@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="th" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VIN Part Finder - ค้นหาและถอดรหัสอะไหล่รถยนต์จากเลข VIN</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'Sarabun', 'sans-serif'],
+                        display: ['Outfit', 'sans-serif'],
+                    },
+                    colors: {
+                        brand: {
+                            50: '#f5f3ff',
+                            100: '#ede9fe',
+                            200: '#ddd6fe',
+                            300: '#c4b5fd',
+                            400: '#a78bfa',
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                            700: '#6d28d9',
+                            800: '#5b21b6',
+                            900: '#4c1d95',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #0b0f19;
+            background-image: 
+                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsla(255,83%,53%,0.15) 0, transparent 50%),
+                radial-gradient(at 100% 0%, hsla(218,93%,60%,0.1) 0, transparent 50%);
+            background-attachment: fixed;
+        }
+        /* Custom scrollbar for table container */
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #111827;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #374151;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: #4B5563;
+        }
+    </style>
+</head>
+<body class="text-slate-200 min-h-screen flex flex-col font-sans antialiased">
+
+    <!-- Header Section -->
+    <header class="border-b border-slate-800/80 bg-slate-950/40 backdrop-blur-md sticky top-0 z-50 transition-all duration-300">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-brand-500/20">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold font-display tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
+                        Antigravity PartFinder
+                    </h1>
+                    <p class="text-xs text-brand-400 font-medium">External VIN Decoding & Part Lookup System</p>
+                </div>
+            </div>
+            <div class="flex items-center space-x-2">
+                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+                    API Connected
+                </span>
+            </div>
+        </div>
+    </header>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        
+        <!-- Search Card -->
+        <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 sm:p-8 backdrop-blur-xl shadow-xl">
+            <div class="max-w-3xl mb-6">
+                <h2 class="text-2xl font-bold font-display text-white mb-2">ระบบค้นหาและประมวลผลข้อมูลอะไหล่รถยนต์ด่วน (AI + Sheets)</h2>
+                <p class="text-slate-400 text-sm">
+                    วิเคราะห์ข้อมูลอะไหล่แท้และอะไหล่ทดแทนด้วยลอจิก AI ตรวจสอบและแก้ไขเลขตัวถัง (VIN) อัตโนมัติ ดึงข้อมูลตรงจากทุกชีตและเว็บไซต์อัปเดตลงตารางชีตสำรอง
+                </p>
+            </div>
+
+            <!-- Form -->
+            <form id="search-form" class="space-y-6">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <!-- OEM Code Field -->
+                    <div class="space-y-2">
+                        <label for="oem-input" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                            รหัส OEM (ถ้าทราบ) <span class="text-xs text-brand-400 font-normal">(ลัดคิว AI ดึงชีตทันที)</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="oem-input" 
+                            name="oem_code" 
+                            placeholder="เช่น 52610-TR7-B03"
+                            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition duration-200"
+                        >
+                        <p id="oem-hint" class="text-[11px] text-slate-500 hidden">
+                            ⚡ ระบบจะค้นหาตรงเข้า Google Sheets และตรวจสอบสเปคออนไลน์เพื่อความเร็วสูงสุด
+                        </p>
+                    </div>
+
+                    <!-- VIN Field -->
+                    <div class="space-y-2">
+                        <label for="vin-input" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                            เลขตัวถังรถ (VIN) <span class="text-xs text-slate-500 font-normal">(ตรวจจับ/แก้ไขคำผิดด้วย AI)</span>
+                        </label>
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                id="vin-input" 
+                                name="vin" 
+                                maxlength="17" 
+                                placeholder="ระบุเลข VIN 17 หลัก (ข้ามได้)"
+                                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white uppercase placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition duration-200"
+                            >
+                            <span id="vin-counter" class="absolute right-3 top-3.5 text-[10px] font-mono text-slate-500 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
+                                0 / 17
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Brand Field -->
+                    <div class="space-y-2">
+                        <label for="brand-input" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                            ยี่ห้อรถ (Brand)
+                        </label>
+                        <select 
+                            id="brand-input" 
+                            name="brand" 
+                            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition duration-200"
+                        >
+                            <option value="">-- ไม่ระบุ / ข้าม --</option>
+                            <optgroup label="🇯🇵 รถญี่ปุ่น (Japanese Brands)">
+                                <option value="Toyota">TOYOTA (โตโยต้า)</option>
+                                <option value="Honda">HONDA (ฮอนด้า)</option>
+                                <option value="Isuzu">ISUZU (อีซูซุ)</option>
+                                <option value="Nissan">NISSAN (นิสสัน)</option>
+                                <option value="Mitsubishi">MITSUBISHI (มิตซูบิชิ)</option>
+                                <option value="Mazda">MAZDA (มาสด้า)</option>
+                                <option value="Suzuki">SUZUKI (ซูซูกิ)</option>
+                                <option value="Subaru">SUBARU (ซูบารุ)</option>
+                                <option value="Lexus">LEXUS (เลกซัส)</option>
+                                <option value="Daihatsu">DAIHATSU (ไดฮัทสุ)</option>
+                            </optgroup>
+                            <optgroup label="🇨🇳 รถจีน & รถไฟฟ้า EV (Chinese & EV Brands)">
+                                <option value="BYD">BYD (บีวายดี)</option>
+                                <option value="MG">MG (เอ็มจี)</option>
+                                <option value="GWM">GWM / HAVAL / ORA / TANK (เกรท วอลล์)</option>
+                                <option value="Changan">CHANGAN / DEEPAL / AVATR (ฉางอัน)</option>
+                                <option value="Neta">NETA (เน็ตต้า)</option>
+                                <option value="Aion">GAC AION (เอไอออน)</option>
+                                <option value="Chery">CHERY / OMODA / JAECOO (เชอรี)</option>
+                                <option value="Zeekr">ZEEKR (ซีเคอร์)</option>
+                                <option value="Xpeng">XPENG (เสี่ยวเผิง)</option>
+                                <option value="Wuling">WULING (วู่หลิง)</option>
+                                <option value="Maxus">MAXUS (แมกซัส)</option>
+                            </optgroup>
+                            <optgroup label="🇪🇺 รถยุโรป (European Brands)">
+                                <option value="Mercedes-Benz">MERCEDES-BENZ (เมอร์เซเดส-เบนซ์)</option>
+                                <option value="BMW">BMW (บีเอ็มดับเบิลยู)</option>
+                                <option value="Audi">AUDI (อาวดี้)</option>
+                                <option value="Volkswagen">VOLKSWAGEN (โฟล์คสวาเกน)</option>
+                                <option value="Volvo">VOLVO (วอลโว่)</option>
+                                <option value="Porsche">PORSCHE (ปอร์เช่)</option>
+                                <option value="Mini">MINI (มินิ)</option>
+                                <option value="Peugeot">PEUGEOT (เปอโยต์)</option>
+                                <option value="Land Rover">LAND ROVER (แลนด์โรเวอร์)</option>
+                                <option value="Jaguar">JAGUAR (จาการ์)</option>
+                            </optgroup>
+                            <optgroup label="🇺🇸 🇰🇷 รถอเมริกัน & เกาหลี (American & Korean Brands)">
+                                <option value="Ford">FORD (ฟอร์ด)</option>
+                                <option value="Chevrolet">CHEVROLET (เชฟโรเลต)</option>
+                                <option value="Tesla">TESLA (เทสลา)</option>
+                                <option value="Jeep">JEEP (จี๊ป)</option>
+                                <option value="Hyundai">HYUNDAI (ฮุนได)</option>
+                                <option value="Kia">KIA (เกีย)</option>
+                            </optgroup>
+                            <optgroup label="🚛 🚌 รถใหญ่ / รถบรรทุก / รถบัส / รถพาณิชย์ (Trucks, Buses & Heavy Commercial)">
+                                <option value="Hino">HINO (ฮีโน่ - รถบรรทุก/บัส)</option>
+                                <option value="Isuzu Trucks">ISUZU TRUCKS (อีซูซุ รถบรรทุกหนัก)</option>
+                                <option value="Fuso">FUSO (มิตซูบิชิ ฟูโซ่)</option>
+                                <option value="UD Trucks">UD TRUCKS (ยูดี ทรัคส์ / นิสสัน ดีเซล)</option>
+                                <option value="Scania">SCANIA (สแกนเนีย - รถบรรทุก/บัส)</option>
+                                <option value="Volvo Trucks">VOLVO TRUCKS (วอลโว่ ทรัคส์)</option>
+                                <option value="MAN">MAN (เอ็ม เอ เอ็น - รถบรรทุก/บัสเยอรมนี)</option>
+                                <option value="Mercedes-Benz Trucks">MERCEDES-BENZ TRUCKS (เบนซ์ รถบรรทุก/บัส)</option>
+                                <option value="Dongfeng">DONGFENG / DFSK (ตงฟง)</option>
+                                <option value="Foton">FOTON (โฟตอน)</option>
+                                <option value="Tata">TATA (ทาทา)</option>
+                                <option value="Sinotruk">SINOTRUK / HOWO (ซิโนทรัค / ฮาวโว่)</option>
+                                <option value="King Long">KING LONG (คิงลอง - รถบัส)</option>
+                            </optgroup>
+                        </select>
+                    </div>
+
+                    <!-- Model Field -->
+                    <div class="space-y-2">
+                        <label for="model-input" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                            รุ่นรถ (Model)
+                        </label>
+                        <select 
+                            id="model-input" 
+                            name="model" 
+                            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition duration-200"
+                        >
+                            <option value="">-- ไม่ระบุ / ข้าม --</option>
+                        </select>
+                    </div>
+
+                    <!-- Year Field -->
+                    <div class="space-y-2">
+                        <label for="year-input" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                            ปีรถ (Year)
+                        </label>
+                        <select 
+                            id="year-input" 
+                            name="year" 
+                            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition duration-200"
+                        >
+                            <option value="">-- ไม่ระบุ / ข้าม --</option>
+                            <!-- Script will populate years -->
+                        </select>
+                    </div>
+
+                    <!-- Product Name Field -->
+                    <div class="space-y-2">
+                        <label for="product-input" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
+                            ชื่อสินค้า / อะไหล่ที่ต้องการ <span class="text-red-400">*</span>
+                        </label>
+                        <input 
+                            type="text" 
+                            id="product-input" 
+                            name="product_name" 
+                            required
+                            placeholder="เช่น ผ้าเบรคหน้า, จานดิสเบรค, โช๊คอัพ"
+                            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition duration-200"
+                        >
+                    </div>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="flex justify-end pt-2">
+                    <button 
+                        type="submit" 
+                        id="search-btn"
+                        class="w-full md:w-auto bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-semibold px-10 py-4 rounded-xl flex items-center justify-center space-x-2 shadow-lg shadow-brand-500/10 hover:shadow-brand-500/20 transform hover:-translate-y-0.5 transition duration-200 cursor-pointer"
+                    >
+                        <span>[ ค้นหารหัสอะไหล่ด่วน ]</span>
+                        <svg id="btn-spinner" class="animate-spin -mr-1 ml-3 h-5 w-5 text-white hidden" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Alert Notification Message -->
+        <div id="error-alert" class="hidden bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl flex items-start space-x-3">
+            <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+            </svg>
+            <div class="text-sm">
+                <span class="font-bold">เกิดข้อผิดพลาด:</span>
+                <span id="error-message">ไม่สามารถทำรายการได้ในขณะนี้</span>
+            </div>
+        </div>
+
+        <!-- Results Block (Hidden initially) -->
+        <div id="results-container" class="hidden space-y-6">
+            
+            <!-- VIN Correction alert (Hidden by default) -->
+            <div id="vin-correction-alert" class="hidden bg-amber-500/10 border border-amber-500/20 text-amber-400 p-4 rounded-xl flex items-start space-x-3">
+                <span class="text-xl">⚠️</span>
+                <div class="text-sm">
+                    <span class="font-bold">AI ปรับแก้เลขตัวถังรถ (VIN) ให้ถูกต้องตามรุ่นรถยนต์:</span>
+                    <span id="vin-correction-detail"></span>
+                </div>
+            </div>
+
+            <!-- OEM Discovered Banner & Source -->
+            <div class="bg-gradient-to-r from-brand-950/80 to-indigo-950/80 border border-brand-800/50 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 backdrop-blur-md">
+                <div class="flex items-center space-x-4">
+                    <div class="w-12 h-12 rounded-xl bg-brand-500/20 border border-brand-500/30 flex items-center justify-center">
+                        <span class="text-2xl">🎯</span>
+                    </div>
+                    <div>
+                        <div class="text-xs text-brand-400 font-semibold uppercase tracking-wider">รหัส OEM ศูนย์แท้หลักที่ค้นพบ</div>
+                        <h3 id="oem-display-banner" class="text-xl md:text-2xl font-bold font-display text-white mt-0.5">
+                            NOT_FOUND
+                        </h3>
+                    </div>
+                </div>
+                <div class="flex flex-col md:flex-row gap-2">
+                    <div class="flex items-center space-x-2 text-xs text-slate-400 bg-slate-900/60 px-4 py-2 rounded-lg border border-slate-800">
+                        <span>แหล่งข้อมูลประมวลผล:</span>
+                        <span id="source-badge" class="font-semibold text-brand-400">Google Sheets</span>
+                    </div>
+                    <div class="flex items-center space-x-2 text-xs text-slate-400 bg-slate-900/60 px-4 py-2 rounded-lg border border-slate-800">
+                        <span>สถานะระบบ:</span>
+                        <span id="data-status-badge" class="font-semibold text-emerald-400">ปกติ</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Table Block -->
+            <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-xl shadow-xl">
+                <div class="px-6 py-5 border-b border-slate-800/80 flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold font-display text-white">รายการแบรนด์สินค้าอะไหล่ (แท้ศูนย์ & Aftermarket)</h3>
+                        <p class="text-xs text-slate-400 mt-0.5">ข้อมูลรหัสสินค้าสำหรับขายหน้าร้าน/เปิดบิล (Commercial Retail Sales SKU) แยกจากเบอร์ OEM</p>
+                    </div>
+                    <span class="text-xs text-slate-500">เลื่อนตารางเพื่อดูข้อมูลเพิ่มเติม</span>
+                </div>
+
+                <div class="overflow-x-auto custom-scrollbar">
+                    <table class="w-full text-left border-collapse table-auto">
+                        <thead>
+                            <tr class="bg-slate-950 text-xs font-semibold text-slate-300 uppercase tracking-wider border-b border-slate-800">
+                                <th class="px-4 py-3.5 whitespace-nowrap">แบรนด์สินค้า</th>
+                                <th class="px-4 py-3.5 whitespace-nowrap text-amber-400 font-bold">รหัสสินค้า (สำหรับขาย)</th>
+                                <th class="px-4 py-3.5 whitespace-nowrap text-indigo-400">เบอร์ OEM</th>
+                                <th class="px-4 py-3.5 whitespace-nowrap text-brand-400">ชื่อสินค้า (ไทย)</th>
+                                <th class="px-4 py-3.5 whitespace-nowrap">ยี่ห้อรถ</th>
+                                <th class="px-4 py-3.5 whitespace-nowrap">รุ่นรถ</th>
+                                <th class="px-4 py-3.5 whitespace-nowrap">ปีเริ่มต้น</th>
+                                <th class="px-4 py-3.5 whitespace-nowrap">ปีสิ้นสุด</th>
+                                <th class="px-4 py-3.5 whitespace-nowrap">เครื่องยนต์</th>
+                                <th class="px-4 py-3.5 whitespace-nowrap">น้ำมัน</th>
+                                <th class="px-4 py-3.5 whitespace-nowrap">เกียร์</th>
+                                <th class="px-4 py-3.5 min-w-[250px]">รายละเอียดสินค้า</th>
+                            </tr>
+                        </thead>
+                        <tbody id="results-table-body" class="divide-y divide-slate-800/50 text-sm">
+                            <!-- Populated via Javascript -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-slate-900 bg-slate-950/60 py-6 mt-12 text-center text-xs text-slate-500">
+        <div class="max-w-7xl mx-auto px-4">
+            <p>© 2026 Antigravity Car Parts Catalog Discovery Demo. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <!-- App Script -->
+    <script>
+        const form = document.getElementById('search-form');
+        const oemInput = document.getElementById('oem-input');
+        const oemHint = document.getElementById('oem-hint');
+        const vinInput = document.getElementById('vin-input');
+        const vinCounter = document.getElementById('vin-counter');
+        const brandInput = document.getElementById('brand-input');
+        const modelInput = document.getElementById('model-input');
+        const yearInput = document.getElementById('year-input');
+        const searchBtn = document.getElementById('search-btn');
+        const btnSpinner = document.getElementById('btn-spinner');
+        const errorAlert = document.getElementById('error-alert');
+        const errorMessage = document.getElementById('error-message');
+        const resultsContainer = document.getElementById('results-container');
+        const oemDisplayBanner = document.getElementById('oem-display-banner');
+        const sourceBadge = document.getElementById('source-badge');
+        const dataStatusBadge = document.getElementById('data-status-badge');
+        const resultsTableBody = document.getElementById('results-table-body');
+        const vinCorrectionAlert = document.getElementById('vin-correction-alert');
+        const vinCorrectionDetail = document.getElementById('vin-correction-detail');
+
+        // Dynamic Brand -> Model mapping
+        const modelsByBrand = {
+            // รถญี่ปุ่น (Japanese Brands)
+            "Toyota": ["Corolla Altis", "Vios", "Yaris", "Yaris Ativ", "Camry", "Fortuner", "Hilux Revo", "Hilux Vigo", "Commuter", "Corolla Cross", "Veloz", "Alphard", "Vellfire", "Majesty", "CHR", "Sienta", "Avanza"],
+            "Honda": ["Civic", "City", "City Hatchback", "Accord", "CR-V", "HR-V", "WR-V", "BR-V", "Jazz", "Brio", "Mobilio", "Freed", "Stepwgn"],
+            "Isuzu": ["D-Max", "MU-X", "MU-7", "Dragon Power", "TFR", "N-Series (NKR/NPR/NQR)", "F-Series (FTR/FVR/GVR)"],
+            "Nissan": ["Almera", "Navara", "Kicks", "Terra", "March", "Note", "Teana", "Sylphy", "X-Trail", "Urvan (NV350)", "Big-M", "Frontier"],
+            "Mitsubishi": ["Triton", "Pajero Sport", "Xpander", "Xpander Cross", "Mirage", "Attrage", "Lancer", "Lancer EX", "Delica"],
+            "Mazda": ["Mazda 2", "Mazda 3", "CX-3", "CX-30", "CX-5", "CX-8", "BT-50", "BT-50 PRO"],
+            "Suzuki": ["Swift", "Ciaz", "Ertiga", "XL7", "Celerio", "Carry", "Jimny"],
+            "Subaru": ["XV", "Forester", "Outback", "WRX", "BRZ"],
+            "Lexus": ["RX", "NX", "UX", "ES", "IS", "LM", "LS"],
+            "Daihatsu": ["Mira", "Hijet", "Gran Max", "Terios", "Atrai"],
+
+            // รถจีน & รถไฟฟ้า EV (Chinese & EV Brands)
+            "BYD": ["Atto 3", "Dolphin", "Seal", "Sealion 6", "M6"],
+            "MG": ["MG3", "MG4 Electric", "MG5", "MG ZS", "MG ZS EV", "MG HS", "MG EP / ES", "MG Extender", "MAXUS 9"],
+            "GWM": ["Haval H6", "Haval Jolion", "Ora Good Cat", "Ora 07", "Tank 300", "Tank 500"],
+            "Changan": ["Deepal L07", "Deepal S07", "Lumin", "Avatr 11"],
+            "Neta": ["Neta V", "Neta V-II", "Neta X"],
+            "Aion": ["Aion Y Plus", "Aion ES", "Hyptec HT"],
+            "Chery": ["Omoda C5", "Jaecoo 6", "Jaecoo 7"],
+            "Zeekr": ["Zeekr X", "Zeekr 009"],
+            "Xpeng": ["Xpeng G6", "Xpeng G9"],
+            "Wuling": ["Air EV", "Binguo EV"],
+            "Maxus": ["MAXUS 9", "V80", "Deliver 9"],
+
+            // รถยุโรป (European Brands)
+            "Mercedes-Benz": ["C-Class", "E-Class", "S-Class", "GLA", "GLC", "GLE", "GLS", "A-Class", "CLA", "V-Class", "Vito"],
+            "BMW": ["3 Series", "5 Series", "7 Series", "X1", "X3", "X5", "X7", "4 Series", "2 Series", "iX3", "i4", "i7"],
+            "Audi": ["A4", "A5", "A6", "Q3", "Q5", "Q7", "TT", "e-tron"],
+            "Volkswagen": ["Caravelle", "Golf", "Passat", "Tiguan", "Beetle"],
+            "Volvo": ["XC40", "XC60", "XC90", "V60", "S60", "S90", "C40 Recharge", "EX30"],
+            "Porsche": ["Cayenne", "Macan", "Panamera", "911", "Taycan", "718 Cayman/Boxster"],
+            "Mini": ["Cooper", "Countryman", "Clubman"],
+            "Peugeot": ["2008", "3008", "5008"],
+            "Land Rover": ["Defender", "Range Rover", "Range Rover Sport", "Discovery"],
+            "Jaguar": ["F-Pace", "E-Pace", "I-Pace", "XF"],
+
+            // รถอเมริกัน & เกาหลี (American & Korean Brands)
+            "Ford": ["Ranger", "Ranger Raptor", "Everest", "Fiesta", "Focus", "EcoSport", "Mustang"],
+            "Chevrolet": ["Colorado", "Trailblazer", "Captiva", "Cruze", "Sonic", "Aveo", "Optra"],
+            "Tesla": ["Model 3", "Model Y", "Model S", "Model X"],
+            "Jeep": ["Wrangler", "Gladiator", "Grand Cherokee"],
+            "Hyundai": ["H-1 / Grand Starex", "Staria", "Creta", "Santa Fe", "Ioniq 5", "Elantra", "Tucson"],
+            "Kia": ["Carnival", "EV6", "EV9", "Sorento", "Picanto"],
+
+            // รถใหญ่ / รถบรรทุก / รถบัส / รถพาณิชย์ (Trucks, Buses & Heavy Commercial Vehicles)
+            "Hino": ["Dominator (500)", "Victor (500)", "Mega", "Profia", "Liesse", "300 Innova", "500 Series", "700 Series"],
+            "Isuzu Trucks": ["ELF (N-Series)", "FORWARD (F-Series)", "GIGA (C&E Series)", "King of Trucks"],
+            "Fuso": ["Canter", "Fighter", "Super Great", "FJ", "FZ"],
+            "UD Trucks": ["Qonquer", "Quester", "Croner", "Condor", "Quon"],
+            "Scania": ["P-Series", "G-Series", "R-Series", "S-Series", "K-Series (Bus)"],
+            "Volvo Trucks": ["FH", "FM", "FMX", "FL", "FE"],
+            "MAN": ["TGS", "TGX", "TGL", "TGM", "MAN Bus Chassis"],
+            "Mercedes-Benz Trucks": ["Actros", "Arocs", "Atego"],
+            "Dongfeng": ["DFSK Mini Truck", "Captain", "GX", "KX", "Tianlong"],
+            "Foton": ["Aumark", "Auman", "View Transvan", "eAumark"],
+            "Tata": ["Xenon", "Super Ace", "Ultra", "Prima"],
+            "Sinotruk": ["Howo T7H", "Howo A7", "Howo V7G"],
+            "King Long": ["XMQ Bus Series", "City Bus", "Coach"]
+        };
+
+        brandInput.addEventListener('change', () => {
+            const selectedBrand = brandInput.value;
+            // Clear models
+            modelInput.innerHTML = '<option value="">-- ไม่ระบุ / ข้าม --</option>';
+            
+            if (modelsByBrand[selectedBrand]) {
+                modelsByBrand[selectedBrand].forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m;
+                    opt.textContent = m;
+                    modelInput.appendChild(opt);
+                });
+            }
+        });
+
+        // Initialize Year dropdown options
+        const currentYear = 2026;
+        for (let y = currentYear; y >= 2000; y--) {
+            const opt = document.createElement('option');
+            opt.value = y.toString();
+            opt.textContent = y.toString();
+            yearInput.appendChild(opt);
+        }
+
+        // Toggle hint for OEM code typing
+        oemInput.addEventListener('input', (e) => {
+            if (e.target.value.trim().length > 0) {
+                oemHint.classList.remove('hidden');
+            } else {
+                oemHint.classList.add('hidden');
+            }
+        });
+
+        // Track characters in VIN field (allows letters, removes confusion characters, enforces uppercase)
+        vinInput.addEventListener('input', (e) => {
+            let value = e.target.value.toUpperCase();
+            value = value.replace(/[IOQioq]/g, '');
+            value = value.replace(/[^A-Z0-9]/g, '');
+            e.target.value = value;
+            
+            const len = value.length;
+            vinCounter.textContent = `${len} / 17`;
+
+            if (len === 17) {
+                vinCounter.classList.remove('text-slate-500', 'border-slate-800');
+                vinCounter.classList.add('text-emerald-400', 'border-emerald-500/30', 'bg-emerald-500/5');
+            } else {
+                vinCounter.classList.add('text-slate-500', 'border-slate-800');
+                vinCounter.classList.remove('text-emerald-400', 'border-emerald-500/30', 'bg-emerald-500/5');
+            }
+        });
+
+        // Async Form Submission
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Clear previous errors/notifications
+            errorAlert.classList.add('hidden');
+            vinCorrectionAlert.classList.add('hidden');
+            
+            const oemCode = oemInput.value.trim();
+            const vin = vinInput.value.trim().toUpperCase();
+            const brand = brandInput.value;
+            const model = modelInput.value;
+            const year = yearInput.value;
+            const productName = document.getElementById('product-input').value.trim();
+
+            // Check: Must specify either OEM Code, VIN, or vehicle description
+            if (!oemCode && !vin && !brand) {
+                showError("กรุณากรอกรหัส OEM, เลขตัวถังรถ (VIN) หรืออย่างน้อยเลือกยี่ห้อรถยนต์ เพื่อเป็นเบาะแสสำหรับดึงข้อมูล");
+                return;
+            }
+
+            // UI Loading state
+            searchBtn.disabled = true;
+            btnSpinner.classList.remove('hidden');
+            searchBtn.classList.add('opacity-80', 'cursor-not-allowed');
+
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 60000);
+
+            try {
+                const response = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    signal: controller.signal,
+                    body: JSON.stringify({
+                        oem_code: oemCode || null,
+                        vin: vin || null,
+                        brand: brand || null,
+                        model: model || null,
+                        year: year || null,
+                        product_name: productName
+                    })
+                });
+                clearTimeout(timeoutId);
+
+                const resData = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(resData.detail || 'การสืบค้นข้อมูลพาร์ทล้มเหลว');
+                }
+
+                if (resData.success && resData.data && resData.data.success) {
+                    renderResults(resData.data, vin);
+                } else {
+                    throw new Error(resData.data?.vin_explanation || 'ไม่พบข้อมูลอะไหล่จากระบบป้อนค่า กรุณาปรับเปลี่ยนข้อมูลค้นหา');
+                }
+            } catch (err) {
+                clearTimeout(timeoutId);
+                let msg = err.message;
+                if (err.name === 'AbortError') {
+                    msg = 'การสืบค้นข้อมูลใช้เวลานานเกินไป หรือการเชื่อมต่อเซิร์ฟเวอร์ถูกยกเลิก กรุณากดค้นหาใหม่อีกครั้ง';
+                } else if (err.name === 'TypeError' || (err.message && err.message.includes('Failed to fetch'))) {
+                    msg = 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาตรวจสอบว่าเซิร์ฟเวอร์เปิดอยู่ (http://127.0.0.1:8000)';
+                }
+                showError(msg);
+                resultsContainer.classList.add('hidden');
+            } finally {
+                // Restore button state
+                searchBtn.disabled = false;
+                btnSpinner.classList.add('hidden');
+                searchBtn.classList.remove('opacity-80', 'cursor-not-allowed');
+            }
+        });
+
+        function showError(msg) {
+            errorMessage.textContent = msg;
+            errorAlert.classList.remove('hidden');
+            errorAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // Format values that are NOT_FOUND to look visually structured
+        function formatCellValue(val) {
+            if (!val || val === 'NOT_FOUND' || val === 'UNKNOWN') {
+                return `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20 font-mono">NOT_FOUND</span>`;
+            }
+            return `<span class="text-slate-200">${val}</span>`;
+        }
+
+        function renderResults(data, originalVin) {
+            // Update Banner
+            const oemVal = data.oem_code;
+            oemDisplayBanner.innerHTML = `🎯 รหัส OEM แท้ศูนย์: ${oemVal === 'NOT_FOUND' ? '<span class="text-red-400 font-mono">NOT_FOUND</span>' : oemVal}`;
+            sourceBadge.textContent = data.data_source;
+            if (data.data_source && data.data_source.includes('ข้อมูลภายในเท่านั้น')) {
+                sourceBadge.className = 'px-3 py-1 text-xs font-semibold rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20';
+            } else {
+                sourceBadge.className = 'px-3 py-1 text-xs font-semibold rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20';
+            }
+
+            // Handle VIN correction notifications (only when user actually provided a VIN)
+            if (data.vin_corrected && originalVin && originalVin.trim() !== '') {
+                vinCorrectionDetail.innerHTML = `ตรวจพบความผิดปกติในรหัสที่กรอก <strong>"${originalVin}"</strong> ได้รับการแก้ไขเป็นรหัสที่ถูกต้อง <strong>"${data.corrected_vin}"</strong> (${data.vin_explanation})`;
+                vinCorrectionAlert.classList.remove('hidden');
+            } else {
+                vinCorrectionAlert.classList.add('hidden');
+            }
+
+            // Build Rows Content
+            resultsTableBody.innerHTML = '';
+            
+            if (data.rows && data.rows.length > 0) {
+                dataStatusBadge.textContent = 'ข้อมูลสมบูรณ์';
+                dataStatusBadge.className = 'font-semibold text-emerald-400';
+
+                data.rows.forEach(row => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-slate-800/30 transition duration-150 border-b border-slate-800/50';
+                    
+                    const isGenuine = String(row["แบรนด์ของสินค้า"]).toUpperCase() === 'GENUINE' || String(row["แบรนด์ของสินค้า"]).includes('แท้');
+                    const brandCell = isGenuine 
+                        ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-sans">GENUINE (แท้)</span>`
+                        : formatCellValue(row["แบรนด์ของสินค้า"]);
+
+                    tr.innerHTML = `
+                        <td class="px-4 py-4.5 whitespace-nowrap font-medium">${brandCell}</td>
+                        <td class="px-4 py-4.5 whitespace-nowrap font-mono text-xs">${formatCellValue(row["รหัสสินค้า"])}</td>
+                        <td class="px-4 py-4.5 whitespace-nowrap font-mono text-xs text-indigo-400 font-semibold">${formatCellValue(row["เบอร์ OEM"])}</td>
+                        <td class="px-4 py-4.5 whitespace-nowrap text-brand-400 font-semibold">${formatCellValue(row["ชื่อสินค้า (ไทย)"])}</td>
+                        <td class="px-4 py-4.5 whitespace-nowrap">${formatCellValue(row["ยี่ห้อรถ"])}</td>
+                        <td class="px-4 py-4.5 whitespace-nowrap">${formatCellValue(row["รุ่นรถ"])}</td>
+                        <td class="px-4 py-4.5 whitespace-nowrap">${formatCellValue(row["ปีเริ่มต้น"])}</td>
+                        <td class="px-4 py-4.5 whitespace-nowrap">${formatCellValue(row["ปีสิ้นสุด"])}</td>
+                        <td class="px-4 py-4.5 whitespace-nowrap text-xs">${formatCellValue(row["เครื่องยนต์"])}</td>
+                        <td class="px-4 py-4.5 whitespace-nowrap">${formatCellValue(row["น้ำมัน"])}</td>
+                        <td class="px-4 py-4.5 whitespace-nowrap text-xs">${formatCellValue(row["เกียร์"])}</td>
+                        <td class="px-4 py-4.5 text-xs text-slate-400 leading-relaxed">${formatCellValue(row["รายละเอียดสินค้า"])}</td>
+                    `;
+                    resultsTableBody.appendChild(tr);
+                });
+            } else {
+                dataStatusBadge.textContent = 'ไม่พบข้อมูลแถวอะไหล่';
+                dataStatusBadge.className = 'font-semibold text-amber-400';
+                resultsTableBody.innerHTML = `
+                    <tr>
+                        <td colspan="12" class="px-4 py-8 text-center text-slate-500 font-medium">
+                            ไม่พบรายการข้อมูลสินค้า (กรุณาตรวจสอบโครงสร้างรหัส OEM หรือความถูกต้องในการค้นหา)
+                        </td>
+                    </tr>
+                `;
+            }
+
+            // Reveal Container
+            resultsContainer.classList.remove('hidden');
+            resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    </script>
+</body>
+</html>
