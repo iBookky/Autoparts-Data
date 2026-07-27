@@ -31,7 +31,7 @@ class SearchRequest(BaseModel):
     brand: Optional[str] = Field(None, description="Car manufacturer/brand")
     model: Optional[str] = Field(None, description="Car model")
     year: Optional[str] = Field(None, description="Car year")
-    product_name: str = Field(..., min_length=1, description="Car part/product name to search")
+    product_name: Optional[str] = Field(None, description="Car part/product name to search")
 
     @field_validator('vin')
     @classmethod
@@ -72,8 +72,14 @@ async def api_search(req: SearchRequest):
             brand=req.brand,
             model=req.model,
             year=req.year,
-            product_name=req.product_name
+            product_name=req.product_name or ""
         )
+        if not result.get("success", True):
+            return {
+                "success": False,
+                "error": result.get("error", "เกิดข้อผิดพลาดในการตรวจสอบข้อมูล"),
+                "data": result
+            }
         return {
             "success": True,
             "data": result

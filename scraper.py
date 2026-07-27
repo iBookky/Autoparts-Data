@@ -831,7 +831,58 @@ def get_oem_by_vehicle_and_product(brand: str, model: str, product_name: str) ->
         "details": f"{product_name} OEM แท้ศูนย์ สเปกมาตรฐานโรงงาน"
     }
 
-    if "HINO" in b_upper or "500" in m_upper or "MEGA" in m_upper or "VICTOR" in m_upper:
+    if "YARIS" in m_upper:
+        res["brand"] = "TOYOTA (โตโยต้า)"
+        res["model"] = model if model and model != "Standard Model" else "Yaris (ปี 2012 - 2014)"
+        res["year_start"] = "2012"
+        res["year_end"] = "2014"
+        res["engine"] = "1NZ-FE / 3NR-FE (1.2L - 1.5L)"
+        res["fuel"] = "เบนซิน"
+        res["gear"] = "Auto/CVT"
+        if "เบรค" in p_upper or "เบรก" in p_upper:
+            res["oem_code"] = "04465-52260"
+            res["details"] = "ผ้าเบรคหน้า OEM แท้ศูนย์ TOYOTA Yaris (รถยนต์นั่งขนาดเล็ก เก๋ง/Hatchback)"
+        elif "กรองน้ำมันเครื่อง" in p_upper or "OIL FILTER" in p_upper:
+            res["oem_code"] = "90915-YZZE1"
+            res["details"] = "กรองน้ำมันเครื่อง OEM แท้ศูนย์ TOYOTA Yaris"
+        else:
+            res["oem_code"] = "04465-52260"
+
+    elif "ACCORD" in m_upper:
+        res["brand"] = "HONDA (ฮอนด้า)"
+        res["model"] = model if model and model != "Standard Model" else "Accord (G8/G9)"
+        res["year_start"] = "2008"
+        res["year_end"] = "2017"
+        res["engine"] = "K20A / K24A / R20A (2.0L - 2.4L)"
+        res["fuel"] = "เบนซิน"
+        res["gear"] = "Auto"
+        if "เบรค" in p_upper or "เบรก" in p_upper:
+            res["oem_code"] = "45022-TA0-A00"
+            res["details"] = "ผ้าเบรคหน้า OEM แท้ศูนย์ HONDA Accord G8/G9 (2.0L / 2.4L)"
+        elif "กรองอากาศ" in p_upper or "AIR FILTER" in p_upper:
+            res["oem_code"] = "17220-R40-A00"
+            res["details"] = "กรองอากาศ OEM แท้ศูนย์ HONDA Accord 2.4"
+        else:
+            res["oem_code"] = "45022-TA0-A00"
+
+    elif "RANGER" in m_upper or "FORD" in b_upper:
+        res["brand"] = "FORD (ฟอร์ด)"
+        res["model"] = model if model and model != "Standard Model" else "Ranger T6 (ปี 2012 - 2022)"
+        res["year_start"] = "2012"
+        res["year_end"] = "2022"
+        res["engine"] = "Duratorq 2.2L / 3.2L TDCI"
+        res["fuel"] = "ดีเซล"
+        res["gear"] = "Auto/Manual"
+        if "กรองน้ำมันเครื่อง" in p_upper or "OIL FILTER" in p_upper:
+            res["oem_code"] = "JU2Z-6731-A"
+            res["details"] = "กรองน้ำมันเครื่อง OEM แท้ศูนย์ FORD Ranger T6 2.2 / 3.2"
+        elif "เบรค" in p_upper or "เบรก" in p_upper:
+            res["oem_code"] = "AB31-2C026-AA"
+            res["details"] = "ผ้าเบรคหน้า OEM แท้ศูนย์ FORD Ranger T6"
+        else:
+            res["oem_code"] = "JU2Z-6731-A"
+
+    elif "HINO" in b_upper or "500" in m_upper or "MEGA" in m_upper or "VICTOR" in m_upper:
         res["brand"] = "HINO (ฮีโน่ - รถบรรทุก/บัส)"
         res["model"] = model if model and model != "Standard Model" else "Mega 500 / Victor"
         res["year_start"] = "2008"
@@ -853,15 +904,15 @@ def get_oem_by_vehicle_and_product(brand: str, model: str, product_name: str) ->
 
     elif "ISUZU" in b_upper or "D-MAX" in m_upper or "DMAX" in m_upper:
         res["brand"] = "ISUZU (อีซูซุ)"
-        res["model"] = model if model and model != "Standard Model" else "D-Max / MU-X"
+        res["model"] = model if model and model != "Standard Model" else "D-Max (ปี 2012 - 2020)"
         res["year_start"] = "2012"
         res["year_end"] = "2020"
-        res["engine"] = "4JJ1-TCX / 4JK1-TCX / RZ4E"
+        res["engine"] = "4JJ1-TCX / 4JK1-TCX / RZ4E (1.9L - 3.0L)"
         res["fuel"] = "ดีเซล"
         res["gear"] = "Auto/Manual"
         if "เบรค" in p_upper or "เบรก" in p_upper:
             res["oem_code"] = "8-98079-104-0"
-            res["details"] = "ผ้าเบรคหน้า OEM แท้ศูนย์ ISUZU D-Max 4WD / Hi-Lander"
+            res["details"] = "ผ้าเบรคหน้า OEM แท้ศูนย์ ISUZU D-Max (รถกระบะขนาด 1 ตัน ขับ 2 / ขับ 4)"
         elif "กรองน้ำมันเครื่อง" in p_upper or "OIL FILTER" in p_upper:
             res["oem_code"] = "8-98018-858-0"
             res["details"] = "กรองน้ำมันเครื่อง OEM แท้ศูนย์ ISUZU All New D-Max 1.9 / 2.5 / 3.0"
@@ -891,7 +942,24 @@ def get_oem_by_vehicle_and_product(brand: str, model: str, product_name: str) ->
         else:
             res["oem_code"] = "45022-S04-150"
 
-    elif "NISSAN" in b_upper or "NAVARA" in m_upper or "ALMERA" in m_upper or "MARCH" in m_upper:
+    elif "NAVARA" in m_upper or ("NISSAN" in b_upper and "NAVARA" in m_upper):
+        res["brand"] = "NISSAN (นิสสัน)"
+        res["model"] = model if model and model != "Standard Model" else "Navara NP300 (ปี 2014 - 2024)"
+        res["year_start"] = "2014"
+        res["year_end"] = "2024"
+        res["engine"] = "YD25DDTi / YS23DDTT (2.3L - 2.5L)"
+        res["fuel"] = "ดีเซล"
+        res["gear"] = "Auto/Manual"
+        if "กรองน้ำมันเครื่อง" in p_upper or "OIL FILTER" in p_upper:
+            res["oem_code"] = "15208-2D10A"
+            res["details"] = "กรองน้ำมันเครื่อง OEM แท้ศูนย์ NISSAN Navara NP300 / D23"
+        elif "เบรค" in p_upper or "เบรก" in p_upper:
+            res["oem_code"] = "D1060-4JA0A"
+            res["details"] = "ผ้าเบรคหน้า OEM แท้ศูนย์ NISSAN Navara NP300"
+        else:
+            res["oem_code"] = "15208-2D10A"
+
+    elif "NISSAN" in b_upper or "ALMERA" in m_upper or "MARCH" in m_upper:
         res["brand"] = "NISSAN (นิสสัน)"
         res["model"] = model if model and model != "Standard Model" else "Navara / Almera / March"
         res["year_start"] = "2011"
@@ -917,30 +985,33 @@ def get_oem_by_vehicle_and_product(brand: str, model: str, product_name: str) ->
         res["fuel"] = "ดีเซล"
         res["gear"] = "Auto/Manual"
         if "เบรค" in p_upper or "เบรก" in p_upper:
-            res["oem_code"] = "MZ690186"
+            res["oem_code"] = "4605A546"
             res["details"] = "ผ้าเบรคหน้า OEM แท้ศูนย์ MITSUBISHI Triton / Pajero Sport"
         elif "กรองน้ำมันเครื่อง" in p_upper or "OIL FILTER" in p_upper:
             res["oem_code"] = "1230A045"
             res["details"] = "กรองน้ำมันเครื่อง OEM แท้ศูนย์ MITSUBISHI Triton 2.5 / 2.4"
         else:
-            res["oem_code"] = "MZ690186"
+            res["oem_code"] = "4605A546"
 
     elif "MAZDA" in b_upper or "MAZDA 2" in m_upper or "MAZDA 3" in m_upper or "BT-50" in m_upper:
         res["brand"] = "MAZDA (มาสด้า)"
-        res["model"] = model if model and model != "Standard Model" else "Mazda 2 / Mazda 3"
-        res["year_start"] = "2010"
-        res["year_end"] = "2020"
-        res["engine"] = "MZR 1.5L / Skyactiv 1.3L"
-        res["fuel"] = "เบนซิน"
+        res["model"] = model if model and model != "Standard Model" else "Mazda 2 Skyactiv (ปี 2015 - 2024)"
+        res["year_start"] = "2015"
+        res["year_end"] = "2024"
+        res["engine"] = "Skyactiv-G 1.3L / Skyactiv-D 1.5L"
+        res["fuel"] = "เบนซิน/ดีเซล"
         res["gear"] = "Auto"
-        if "เบรค" in p_upper or "เบรก" in p_upper:
-            res["oem_code"] = "B455-33-28Z"
-            res["details"] = "ผ้าเบรคหน้า OEM แท้ศูนย์ MAZDA 2 / Mazda 3"
+        if "กรองอากาศ" in p_upper or "AIR FILTER" in p_upper:
+            res["oem_code"] = "P501-13-Z40"
+            res["details"] = "กรองอากาศ OEM แท้ศูนย์ MAZDA 2 Skyactiv"
+        elif "เบรค" in p_upper or "เบรก" in p_upper:
+            res["oem_code"] = "DA6C-33-23Z"
+            res["details"] = "ผ้าเบรคหน้า OEM แท้ศูนย์ MAZDA 2 Skyactiv"
         elif "กรองน้ำมันเครื่อง" in p_upper or "OIL FILTER" in p_upper:
             res["oem_code"] = "PE01-14-302"
             res["details"] = "กรองน้ำมันเครื่อง OEM แท้ศูนย์ MAZDA Skyactiv"
         else:
-            res["oem_code"] = "B455-33-28Z"
+            res["oem_code"] = "P501-13-Z40"
 
     else:
         # TOYOTA (Vios / Yaris / Hilux / Altis)
@@ -1175,7 +1246,12 @@ def generate_fallback_oem_catalog(oem_code: str, brand: str = "", model: str = "
             elif "NISSHINBO" in b_upper:
                 sku_code = "NP1020"
             elif "ACDELCO" in b_upper:
-                sku_code = "19371548"
+                if "ISUZU" in brand_clean.upper() or "D-MAX" in model_clean.upper():
+                    sku_code = "19374024"
+                elif "YARIS" in model_clean.upper() or "YARIS" in brand_clean.upper():
+                    sku_code = "19371548"
+                else:
+                    sku_code = "19371548"
 
         if not sku_code:
             clean_prefix = re.sub(r'[^A-Z0-9]', '', clean_b.split()[0].upper())
@@ -2697,6 +2773,114 @@ Respond with a JSON object in this format:
 All text properties should be in Thai where applicable (like names and details). Keep string values clean and non-empty.
 """
 
+def validate_oem_format_by_brand(oem_code: str, brand: str) -> bool:
+    """Validates if an OEM code follows valid structure for a car brand."""
+    if not oem_code or len(oem_code) < 4:
+        return False
+    code = oem_code.strip().upper()
+    brand_u = brand.upper() if brand else ""
+
+    if "TOYOTA" in brand_u:
+        return bool(re.match(r'^\d{5}-[A-Z0-9]{5}$', code) or re.match(r'^\d{10}$', code))
+    elif "HONDA" in brand_u:
+        return bool(re.match(r'^\d{5}-[A-Z0-9]{3,4}-[A-Z0-9]{3,4}$', code) or re.match(r'^\d{11}$', code))
+    elif "ISUZU" in brand_u:
+        return bool(re.match(r'^\d-\d{5}-\d{3}-\d$', code) or re.match(r'^\d-\d{8}-\d$', code) or re.match(r'^\d{10}$', code) or re.match(r'^\d{8}$', code))
+    elif "HINO" in brand_u:
+        return bool(re.match(r'^\d{5}-\d{4,5}$', code) or re.match(r'^\d{9,10}$', code))
+    elif "NISSAN" in brand_u:
+        return bool(re.match(r'^[A-Z0-9]{5}-[A-Z0-9]{5}$', code) or re.match(r'^[A-Z0-9]{10}$', code))
+    elif "MITSUBISHI" in brand_u:
+        return bool(re.match(r'^[A-Z]{2}\d{6}$', code) or re.match(r'^[A-Z0-9]{6,10}$', code) or re.match(r'^\d{8}$', code))
+    elif "MAZDA" in brand_u:
+        return bool(re.match(r'^[A-Z0-9]{4}-\d{2}-[A-Z0-9]{3,4}$', code) or re.match(r'^[A-Z0-9]{8,12}$', code))
+    elif "FORD" in brand_u:
+        return bool(re.match(r'^[A-Z0-9]{4}-[A-Z0-9]{4,6}-[A-Z0-9]{1,3}$', code) or re.match(r'^[A-Z0-9\-]{8,15}$', code))
+    
+    return bool(re.match(r'^[A-Z0-9\-]{5,18}$', code))
+
+
+def filter_by_allowed_sheet_brands(rows: list[dict], allowed_brands: list[str]) -> list[dict]:
+    """
+    Filters and normalizes product rows so that 'แบรนด์ของสินค้า' MUST be either:
+    1. GENUINE (อะไหล่แท้ / Genuineศูนย์)
+    2. One of the brands listed in Google Sheets tab 'brands'.
+    """
+    if not rows:
+        return []
+
+    allowed_map = {}
+    for b in allowed_brands:
+        if isinstance(b, str) and b.strip():
+            clean_b = b.strip()
+            main_token = clean_b.split('(')[0].strip()
+            allowed_map[clean_b.lower()] = clean_b
+            allowed_map[main_token.lower()] = clean_b
+
+    filtered = []
+    seen = set()
+
+    for r in rows:
+        b_val = str(r.get("แบรนด์ของสินค้า", "")).strip()
+        b_upper = b_val.upper()
+
+        target_brand = None
+        if b_upper in ["GENUINE", "GENUINE (แท้)", "แท้", "ศูนย์แท้", "แท้ศูนย์"]:
+            target_brand = "GENUINE"
+        else:
+            b_lower = b_val.lower()
+            main_b_token = b_val.split('(')[0].strip().lower()
+            if b_lower in allowed_map:
+                target_brand = allowed_map[b_lower]
+            elif main_b_token in allowed_map:
+                target_brand = allowed_map[main_b_token]
+            else:
+                for key, official_name in allowed_map.items():
+                    if key in b_lower or b_lower in key:
+                        target_brand = official_name
+                        break
+
+        if target_brand:
+            r_copy = dict(r)
+            r_copy["แบรนด์ของสินค้า"] = target_brand
+            key = (target_brand.upper(), str(r_copy.get("รหัสสินค้า", "")).upper(), str(r_copy.get("เบอร์ OEM", "")).upper())
+            if key not in seen:
+                seen.add(key)
+                filtered.append(r_copy)
+
+    return filtered
+
+
+def make_verify_all_fields_prompt(oem_code: str, vin: str, brand: str, model: str, year: str, product_name: str) -> str:
+    return f"""
+You are an automotive parts catalog auditor.
+The user provided ALL search parameters:
+- OEM Part Number: "{oem_code}"
+- VIN Code: "{vin}"
+- Car Brand: "{brand}"
+- Car Model: "{model}"
+- Car Year: "{year}"
+- Product Name: "{product_name}"
+
+Your task is to audit and cross-verify these inputs for consistency:
+1. Decode the VIN code ("{vin}") and verify if it matches Car Brand "{brand}", Model "{model}", and Year "{year}".
+2. Check if the OEM Part Number "{oem_code}" is valid and actually matches this vehicle ({brand} {model} {year}) for "{product_name}".
+3. Flag any conflict, mismatch, or wrong OEM number.
+   If the OEM part number belongs to a different vehicle, different engine, wrong car brand, or different part type, set is_conflict = true and oem_warning = "ตรวจสอบเลขโอเอ็มใหม่".
+
+Return a JSON object in this exact format:
+{{
+  "is_conflict": true or false,
+  "conflict_reason": "Explanation of conflict if is_conflict is true (e.g. OEM code 45022-S04-150 belongs to Honda Civic, not Toyota Revo), otherwise empty string",
+  "oem_warning": "ตรวจสอบเลขโอเอ็มใหม่" if is_conflict is true else "",
+  "vin_corrected": true or false,
+  "corrected_vin": "{vin}",
+  "vin_explanation": "Explanation of VIN decoding and consistency"
+}}
+All text fields should be in Thai where applicable.
+"""
+
+
 def make_search_ai_prompt(vin: str, brand: str, model: str, year: str, product_name: str, available_brands: list[str] = None) -> str:
     brand_context = ""
     if available_brands:
@@ -3024,17 +3208,17 @@ async def verify_and_process_autoparts(
     product_name: str = ""
 ) -> dict:
     """
-    Main orchestrator for Full-Data AI Processing:
-    1. Reads from Google Sheets (or local mockup)
-    2. Uses Gemini AI to search/validate/correct details
-    3. Writes correct rows to sheet tab 'temp' if needed
-    4. Returns a uniform result structure.
+    Main orchestrator for Full-Data AI Processing enforcing 4 strict business conditions:
+    1. OEM code provided -> Search Google Sheets first & Global Web. Save new web rows to sheet tab 'temp'.
+    2. VIN code provided without OEM -> MANDATE Car Brand. Decode VIN & find authentic OEM code.
+    3. Neither VIN nor OEM provided -> MANDATE Car Brand AND Car Model.
+    4. All fields provided -> Perform cross-verification across all fields. Alert 'ตรวจสอบเลขโอเอ็มใหม่' if conflict found.
+    Global: product_name is ALWAYS mandatory. Return rows restricted to 'GENUINE' + tab 'brands'.
     """
     rate_limit_var.set(False)
     sheets = SheetsHelper()
     dynamic_brands = sheets.get_brands_from_sheet()
     
-    # Initialize response structure
     res = {
         "success": True,
         "vin_corrected": False,
@@ -3042,7 +3226,8 @@ async def verify_and_process_autoparts(
         "vin_explanation": "",
         "data_source": "Google Sheets",
         "oem_code": oem_code or "NOT_FOUND",
-        "rows": []
+        "rows": [],
+        "oem_warning": ""
     }
     
     # Pre-clean inputs
@@ -3053,12 +3238,59 @@ async def verify_and_process_autoparts(
     year_clean = year.strip() if year else ""
     product_clean = product_name.strip() if product_name else ""
     
-    # Path A: OEM Code is provided (or BOTH VIN and OEM are provided -> Prioritize OEM directly)
+    # ------------------------------------------------------------------
+    # GLOBAL RULE: Part Name (product_name) is ALWAYS Mandatory
+    # ------------------------------------------------------------------
+    if not product_clean:
+        res["success"] = False
+        res["error"] = "กรุณาระบุชื่อสินค้า / อะไหล่ที่ต้องการเสมอ"
+        return res
+
+    # ------------------------------------------------------------------
+    # CONDITION 2 RULE: If VIN is provided, Car Brand MUST also be provided
+    # ------------------------------------------------------------------
+    if vin_clean and not brand_clean:
+        res["success"] = False
+        res["error"] = "เมื่อระบุเลขตัวถัง (VIN) บังคับให้ระบุยี่ห้อรถยนต์ (Brand) ร่วมด้วยเสมอ"
+        return res
+
+    # ------------------------------------------------------------------
+    # CONDITION 3 RULE: If No OEM & No VIN, MUST provide Brand AND Model
+    # ------------------------------------------------------------------
+    if not oem_clean and not vin_clean:
+        if not brand_clean or not model_clean:
+            res["success"] = False
+            res["error"] = "กรณีไม่ระบุเลข OEM และ VIN บังคับให้ระบุทั้งยี่ห้อรถยนต์ (Brand) และรุ่นรถยนต์ (Model) เพื่อแคบวงการค้นหา"
+            return res
+
+    # ------------------------------------------------------------------
+    # CONDITION 4 RULE: All fields provided -> Perform cross-verification
+    # ------------------------------------------------------------------
+    if oem_clean and vin_clean and brand_clean and model_clean and year_clean:
+        print(f"[AI-Processing] Condition 4: All fields provided. Cross-verifying OEM '{oem_clean}' against VIN '{vin_clean}' and vehicle specs...")
+        verify_prompt = make_verify_all_fields_prompt(
+            oem_code=oem_clean,
+            vin=vin_clean,
+            brand=brand_clean,
+            model=model_clean,
+            year=year_clean,
+            product_name=product_clean
+        )
+        ver_res = await call_gemini_json(verify_prompt)
+        if ver_res:
+            res["vin_corrected"] = ver_res.get("vin_corrected", False)
+            res["corrected_vin"] = ver_res.get("corrected_vin", vin_clean)
+            if ver_res.get("is_conflict"):
+                res["oem_warning"] = "ตรวจสอบเลขโอเอ็มใหม่"
+                res["vin_explanation"] = f"⚠️ ตรวจสอบเลขโอเอ็มใหม่ ({ver_res.get('conflict_reason', 'เลข OEM ไม่ตรงกับข้อมูลยี่ห้อ/รุ่น/ปี/VIN')})"
+            else:
+                res["vin_explanation"] = ver_res.get("vin_explanation", f"ตรวจสอบข้อมูลเรียบร้อย ตรงกับ VIN {vin_clean}")
+
+    # Path A: OEM Code is provided
     if oem_clean:
-        print(f"[AI-Processing] Path A: Prioritizing search directly by OEM Code '{oem_clean}'...")
+        print(f"[AI-Processing] Path A: Searching directly by OEM Code '{oem_clean}'...")
         
-        # If VIN is also provided, decode and explain VIN validation while searching by OEM
-        if vin_clean:
+        if vin_clean and not res.get("vin_explanation"):
             vin_prompt = make_search_ai_prompt(vin_clean, brand_clean, model_clean, year_clean, product_clean, available_brands=dynamic_brands)
             vin_res = await call_gemini_json(vin_prompt)
             if vin_res:
@@ -3066,7 +3298,6 @@ async def verify_and_process_autoparts(
                 res["corrected_vin"] = vin_res.get("corrected_vin", vin_clean)
                 res["vin_explanation"] = vin_res.get("vin_explanation", "")
 
-        # 1. Decode specs first to run highly targeted search
         decode_prompt = f"""
 You are an automotive parts expert. Decode the following OEM Part Number to find the vehicle specifications:
 - OEM Part Number: "{oem_clean}"
@@ -3084,9 +3315,8 @@ Return a JSON object in this format:
         decoded_specs = await call_gemini_json(decode_prompt)
         dec_brand = decoded_specs.get("brand") or brand_clean
         dec_model = decoded_specs.get("model") or model_clean
-        dec_prod = decoded_specs.get("product_name_en") or product_clean
 
-        # 1. Search Google Sheets first across all tabs using OEM Code
+        # Search Google Sheets first
         sheet_rows = sheets.search_by_vehicle_and_product(
             brand=brand_clean,
             model=model_clean,
@@ -3095,15 +3325,7 @@ Return a JSON object in this format:
             oem_code=oem_clean
         )
 
-        if sheet_rows:
-            print(f"[AI-Processing] OEM '{oem_clean}' found in Google Sheets ({len(sheet_rows)} rows). Verifying with global web data...")
-        else:
-            print(f"[AI-Processing] OEM '{oem_clean}' NOT found in Google Sheets. Executing global web search across international catalogs...")
-
-        # 2. Execute global web search for OEM Code, Car Brand and Product Name across global catalogs & databases
         clean_brand_term = brand_clean.split('(')[0].strip() if brand_clean else dec_brand or ""
-        oem_nohyphen = oem_clean.replace("-", "")
-
         target_brands = get_category_target_brands(product_clean)
         top_aftermarket_brands = " ".join([b.split(' ')[0] for b in target_brands[:4]])
 
@@ -3142,9 +3364,7 @@ Return a JSON object in this format:
         web_res = await call_gemini_json(search_prompt)
         web_rows = web_res.get("rows", [])
 
-        # Direct AI Synthesis Fallback if web snippets yield no rows
         if not web_rows:
-            print(f"[AI-Processing] Web snippets yielded 0 rows. Running Direct AI Synthesis for OEM '{oem_clean}' ({clean_brand_term} {product_clean})...")
             fallback_prompt = make_search_by_oem_prompt(
                 oem_code=oem_clean,
                 product_name=product_clean,
@@ -3157,7 +3377,7 @@ Return a JSON object in this format:
             web_res = await call_gemini_json(fallback_prompt)
             web_rows = web_res.get("rows", [])
 
-        # 3. Identify external web search rows that are NOT in Google Sheets
+        # Write new external web rows to sheet tab 'temp'
         sheet_keys = {
             (str(r.get("แบรนด์ของสินค้า", "")).upper(), str(r.get("รหัสสินค้า", "")).upper())
             for r in sheet_rows
@@ -3167,12 +3387,10 @@ Return a JSON object in this format:
             if (str(wr.get("แบรนด์ของสินค้า", "")).upper(), str(wr.get("รหัสสินค้า", "")).upper()) not in sheet_keys
         ]
         
-        # 4. Save newly discovered global web search rows directly to 'temp' sheet tab in Google Sheets
         if new_web_rows:
             print(f"[AI-Processing] Found {len(new_web_rows)} new external web rows. Writing to tab 'temp' in Google Sheets...")
             asyncio.create_task(asyncio.to_thread(sheets.write_temp_sheet, new_web_rows))
             
-        # 5. Merge sheet rows and new external web rows
         all_rows = list(sheet_rows)
         seen_keys = set(sheet_keys)
         for wr in web_rows:
@@ -3182,24 +3400,17 @@ Return a JSON object in this format:
                 all_rows.append(wr)
                 
         all_rows = filter_rows_by_subcategory(all_rows, product_clean)
-
-        # Fallback safety: If filter_rows_by_subcategory filtered out all rows, retain unfiltered web_rows
         if not all_rows and web_rows:
             all_rows = list(web_rows)
         
-        # Normalize brand names and enforce OEM code consistency for Path A
         for r in all_rows:
             r["แบรนด์ของสินค้า"] = normalize_brand_name(r.get("แบรนด์ของสินค้า", ""))
             if not r.get("เบอร์ OEM") or r.get("เบอร์ OEM") == "NOT_FOUND":
                 r["เบอร์ OEM"] = oem_clean
 
-        # Filter strictly for rows matching specified OEM Part Number
         all_rows = [r for r in all_rows if str(r.get("เบอร์ OEM", "")).strip().upper().replace("-", "") in [oem_clean.replace("-", ""), oem_clean]]
-
-        # Enforce brand's own internal SKU in 'รหัสสินค้า' column for aftermarket brands
         all_rows = ensure_brand_internal_skus(all_rows)
 
-        # Ensure maximum brand coverage: Complement with target brands catalog if rows count < 10
         if len(all_rows) < 10:
             target_catalog = generate_fallback_oem_catalog(oem_clean, brand_clean, model_clean, product_clean)
             seen_brands = {str(r.get("แบรนด์ของสินค้า", "")).upper() for r in all_rows}
@@ -3214,30 +3425,19 @@ Return a JSON object in this format:
                 asyncio.create_task(asyncio.to_thread(sheets.write_temp_sheet, added_fallback))
             all_rows = ensure_brand_internal_skus(all_rows)
 
-        if all_rows:
-            res["rows"] = all_rows
-            res["data_source"] = "Google Sheets & Web Search AI Global (ค้นหาจากเว็บทั่วโลก & บันทึกใน temp เรียบร้อย)"
-            res["oem_code"] = oem_clean
-            return res
-        else:
-            print("[AI-Processing] AI global web search for OEM yielded no rows. Generating fallback catalog...")
-            fallback_rows = generate_fallback_oem_catalog(oem_clean, brand_clean, model_clean, product_clean)
-            fallback_rows = ensure_brand_internal_skus(fallback_rows)
-            asyncio.create_task(asyncio.to_thread(sheets.write_temp_sheet, fallback_rows))
-            res["rows"] = fallback_rows
-            res["data_source"] = "AI Synthesis Global Catalog (บันทึกใน temp เรียบร้อย)"
-            res["oem_code"] = oem_clean
-            return res
+        # STRICT BRAND FILTER: Only GENUINE + brands from tab 'brands'
+        all_rows = filter_by_allowed_sheet_brands(all_rows, dynamic_brands)
+
+        res["rows"] = all_rows
+        res["data_source"] = "Google Sheets & Web Search AI Global (ค้นหาจากเว็บทั่วโลก & บันทึกใน temp เรียบร้อย)"
+        res["oem_code"] = oem_clean
+        return res
                 
-    # Path B: OEM Code is NOT provided (VIN and vehicle specs must be processed)
+    # Path B: OEM Code is NOT provided (VIN or vehicle specs provided)
     else:
         print(f"[AI-Processing] Path B: Processing VIN/Vehicle for Part '{product_clean}'")
-        
         found_oem = ""
-        web_rows = []
-        sheet_rows = []
         
-        # Step 1: Decode VIN WMI and Vehicle Specs using ISO 3779 standard
         vin_info = decode_full_vin(vin_clean) if vin_clean else {}
         wmi_make = vin_info.get("brand", "") or get_make_from_wmi(vin_clean)
         wmi_model = vin_info.get("model", "")
@@ -3250,7 +3450,6 @@ Return a JSON object in this format:
         dec_m = (ai_res.get("decoded_model") if ai_res else "") or wmi_model or model_clean
         dec_y = (ai_res.get("decoded_year") if ai_res else "") or wmi_year or year_clean
 
-        # Step 2: Identify Genuine OEM Part Number using authoritative lookup & AI
         oem_lookup = get_oem_by_vehicle_and_product(dec_b, dec_m, product_clean)
         
         if ai_res and ai_res.get("oem_code") and ai_res.get("oem_code") != "NOT_FOUND":
@@ -3270,7 +3469,6 @@ Return a JSON object in this format:
         effective_brand = dec_b or brand_clean
         effective_model = dec_m or model_clean
 
-        # Step 3: Search Google Sheets and Web using Decoded Vehicle Specs & Identified OEM
         if found_oem:
             sheet_rows = sheets.search_by_vehicle_and_product(
                 brand=effective_brand,
@@ -3279,7 +3477,7 @@ Return a JSON object in this format:
                 year=dec_y or year_clean,
                 oem_code=found_oem
             )
-        elif effective_brand:
+        else:
             sheet_rows = sheets.search_by_vehicle_and_product(
                 brand=effective_brand,
                 model=effective_model,
@@ -3288,7 +3486,6 @@ Return a JSON object in this format:
                 oem_code=""
             )
 
-        # Perform targeted web searches for identified OEM or vehicle specs
         clean_brand_term = effective_brand.split('(')[0].strip() if effective_brand else ""
         queries = []
         if found_oem:
@@ -3323,7 +3520,6 @@ Return a JSON object in this format:
             found_oem = web_res.get("oem_code").strip().upper()
             res["oem_code"] = found_oem
 
-        # Save newly discovered global web rows directly to 'temp' sheet tab in Google Sheets
         sheet_keys = {
             (str(r.get("แบรนด์ของสินค้า", "")).upper(), str(r.get("รหัสสินค้า", "")).upper())
             for r in sheet_rows
@@ -3337,7 +3533,6 @@ Return a JSON object in this format:
             print(f"[AI-Processing] Found {len(new_web_rows)} new external web rows. Writing to tab 'temp' in Google Sheets...")
             asyncio.create_task(asyncio.to_thread(sheets.write_temp_sheet, new_web_rows))
             
-        # Merge sheet rows and new web rows
         all_rows = list(sheet_rows)
         seen_keys = set(sheet_keys)
         for wr in web_rows:
@@ -3348,7 +3543,6 @@ Return a JSON object in this format:
                 
         all_rows = filter_rows_by_subcategory(all_rows, product_clean)
 
-        # STRICT FILTERING: Keep ONLY rows that match identified OEM
         if found_oem:
             clean_found_oem = found_oem.replace("-", "").strip().upper()
             filtered_rows = []
@@ -3357,7 +3551,6 @@ Return a JSON object in this format:
                 r_sku = str(r.get("รหัสสินค้า", "")).strip().upper().replace("-", "")
                 r_desc = str(r.get("รายละเอียดสินค้า", "")).strip().upper()
                 
-                # Match rows that strictly reference this target OEM code or SKU
                 if r_oem == clean_found_oem or clean_found_oem in r_oem or clean_found_oem in r_sku or clean_found_oem in r_desc:
                     r["เบอร์ OEM"] = found_oem
                     filtered_rows.append(r)
@@ -3369,7 +3562,6 @@ Return a JSON object in this format:
             brand_token = effective_brand.split()[0].upper()
             all_rows = [r for r in all_rows if brand_token in str(r.get("ยี่ห้อรถ", "")).upper() or str(r.get("แบรนด์ของสินค้า", "")).upper() != "GENUINE"]
 
-        # Also filter by car model if effective_model is specified (e.g. Vios / Yaris)
         if effective_model:
             model_tokens = [m.strip().upper() for m in re.split(r'[/,\- ]+', effective_model) if len(m.strip()) >= 3]
             if model_tokens:
@@ -3379,10 +3571,8 @@ Return a JSON object in this format:
                     or str(r.get("รุ่นรถ", "")).strip() in ["", "-", "–", "Standard Model"]
                 ]
 
-        # Normalize brand names & enforce commercial box SKUs
         all_rows = ensure_brand_internal_skus(all_rows)
 
-        # Ensure maximum brand coverage: Complement with target brands catalog if rows count < 10
         effective_oem = found_oem or res.get("oem_code", "NOT_FOUND")
         if len(all_rows) < 10:
             target_catalog = generate_fallback_oem_catalog(effective_oem, effective_brand, effective_model, product_clean)
@@ -3398,18 +3588,10 @@ Return a JSON object in this format:
                 asyncio.create_task(asyncio.to_thread(sheets.write_temp_sheet, added_fallback))
             all_rows = ensure_brand_internal_skus(all_rows)
 
-        if all_rows:
-            res["rows"] = all_rows
-            res["oem_code"] = effective_oem
-            res["data_source"] = "Google Sheets & Web Search AI Global (ค้นหาจากเว็บทั่วโลก & บันทึกใน temp เรียบร้อย)"
-            return res
-        else:
-            print("[AI-Processing] Path B yielded no matching rows. Generating fallback catalog...")
-            effective_oem = found_oem or "OEM-GENUINE-PART"
-            fallback_rows = generate_fallback_oem_catalog(effective_oem, effective_brand, effective_model, product_clean)
-            fallback_rows = ensure_brand_internal_skus(fallback_rows)
-            asyncio.create_task(asyncio.to_thread(sheets.write_temp_sheet, fallback_rows))
-            res["rows"] = fallback_rows
-            res["oem_code"] = effective_oem
-            res["data_source"] = "AI Synthesis Global Catalog (บันทึกใน temp เรียบร้อย)"
-            return res
+        # STRICT BRAND FILTER: Only GENUINE + brands from tab 'brands'
+        all_rows = filter_by_allowed_sheet_brands(all_rows, dynamic_brands)
+
+        res["rows"] = all_rows
+        res["oem_code"] = effective_oem
+        res["data_source"] = "Google Sheets & Web Search AI Global (ค้นหาจากเว็บทั่วโลก & บันทึกใน temp เรียบร้อย)"
+        return res

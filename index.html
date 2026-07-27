@@ -519,15 +519,29 @@
             
             const oemCode = oemInput.value.trim();
             const vin = vinInput.value.trim().toUpperCase();
-            const brand = brandInput.value;
-            const model = modelInput.value;
-            const year = yearInput.value;
+            const brand = brandInput.value.trim();
+            const model = modelInput.value.trim();
+            const year = yearInput.value.trim();
             const productName = document.getElementById('product-input').value.trim();
 
-            // Check: Must specify either OEM Code, VIN, or vehicle description
-            if (!oemCode && !vin && !brand) {
-                showError("กรุณากรอกรหัส OEM, เลขตัวถังรถ (VIN) หรืออย่างน้อยเลือกยี่ห้อรถยนต์ เพื่อเป็นเบาะแสสำหรับดึงข้อมูล");
+            // Global Rule: Part Name is mandatory
+            if (!productName) {
+                showError("กรุณาระบุชื่อสินค้า / อะไหล่ที่ต้องการเสมอ");
                 return;
+            }
+
+            // Rule 2: If VIN is provided, Car Brand MUST be provided
+            if (vin && !brand) {
+                showError("เมื่อระบุเลขตัวถัง (VIN) บังคับให้ระบุยี่ห้อรถยนต์ (Brand) ร่วมด้วยเสมอ");
+                return;
+            }
+
+            // Rule 3: If No OEM and No VIN, MUST provide Brand AND Model
+            if (!oemCode && !vin) {
+                if (!brand || !model) {
+                    showError("กรณีไม่ระบุเลข OEM และ VIN บังคับให้ระบุทั้งยี่ห้อรถยนต์ (Brand) และรุ่นรถยนต์ (Model) เพื่อแคบวงการค้นหา");
+                    return;
+                }
             }
 
             // UI Loading state
@@ -565,7 +579,9 @@
                 if (resData.success && resData.data && resData.data.success) {
                     renderResults(resData.data, vin);
                 } else {
-                    throw new Error(resData.data?.vin_explanation || 'ไม่พบข้อมูลอะไหล่จากระบบป้อนค่า กรุณาปรับเปลี่ยนข้อมูลค้นหา');
+                    const errText = resData.error || resData.data?.error || 'เกิดข้อผิดพลาดในการตรวจสอบข้อมูล';
+                    showError(errText);
+                    resultsContainer.classList.add('hidden');
                 }
             } catch (err) {
                 clearTimeout(timeoutId);
@@ -610,9 +626,14 @@
                 sourceBadge.className = 'px-3 py-1 text-xs font-semibold rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20';
             }
 
-            // Handle VIN correction notifications (only when user actually provided a VIN)
-            if (data.vin_corrected && originalVin && originalVin.trim() !== '') {
+            // Handle Conflict (Rule 4: OEM warning) or VIN correction notifications
+            if (data.oem_warning || (data.vin_explanation && data.vin_explanation.includes("ตรวจสอบเลขโอเอ็มใหม่"))) {
+                vinCorrectionDetail.innerHTML = `<strong class="text-red-400">⚠️ แจ้งเตือน: ตรวจสอบเลขโอเอ็มใหม่</strong> - ${data.vin_explanation || 'เลข OEM ที่กรอกอาจมีความขัดแย้งกับข้อมูลยี่ห้อ/รุ่น/ปี/เลขตัวถัง'}`;
+                vinCorrectionAlert.className = "bg-amber-500/10 border border-amber-500/30 text-amber-300 p-4 rounded-xl flex items-start space-x-3";
+                vinCorrectionAlert.classList.remove('hidden');
+            } else if (data.vin_corrected && originalVin && originalVin.trim() !== '') {
                 vinCorrectionDetail.innerHTML = `ตรวจพบความผิดปกติในรหัสที่กรอก <strong>"${originalVin}"</strong> ได้รับการแก้ไขเป็นรหัสที่ถูกต้อง <strong>"${data.corrected_vin}"</strong> (${data.vin_explanation})`;
+                vinCorrectionAlert.className = "bg-amber-500/10 border border-amber-500/20 text-amber-400 p-4 rounded-xl flex items-start space-x-3";
                 vinCorrectionAlert.classList.remove('hidden');
             } else {
                 vinCorrectionAlert.classList.add('hidden');
