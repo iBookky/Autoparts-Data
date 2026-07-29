@@ -1,5 +1,6 @@
 import os
 import json
+import re
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from dotenv import load_dotenv
@@ -106,6 +107,45 @@ def save_local_mock(data: dict):
             json.dump(data, f, ensure_ascii=False, indent=4)
     except Exception as e:
         print(f"Error saving local mock: {e}")
+
+def parse_single_year(val) -> int:
+    if not val:
+        return 0
+    val_str = str(val).strip()
+    nums = re.findall(r'\b\d{4}\b', val_str)
+    if nums:
+        y = int(nums[0])
+        if y > 2400:
+            y -= 543
+        return y
+    nums2 = re.findall(r'\b\d{2}\b', val_str)
+    if nums2:
+        y2 = int(nums2[0])
+        return (2000 + y2) if y2 < 50 else (1900 + y2)
+    return 0
+
+def parse_year_range(start_val: str, end_val: str) -> tuple[int, int]:
+    s_str = str(start_val or "").strip()
+    e_str = str(end_val or "").strip()
+
+    s_nums = [int(n) - 543 if int(n) > 2400 else int(n) for n in re.findall(r'\b\d{4}\b', s_str)]
+    e_nums = [int(n) - 543 if int(n) > 2400 else int(n) for n in re.findall(r'\b\d{4}\b', e_str)]
+
+    y_start = 1900
+    y_end = 2099
+
+    if s_nums:
+        y_start = s_nums[0]
+        if len(s_nums) > 1:
+            y_end = s_nums[1]
+
+    if e_nums:
+        y_end = e_nums[0]
+
+    if any(k in e_str.upper() or k in s_str.upper() for k in ["ปัจจุบัน", "PRESENT", "ON", "ONWARD", "+", "NOW"]):
+        y_end = 2099
+
+    return y_start, y_end
 
 class SheetsHelper:
     def __init__(self):
@@ -243,20 +283,38 @@ class SheetsHelper:
         year_clean = year.strip()
         oem_clean = oem_code.strip().upper()
 
+        # Build type-specific product keywords for precise matching
         prod_keywords = []
-        if product_clean:
-            if any(w in product_clean for w in ["โช้ค", "โช๊ค", "shock"]):
-                prod_keywords.extend(["โช้ค", "โช๊ค", "shock"])
-            if any(w in product_clean for w in ["เบรก", "เบรค", "brake"]):
-                prod_keywords.extend(["เบรก", "เบรค", "brake"])
-            if any(w in product_clean for w in ["กรอง", "filter"]):
-                prod_keywords.extend(["กรอง", "filter"])
-            if any(w in product_clean for w in ["ลูกปืน", "bearing"]):
-                prod_keywords.extend(["ลูกปืน", "bearing"])
-            if any(w in product_clean for w in ["คลัตช์", "คลัทช์", "clutch"]):
-                prod_keywords.extend(["คลัตช์", "คลัทช์", "clutch"])
-            if not prod_keywords:
-                prod_keywords = [product_clean]
+        # ประเภทสินค้า -> คำที่ต้องมีในชื่อสินค้าใน Google Sheet
+        PRODUCT_TYPE_MAP = [
+            (["ผ้าดิส", "ผ้าเบรกหน้า", "ผ้าเบรคหน้า"],      ["ผ้าดิส", "ผ้าเบรกหน้า", "ผ้าเบรคหน้า", "brake pad"]),
+            (["ผ้าเบรกหลัง", "ผ้าเบรคหลัง"],                 ["ผ้าเบรกหลัง", "ผ้าเบรคหลัง", "brake pad rear"]),
+            (["ผ้าเบรก", "ผ้าเบรค", "brake pad"],            ["ผ้าเบรก", "ผ้าเบรค", "ผ้าดิส", "brake pad"]),
+            (["ก้ามเบรก", "ก้ามเบรค", "brake shoe"],         ["ก้ามเบรก", "ก้ามเบรค", "brake shoe"]),
+            (["จานเบรก", "จานดิส", "disc", "rotor"],         ["จานเบรก", "จานดิส", "brake disc", "rotor"]),
+            (["โช้คอัพ", "โช้ค", "โช๊ค", "shock"],           ["โช้คอัพ", "โช้ค", "โช๊ค", "shock absorber"]),
+            (["กรองอากาศ", "air filter"],                    ["กรองอากาศ", "air filter"]),
+            (["กรองแอร์", "cabin filter"],                   ["กรองแอร์", "cabin filter"]),
+            (["กรองเครื่อง", "กรองน้ำมัน", "oil filter"],    ["กรองเครื่อง", "กรองน้ำมัน", "oil filter"]),
+            (["กรองโซล่า", "กรองดีเซล", "fuel filter"],      ["กรองโซล่า", "กรองดีเซล", "fuel filter"]),
+            (["ลูกปืนล้อ", "ลูกปืนดุม", "wheel bearing", "hub bearing"], ["ลูกปืนล้อ", "ลูกปืนดุม", "wheel bearing", "hub bearing"]),
+            (["ลูกปืน", "bearing"],                         ["ลูกปืน", "bearing"]),
+            (["คลัตช์", "คลัทช์", "clutch"],                ["คลัตช์", "คลัทช์", "clutch"]),
+            (["สายพาน", "belt"],                            ["สายพาน", "belt"]),
+            (["ยางแท่นเครื่อง", "engine mount"],            ["ยางแท่นเครื่อง", "engine mount"]),
+            (["ยาง", "rubber"],                             ["ยาง", "rubber"]),
+        ]
+
+        matched_type_keywords = None
+        for triggers, row_keywords in PRODUCT_TYPE_MAP:
+            if any(t in product_clean for t in triggers):
+                matched_type_keywords = row_keywords
+                break
+
+        if matched_type_keywords:
+            prod_keywords = matched_type_keywords
+        elif product_clean:
+            prod_keywords = [product_clean]
 
         want_rear = any(w in product_clean for w in ["หลัง", "rear"])
         want_front = any(w in product_clean for w in ["หน้า", "front"])
@@ -269,9 +327,14 @@ class SheetsHelper:
         def add_record_if_new(r):
             row_dict = {k: str(r.get(k, "")) for k in HEADERS}
             key = (
-                row_dict.get("แบรนด์ของสินค้า", "").upper(),
-                row_dict.get("รหัสสินค้า", "").upper(),
-                row_dict.get("เบอร์ OEM", "").upper()
+                row_dict.get("แบรนด์ของสินค้า", "").strip().upper(),
+                row_dict.get("รหัสสินค้า", "").strip().upper(),
+                row_dict.get("เบอร์ OEM", "").strip().upper(),
+                row_dict.get("ยี่ห้อรถ", "").strip().upper(),
+                row_dict.get("รุ่นรถ", "").strip().upper(),
+                row_dict.get("ปีเริ่มต้น", "").strip(),
+                row_dict.get("ปีสิ้นสุด", "").strip(),
+                row_dict.get("เครื่องยนต์", "").strip().upper()
             )
             if key not in seen_keys:
                 seen_keys.add(key)
@@ -292,6 +355,8 @@ class SheetsHelper:
 
         for records in records_by_tab:
             for r in records:
+                if not isinstance(r, dict):
+                    continue
                 row_oem = str(r.get("เบอร์ OEM", "")).strip().upper()
                 row_sku = str(r.get("รหัสสินค้า", "")).strip().upper()
                 row_brand_car = str(r.get("ยี่ห้อรถ", "")).strip().lower()
@@ -313,23 +378,21 @@ class SheetsHelper:
 
                 if want_disc:
                     has_disc_title = any(w in prod_title_only for w in ["จาน", "disc", "rotor"])
-                    has_pad_title = any(w in prod_title_only for w in ["ผ้า", "pad"])
+                    has_pad_title = any(w in prod_title_only for w in ["ผ้า", "ก้าม", "pad", "shoe"])
                     if has_pad_title and not has_disc_title:
                         continue
                     if not has_disc_title and "จาน" in product_clean:
                         continue
 
-                if want_pad:
-                    has_pad_title = any(w in prod_title_only for w in ["ผ้า", "pad"])
-                    has_disc_title = any(w in prod_title_only for w in ["จาน", "disc", "rotor"])
-                    if has_disc_title and not has_pad_title:
+                if want_pad or want_shoe:
+                    has_pad_or_shoe = any(w in prod_combined for w in ["ผ้า", "ก้าม", "pad", "shoe", "lining", "เบรค", "เบรก"])
+                    has_disc_title = any(w in prod_title_only for w in ["จาน", "rotor"])
+                    if has_disc_title and not any(w in prod_title_only for w in ["ผ้า", "ก้าม", "pad", "shoe"]):
                         continue
-                    if not has_pad_title and "ผ้า" in product_clean:
+                    is_other_brake_part = any(w in prod_title_only for w in ["แม่ปั๊ม", "ปั๊ม", "ท่อยาง", "สายเบรค", "สายเบรก", "สวิตช์", "กระบอก", "น้ำมันเบรก", "น้ำมันเบรค"])
+                    if is_other_brake_part and not any(w in prod_title_only for w in ["ผ้า", "ก้าม", "pad", "shoe"]):
                         continue
-
-                if want_shoe:
-                    has_shoe_title = any(w in prod_title_only for w in ["ก้าม", "shoe"])
-                    if not has_shoe_title:
+                    if not has_pad_or_shoe:
                         continue
 
                 # Filters sub-category check
@@ -355,12 +418,8 @@ class SheetsHelper:
 
                 if want_rear and has_front and not has_rear:
                     continue
-                if want_rear and not has_rear:
-                    continue
 
                 if want_front and has_rear and not has_front:
-                    continue
-                if want_front and not has_front:
                     continue
 
                 # Side check (Left vs Right)
@@ -372,26 +431,31 @@ class SheetsHelper:
                 if want_right and has_left and not has_right:
                     continue
 
-                # OEM code match check after position/sub-category validation
-                if oem_clean and oem_clean in (row_oem, row_sku):
-                    add_record_if_new(r)
-                    continue
-
                 # Vehicle & Product match
                 brand_match = True
                 if brand_clean:
-                    brand_match = (
-                        brand_clean in row_brand_car or
-                        row_brand_car in brand_clean or
-                        ("โตโยต้า" in brand_clean and "toyota" in row_brand_car) or
-                        ("ฮอนด้า" in brand_clean and "honda" in row_brand_car)
-                    )
+                    b_tokens = [t.strip() for t in re.split(r'[\(\)\-/\s]+', brand_clean) if len(t.strip()) >= 2 and t.strip() not in ["รถบรรทุก", "บัส", "รถกระบะ", "รถยนต์"]]
+                    r_b_tokens = [t.strip() for t in re.split(r'[\(\)\-/\s]+', row_brand_car) if len(t.strip()) >= 2]
+                    brand_match = not b_tokens or any(t in row_brand_car or any(rt in t or t in rt for rt in r_b_tokens) for t in b_tokens)
+
+                # OEM code match check after position/sub-category & brand validation
+                clean_oem_req = re.sub(r'[^A-Z0-9]', '', oem_clean)
+                clean_r_oem = re.sub(r'[^A-Z0-9]', '', row_oem)
+                clean_r_sku = re.sub(r'[^A-Z0-9]', '', row_sku)
+
+                if clean_oem_req and (clean_oem_req in clean_r_oem or clean_oem_req in clean_r_sku or (clean_r_oem and clean_r_oem in clean_oem_req)):
+                    if brand_match:
+                        add_record_if_new(r)
+                        continue
 
                 model_match = True
                 if model_clean:
+                    m_tokens = [m.strip() for m in re.split(r'[\(\)\-/\s]+', model_clean) if len(m.strip()) >= 2]
                     model_match = (
                         model_clean in row_model_car or
-                        any(m in row_model_car for m in model_clean.split() if len(m) >= 2)
+                        row_model_car in model_clean or
+                        any(m in row_model_car for m in m_tokens) or
+                        row_model_car in ["", "-", "–", "ทุกรุ่น", "standard model", "all models"]
                     )
 
                 prod_match = True
@@ -399,15 +463,12 @@ class SheetsHelper:
                     prod_match = any(kw in prod_combined for kw in prod_keywords)
 
                 year_match = True
-                if year_clean and year_clean.isdigit():
-                    y = int(year_clean)
-                    try:
-                        y_start = int(row_year_start) if row_year_start.isdigit() else 1900
-                        y_end = int(row_year_end) if row_year_end.isdigit() else 2099
-                        if not (y_start <= y <= y_end):
+                if year_clean:
+                    target_y = parse_single_year(year_clean)
+                    if target_y:
+                        y_start, y_end = parse_year_range(row_year_start, row_year_end)
+                        if not (y_start <= target_y <= y_end):
                             year_match = False
-                    except ValueError:
-                        pass
 
                 if brand_match and model_match and prod_match and year_match:
                     add_record_if_new(r)

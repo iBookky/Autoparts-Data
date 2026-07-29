@@ -618,7 +618,13 @@
         function renderResults(data, originalVin) {
             // Update Banner
             const oemVal = data.oem_code;
-            oemDisplayBanner.innerHTML = `🎯 รหัส OEM แท้ศูนย์: ${oemVal === 'NOT_FOUND' ? '<span class="text-red-400 font-mono">NOT_FOUND</span>' : oemVal}`;
+            let oemHtml = oemVal;
+            if (!oemVal || oemVal === 'NOT_FOUND') {
+                oemHtml = '<span class="text-red-400 font-mono">NOT_FOUND</span>';
+            } else if (oemVal.includes('ไม่ระบุ')) {
+                oemHtml = `<span class="text-amber-400 font-medium">${oemVal}</span>`;
+            }
+            oemDisplayBanner.innerHTML = `🎯 รหัส OEM แท้ศูนย์หลัก: ${oemHtml}`;
             sourceBadge.textContent = data.data_source;
             if (data.data_source && data.data_source.includes('ข้อมูลภายในเท่านั้น')) {
                 sourceBadge.className = 'px-3 py-1 text-xs font-semibold rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20';
