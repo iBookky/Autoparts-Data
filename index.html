@@ -1,697 +1,1966 @@
 <!DOCTYPE html>
-<html lang="th" class="dark">
+<html lang="th">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VIN Part Finder - ค้นหาและถอดรหัสอะไหล่รถยนต์จากเลข VIN</title>
-    <!-- Google Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter', 'Sarabun', 'sans-serif'],
-                        display: ['Outfit', 'sans-serif'],
-                    },
-                    colors: {
-                        brand: {
-                            50: '#f5f3ff',
-                            100: '#ede9fe',
-                            200: '#ddd6fe',
-                            300: '#c4b5fd',
-                            400: '#a78bfa',
-                            500: '#8b5cf6',
-                            600: '#7c3aed',
-                            700: '#6d28d9',
-                            800: '#5b21b6',
-                            900: '#4c1d95',
-                        }
-                    }
-                }
-            }
-        }
-    </script>
-    <style>
-        body {
-            background-color: #0b0f19;
-            background-image: 
-                radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
-                radial-gradient(at 50% 0%, hsla(255,83%,53%,0.15) 0, transparent 50%),
-                radial-gradient(at 100% 0%, hsla(218,93%,60%,0.1) 0, transparent 50%);
-            background-attachment: fixed;
-        }
-        /* Custom scrollbar for table container */
-        .custom-scrollbar::-webkit-scrollbar {
-            height: 8px;
-            width: 8px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-track {
-            background: #111827;
-            border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb {
-            background: #374151;
-            border-radius: 4px;
-        }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-            background: #4B5563;
-        }
-    </style>
+    <title>OEM vs Aftermarket Parts Cross-Reference System</title>
+    <!-- Cache Busting: Updated version parameter to force browser style refresh -->
+    <link rel="stylesheet" href="/frontend/css/index.css?v=20260829_1338">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
-<body class="text-slate-200 min-h-screen flex flex-col font-sans antialiased">
+<body>
 
-    <!-- Header Section -->
-    <header class="border-b border-slate-800/80 bg-slate-950/40 backdrop-blur-md sticky top-0 z-50 transition-all duration-300">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center shadow-lg shadow-brand-500/20">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                    </svg>
-                </div>
-                <div>
-                    <h1 class="text-xl font-bold font-display tracking-tight bg-gradient-to-r from-white via-slate-100 to-slate-400 bg-clip-text text-transparent">
-                        Antigravity PartFinder
-                    </h1>
-                    <p class="text-xs text-brand-400 font-medium">External VIN Decoding & Part Lookup System</p>
-                </div>
+    <!-- ================= LOGIN SCREEN OVERLAY ================= -->
+    <div id="auth-screen" class="auth-overlay">
+        <div class="auth-card">
+            <div class="logo-section" style="justify-content: center; margin-bottom: 1.5rem;">
+                <span class="logo-icon"><i class="fa-solid fa-gears"></i></span>
+                <span class="logo-text" style="font-size: 1.8rem;">AutoParts System</span>
             </div>
-            <div class="flex items-center space-x-2">
-                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    <span class="w-1.5 h-1.5 mr-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    API Connected
-                </span>
+            <h2 class="auth-title">เข้าสู่ระบบเพื่อใช้งาน</h2>
+            <form onsubmit="handleLogin(event)">
+                <div class="input-group" style="text-align: left; margin-bottom: 1.25rem;">
+                    <label>ชื่อผู้ใช้งาน (Username)</label>
+                    <input type="text" id="login-username" class="form-control" placeholder="เช่น admin, staff" required>
+                </div>
+                <div class="input-group" style="text-align: left; margin-bottom: 2rem;">
+                    <label>รหัสผ่าน (Password)</label>
+                    <input type="password" id="login-password" class="form-control" placeholder="ระบุรหัสผ่านของคุณ" required>
+                </div>
+                <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.85rem;">
+                    <i class="fa-solid fa-right-to-bracket"></i> ลงชื่อเข้าใช้งาน
+                </button>
+            </form>
+            <p style="font-size: 0.8rem; color: var(--text-muted); margin-top: 1.5rem;">
+                บัญชีสาธิต: admin / admin123, staff / staff123 หรือ superadmin / superadmin123
+            </p>
+        </div>
+    </div>
+
+    <!-- Header Navigation -->
+    <header id="main-header" style="display: none;">
+        <div class="header-container">
+            <div class="logo-section">
+                <span class="logo-icon"><i class="fa-solid fa-gears"></i></span>
+                <span class="logo-text">AutoParts Cross-Ref</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 1.5rem;">
+                <nav class="nav-tabs">
+                    <button class="tab-btn active" onclick="switchView('sales-view', this)">
+                        <i class="fa-solid fa-cash-register"></i> ค้นหา & ขายหน้าร้าน
+                    </button>
+                    <button class="tab-btn" id="admin-nav-tab" style="display: none;" onclick="switchView('admin-view', this)">
+                        <i class="fa-solid fa-user-shield"></i> แผงควบคุมแอดมิน (Admin)
+                    </button>
+                    <button class="tab-btn" id="superadmin-nav-tab" style="display: none;" onclick="switchView('superadmin-view', this)">
+                        <i class="fa-solid fa-brain"></i> AI & สถิติ (Super Admin)
+                    </button>
+                </nav>
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <span id="user-display-badge" class="badge badge-info" style="font-weight: 600;">Role: STAFF</span>
+                    <button class="btn btn-danger" style="padding: 0.4rem 0.85rem; font-size: 0.8rem;" onclick="handleLogout()">
+                        <i class="fa-solid fa-right-from-bracket"></i> ออกระบบ
+                    </button>
+                </div>
             </div>
         </div>
     </header>
 
-    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        
-        <!-- Search Card -->
-        <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-6 sm:p-8 backdrop-blur-xl shadow-xl">
-            <div class="max-w-3xl mb-6">
-                <h2 class="text-2xl font-bold font-display text-white mb-2">ระบบค้นหาและประมวลผลข้อมูลอะไหล่รถยนต์ด่วน (AI + Sheets)</h2>
-                <p class="text-slate-400 text-sm">
-                    วิเคราะห์ข้อมูลอะไหล่แท้และอะไหล่ทดแทนด้วยลอจิก AI ตรวจสอบและแก้ไขเลขตัวถัง (VIN) อัตโนมัติ ดึงข้อมูลตรงจากทุกชีตและเว็บไซต์อัปเดตลงตารางชีตสำรอง
-                </p>
-            </div>
+    <!-- Main Container -->
+    <main class="container" id="main-app" style="display: none;">
 
-            <!-- Form -->
-            <form id="search-form" class="space-y-6">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <!-- OEM Code Field -->
-                    <div class="space-y-2">
-                        <label for="oem-input" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                            รหัส OEM (ถ้าทราบ) <span class="text-xs text-brand-400 font-normal">(ลัดคิว AI ดึงชีตทันที)</span>
-                        </label>
-                        <input 
-                            type="text" 
-                            id="oem-input" 
-                            name="oem_code" 
-                            placeholder="เช่น 52610-TR7-B03"
-                            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition duration-200"
-                        >
-                        <p id="oem-hint" class="text-[11px] text-slate-500 hidden">
-                            ⚡ ระบบจะค้นหาตรงเข้า Google Sheets และตรวจสอบสเปคออนไลน์เพื่อความเร็วสูงสุด
-                        </p>
-                    </div>
-
-                    <!-- VIN Field -->
-                    <div class="space-y-2">
-                        <label for="vin-input" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                            เลขตัวถังรถ (VIN) <span class="text-xs text-slate-500 font-normal">(ตรวจจับ/แก้ไขคำผิดด้วย AI)</span>
-                        </label>
-                        <div class="relative">
-                            <input 
-                                type="text" 
-                                id="vin-input" 
-                                name="vin" 
-                                maxlength="17" 
-                                placeholder="ระบุเลข VIN 17 หลัก (ข้ามได้)"
-                                class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white uppercase placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition duration-200"
-                            >
-                            <span id="vin-counter" class="absolute right-3 top-3.5 text-[10px] font-mono text-slate-500 bg-slate-900 px-1.5 py-0.5 rounded border border-slate-800">
-                                0 / 17
-                            </span>
+        <!-- ================= SALES VIEW ================= -->
+        <section id="sales-view" class="app-view active">
+            <!-- Search Control Panel (Collapsed steps layout, unified design with Dropdowns) -->
+            <div class="panel">
+                <h2 class="panel-title">
+                    <i class="fa-solid fa-magnifying-glass" style="color: var(--primary);"></i> ค้นหาและระบุตัวเลือกอะไหล่จับคู่
+                </h2>
+                
+                <div style="display: flex; flex-direction: column; gap: 1rem;" class="search-form-layout">
+                    <!-- Row 1: Vehicle Compatibility Group (Borderless search section box) -->
+                    <div class="search-section-box borderless">
+                        <div class="grid-2">
+                            <div class="input-group">
+                                <label><i class="fa-solid fa-fingerprint" style="color: #f43f5e;"></i> กรอกเลข VIN 17 หลัก</label>
+                                <input type="text" id="s-vin" class="form-control" placeholder="เช่น MR0KA3CD90..." maxlength="17">
+                            </div>
+                            <div class="input-group">
+                                <label><i class="fa-solid fa-car-side" style="color: #3b82f6;"></i> เลือกตามข้อมูลรถยนต์</label>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.5rem;">
+                                    <select id="s-car-brand" class="form-control" onchange="onSalesCarBrandChanged()">
+                                        <option value="">ยี่ห้อ: ทั้งหมด</option>
+                                    </select>
+                                    <select id="s-car-model" class="form-control">
+                                        <option value="">รุ่น: ทั้งหมด</option>
+                                    </select>
+                                    <select id="s-car-year" class="form-control">
+                                        <option value="">ปี: ทั้งหมด</option>
+                                    </select>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Brand Field -->
-                    <div class="space-y-2">
-                        <label for="brand-input" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                            ยี่ห้อรถ (Brand)
-                        </label>
-                        <select 
-                            id="brand-input" 
-                            name="brand" 
-                            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition duration-200"
-                        >
-                            <option value="">-- ไม่ระบุ / ข้าม --</option>
-                            <optgroup label="🇯🇵 รถญี่ปุ่น (Japanese Brands)">
-                                <option value="Toyota">TOYOTA (โตโยต้า)</option>
-                                <option value="Honda">HONDA (ฮอนด้า)</option>
-                                <option value="Isuzu">ISUZU (อีซูซุ)</option>
-                                <option value="Nissan">NISSAN (นิสสัน)</option>
-                                <option value="Mitsubishi">MITSUBISHI (มิตซูบิชิ)</option>
-                                <option value="Mazda">MAZDA (มาสด้า)</option>
-                                <option value="Suzuki">SUZUKI (ซูซูกิ)</option>
-                                <option value="Subaru">SUBARU (ซูบารุ)</option>
-                                <option value="Lexus">LEXUS (เลกซัส)</option>
-                                <option value="Daihatsu">DAIHATSU (ไดฮัทสุ)</option>
-                            </optgroup>
-                            <optgroup label="🇨🇳 รถจีน & รถไฟฟ้า EV (Chinese & EV Brands)">
-                                <option value="BYD">BYD (บีวายดี)</option>
-                                <option value="MG">MG (เอ็มจี)</option>
-                                <option value="GWM">GWM / HAVAL / ORA / TANK (เกรท วอลล์)</option>
-                                <option value="Changan">CHANGAN / DEEPAL / AVATR (ฉางอัน)</option>
-                                <option value="Neta">NETA (เน็ตต้า)</option>
-                                <option value="Aion">GAC AION (เอไอออน)</option>
-                                <option value="Chery">CHERY / OMODA / JAECOO (เชอรี)</option>
-                                <option value="Zeekr">ZEEKR (ซีเคอร์)</option>
-                                <option value="Xpeng">XPENG (เสี่ยวเผิง)</option>
-                                <option value="Wuling">WULING (วู่หลิง)</option>
-                                <option value="Maxus">MAXUS (แมกซัส)</option>
-                            </optgroup>
-                            <optgroup label="🇪🇺 รถยุโรป (European Brands)">
-                                <option value="Mercedes-Benz">MERCEDES-BENZ (เมอร์เซเดส-เบนซ์)</option>
-                                <option value="BMW">BMW (บีเอ็มดับเบิลยู)</option>
-                                <option value="Audi">AUDI (อาวดี้)</option>
-                                <option value="Volkswagen">VOLKSWAGEN (โฟล์คสวาเกน)</option>
-                                <option value="Volvo">VOLVO (วอลโว่)</option>
-                                <option value="Porsche">PORSCHE (ปอร์เช่)</option>
-                                <option value="Mini">MINI (มินิ)</option>
-                                <option value="Peugeot">PEUGEOT (เปอโยต์)</option>
-                                <option value="Land Rover">LAND ROVER (แลนด์โรเวอร์)</option>
-                                <option value="Jaguar">JAGUAR (จาการ์)</option>
-                            </optgroup>
-                            <optgroup label="🇺🇸 🇰🇷 รถอเมริกัน & เกาหลี (American & Korean Brands)">
-                                <option value="Ford">FORD (ฟอร์ด)</option>
-                                <option value="Chevrolet">CHEVROLET (เชฟโรเลต)</option>
-                                <option value="Tesla">TESLA (เทสลา)</option>
-                                <option value="Jeep">JEEP (จี๊ป)</option>
-                                <option value="Hyundai">HYUNDAI (ฮุนได)</option>
-                                <option value="Kia">KIA (เกีย)</option>
-                            </optgroup>
-                            <optgroup label="🚛 🚌 รถใหญ่ / รถบรรทุก / รถบัส / รถพาณิชย์ (Trucks, Buses & Heavy Commercial)">
-                                <option value="Hino">HINO (ฮีโน่ - รถบรรทุก/บัส)</option>
-                                <option value="Isuzu Trucks">ISUZU TRUCKS (อีซูซุ รถบรรทุกหนัก)</option>
-                                <option value="Fuso">FUSO (มิตซูบิชิ ฟูโซ่)</option>
-                                <option value="UD Trucks">UD TRUCKS (ยูดี ทรัคส์ / นิสสัน ดีเซล)</option>
-                                <option value="Scania">SCANIA (สแกนเนีย - รถบรรทุก/บัส)</option>
-                                <option value="Volvo Trucks">VOLVO TRUCKS (วอลโว่ ทรัคส์)</option>
-                                <option value="MAN">MAN (เอ็ม เอ เอ็น - รถบรรทุก/บัสเยอรมนี)</option>
-                                <option value="Mercedes-Benz Trucks">MERCEDES-BENZ TRUCKS (เบนซ์ รถบรรทุก/บัส)</option>
-                                <option value="Dongfeng">DONGFENG / DFSK (ตงฟง)</option>
-                                <option value="Foton">FOTON (โฟตอน)</option>
-                                <option value="Tata">TATA (ทาทา)</option>
-                                <option value="Sinotruk">SINOTRUK / HOWO (ซิโนทรัค / ฮาวโว่)</option>
-                                <option value="King Long">KING LONG (คิงลอง - รถบัส)</option>
-                            </optgroup>
-                        </select>
+                    <!-- Row 2: Category & Part Info Group -->
+                    <div class="search-section-box borderless">
+                        <div class="grid-2">
+                            <div class="input-group">
+                                <label><i class="fa-solid fa-layer-group" style="color: #8b5cf6;"></i> หมวดหมู่สินค้า</label>
+                                <select id="s-category" class="form-control">
+                                    <option value="">-- เลือกหมวดหมู่สินค้า --</option>
+                                    <option value="ระบบเบรก">ระบบเบรก (Brake)</option>
+                                    <option value="ระบบช่วงล่าง">ระบบช่วงล่าง (Suspension)</option>
+                                    <option value="กรองอากาศ / กรองน้ำมัน">กรองต่างๆ (Filters)</option>
+                                    <option value="โช๊คอัพ">โช๊คอัพ (Shock Absorber)</option>
+                                    <option value="สายพาน / ลูกรอก">ระบบสายพาน (Belts)</option>
+                                </select>
+                            </div>
+                            <div class="input-group">
+                                <label><i class="fa-solid fa-tag" style="color: #8b5cf6;"></i> ชื่ออะไหล่</label>
+                                <input type="text" id="s-oem-name" class="form-control" placeholder="เช่น ผ้าเบรคหน้า, โช๊คอัพ">
+                            </div>
+                        </div>
                     </div>
 
-                    <!-- Model Field -->
-                    <div class="space-y-2">
-                        <label for="model-input" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                            รุ่นรถ (Model)
-                        </label>
-                        <select 
-                            id="model-input" 
-                            name="model" 
-                            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition duration-200"
-                        >
-                            <option value="">-- ไม่ระบุ / ข้าม --</option>
-                        </select>
-                    </div>
-
-                    <!-- Year Field -->
-                    <div class="space-y-2">
-                        <label for="year-input" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                            ปีรถ (Year)
-                        </label>
-                        <select 
-                            id="year-input" 
-                            name="year" 
-                            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition duration-200"
-                        >
-                            <option value="">-- ไม่ระบุ / ข้าม --</option>
-                            <!-- Script will populate years -->
-                        </select>
-                    </div>
-
-                    <!-- Product Name Field -->
-                    <div class="space-y-2">
-                        <label for="product-input" class="block text-xs font-semibold text-slate-300 uppercase tracking-wider">
-                            ชื่อสินค้า / อะไหล่ที่ต้องการ <span class="text-red-400">*</span>
-                        </label>
-                        <input 
-                            type="text" 
-                            id="product-input" 
-                            name="product_name" 
-                            required
-                            placeholder="เช่น ผ้าเบรคหน้า, จานดิสเบรค, โช๊คอัพ"
-                            class="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition duration-200"
-                        >
+                    <!-- Row 3: Cross-Ref IDs Group -->
+                    <div class="search-section-box borderless">
+                        <div class="grid-2">
+                            <div class="input-group">
+                                <label><i class="fa-solid fa-puzzle-piece" style="color: #f59e0b;"></i> รหัสอะไหล่แท้ (OEM Code)</label>
+                                <input type="text" id="s-oem-code" class="form-control" placeholder="เช่น 04465-52260">
+                            </div>
+                            <div class="input-group">
+                                <label><i class="fa-solid fa-industry" style="color: #10b981;"></i> แบรนด์ทดแทน & รหัสสินค้า SKU</label>
+                                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 0.5rem;">
+                                    <select id="s-aftermarket-brand" class="form-control">
+                                        <option value="">แบรนด์สินค้า</option>
+                                    </select>
+                                    <input type="text" id="s-aftermarket-part" class="form-control" placeholder="รหัสสินค้า SKU">
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Submit Button -->
-                <div class="flex justify-end pt-2">
-                    <button 
-                        type="submit" 
-                        id="search-btn"
-                        class="w-full md:w-auto bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-500 hover:to-indigo-500 text-white font-semibold px-10 py-4 rounded-xl flex items-center justify-center space-x-2 shadow-lg shadow-brand-500/10 hover:shadow-brand-500/20 transform hover:-translate-y-0.5 transition duration-200 cursor-pointer"
-                    >
-                        <span>[ ค้นหารหัสอะไหล่ด่วน ]</span>
-                        <svg id="btn-spinner" class="animate-spin -mr-1 ml-3 h-5 w-5 text-white hidden" fill="none" viewBox="0 0 24 24">
-                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
+                <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1rem;">
+                    <button class="btn btn-secondary" onclick="clearSearchInputs()">
+                        <i class="fa-solid fa-trash"></i> ล้างข้อมูล
+                    </button>
+                    <button class="btn btn-primary" onclick="performAdvancedSearch()">
+                        <i class="fa-solid fa-magnifying-glass"></i> ค้นหาข้อมูลจับคู่
+                    </button>
+                    <button class="btn btn-warning" id="live-search-trigger-btn" onclick="triggerLiveSearchFallback()" style="display: none;">
+                        <i class="fa-solid fa-bolt"></i> AI Scraping / ค้นหาเพิ่มทั่วโลก
                     </button>
                 </div>
-            </form>
-        </div>
-
-        <!-- Alert Notification Message -->
-        <div id="error-alert" class="hidden bg-red-500/10 border border-red-500/20 text-red-400 p-4 rounded-xl flex items-start space-x-3">
-            <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-            </svg>
-            <div class="text-sm">
-                <span class="font-bold">เกิดข้อผิดพลาด:</span>
-                <span id="error-message">ไม่สามารถทำรายการได้ในขณะนี้</span>
-            </div>
-        </div>
-
-        <!-- Results Block (Hidden initially) -->
-        <div id="results-container" class="hidden space-y-6">
-            
-            <!-- VIN Correction alert (Hidden by default) -->
-            <div id="vin-correction-alert" class="hidden bg-amber-500/10 border border-amber-500/20 text-amber-400 p-4 rounded-xl flex items-start space-x-3">
-                <span class="text-xl">⚠️</span>
-                <div class="text-sm">
-                    <span class="font-bold">AI ปรับแก้เลขตัวถังรถ (VIN) ให้ถูกต้องตามรุ่นรถยนต์:</span>
-                    <span id="vin-correction-detail"></span>
-                </div>
             </div>
 
-            <!-- OEM Discovered Banner & Source -->
-            <div class="bg-gradient-to-r from-brand-950/80 to-indigo-950/80 border border-brand-800/50 rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 backdrop-blur-md">
-                <div class="flex items-center space-x-4">
-                    <div class="w-12 h-12 rounded-xl bg-brand-500/20 border border-brand-500/30 flex items-center justify-center">
-                        <span class="text-2xl">🎯</span>
-                    </div>
-                    <div>
-                        <div class="text-xs text-brand-400 font-semibold uppercase tracking-wider">รหัส OEM ศูนย์แท้หลักที่ค้นพบ</div>
-                        <h3 id="oem-display-banner" class="text-xl md:text-2xl font-bold font-display text-white mt-0.5">
-                            NOT_FOUND
-                        </h3>
-                    </div>
-                </div>
-                <div class="flex flex-col md:flex-row gap-2">
-                    <div class="flex items-center space-x-2 text-xs text-slate-400 bg-slate-900/60 px-4 py-2 rounded-lg border border-slate-800">
-                        <span>แหล่งข้อมูลประมวลผล:</span>
-                        <span id="source-badge" class="font-semibold text-brand-400">Google Sheets</span>
-                    </div>
-                    <div class="flex items-center space-x-2 text-xs text-slate-400 bg-slate-900/60 px-4 py-2 rounded-lg border border-slate-800">
-                        <span>สถานะระบบ:</span>
-                        <span id="data-status-badge" class="font-semibold text-emerald-400">ปกติ</span>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Table Block -->
-            <div class="bg-slate-900/60 border border-slate-800/80 rounded-2xl overflow-hidden backdrop-blur-xl shadow-xl">
-                <div class="px-6 py-5 border-b border-slate-800/80 flex items-center justify-between">
-                    <div>
-                        <h3 class="text-lg font-bold font-display text-white">รายการแบรนด์สินค้าอะไหล่ (แท้ศูนย์ & Aftermarket)</h3>
-                        <p class="text-xs text-slate-400 mt-0.5">ข้อมูลรหัสสินค้าสำหรับขายหน้าร้าน/เปิดบิล (Commercial Retail Sales SKU) แยกจากเบอร์ OEM</p>
-                    </div>
-                    <span class="text-xs text-slate-500">เลื่อนตารางเพื่อดูข้อมูลเพิ่มเติม</span>
-                </div>
-
-                <div class="overflow-x-auto custom-scrollbar">
-                    <table class="w-full text-left border-collapse table-auto">
+            <!-- Search Results -->
+            <div class="panel" id="results-panel" style="display: none;">
+                <h2 class="panel-title">
+                    <i class="fa-solid fa-list-check" style="color: var(--secondary);"></i> รายการอะไหล่ที่ตรวจพบ (<span id="results-count">0</span> รายการ)
+                </h2>
+                <div class="table-wrapper">
+                    <table id="sales-results-table">
                         <thead>
-                            <tr class="bg-slate-950 text-xs font-semibold text-slate-300 uppercase tracking-wider border-b border-slate-800">
-                                <th class="px-4 py-3.5 whitespace-nowrap">แบรนด์สินค้า</th>
-                                <th class="px-4 py-3.5 whitespace-nowrap text-amber-400 font-bold">รหัสสินค้า (สำหรับขาย)</th>
-                                <th class="px-4 py-3.5 whitespace-nowrap text-indigo-400">เบอร์ OEM</th>
-                                <th class="px-4 py-3.5 whitespace-nowrap text-brand-400">ชื่อสินค้า (ไทย)</th>
-                                <th class="px-4 py-3.5 whitespace-nowrap">ยี่ห้อรถ</th>
-                                <th class="px-4 py-3.5 whitespace-nowrap">รุ่นรถ</th>
-                                <th class="px-4 py-3.5 whitespace-nowrap">ปีเริ่มต้น</th>
-                                <th class="px-4 py-3.5 whitespace-nowrap">ปีสิ้นสุด</th>
-                                <th class="px-4 py-3.5 whitespace-nowrap">เครื่องยนต์</th>
-                                <th class="px-4 py-3.5 whitespace-nowrap">น้ำมัน</th>
-                                <th class="px-4 py-3.5 whitespace-nowrap">เกียร์</th>
-                                <th class="px-4 py-3.5 min-w-[250px]">รายละเอียดสินค้า</th>
+                            <tr>
+                                <th>หมวดหมู่</th>
+                                <th>แบรนด์ทดแทน</th>
+                                <th>รหัสสินค้า (SKU)</th>
+                                <th>รหัส OEM แท้</th>
+                                <th>ชื่อสินค้า (ไทย)</th>
+                                <th>การรองรับ (รถยนต์)</th>
+                                <th>ราคาทุน</th>
+                                <th style="text-align: center;">สถานะ</th>
+                                <th>AI Search / Feedback</th>
                             </tr>
                         </thead>
-                        <tbody id="results-table-body" class="divide-y divide-slate-800/50 text-sm">
-                            <!-- Populated via Javascript -->
+                        <tbody id="sales-results-body">
+                            <!-- Populated dynamically via JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Live Search Fallback Option -->
+                <div class="live-search-fallback" id="live-search-prompt" style="display: none;">
+                    <i class="fa-solid fa-globe" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem; display: block;"></i>
+                    <h3>ไม่พบรายการจับคู่ที่เหมาะสมในฐานข้อมูล?</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">สั่งระบบดูดข้อมูลสดจากแคตตาล็อกผู้แทนจำหน่ายเพื่อดึงรหัสที่จับคู่ได้ล่าสุด</p>
+                    <button class="btn btn-warning" id="live-search-trigger-btn-fallback" onclick="triggerLiveSearchFallback()">
+                        <i class="fa-solid fa-bolt"></i> ค้นหาแบบเร่งด่วนจากภายนอก (Live Scrape)
+                    </button>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= ADMIN VIEW ================= -->
+        <section id="admin-view" class="app-view">
+            <!-- Tabs inside Admin View -->
+            <div style="display: flex; gap: 1rem; margin-bottom: 1.5rem; border-bottom: 1px solid var(--panel-border); padding-bottom: 1rem; flex-wrap: wrap;">
+                <button class="btn btn-secondary btn-sm" onclick="switchAdminSubTab('review-queue-tab', this)">
+                    <i class="fa-solid fa-hourglass-half"></i> คัดกรองรอนุมัติ (Queue)
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="switchAdminSubTab('database-view-tab', this)">
+                    <i class="fa-solid fa-database"></i> ข้อมูลทั้งหมดในระบบ
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="switchAdminSubTab('scraper-config-tab', this)">
+                    <i class="fa-solid fa-cloud-arrow-down"></i> ตั้งค่าดึงข้อมูล
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="switchAdminSubTab('metadata-management-tab', this)">
+                    <i class="fa-solid fa-sliders"></i> จัดการตัวเลือกระบบ (Metadata)
+                </button>
+                <button class="btn btn-secondary btn-sm" onclick="switchAdminSubTab('user-management-tab', this)">
+                    <i class="fa-solid fa-users-gear"></i> จัดการบัญชีผู้ใช้
+                </button>
+            </div>
+
+            <!-- SUB TAB 1: Review Queue -->
+            <div id="review-queue-tab" class="admin-sub-view" style="display: block;">
+                <!-- Queue table -->
+                <div class="panel">
+                    <h2 class="panel-title" style="justify-content: space-between;">
+                        <span><i class="fa-solid fa-clock-rotate-left" style="color: var(--warning);"></i> ตารางพักคัดกรองข้อมูลรอนุมัติ (<span id="temp-parts-count">0</span> รายการ)</span>
+                        <button class="btn btn-secondary" onclick="loadTempPartsAdmin()"><i class="fa-solid fa-rotate"></i> รีเฟรช</button>
+                    </h2>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th style="text-align: center;">ด่วน</th>
+                                    <th>ประเภทนำเข้า</th>
+                                    <th>หมวดหมู่</th>
+                                    <th>แบรนด์ / SKU</th>
+                                    <th>OEM แท้</th>
+                                    <th>ชื่อสินค้า</th>
+                                    <th>รุ่นรถที่รองรับ</th>
+                                    <th style="text-align: center;">เปรียบเทียบ</th>
+                                    <th>Staff Note</th>
+                                    <th>จัดการการอนุมัติ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="temp-parts-admin-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB TAB 2: Database View -->
+            <div id="database-view-tab" class="admin-sub-view" style="display: none;">
+                <div class="panel">
+                    <h2 class="panel-title"><i class="fa-solid fa-filter" style="color: var(--primary);"></i> กรองข้อมูลทั้งหมดในระบบ</h2>
+                    <div class="grid-2" style="margin-bottom: 1rem;">
+                        <div class="input-group">
+                            <label>กรองตามแบรนด์สินค้า</label>
+                            <input type="text" id="f-brand" class="form-control" placeholder="เช่น TRW, BOSCH" oninput="loadAllPartsSystem()">
+                        </div>
+                        <div class="input-group">
+                            <label>กรองตามยี่ห้อ/รุ่นรถ</label>
+                            <input type="text" id="f-car" class="form-control" placeholder="เช่น Civic, Yaris" oninput="loadAllPartsSystem()">
+                        </div>
+                    </div>
+                    <div class="input-group" style="margin-bottom: 1.5rem;">
+                        <label>ประเภทฐานข้อมูล</label>
+                        <select id="f-source" class="form-control" onchange="loadAllPartsSystem()">
+                            <option value="">ทั้งหมด (Master + Temp)</option>
+                            <option value="MASTER">ฐานข้อมูลหลัก (Master)</option>
+                            <option value="TEMP">ฐานข้อมูลพักตรวจสอบ (Temp)</option>
+                        </select>
+                    </div>
+
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ฐานข้อมูล</th>
+                                    <th>หมวดหมู่</th>
+                                    <th>แบรนด์สินค้า</th>
+                                    <th>รหัสสินค้า (SKU)</th>
+                                    <th>OEM แท้</th>
+                                    <th>ชื่อสินค้า (ไทย)</th>
+                                    <th>การรองรับ (รถยนต์)</th>
+                                    <th>ราคาทุน</th>
+                                    <th style="text-align: center;">สถานะ</th>
+                                    <th>การจัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="db-view-parts-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB TAB 3: Config Scrape & Upload (ตั้งค่าดึงข้อมูล) -->
+            <div id="scraper-config-tab" class="admin-sub-view" style="display: none;">
+                <!-- Section 1: Excel/CSV Upload (Moved here) -->
+                <div class="panel">
+                    <h2 class="panel-title" style="display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 0.5rem;">
+                        <span><i class="fa-solid fa-file-import" style="color: var(--primary);"></i> นำเข้าข้อมูลจับคู่ระดับแอดมิน (Excel/CSV Upload)</span>
+                        <a href="/api/parts/export-import-template" class="btn btn-secondary" style="font-size: 0.8rem; padding: 0.35rem 0.6rem; display: inline-flex; align-items: center; gap: 0.35rem;" download>
+                            <i class="fa-solid fa-file-excel" style="color: #217346; font-size: 1rem;"></i> ดาวน์โหลดไฟล์เทมเพลตนำเข้า
+                        </a>
+                    </h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                        อัปโหลดไฟล์ประเภท CSV หรือ Excel (.xlsx) เพื่อนำเข้าตารางคัดกรอง ข้อมูลจะเข้าตารางพัก (temp_parts) รอผู้เชี่ยวชาญตรวจสอบก่อนย้ายเข้าสู่ฐานข้อมูลหลัก
+                    </p>
+                    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                        <input type="file" id="admin-file-input" style="display: none;" accept=".csv,.xlsx,.xls" onchange="handleFileSelected(this)">
+                        <button class="btn btn-secondary" onclick="document.getElementById('admin-file-input').click()">
+                            <i class="fa-solid fa-folder-open"></i> เลือกไฟล์ Excel / CSV
+                        </button>
+                        <span id="selected-file-name" style="color: var(--text-secondary);">ยังไม่ได้เลือกไฟล์</span>
+                        <button class="btn btn-primary" id="upload-submit-btn" style="display: none;" onclick="uploadFile()">
+                            <i class="fa-solid fa-file-arrow-up"></i> ยืนยันนำเข้าข้อมูล
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Section 2: Custom URL Scraper with Preview -->
+                <div class="panel">
+                    <h2 class="panel-title"><i class="fa-solid fa-link" style="color: var(--primary);"></i> ดูดข้อมูลเจาะจงผ่านลิงก์ภายนอก</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                        ใส่ลิงก์เว็บไซต์ของตัวแทนจำหน่าย/คู่แข่ง หรือหน้าแคตตาล็อกอะไหล่ เพื่อสั่งให้ Scraper ไดนามิกเจาะเข้าไปดึงข้อมูลมาแสดงเป็นผลลัพธ์พรีวิวก่อนเซฟเข้าตารางพัก
+                    </p>
+                    <div class="input-group" style="margin-bottom: 1rem;">
+                        <label>URL หน้าเว็บเป้าหมายที่ต้องการขูด (Scraping URL Target)</label>
+                        <input type="url" id="scrape-target-url" class="form-control" placeholder="https://www.anotherparts-site.com/search?q=Civic" required>
+                    </div>
+                    <div class="input-group" style="margin-bottom: 1.5rem;">
+                        <label>รหัสข้อความสำหรับทำดัชนี (Optional Search Term)</label>
+                        <input type="text" id="scrape-target-query" class="form-control" placeholder="เช่น 04465-52260">
+                    </div>
+                    <button class="btn btn-primary" id="start-custom-scrape-btn" onclick="startCustomScrape()">
+                        <i class="fa-solid fa-play"></i> เริ่มดึงข้อมูลตามลิงก์
+                    </button>
+
+                    <!-- Preview container -->
+                    <div id="scrape-preview-container" style="display: none; margin-top: 2rem; border-top: 1px solid var(--panel-border); padding-top: 1.5rem;">
+                        <h3 style="margin-bottom: 1rem;"><i class="fa-solid fa-magnifying-glass-chart" style="color: var(--secondary)"></i> พรีวิวข้อมูลที่ดึงได้จากภายนอก (ระบบตรวจสอบรหัส OEM ให้แล้ว)</h3>
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th>แบรนด์สินค้า</th>
+                                        <th>รหัสสินค้า (SKU)</th>
+                                        <th>เบอร์ OEM แท้</th>
+                                        <th>ชื่อสินค้า (ไทย)</th>
+                                        <th>หมวดหมู่</th>
+                                        <th>รุ่นรถที่รองรับ</th>
+                                        <th>ราคาทุน</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="scrape-preview-body">
+                                    <!-- Populated via JS -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <div style="display: flex; justify-content: flex-end; margin-top: 1.5rem;">
+                            <button class="btn btn-secondary" onclick="cancelScrapePreview()" style="margin-right: 0.75rem;">ยกเลิก</button>
+                            <button class="btn btn-primary" id="confirm-save-preview-btn" onclick="confirmSaveScrapedPreview()">
+                                <i class="fa-solid fa-floppy-disk"></i> ยืนยันบันทึกลงตารางพัก (Temp Database)
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB TAB 4: Metadata settings panel (จัดการตัวเลือก) -->
+            <div id="metadata-management-tab" class="admin-sub-view" style="display: none;">
+                <div class="grid-2">
+                    <!-- Column 1: Aftermarket Brands Management -->
+                    <div class="panel" style="padding: 1.25rem;">
+                        <h3 style="font-size:1rem; margin-bottom:1rem;"><i class="fa-solid fa-industry" style="color: var(--secondary)"></i> แบรนด์สินค้าทดแทน</h3>
+                        <form onsubmit="addMetadataItem(event, 'aftermarket-brands')" style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+                            <input type="text" id="add-brand-name" class="form-control" placeholder="แบรนด์ใหม่ เช่น TRW" required>
+                            <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i></button>
+                        </form>
+                        <div class="table-wrapper" style="max-height: 250px; overflow-y: auto;">
+                            <table>
+                                <tbody id="meta-brands-list-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Column 2: Car Brands Management -->
+                    <div class="panel" style="padding: 1.25rem;">
+                        <h3 style="font-size:1rem; margin-bottom:1rem;"><i class="fa-solid fa-car" style="color: var(--primary)"></i> ยี่ห้อรถยนต์</h3>
+                        <form onsubmit="addMetadataItem(event, 'car-brands')" style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+                            <input type="text" id="add-car-brand-name" class="form-control" placeholder="ยี่ห้อใหม่ เช่น HONDA" required>
+                            <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i></button>
+                        </form>
+                        <div class="table-wrapper" style="max-height: 250px; overflow-y: auto;">
+                            <table>
+                                <tbody id="meta-car-brands-list-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="grid-2" style="margin-top: 1rem;">
+                    <!-- Column 3: Car Models Management -->
+                    <div class="panel" style="padding: 1.25rem;">
+                        <h3 style="font-size:1rem; margin-bottom:1rem;"><i class="fa-solid fa-car-side" style="color: var(--purple)"></i> รุ่นรถยนต์</h3>
+                        <form onsubmit="addCarModelItem(event)" style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1rem;">
+                            <select id="add-model-car-brand" class="form-control" required>
+                                <option value="">-- เลือกยี่ห้อรถ --</option>
+                            </select>
+                            <div style="display:flex; gap:0.5rem;">
+                                <input type="text" id="add-model-name" class="form-control" placeholder="รุ่นรถใหม่ เช่น Accord" required>
+                                <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i></button>
+                            </div>
+                        </form>
+                        <div class="table-wrapper" style="max-height: 250px; overflow-y: auto;">
+                            <table>
+                                <tbody id="meta-car-models-list-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Column 4: Car Years Management -->
+                    <div class="panel" style="padding: 1.25rem;">
+                        <h3 style="font-size:1rem; margin-bottom:1rem;"><i class="fa-solid fa-calendar-days" style="color: var(--warning)"></i> ปีรถยนต์</h3>
+                        <form onsubmit="addMetadataItem(event, 'car-years')" style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+                            <input type="number" id="add-year-value" class="form-control" placeholder="ปีใหม่ เช่น 2027" required>
+                            <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i></button>
+                        </form>
+                        <div class="table-wrapper" style="max-height: 250px; overflow-y: auto;">
+                            <table>
+                                <tbody id="meta-car-years-list-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SUB TAB 5: User Management -->
+            <div id="user-management-tab" class="admin-sub-view" style="display: none;">
+                <div class="panel">
+                    <h2 class="panel-title"><i class="fa-solid fa-user-plus" style="color: var(--secondary);"></i> สร้างผู้ใช้งานรายใหม่</h2>
+                    <form onsubmit="handleCreateUser(event)" class="grid-2">
+                        <div class="input-group">
+                            <label>ชื่อผู้ใช้งาน (Username)</label>
+                            <input type="text" id="new-user-name" class="form-control" placeholder="เช่น somchai_staff" required>
+                        </div>
+                        <div class="input-group">
+                            <label>รหัสผ่าน</label>
+                            <input type="password" id="new-user-pwd" class="form-control" placeholder="อย่างน้อย 6 ตัวอักษร" required>
+                        </div>
+                        <div class="input-group" style="grid-column: span 2;">
+                            <label>ระดับสิทธิ์การเข้าถึง (Access Level)</label>
+                            <select id="new-user-role" class="form-control">
+                                <option value="STAFF">พนักงานหน้าร้านทั่วไป (STAFF)</option>
+                                <option value="ADMIN">ผู้ดูแลระบบคัดกรอง (ADMIN)</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn btn-secondary" style="grid-column: span 2; margin-top: 1rem;">
+                            <i class="fa-solid fa-user-plus"></i> บันทึกและสร้างผู้ใช้
+                        </button>
+                    </form>
+                </div>
+
+                <div class="panel">
+                    <h2 class="panel-title"><i class="fa-solid fa-users" style="color: var(--primary);"></i> รายชื่อผู้ใช้ทั้งหมดในระบบ</h2>
+                    <div class="table-wrapper">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>ชื่อผู้ใช้ (Username)</th>
+                                    <th>ระดับสิทธิ์</th>
+                                    <th>วันที่ลงทะเบียน</th>
+                                    <th>การจัดการ</th>
+                                </tr>
+                            </thead>
+                            <tbody id="user-management-list-body">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- ================= SUPER ADMIN VIEW ================= -->
+        <section id="superadmin-view" class="app-view">
+            <!-- AI Key Management Panel -->
+            <div class="panel">
+                <h2 class="panel-title"><i class="fa-solid fa-key" style="color: var(--warning);"></i> ตั้งค่ากุญแจเชื่อมต่อ AI (Gemini APIs Key Config)</h2>
+                <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
+                    สามารถใส่และจัดสรรคีย์ API แยกตามรุ่นโมเดล (กรณีไม่ใส่คีย์ หรือปิดใช้งาน จะใช้คีย์เริ่มต้นระบบใน .env เป็น Fallback)
+                </p>
+                <form onsubmit="handleSaveAIKey(event)" class="grid-2" style="margin-bottom: 2rem;">
+                    <div class="input-group">
+                        <label>เลือกโมเดลปัญญาประดิษฐ์</label>
+                        <select id="ai-model-select" class="form-control" required>
+                            <option value="gemini-3.6-flash">gemini-3.6-flash (โมเดลตัวใหม่ล่าสุด)</option>
+                            <option value="gemini-3.5-flash">gemini-3.5-flash (โมเดลประสิทธิภาพสูง)</option>
+                            <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (Flash Lite)</option>
+                            <option value="gemini-2.0-flash">gemini-2.0-flash (Flash เกรดสอง)</option>
+                            <option value="gemini-flash-latest">gemini-flash-latest</option>
+                            <option value="gemini-2.0-flash-lite">gemini-2.0-flash-lite</option>
+                            <option value="gemini-1.5-flash">gemini-1.5-flash</option>
+                            <option value="gemini-1.5-pro">gemini-1.5-pro (เกรดวิเคราะห์ข้อมูลเชิงลึก)</option>
+                        </select>
+                    </div>
+                    <div class="input-group">
+                        <label>API Key ของโมเดล</label>
+                        <input type="password" id="ai-key-input" class="form-control" placeholder="ใส่ API Key ขึ้นต้นด้วย AIzaSy..." required>
+                    </div>
+                    <div class="input-group" style="grid-column: span 2;">
+                        <label>สถานะการเปิดใช้งาน</label>
+                        <select id="ai-status-select" class="form-control">
+                            <option value="1">เปิดใช้งาน (Active)</option>
+                            <option value="0">ปิดใช้งานชั่วคราว (Inactive)</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn btn-primary" style="grid-column: span 2; margin-top: 1rem;">
+                        <i class="fa-solid fa-floppy-disk"></i> บันทึกคีย์โมเดล
+                    </button>
+                </form>
+
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>รุ่นโมเดล AI</th>
+                                <th>API Key (ซ่อนบางส่วน)</th>
+                                <th>สถานะ</th>
+                                <th>วันที่ปรับปรุง</th>
+                                <th style="text-align: right;">ลบ</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ai-keys-list-body">
+                            <!-- Populated dynamically -->
                         </tbody>
                     </table>
                 </div>
             </div>
 
-        </div>
+            <!-- AI Usage Statistics Panel -->
+            <div class="panel">
+                <h2 class="panel-title"><i class="fa-solid fa-chart-line" style="color: var(--secondary);"></i> สถิติการใช้งานโมเดลแต่ละวัน (Usage History Logs)</h2>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>วันที่ประมวลผล</th>
+                                <th>รุ่นโมเดล</th>
+                                <th>จำนวนครั้งที่เรียกใช้ (Calls Count)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ai-usage-list-body">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
 
     </main>
 
-    <!-- Footer -->
-    <footer class="border-t border-slate-900 bg-slate-950/60 py-6 mt-12 text-center text-xs text-slate-500">
-        <div class="max-w-7xl mx-auto px-4">
-            <p>© 2026 Antigravity Car Parts Catalog Discovery Demo. All rights reserved.</p>
+    <!-- Review / Edit Modal -->
+    <div class="modal-overlay" id="edit-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="edit-modal-title">แก้ไขและตรวจสอบข้อมูลก่อนเข้าสู่ Master</h3>
+                <button class="close-btn" onclick="closeEditModal()">&times;</button>
+            </div>
+            <form id="edit-part-form" onsubmit="submitPartEdit(event)">
+                <input type="hidden" id="edit-temp-id">
+                <input type="hidden" id="edit-source-type"> <!-- MASTER or TEMP -->
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label>แบรนด์ของสินค้า</label>
+                        <input type="text" id="edit-brand" class="form-control" required>
+                    </div>
+                    <div class="input-group">
+                        <label>รหัสสินค้า (SKU)</label>
+                        <input type="text" id="edit-part-number" class="form-control" required>
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label>เบอร์ OEM แท้</label>
+                        <input type="text" id="edit-oem-number" class="form-control" required>
+                    </div>
+                    <div class="input-group">
+                        <label>ชื่อสินค้า (ไทย)</label>
+                        <input type="text" id="edit-product-name-th" class="form-control" required>
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label>หมวดหมู่สินค้า</label>
+                        <input type="text" id="edit-category" class="form-control">
+                    </div>
+                    <div class="input-group">
+                        <label>ยี่ห้อรถ</label>
+                        <input type="text" id="edit-car-brand" class="form-control">
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label>รุ่นรถ</label>
+                        <input type="text" id="edit-car-model" class="form-control">
+                    </div>
+                    <div class="input-group">
+                        <label>ปีเริ่มต้น</label>
+                        <input type="text" id="edit-year-start" class="form-control">
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label>ปีสิ้นสุด</label>
+                        <input type="text" id="edit-year-end" class="form-control">
+                    </div>
+                    <div class="input-group">
+                        <label>เครื่องยนต์</label>
+                        <input type="text" id="edit-engine" class="form-control">
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label>ประเภทน้ำมัน</label>
+                        <input type="text" id="edit-fuel" class="form-control">
+                    </div>
+                    <div class="input-group">
+                        <label>ประเภทเกียร์</label>
+                        <input type="text" id="edit-transmission" class="form-control">
+                    </div>
+                </div>
+                <div class="grid-2">
+                    <div class="input-group">
+                        <label>หน่วยราคาทุน</label>
+                        <input type="text" id="edit-cost-unit" class="form-control">
+                    </div>
+                    <div class="input-group">
+                        <label>หมายเหตุ</label>
+                        <input type="text" id="edit-notes" class="form-control">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>รายละเอียดสินค้า</label>
+                    <textarea id="edit-description" class="form-control" rows="2"></textarea>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">ยกเลิก</button>
+                    <button type="button" class="btn btn-danger" onclick="deletePartFromModal()">ปฏิเสธ/ลบ</button>
+                    <button type="submit" class="btn btn-primary" id="edit-submit-btn">บันทึก & อนุมัติย้ายเข้า Master</button>
+                </div>
+            </form>
         </div>
-    </footer>
+    </div>
 
-    <!-- App Script -->
+    <!-- Metadata Edit Modal Popup (Alternative to browser prompts) -->
+    <div class="modal-overlay" id="edit-metadata-modal">
+        <div class="modal-content" style="max-width: 420px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="edit-meta-title">แก้ไขรายละเอียดตัวเลือก (Edit Metadata Option)</h3>
+                <button class="close-btn" onclick="closeMetaEditModal()">&times;</button>
+            </div>
+            <form id="edit-metadata-form" onsubmit="submitMetadataEdit(event)">
+                <input type="hidden" id="edit-meta-id">
+                <input type="hidden" id="edit-meta-category">
+                
+                <!-- Displayed for Car Models only -->
+                <div class="input-group" id="edit-meta-brand-container" style="display: none; margin-bottom: 1rem;">
+                    <label>ยี่ห้อรถ (Car Brand)</label>
+                    <input type="text" id="edit-meta-car-brand" class="form-control">
+                </div>
+                
+                <div class="input-group" style="margin-bottom: 1.5rem;">
+                    <label id="edit-meta-label">ชื่อ / ค่าตัวเลือก</label>
+                    <input type="text" id="edit-meta-value" class="form-control" required>
+                </div>
+                
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeMetaEditModal()">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary">บันทึกข้อมูลตัวเลือก</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Staff Note Dialog Modal -->
+    <div class="modal-overlay" id="note-modal">
+        <div class="modal-content" style="max-width: 450px;">
+            <div class="modal-header">
+                <h3 class="modal-title">ส่งฟีดแบ็กหน้างานแนบไปกับตัวสินค้า</h3>
+                <button class="close-btn" onclick="closeNoteModal()">&times;</button>
+            </div>
+            <form id="note-part-form" onsubmit="submitStaffNote(event)">
+                <input type="hidden" id="note-temp-id">
+                <div class="input-group">
+                    <label>หมายเหตุหน้างาน (Staff Note)</label>
+                    <textarea id="note-text" class="form-control" rows="4" placeholder="พิมพ์ฟีดแบ็ก..." required></textarea>
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeNoteModal()">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary">ส่งฟีดแบ็กถึงแอดมิน</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div class="toast-container" id="toast-box"></div>
+
+    <!-- Core Scripting Logic -->
     <script>
-        const form = document.getElementById('search-form');
-        const oemInput = document.getElementById('oem-input');
-        const oemHint = document.getElementById('oem-hint');
-        const vinInput = document.getElementById('vin-input');
-        const vinCounter = document.getElementById('vin-counter');
-        const brandInput = document.getElementById('brand-input');
-        const modelInput = document.getElementById('model-input');
-        const yearInput = document.getElementById('year-input');
-        const searchBtn = document.getElementById('search-btn');
-        const btnSpinner = document.getElementById('btn-spinner');
-        const errorAlert = document.getElementById('error-alert');
-        const errorMessage = document.getElementById('error-message');
-        const resultsContainer = document.getElementById('results-container');
-        const oemDisplayBanner = document.getElementById('oem-display-banner');
-        const sourceBadge = document.getElementById('source-badge');
-        const dataStatusBadge = document.getElementById('data-status-badge');
-        const resultsTableBody = document.getElementById('results-table-body');
-        const vinCorrectionAlert = document.getElementById('vin-correction-alert');
-        const vinCorrectionDetail = document.getElementById('vin-correction-detail');
+        let currentUser = null;
+        let lastScrapedPreviewItems = [];
+        let allCarModelsList = []; // Kept to filter dynamically on client side
 
-        // Dynamic Brand -> Model mapping
-        const modelsByBrand = {
-            // รถญี่ปุ่น (Japanese Brands)
-            "Toyota": ["Corolla Altis", "Vios", "Yaris", "Yaris Ativ", "Camry", "Fortuner", "Hilux Revo", "Hilux Vigo", "Commuter", "Corolla Cross", "Veloz", "Alphard", "Vellfire", "Majesty", "CHR", "Sienta", "Avanza"],
-            "Honda": ["Civic", "City", "City Hatchback", "Accord", "CR-V", "HR-V", "WR-V", "BR-V", "Jazz", "Brio", "Mobilio", "Freed", "Stepwgn"],
-            "Isuzu": ["D-Max", "MU-X", "MU-7", "Dragon Power", "TFR", "N-Series (NKR/NPR/NQR)", "F-Series (FTR/FVR/GVR)"],
-            "Nissan": ["Almera", "Navara", "Kicks", "Terra", "March", "Note", "Teana", "Sylphy", "X-Trail", "Urvan (NV350)", "Big-M", "Frontier"],
-            "Mitsubishi": ["Triton", "Pajero Sport", "Xpander", "Xpander Cross", "Mirage", "Attrage", "Lancer", "Lancer EX", "Delica"],
-            "Mazda": ["Mazda 2", "Mazda 3", "CX-3", "CX-30", "CX-5", "CX-8", "BT-50", "BT-50 PRO"],
-            "Suzuki": ["Swift", "Ciaz", "Ertiga", "XL7", "Celerio", "Carry", "Jimny"],
-            "Subaru": ["XV", "Forester", "Outback", "WRX", "BRZ"],
-            "Lexus": ["RX", "NX", "UX", "ES", "IS", "LM", "LS"],
-            "Daihatsu": ["Mira", "Hijet", "Gran Max", "Terios", "Atrai"],
-
-            // รถจีน & รถไฟฟ้า EV (Chinese & EV Brands)
-            "BYD": ["Atto 3", "Dolphin", "Seal", "Sealion 6", "M6"],
-            "MG": ["MG3", "MG4 Electric", "MG5", "MG ZS", "MG ZS EV", "MG HS", "MG EP / ES", "MG Extender", "MAXUS 9"],
-            "GWM": ["Haval H6", "Haval Jolion", "Ora Good Cat", "Ora 07", "Tank 300", "Tank 500"],
-            "Changan": ["Deepal L07", "Deepal S07", "Lumin", "Avatr 11"],
-            "Neta": ["Neta V", "Neta V-II", "Neta X"],
-            "Aion": ["Aion Y Plus", "Aion ES", "Hyptec HT"],
-            "Chery": ["Omoda C5", "Jaecoo 6", "Jaecoo 7"],
-            "Zeekr": ["Zeekr X", "Zeekr 009"],
-            "Xpeng": ["Xpeng G6", "Xpeng G9"],
-            "Wuling": ["Air EV", "Binguo EV"],
-            "Maxus": ["MAXUS 9", "V80", "Deliver 9"],
-
-            // รถยุโรป (European Brands)
-            "Mercedes-Benz": ["C-Class", "E-Class", "S-Class", "GLA", "GLC", "GLE", "GLS", "A-Class", "CLA", "V-Class", "Vito"],
-            "BMW": ["3 Series", "5 Series", "7 Series", "X1", "X3", "X5", "X7", "4 Series", "2 Series", "iX3", "i4", "i7"],
-            "Audi": ["A4", "A5", "A6", "Q3", "Q5", "Q7", "TT", "e-tron"],
-            "Volkswagen": ["Caravelle", "Golf", "Passat", "Tiguan", "Beetle"],
-            "Volvo": ["XC40", "XC60", "XC90", "V60", "S60", "S90", "C40 Recharge", "EX30"],
-            "Porsche": ["Cayenne", "Macan", "Panamera", "911", "Taycan", "718 Cayman/Boxster"],
-            "Mini": ["Cooper", "Countryman", "Clubman"],
-            "Peugeot": ["2008", "3008", "5008"],
-            "Land Rover": ["Defender", "Range Rover", "Range Rover Sport", "Discovery"],
-            "Jaguar": ["F-Pace", "E-Pace", "I-Pace", "XF"],
-
-            // รถอเมริกัน & เกาหลี (American & Korean Brands)
-            "Ford": ["Ranger", "Ranger Raptor", "Everest", "Fiesta", "Focus", "EcoSport", "Mustang"],
-            "Chevrolet": ["Colorado", "Trailblazer", "Captiva", "Cruze", "Sonic", "Aveo", "Optra"],
-            "Tesla": ["Model 3", "Model Y", "Model S", "Model X"],
-            "Jeep": ["Wrangler", "Gladiator", "Grand Cherokee"],
-            "Hyundai": ["H-1 / Grand Starex", "Staria", "Creta", "Santa Fe", "Ioniq 5", "Elantra", "Tucson"],
-            "Kia": ["Carnival", "EV6", "EV9", "Sorento", "Picanto"],
-
-            // รถใหญ่ / รถบรรทุก / รถบัส / รถพาณิชย์ (Trucks, Buses & Heavy Commercial Vehicles)
-            "Hino": ["Dominator (500)", "Victor (500)", "Mega", "Profia", "Liesse", "300 Innova", "500 Series", "700 Series"],
-            "Isuzu Trucks": ["ELF (N-Series)", "FORWARD (F-Series)", "GIGA (C&E Series)", "King of Trucks"],
-            "Fuso": ["Canter", "Fighter", "Super Great", "FJ", "FZ"],
-            "UD Trucks": ["Qonquer", "Quester", "Croner", "Condor", "Quon"],
-            "Scania": ["P-Series", "G-Series", "R-Series", "S-Series", "K-Series (Bus)"],
-            "Volvo Trucks": ["FH", "FM", "FMX", "FL", "FE"],
-            "MAN": ["TGS", "TGX", "TGL", "TGM", "MAN Bus Chassis"],
-            "Mercedes-Benz Trucks": ["Actros", "Arocs", "Atego"],
-            "Dongfeng": ["DFSK Mini Truck", "Captain", "GX", "KX", "Tianlong"],
-            "Foton": ["Aumark", "Auman", "View Transvan", "eAumark"],
-            "Tata": ["Xenon", "Super Ace", "Ultra", "Prima"],
-            "Sinotruk": ["Howo T7H", "Howo A7", "Howo V7G"],
-            "King Long": ["XMQ Bus Series", "City Bus", "Coach"]
-        };
-
-        brandInput.addEventListener('change', () => {
-            const selectedBrand = brandInput.value;
-            // Clear models
-            modelInput.innerHTML = '<option value="">-- ไม่ระบุ / ข้าม --</option>';
-            
-            if (modelsByBrand[selectedBrand]) {
-                modelsByBrand[selectedBrand].forEach(m => {
-                    const opt = document.createElement('option');
-                    opt.value = m;
-                    opt.textContent = m;
-                    modelInput.appendChild(opt);
-                });
+        // On Load checks session and initial dropdowns loading
+        window.addEventListener('DOMContentLoaded', () => {
+            const saved = localStorage.getItem('auto_user');
+            if (saved) {
+                currentUser = JSON.parse(saved);
+                initializeSession();
+                loadMetadataDropdowns();
             }
         });
 
-        // Initialize Year dropdown options
-        const currentYear = 2026;
-        for (let y = currentYear; y >= 2000; y--) {
-            const opt = document.createElement('option');
-            opt.value = y.toString();
-            opt.textContent = y.toString();
-            yearInput.appendChild(opt);
-        }
-
-        // Toggle hint for OEM code typing
-        oemInput.addEventListener('input', (e) => {
-            if (e.target.value.trim().length > 0) {
-                oemHint.classList.remove('hidden');
-            } else {
-                oemHint.classList.add('hidden');
-            }
-        });
-
-        // Track characters in VIN field (allows letters, removes confusion characters, enforces uppercase)
-        vinInput.addEventListener('input', (e) => {
-            let value = e.target.value.toUpperCase();
-            value = value.replace(/[IOQioq]/g, '');
-            value = value.replace(/[^A-Z0-9]/g, '');
-            e.target.value = value;
-            
-            const len = value.length;
-            vinCounter.textContent = `${len} / 17`;
-
-            if (len === 17) {
-                vinCounter.classList.remove('text-slate-500', 'border-slate-800');
-                vinCounter.classList.add('text-emerald-400', 'border-emerald-500/30', 'bg-emerald-500/5');
-            } else {
-                vinCounter.classList.add('text-slate-500', 'border-slate-800');
-                vinCounter.classList.remove('text-emerald-400', 'border-emerald-500/30', 'bg-emerald-500/5');
-            }
-        });
-
-        // Async Form Submission
-        form.addEventListener('submit', async (e) => {
+        // Auth Operations
+        async function handleLogin(e) {
             e.preventDefault();
-
-            // Clear previous errors/notifications
-            errorAlert.classList.add('hidden');
-            vinCorrectionAlert.classList.add('hidden');
-            
-            const oemCode = oemInput.value.trim();
-            const vin = vinInput.value.trim().toUpperCase();
-            const brand = brandInput.value.trim();
-            const model = modelInput.value.trim();
-            const year = yearInput.value.trim();
-            const productName = document.getElementById('product-input').value.trim();
-
-            // Global Rule: Part Name is mandatory
-            if (!productName) {
-                showError("กรุณาระบุชื่อสินค้า / อะไหล่ที่ต้องการเสมอ");
-                return;
-            }
-
-            // Rule 2: If VIN is provided, Car Brand MUST be provided
-            if (vin && !brand) {
-                showError("เมื่อระบุเลขตัวถัง (VIN) บังคับให้ระบุยี่ห้อรถยนต์ (Brand) ร่วมด้วยเสมอ");
-                return;
-            }
-
-            // Rule 3: If No OEM and No VIN, MUST provide Brand AND Model
-            if (!oemCode && !vin) {
-                if (!brand || !model) {
-                    showError("กรณีไม่ระบุเลข OEM และ VIN บังคับให้ระบุทั้งยี่ห้อรถยนต์ (Brand) และรุ่นรถยนต์ (Model) เพื่อแคบวงการค้นหา");
-                    return;
-                }
-            }
-
-            // UI Loading state
-            searchBtn.disabled = true;
-            btnSpinner.classList.remove('hidden');
-            searchBtn.classList.add('opacity-80', 'cursor-not-allowed');
-
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 60000);
+            const u = document.getElementById('login-username').value.trim();
+            const p = document.getElementById('login-password').value.trim();
 
             try {
-                const response = await fetch('/api/search', {
+                const response = await fetch('/api/auth/login', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    signal: controller.signal,
-                    body: JSON.stringify({
-                        oem_code: oemCode || null,
-                        vin: vin || null,
-                        brand: brand || null,
-                        model: model || null,
-                        year: year || null,
-                        product_name: productName
-                    })
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({username: u, password: p})
                 });
-                clearTimeout(timeoutId);
-
                 const resData = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(resData.detail || 'การสืบค้นข้อมูลพาร์ทล้มเหลว');
-                }
-
-                if (resData.success && resData.data && resData.data.success) {
-                    renderResults(resData.data, vin);
+                if (resData.success) {
+                    currentUser = { username: resData.username, role: resData.role };
+                    localStorage.setItem('auto_user', JSON.stringify(currentUser));
+                    initializeSession();
+                    loadMetadataDropdowns();
+                    showToast("เข้าสู่ระบบเรียบร้อยแล้ว", "success");
                 } else {
-                    const errText = resData.error || resData.data?.error || 'เกิดข้อผิดพลาดในการตรวจสอบข้อมูล';
-                    showError(errText);
-                    resultsContainer.classList.add('hidden');
+                    showToast(resData.error || "ล็อกอินไม่สำเร็จ", "danger");
                 }
             } catch (err) {
-                clearTimeout(timeoutId);
-                let msg = err.message;
-                if (err.name === 'AbortError') {
-                    msg = 'การสืบค้นข้อมูลใช้เวลานานเกินไป หรือการเชื่อมต่อเซิร์ฟเวอร์ถูกยกเลิก กรุณากดค้นหาใหม่อีกครั้ง';
-                } else if (err.name === 'TypeError' || (err.message && err.message.includes('Failed to fetch'))) {
-                    msg = 'ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้ กรุณาตรวจสอบว่าเซิร์ฟเวอร์เปิดอยู่ (http://127.0.0.1:8000)';
-                }
-                showError(msg);
-                resultsContainer.classList.add('hidden');
-            } finally {
-                // Restore button state
-                searchBtn.disabled = false;
-                btnSpinner.classList.add('hidden');
-                searchBtn.classList.remove('opacity-80', 'cursor-not-allowed');
+                console.error(err);
+                showToast("เครือข่ายขัดข้อง", "danger");
             }
-        });
-
-        function showError(msg) {
-            errorMessage.textContent = msg;
-            errorAlert.classList.remove('hidden');
-            errorAlert.scrollIntoView({ behavior: 'smooth', block: 'center' });
         }
 
-        // Format values that are NOT_FOUND to look visually structured
-        function formatCellValue(val) {
-            if (!val || val === 'NOT_FOUND' || val === 'UNKNOWN') {
-                return `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-500/10 text-red-400 border border-red-500/20 font-mono">NOT_FOUND</span>`;
-            }
-            return `<span class="text-slate-200">${val}</span>`;
+        function handleLogout() {
+            currentUser = null;
+            localStorage.removeItem('auto_user');
+            document.getElementById('auth-screen').classList.remove('hidden');
+            document.getElementById('main-header').style.display = 'none';
+            document.getElementById('main-app').style.display = 'none';
+            document.getElementById('admin-nav-tab').style.display = 'none';
+            document.getElementById('superadmin-nav-tab').style.display = 'none';
         }
 
-        function renderResults(data, originalVin) {
-            // Update Banner
-            const oemVal = data.oem_code;
-            let oemHtml = oemVal;
-            if (!oemVal || oemVal === 'NOT_FOUND') {
-                oemHtml = '<span class="text-red-400 font-mono">NOT_FOUND</span>';
-            } else if (oemVal.includes('ไม่ระบุ')) {
-                oemHtml = `<span class="text-amber-400 font-medium">${oemVal}</span>`;
-            }
-            oemDisplayBanner.innerHTML = `🎯 รหัส OEM แท้ศูนย์หลัก: ${oemHtml}`;
-            sourceBadge.textContent = data.data_source;
-            if (data.data_source && data.data_source.includes('ข้อมูลภายในเท่านั้น')) {
-                sourceBadge.className = 'px-3 py-1 text-xs font-semibold rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20';
-            } else {
-                sourceBadge.className = 'px-3 py-1 text-xs font-semibold rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20';
-            }
-
-            // Handle Conflict (Rule 4: OEM warning) or VIN correction notifications
-            if (data.oem_warning || (data.vin_explanation && data.vin_explanation.includes("ตรวจสอบเลขโอเอ็มใหม่"))) {
-                vinCorrectionDetail.innerHTML = `<strong class="text-red-400">⚠️ แจ้งเตือน: ตรวจสอบเลขโอเอ็มใหม่</strong> - ${data.vin_explanation || 'เลข OEM ที่กรอกอาจมีความขัดแย้งกับข้อมูลยี่ห้อ/รุ่น/ปี/เลขตัวถัง'}`;
-                vinCorrectionAlert.className = "bg-amber-500/10 border border-amber-500/30 text-amber-300 p-4 rounded-xl flex items-start space-x-3";
-                vinCorrectionAlert.classList.remove('hidden');
-            } else if (data.vin_corrected && originalVin && originalVin.trim() !== '') {
-                vinCorrectionDetail.innerHTML = `ตรวจพบความผิดปกติในรหัสที่กรอก <strong>"${originalVin}"</strong> ได้รับการแก้ไขเป็นรหัสที่ถูกต้อง <strong>"${data.corrected_vin}"</strong> (${data.vin_explanation})`;
-                vinCorrectionAlert.className = "bg-amber-500/10 border border-amber-500/20 text-amber-400 p-4 rounded-xl flex items-start space-x-3";
-                vinCorrectionAlert.classList.remove('hidden');
-            } else {
-                vinCorrectionAlert.classList.add('hidden');
-            }
-
-            // Build Rows Content
-            resultsTableBody.innerHTML = '';
+        function initializeSession() {
+            document.getElementById('auth-screen').classList.add('hidden');
+            document.getElementById('main-header').style.display = 'block';
+            document.getElementById('main-app').style.display = 'block';
             
-            if (data.rows && data.rows.length > 0) {
-                dataStatusBadge.textContent = 'ข้อมูลสมบูรณ์';
-                dataStatusBadge.className = 'font-semibold text-emerald-400';
-
-                data.rows.forEach(row => {
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-slate-800/30 transition duration-150 border-b border-slate-800/50';
-                    
-                    const isGenuine = String(row["แบรนด์ของสินค้า"]).toUpperCase() === 'GENUINE' || String(row["แบรนด์ของสินค้า"]).includes('แท้');
-                    const brandCell = isGenuine 
-                        ? `<span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 font-sans">GENUINE (แท้)</span>`
-                        : formatCellValue(row["แบรนด์ของสินค้า"]);
-
-                    tr.innerHTML = `
-                        <td class="px-4 py-4.5 whitespace-nowrap font-medium">${brandCell}</td>
-                        <td class="px-4 py-4.5 whitespace-nowrap font-mono text-xs">${formatCellValue(row["รหัสสินค้า"])}</td>
-                        <td class="px-4 py-4.5 whitespace-nowrap font-mono text-xs text-indigo-400 font-semibold">${formatCellValue(row["เบอร์ OEM"])}</td>
-                        <td class="px-4 py-4.5 whitespace-nowrap text-brand-400 font-semibold">${formatCellValue(row["ชื่อสินค้า (ไทย)"])}</td>
-                        <td class="px-4 py-4.5 whitespace-nowrap">${formatCellValue(row["ยี่ห้อรถ"])}</td>
-                        <td class="px-4 py-4.5 whitespace-nowrap">${formatCellValue(row["รุ่นรถ"])}</td>
-                        <td class="px-4 py-4.5 whitespace-nowrap">${formatCellValue(row["ปีเริ่มต้น"])}</td>
-                        <td class="px-4 py-4.5 whitespace-nowrap">${formatCellValue(row["ปีสิ้นสุด"])}</td>
-                        <td class="px-4 py-4.5 whitespace-nowrap text-xs">${formatCellValue(row["เครื่องยนต์"])}</td>
-                        <td class="px-4 py-4.5 whitespace-nowrap">${formatCellValue(row["น้ำมัน"])}</td>
-                        <td class="px-4 py-4.5 whitespace-nowrap text-xs">${formatCellValue(row["เกียร์"])}</td>
-                        <td class="px-4 py-4.5 text-xs text-slate-400 leading-relaxed">${formatCellValue(row["รายละเอียดสินค้า"])}</td>
-                    `;
-                    resultsTableBody.appendChild(tr);
-                });
+            document.getElementById('user-display-badge').textContent = `สิทธิ์: ${currentUser.role} (${currentUser.username})`;
+            
+            if (currentUser.role === 'SUPER_ADMIN') {
+                document.getElementById('admin-nav-tab').style.display = 'inline-block';
+                document.getElementById('superadmin-nav-tab').style.display = 'inline-block';
+            } else if (currentUser.role === 'ADMIN') {
+                document.getElementById('admin-nav-tab').style.display = 'inline-block';
+                document.getElementById('superadmin-nav-tab').style.display = 'none';
             } else {
-                dataStatusBadge.textContent = 'ไม่พบข้อมูลแถวอะไหล่';
-                dataStatusBadge.className = 'font-semibold text-amber-400';
-                resultsTableBody.innerHTML = `
-                    <tr>
-                        <td colspan="12" class="px-4 py-8 text-center text-slate-500 font-medium">
-                            ไม่พบรายการข้อมูลสินค้า (กรุณาตรวจสอบโครงสร้างรหัส OEM หรือความถูกต้องในการค้นหา)
-                        </td>
-                    </tr>
-                `;
+                document.getElementById('admin-nav-tab').style.display = 'none';
+                document.getElementById('superadmin-nav-tab').style.display = 'none';
+            }
+        }
+
+        // Headers injector for API authentication
+        function getAuthHeaders() {
+            return {
+                'x-user-role': currentUser ? currentUser.role : '',
+                'x-username': currentUser ? currentUser.username : ''
+            };
+        }
+
+        // Dynamic Dropdown Lists Population
+        async function loadMetadataDropdowns() {
+            try {
+                // Fetch Aftermarket Brands
+                const resBrands = await fetch('/api/metadata/aftermarket-brands');
+                const brandsData = await resBrands.json();
+                const sBrandSelect = document.getElementById('s-aftermarket-brand');
+                sBrandSelect.innerHTML = '<option value="">แบรนด์สินค้า: ทั้งหมด</option>';
+                if (brandsData.success) {
+                    brandsData.results.forEach(b => {
+                        sBrandSelect.innerHTML += `<option value="${b.name}">${b.name}</option>`;
+                    });
+                }
+
+                // Fetch Car Brands
+                const resCarBrands = await fetch('/api/metadata/car-brands');
+                const carBrandsData = await resCarBrands.json();
+                const sCarBrandSelect = document.getElementById('s-car-brand');
+                sCarBrandSelect.innerHTML = '<option value="">ยี่ห้อ: ทั้งหมด</option>';
+                if (carBrandsData.success) {
+                    carBrandsData.results.forEach(cb => {
+                        sCarBrandSelect.innerHTML += `<option value="${cb.name}">${cb.name}</option>`;
+                    });
+                }
+
+                // Fetch Car Models
+                const resCarModels = await fetch('/api/metadata/car-models');
+                const carModelsData = await resCarModels.json();
+                if (carModelsData.success) {
+                    allCarModelsList = carModelsData.results;
+                }
+                onSalesCarBrandChanged(); // Clear/Reset models list
+
+                // Fetch Car Years
+                const resYears = await fetch('/api/metadata/car-years');
+                const yearsData = await resYears.json();
+                const sYearSelect = document.getElementById('s-car-year');
+                sYearSelect.innerHTML = '<option value="">ปี: ทั้งหมด</option>';
+                if (yearsData.success) {
+                    yearsData.results.forEach(y => {
+                        sYearSelect.innerHTML += `<option value="${y.year}">${y.year}</option>`;
+                    });
+                }
+
+            } catch (err) {
+                console.error("Error loading dropdown options:", err);
+            }
+        }
+
+        // Filter Models when Brand dropdown changes in Sales form
+        function onSalesCarBrandChanged() {
+            const brandVal = document.getElementById('s-car-brand').value;
+            const modelSelect = document.getElementById('s-car-model');
+            modelSelect.innerHTML = '<option value="">รุ่น: ทั้งหมด</option>';
+
+            const filtered = brandVal 
+                ? allCarModelsList.filter(m => m.car_brand === brandVal)
+                : allCarModelsList;
+
+            filtered.forEach(m => {
+                modelSelect.innerHTML += `<option value="${m.name}">${m.name}</option>`;
+            });
+        }
+
+        // View tabs switcher
+        function switchView(viewId, btnEl) {
+            document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            
+            document.getElementById(viewId).classList.add('active');
+            btnEl.classList.add('active');
+            
+            if (viewId === 'admin-view') {
+                switchAdminSubTab('review-queue-tab');
+            } else if (viewId === 'superadmin-view') {
+                loadAIKeysConfig();
+                loadAIUsageStats();
+            }
+        }
+
+        function switchAdminSubTab(subTabId, btnEl = null) {
+            document.querySelectorAll('.admin-sub-view').forEach(v => v.style.display = 'none');
+            document.getElementById(subTabId).style.display = 'block';
+            
+            if (subTabId === 'review-queue-tab') {
+                loadTempPartsAdmin();
+            } else if (subTabId === 'database-view-tab') {
+                loadAllPartsSystem();
+            } else if (subTabId === 'user-management-tab') {
+                loadUsersAdmin();
+            } else if (subTabId === 'metadata-management-tab') {
+                loadMetadataAdminPanel();
+            }
+        }
+
+        function clearSearchInputs() {
+            document.getElementById('s-vin').value = '';
+            document.getElementById('s-car-brand').value = '';
+            document.getElementById('s-car-model').value = '';
+            document.getElementById('s-car-year').value = '';
+            document.getElementById('s-category').value = '';
+            document.getElementById('s-oem-code').value = '';
+            document.getElementById('s-oem-name').value = '';
+            document.getElementById('s-aftermarket-brand').value = '';
+            document.getElementById('s-aftermarket-part').value = '';
+            onSalesCarBrandChanged();
+
+            // Clear search results display and hide results panel
+            document.getElementById('sales-results-body').innerHTML = '';
+            document.getElementById('results-count').textContent = '0';
+            document.getElementById('results-panel').style.display = 'none';
+            document.getElementById('live-search-prompt').style.display = 'none';
+            // Hide AI Scraping button
+            document.getElementById('live-search-trigger-btn').style.display = 'none';
+        }
+
+        // Advanced search execution
+        async function performAdvancedSearch() {
+            const vin = document.getElementById('s-vin').value.trim();
+            const brand = document.getElementById('s-car-brand').value;
+            const model = document.getElementById('s-car-model').value;
+            const year = document.getElementById('s-car-year').value;
+            const cat = document.getElementById('s-category').value;
+            const oemCode = document.getElementById('s-oem-code').value.trim();
+            const oemName = document.getElementById('s-oem-name').value.trim();
+            const afterBrand = document.getElementById('s-aftermarket-brand').value;
+            const afterPart = document.getElementById('s-aftermarket-part').value.trim();
+
+            const tbody = document.getElementById('sales-results-body');
+            const promptBox = document.getElementById('live-search-prompt');
+            const countSpan = document.getElementById('results-count');
+
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังจับคู่อะไหล่ตามเงื่อนไข...</td></tr>`;
+            document.getElementById('results-panel').style.display = 'block';
+            promptBox.style.display = 'none';
+            // Show AI Scraping button after search clicked
+            document.getElementById('live-search-trigger-btn').style.display = 'inline-block';
+
+            // Build query params
+            const params = new URLSearchParams();
+            if (vin) params.append('vin', vin);
+            if (brand) params.append('car_brand', brand);
+            if (model) params.append('car_model', model);
+            if (year) params.append('car_year', year);
+            if (cat) params.append('category', cat);
+            if (oemCode) params.append('oem_code', oemCode);
+            if (oemName) params.append('oem_name', oemName);
+            if (afterBrand) params.append('aftermarket_brand', afterBrand);
+            if (afterPart) params.append('aftermarket_part', afterPart);
+
+            try {
+                const response = await fetch(`/api/parts/search?${params.toString()}`);
+                const resData = await response.json();
+
+                if (resData.success && resData.results.length > 0) {
+                    tbody.innerHTML = '';
+                    countSpan.textContent = resData.results.length;
+
+                    resData.results.forEach(item => {
+                        const tr = document.createElement('tr');
+                        const isTemp = item.source === 'TEMP';
+                        
+                        let statusIcon = isTemp && item.status === 'PENDING_URGENT'
+                            ? `<i class="fa-solid fa-circle-exclamation" style="color: var(--warning); font-size:1.15rem;" title="รอตรวจสอบด่วน"></i>`
+                            : `<i class="fa-solid fa-circle-check" style="color: var(--secondary); font-size:1.15rem;" title="อนุมัติแล้ว"></i>`;
+
+                        // Action columns: AI Search or feedback notes
+                        let actionHtml = '';
+                        if (!isTemp) {
+                            actionHtml = `
+                                <button class="btn btn-purple btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="triggerAISearch(${JSON.stringify(item).replace(/"/g, '&quot;')})">
+                                    <i class="fa-solid fa-wand-magic-sparkles"></i> AI Search
+                                </button>
+                            `;
+                        } else {
+                            actionHtml = `
+                                <button class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="openNoteModal(${item.id})">
+                                    <i class="fa-solid fa-comment-dots"></i> โน้ต
+                                </button>
+                            `;
+                        }
+
+                        tr.innerHTML = `
+                            <td><span style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">${item.category || 'อะไหล่ทั่วไป'}</span></td>
+                            <td><strong>${item.brand || '-'}</strong></td>
+                            <td><code>${item.part_number || '-'}</code></td>
+                            <td><code>${item.oem_number || '-'}</code></td>
+                            <td>${item.product_name_th || '-'}</td>
+                            <td>${item.car_brand || ''} ${item.car_model || ''} (${item.year_start || '-'}-${item.year_end || '-'})</td>
+                            <td>฿${parseFloat(item.cost_unit || 0).toLocaleString()}</td>
+                            <td style="text-align: center;">${statusIcon}</td>
+                            <td>${actionHtml}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-secondary);">ไม่พบคู่สินค้าตรงกับที่ระบุ</td></tr>`;
+                    countSpan.textContent = '0';
+                    promptBox.style.display = 'block';
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("โหลดข้อมูลล้มเหลว", "danger");
+            }
+        }
+
+        // Trigger live scrape if fallback clicked
+        async function triggerLiveSearchFallback() {
+            const oem = document.getElementById('s-oem-code').value.trim();
+            const part = document.getElementById('s-aftermarket-part').value.trim();
+            const vin = document.getElementById('s-vin').value.trim();
+            const queryVal = oem || part || vin || "อะไหล่รถยนต์";
+
+            const targetBrand = document.getElementById('s-aftermarket-brand').value;
+            const targetProductName = document.getElementById('s-oem-name').value.trim();
+
+            const btn1 = document.getElementById('live-search-trigger-btn');
+            const btn2 = document.getElementById('live-search-trigger-btn-fallback');
+            const toggleButtons = (disabled, html) => {
+                if (btn1) { btn1.disabled = disabled; btn1.innerHTML = html; }
+                if (btn2) { btn2.disabled = disabled; btn2.innerHTML = html; }
+            };
+
+            toggleButtons(true, `<i class="fa-solid fa-spinner fa-spin"></i> กำลังส่งดัชนีไปที่ Scraper...`);
+
+            try {
+                const formData = new FormData();
+                formData.append('q', queryVal);
+                if (targetBrand) {
+                    formData.append('brand', targetBrand);
+                }
+                if (targetProductName) {
+                    formData.append('product_name', targetProductName);
+                }
+
+                const response = await fetch('/api/parts/live-search', {
+                    method: 'POST',
+                    body: formData
+                });
+                const resData = await response.json();
+                if (resData.success) {
+                    showToast("ดึงข้อมูลสดภายนอกเสร็จสิ้น (รอนุมัติเข้า Master)", "success");
+                    performAdvancedSearch();
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("เกิดข้อผิดพลาดในการรัน Scraper", "danger");
+            } finally {
+                toggleButtons(false, `<i class="fa-solid fa-bolt"></i> AI Scraping / ค้นหาเพิ่มทั่วโลก`);
+            }
+        }
+
+        // AI Search alternatives
+        async function triggerAISearch(item) {
+            showToast("กำลังวิเคราะห์ความเข้ากันได้แบรนด์อื่นด้วยระบบ AI Search...", "info");
+            try {
+                const formData = new FormData();
+                formData.append('brand', item.brand || '');
+                formData.append('part_number', item.part_number || '');
+                formData.append('oem_number', item.oem_number || '');
+                formData.append('car_brand', item.car_brand || '');
+                formData.append('car_model', item.car_model || '');
+                formData.append('category', item.category || '');
+                formData.append('product_name', item.product_name_th || 'อะไหล่ยนต์');
+
+                const response = await fetch('/api/parts/ai-search', {
+                    method: 'POST',
+                    body: formData
+                });
+                const resData = await response.json();
+                if (resData.success) {
+                    showToast(`พบคู่แบรนด์ทางเลือกใหม่ ${resData.total} รายการ! บันทึกในระบบพักข้อมูล`, "success");
+                    performAdvancedSearch();
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("AI Search ทำงานผิดพลาด", "danger");
+            }
+        }
+
+        // File Selection Handlers
+        let selectedFile = null;
+        function handleFileSelected(input) {
+            if (input.files && input.files.length > 0) {
+                selectedFile = input.files[0];
+                document.getElementById('selected-file-name').textContent = selectedFile.name;
+                document.getElementById('upload-submit-btn').style.display = 'inline-flex';
+            }
+        }
+
+        async function uploadFile() {
+            if (!selectedFile) return;
+            const submitBtn = document.getElementById('upload-submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังอัปโหลด...`;
+
+            try {
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+
+                const response = await fetch('/api/parts/import', {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: formData
+                });
+                const resData = await response.json();
+                if (resData.success) {
+                    showToast(`นำเข้าสำเร็จ ${resData.imported_count} รายการ!`, "success");
+                    document.getElementById('admin-file-input').value = '';
+                    document.getElementById('selected-file-name').textContent = 'ยังไม่ได้เลือกไฟล์';
+                    submitBtn.style.display = 'none';
+                    loadTempPartsAdmin();
+                } else {
+                    showToast(resData.error || "เกิดข้อผิดพลาดในการนำเข้า", "danger");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("นำเข้าไฟล์ล้มเหลว", "danger");
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = `<i class="fa-solid fa-file-arrow-up"></i> ยืนยันนำเข้าข้อมูล`;
+            }
+        }
+
+        // Admin Review loading
+        async function loadTempPartsAdmin() {
+            const tbody = document.getElementById('temp-parts-admin-body');
+            const countSpan = document.getElementById('temp-parts-count');
+            tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังดาวน์โหลดข้อมูลตารางพัก...</td></tr>`;
+
+            try {
+                const response = await fetch('/api/admin/temp-parts', { headers: getAuthHeaders() });
+                const resData = await response.json();
+                if (resData.success) {
+                    countSpan.textContent = resData.results.length;
+                    if (resData.results.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; padding: 3rem; color: var(--text-secondary);">ไม่มีรายการคงค้างคัดกรองในขณะนี้</td></tr>`;
+                        return;
+                    }
+                    tbody.innerHTML = '';
+                    resData.results.forEach(item => {
+                        const tr = document.createElement('tr');
+                        
+                        let priorityIcon = item.status === 'PENDING_URGENT'
+                            ? `<i class="fa-solid fa-bolt" style="color: var(--danger); font-size:1.15rem;" title="ด่วนพิเศษ"></i>`
+                            : `<i class="fa-solid fa-clock" style="color: var(--text-muted); font-size:1.1rem;" title="ทั่วไป"></i>`;
+                            
+                        const compareIcon = item.is_new_pair
+                            ? `<i class="fa-solid fa-star text-glow" style="color: #fbbf24; font-size:1.15rem;" title="คู่ใหม่ (New)"></i>`
+                            : `<i class="fa-solid fa-clone" style="color: var(--text-muted); font-size:1.1rem;" title="มีใน Master แล้ว"></i>`;
+
+                        tr.innerHTML = `
+                            <td style="text-align: center;">${priorityIcon}</td>
+                            <td><small><strong>${item.source_type || 'SYSTEM'}</strong></small></td>
+                            <td><small>${item.category || '-'}</small></td>
+                            <td><strong>${item.brand || '-'}</strong><br><code>${item.part_number || '-'}</code></td>
+                            <td><code>${item.oem_number || '-'}</code></td>
+                            <td>${item.product_name_th || '-'}</td>
+                            <td>${item.car_brand || ''} ${item.car_model || ''} (${item.year_start || '-'}-${item.year_end || '-'})</td>
+                            <td style="text-align: center;">${compareIcon}</td>
+                            <td style="color: #fca5a5; font-size: 0.8rem;">${item.staff_note || '-'}</td>
+                            <td>
+                                <div style="display: flex; gap: 0.25rem;">
+                                    <button class="btn btn-primary" style="padding: 0.35rem 0.6rem; font-size: 0.8rem;" onclick="adminReviewAction(${item.id}, 'confirm')">Confirm</button>
+                                    <button class="btn btn-secondary" style="padding: 0.35rem 0.6rem; font-size: 0.8rem;" onclick="openEditModal(${JSON.stringify(item).replace(/"/g, '&quot;')}, 'TEMP')">Edit</button>
+                                    <button class="btn btn-danger" style="padding: 0.35rem 0.6rem; font-size: 0.8rem;" onclick="adminReviewAction(${item.id}, 'reject')">Reject</button>
+                                </div>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function adminReviewAction(tempId, action, updatedData = null) {
+            try {
+                const formData = new FormData();
+                formData.append('action', action);
+                if (updatedData) {
+                    formData.append('updated_data', JSON.stringify(updatedData));
+                }
+
+                const response = await fetch(`/api/admin/review/${tempId}`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: formData
+                });
+                const resData = await response.json();
+                if (resData.success) {
+                    showToast(resData.message, "success");
+                    loadTempPartsAdmin();
+                } else {
+                    showToast(resData.error || "เกิดข้อผิดพลาด", "danger");
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // Admin Master review actions
+        async function adminMasterReviewAction(masterId, action, updatedData = null) {
+            try {
+                const formData = new FormData();
+                formData.append('action', action);
+                if (updatedData) {
+                    formData.append('updated_data', JSON.stringify(updatedData));
+                }
+
+                const response = await fetch(`/api/admin/master/review/${masterId}`, {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: formData
+                });
+                const resData = await response.json();
+                if (resData.success) {
+                    showToast(resData.message, "success");
+                    loadAllPartsSystem();
+                } else {
+                    showToast(resData.error || "เกิดข้อผิดพลาด", "danger");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("การจัดการข้อมูลล้มเหลว", "danger");
+            }
+        }
+
+        // Edit Modal methods (handles both Master and Temp)
+        function openEditModal(item, sourceType = 'TEMP') {
+            document.getElementById('edit-temp-id').value = item.id;
+            document.getElementById('edit-source-type').value = sourceType;
+            document.getElementById('edit-brand').value = item.brand || '';
+            document.getElementById('edit-part-number').value = item.part_number || '';
+            document.getElementById('edit-oem-number').value = item.oem_number || '';
+            document.getElementById('edit-product-name-th').value = item.product_name_th || '';
+            document.getElementById('edit-category').value = item.category || '';
+            document.getElementById('edit-car-brand').value = item.car_brand || '';
+            document.getElementById('edit-car-model').value = item.car_model || '';
+            document.getElementById('edit-year-start').value = item.year_start || '';
+            document.getElementById('edit-year-end').value = item.year_end || '';
+            document.getElementById('edit-engine').value = item.engine || '';
+            document.getElementById('edit-fuel').value = item.fuel || '';
+            document.getElementById('edit-transmission').value = item.transmission || '';
+            document.getElementById('edit-cost-unit').value = item.cost_unit || '';
+            document.getElementById('edit-description').value = item.description || '';
+            document.getElementById('edit-notes').value = item.notes || '';
+
+            const titleEl = document.getElementById('edit-modal-title');
+            const submitBtn = document.getElementById('edit-submit-btn');
+            
+            if (sourceType === 'MASTER') {
+                titleEl.textContent = "แก้ไขและตรวจสอบข้อมูลตารางหลัก (Master Part)";
+                submitBtn.textContent = "ยืนยันและอัปเดต Master";
+            } else {
+                titleEl.textContent = "แก้ไขและตรวจสอบข้อมูลก่อนเข้าสู่ Master";
+                submitBtn.textContent = "บันทึก & อนุมัติย้ายเข้า Master";
             }
 
-            // Reveal Container
-            resultsContainer.classList.remove('hidden');
-            resultsContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            document.getElementById('edit-modal').classList.add('active');
+        }
+
+        function closeEditModal() {
+            document.getElementById('edit-modal').classList.remove('active');
+        }
+
+        async function submitPartEdit(e) {
+            e.preventDefault();
+            const tempId = document.getElementById('edit-temp-id').value;
+            const sourceType = document.getElementById('edit-source-type').value;
+            
+            const updated = {
+                brand: document.getElementById('edit-brand').value,
+                part_number: document.getElementById('edit-part-number').value,
+                oem_number: document.getElementById('edit-oem-number').value,
+                product_name_th: document.getElementById('edit-product-name-th').value,
+                category: document.getElementById('edit-category').value,
+                car_brand: document.getElementById('edit-car-brand').value,
+                car_model: document.getElementById('edit-car-model').value,
+                year_start: document.getElementById('edit-year-start').value,
+                year_end: document.getElementById('edit-year-end').value,
+                engine: document.getElementById('edit-engine').value,
+                fuel: document.getElementById('edit-fuel').value,
+                transmission: document.getElementById('edit-transmission').value,
+                cost_unit: document.getElementById('edit-cost-unit').value,
+                description: document.getElementById('edit-description').value,
+                notes: document.getElementById('edit-notes').value
+            };
+            
+            closeEditModal();
+            if (sourceType === 'MASTER') {
+                await adminMasterReviewAction(tempId, 'edit', updated);
+            } else {
+                await adminReviewAction(tempId, 'confirm', updated);
+            }
+        }
+
+        function deletePartFromModal() {
+            const tempId = document.getElementById('edit-temp-id').value;
+            const sourceType = document.getElementById('edit-source-type').value;
+            
+            closeEditModal();
+            if (sourceType === 'MASTER') {
+                if (confirm("คุณแน่ใจว่าต้องการลบอะไหล่นี้ออกจากฐานข้อมูลหลัก (Master)?")) {
+                    adminMasterReviewAction(tempId, 'reject');
+                }
+            } else {
+                adminReviewAction(tempId, 'reject');
+            }
+        }
+
+        // Users administration loading & CRUD
+        async function loadUsersAdmin() {
+            const tbody = document.getElementById('user-management-list-body');
+            tbody.innerHTML = `<tr><td colspan="5" style="text-align: center;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังดึงรายชื่อผู้ใช้...</td></tr>`;
+
+            try {
+                const response = await fetch('/api/admin/users', { headers: getAuthHeaders() });
+                const resData = await response.json();
+                if (resData.success) {
+                    tbody.innerHTML = '';
+                    resData.users.forEach(u => {
+                        const tr = document.createElement('tr');
+                        const delBtn = u.username === currentUser.username
+                            ? `<span style="color: var(--text-muted); font-size: 0.8rem;">บัญชีปัจจุบัน</span>`
+                            : `<button class="btn btn-danger btn-sm" style="padding: 0.25rem 0.5rem;" onclick="deleteUserAdmin(${u.id})">ลบผู้ใช้</button>`;
+                        
+                        tr.innerHTML = `
+                            <td>${u.id}</td>
+                            <td><strong>${u.username}</strong></td>
+                            <td><span class="badge ${u.role === 'ADMIN' ? 'badge-warning' : 'badge-info'}">${u.role}</span></td>
+                            <td><small>${new Date(u.created_at).toLocaleString()}</small></td>
+                            <td>${delBtn}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function handleCreateUser(e) {
+            e.preventDefault();
+            const u = document.getElementById('new-user-name').value.trim();
+            const p = document.getElementById('new-user-pwd').value.trim();
+            const r = document.getElementById('new-user-role').value;
+
+            try {
+                const response = await fetch('/api/admin/users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...getAuthHeaders()
+                    },
+                    body: JSON.stringify({username: u, password: p, role: r})
+                });
+                const resData = await response.json();
+                if (resData.success) {
+                    showToast("สร้างบัญชีผู้ใช้งานเสร็จเรียบร้อย", "success");
+                    document.getElementById('new-user-name').value = '';
+                    document.getElementById('new-user-pwd').value = '';
+                    loadUsersAdmin();
+                } else {
+                    showToast(resData.error, "danger");
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function deleteUserAdmin(userId) {
+            if (!confirm("คุณแน่ใจหรือไม่ที่จะลบผู้ใช้นี้ออกจากระบบ?")) return;
+            try {
+                const response = await fetch(`/api/admin/users/${userId}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+                const resData = await response.json();
+                if (resData.success) {
+                    showToast("ลบผู้ใช้งานเรียบร้อยแล้ว", "success");
+                    loadUsersAdmin();
+                } else {
+                    showToast(resData.error || "ไม่สามารถลบได้", "danger");
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // Custom Scraping target url (Preview workflow)
+        async function startCustomScrape() {
+            const url = document.getElementById('scrape-target-url').value.trim();
+            const q = document.getElementById('scrape-target-query').value.trim();
+            const startBtn = document.getElementById('start-custom-scrape-btn');
+
+            if (!url) {
+                showToast("กรุณากรอก URL หน้าเว็บเป้าหมายก่อนสั่งขูดข้อมูล", "warning");
+                return;
+            }
+
+            startBtn.disabled = true;
+            startBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังส่งคิวงาน Scraper เจาะลิงก์เป้าหมาย...`;
+            document.getElementById('scrape-preview-container').style.display = 'none';
+
+            try {
+                const formData = new FormData();
+                formData.append('custom_url', url);
+                formData.append('query', q);
+
+                const response = await fetch('/api/admin/scrape-url', {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: formData
+                });
+                const resData = await response.json();
+                
+                if (resData.success && resData.results.length > 0) {
+                    lastScrapedPreviewItems = resData.results;
+                    
+                    // Render preview body
+                    const previewTbody = document.getElementById('scrape-preview-body');
+                    previewTbody.innerHTML = '';
+                    
+                    resData.results.forEach(item => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td><strong>${item.brand || '-'}</strong></td>
+                            <td><code>${item.part_number || '-'}</code></td>
+                            <td><code style="color: var(--warning);">${item.oem_number || '-'}</code></td>
+                            <td>${item.product_name_th || '-'}</td>
+                            <td>${item.category || '-'}</td>
+                            <td>${item.car_brand || ''} ${item.car_model || ''} (${item.year_start || '-'}-${item.year_end || '-'})</td>
+                            <td>฿${parseFloat(item.cost_unit || 0).toLocaleString()}</td>
+                        `;
+                        previewTbody.appendChild(tr);
+                    });
+                    
+                    document.getElementById('scrape-preview-container').style.display = 'block';
+                    showToast("ดึงข้อมูลเสร็จสิ้น กรุณาตรวจสอบพรีวิวด้านล่างก่อนกดยืนยันบันทึก", "success");
+                } else {
+                    showToast(resData.error || "ไม่พบรายการที่ดึงได้ หรือดึงข้อมูลล้มเหลว", "danger");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("ระบบขูดข้อมูลติดขัดภายนอก", "danger");
+            } finally {
+                startBtn.disabled = false;
+                startBtn.innerHTML = `<i class="fa-solid fa-play"></i> เริ่มดึงข้อมูลตามลิงก์`;
+            }
+        }
+
+        function cancelScrapePreview() {
+            lastScrapedPreviewItems = [];
+            document.getElementById('scrape-preview-container').style.display = 'none';
+            document.getElementById('scrape-target-url').value = '';
+            document.getElementById('scrape-target-query').value = '';
+            showToast("ยกเลิกพรีวิวเรียบร้อย", "info");
+        }
+
+        async function confirmSaveScrapedPreview() {
+            if (lastScrapedPreviewItems.length === 0) return;
+            
+            const saveBtn = document.getElementById('confirm-save-preview-btn');
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> กำลังจัดเก็บลง Temp...`;
+            
+            try {
+                const response = await fetch('/api/admin/save-scraped-preview', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...getAuthHeaders()
+                    },
+                    body: JSON.stringify({ items: lastScrapedPreviewItems })
+                });
+                const resData = await response.json();
+                if (resData.success) {
+                    showToast(`บันทึกสำเร็จทั้งหมด ${resData.inserted_count} รายการลงสู่ตารางพักตรวจสอบ!`, "success");
+                    cancelScrapePreview();
+                } else {
+                    showToast("บันทึกล้มเหลว", "danger");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("เครือข่ายขัดข้องขณะเซฟข้อมูล", "danger");
+            } finally {
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = `<i class="fa-solid fa-floppy-disk"></i> ยืนยันบันทึกลงตารางพัก (Temp Database)`;
+            }
+        }
+
+        // Load all system data inside database view sub-tab
+        async function loadAllPartsSystem() {
+            const tbody = document.getElementById('db-view-parts-body');
+            tbody.innerHTML = `<tr><td colspan="10" style="text-align: center;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังค้นหาคลังข้อมูลระบบ...</td></tr>`;
+
+            const b = document.getElementById('f-brand').value.trim();
+            const c = document.getElementById('f-car').value.trim();
+            const s = document.getElementById('f-source').value;
+
+            const params = new URLSearchParams();
+            if (b) params.append('filter_brand', b);
+            if (c) params.append('filter_car', c);
+            if (s) params.append('filter_source', s);
+
+            try {
+                const response = await fetch(`/api/admin/all-parts?${params.toString()}`, { headers: getAuthHeaders() });
+                const resData = await response.json();
+                if (resData.success) {
+                    tbody.innerHTML = '';
+                    if (resData.results.length === 0) {
+                        tbody.innerHTML = `<tr><td colspan="10" style="text-align: center; color: var(--text-secondary);">ไม่พบข้อมูลอะไหล่ที่ค้นหา</td></tr>`;
+                        return;
+                    }
+                    resData.results.forEach(item => {
+                        const tr = document.createElement('tr');
+                        const isMaster = item.source === 'MASTER';
+                        
+                        let statusIcon = item.status === 'APPROVED'
+                            ? `<i class="fa-solid fa-circle-check" style="color: var(--secondary); font-size:1.15rem;" title="อนุมัติแล้ว"></i>`
+                            : `<i class="fa-solid fa-circle-exclamation" style="color: var(--warning); font-size:1.15rem;" title="รอตรวจสอบด่วน"></i>`;
+
+                        tr.innerHTML = `
+                            <td><span class="badge ${isMaster ? 'badge-success' : 'badge-info'}">${item.source}</span></td>
+                            <td><small>${item.category || '-'}</small></td>
+                            <td><strong>${item.brand || '-'}</strong></td>
+                            <td><code>${item.part_number || '-'}</code></td>
+                            <td><code>${item.oem_number || '-'}</code></td>
+                            <td>${item.product_name_th || '-'}</td>
+                            <td>${item.car_brand || ''} ${item.car_model || ''} (${item.year_start || '-'}-${item.year_end || '-'})</td>
+                            <td>฿${parseFloat(item.cost_unit || 0).toLocaleString()}</td>
+                            <td style="text-align: center;">${statusIcon}</td>
+                            <td>
+                                <div style="display: flex; gap: 0.25rem;">
+                                    <button class="btn btn-secondary btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="openEditModal(${JSON.stringify(item).replace(/"/g, '&quot;')}, '${item.source}')">Edit</button>
+                                    <button class="btn btn-danger btn-sm" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;" onclick="deleteDirectlyFromGrid(${item.id}, '${item.source}')">Reject</button>
+                                </div>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function deleteDirectlyFromGrid(id, source) {
+            if (source === 'MASTER') {
+                if (confirm("คุณแน่ใจว่าต้องการลบอะไหล่นี้ออกจากฐานข้อมูลหลัก (Master)?")) {
+                    await adminMasterReviewAction(id, 'reject');
+                }
+            } else {
+                if (confirm("คุณแน่ใจว่าต้องการปฏิเสธและลบข้อมูลจากตารางพัก (Temp)?")) {
+                    await adminReviewAction(id, 'reject');
+                }
+            }
+        }
+
+        // Staff Note modal commands
+        function openNoteModal(tempId) {
+            document.getElementById('note-temp-id').value = tempId;
+            document.getElementById('note-text').value = '';
+            document.getElementById('note-modal').classList.add('active');
+        }
+
+        function closeNoteModal() {
+            document.getElementById('note-modal').classList.remove('active');
+        }
+
+        async function submitStaffNote(e) {
+            e.preventDefault();
+            const tempId = document.getElementById('note-temp-id').value;
+            const text = document.getElementById('note-text').value;
+
+            try {
+                const formData = new FormData();
+                formData.append('temp_id', tempId);
+                formData.append('note', text);
+
+                const response = await fetch('/api/parts/staff-note', {
+                    method: 'POST',
+                    body: formData
+                });
+                const resData = await response.json();
+                if (resData.success) {
+                    showToast("บันทึกฟีดแบ็กสำเร็จแล้ว", "success");
+                    closeNoteModal();
+                    performAdvancedSearch();
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // ================= METADATA ADMIN MANAGEMENT FUNCTIONS =================
+        async function loadMetadataAdminPanel() {
+            try {
+                // 1. Aftermarket brands (Action buttons replaced with frameless pencil/trash icons)
+                const res1 = await fetch('/api/metadata/aftermarket-brands');
+                const d1 = await res1.json();
+                const b1 = document.getElementById('meta-brands-list-body');
+                b1.innerHTML = '';
+                if (d1.success) {
+                    d1.results.forEach(x => {
+                        b1.innerHTML += `<tr>
+                            <td><strong>${x.name}</strong></td>
+                            <td style="text-align:right;">
+                                <i class="fa-solid fa-pen text-action" style="color: var(--secondary); cursor: pointer; margin-right: 0.85rem;" title="แก้ไข" onclick="openMetaEditModal(${x.id}, 'aftermarket-brands', '${x.name}')"></i>
+                                <i class="fa-solid fa-trash-can text-action" style="color: var(--danger); cursor: pointer;" title="ลบ" onclick="deleteMetadataItem(${x.id}, 'aftermarket-brands')"></i>
+                            </td>
+                        </tr>`;
+                    });
+                }
+
+                // 2. Car brands
+                const res2 = await fetch('/api/metadata/car-brands');
+                const d2 = await res2.json();
+                const b2 = document.getElementById('meta-car-brands-list-body');
+                const modelBrandSelect = document.getElementById('add-model-car-brand');
+                b2.innerHTML = '';
+                modelBrandSelect.innerHTML = '<option value="">-- เลือกยี่ห้อรถ --</option>';
+                if (d2.success) {
+                    d2.results.forEach(x => {
+                        b2.innerHTML += `<tr>
+                            <td><strong>${x.name}</strong></td>
+                            <td style="text-align:right;">
+                                <i class="fa-solid fa-pen text-action" style="color: var(--secondary); cursor: pointer; margin-right: 0.85rem;" title="แก้ไข" onclick="openMetaEditModal(${x.id}, 'car-brands', '${x.name}')"></i>
+                                <i class="fa-solid fa-trash-can text-action" style="color: var(--danger); cursor: pointer;" title="ลบ" onclick="deleteMetadataItem(${x.id}, 'car-brands')"></i>
+                            </td>
+                        </tr>`;
+                        modelBrandSelect.innerHTML += `<option value="${x.name}">${x.name}</option>`;
+                    });
+                }
+
+                // 3. Car models
+                const res3 = await fetch('/api/metadata/car-models');
+                const d3 = await res3.json();
+                const b3 = document.getElementById('meta-car-models-list-body');
+                b3.innerHTML = '';
+                if (d3.success) {
+                    d3.results.forEach(x => {
+                        b3.innerHTML += `<tr>
+                            <td><span class="badge badge-info">${x.car_brand}</span> <strong>${x.name}</strong></td>
+                            <td style="text-align:right;">
+                                <i class="fa-solid fa-pen text-action" style="color: var(--secondary); cursor: pointer; margin-right: 0.85rem;" title="แก้ไข" onclick="openMetaEditModal(${x.id}, 'car-models', '${x.name}', '${x.car_brand}')"></i>
+                                <i class="fa-solid fa-trash-can text-action" style="color: var(--danger); cursor: pointer;" title="ลบ" onclick="deleteMetadataItem(${x.id}, 'car-models')"></i>
+                            </td>
+                        </tr>`;
+                    });
+                }
+
+                // 4. Car years
+                const res4 = await fetch('/api/metadata/car-years');
+                const d4 = await res4.json();
+                const b4 = document.getElementById('meta-car-years-list-body');
+                b4.innerHTML = '';
+                if (d4.success) {
+                    d4.results.forEach(x => {
+                        b4.innerHTML += `<tr>
+                            <td><strong>${x.year}</strong></td>
+                            <td style="text-align:right;">
+                                <i class="fa-solid fa-pen text-action" style="color: var(--secondary); cursor: pointer; margin-right: 0.85rem;" title="แก้ไข" onclick="openMetaEditModal(${x.id}, 'car-years', '${x.year}')"></i>
+                                <i class="fa-solid fa-trash-can text-action" style="color: var(--danger); cursor: pointer;" title="ลบ" onclick="deleteMetadataItem(${x.id}, 'car-years')"></i>
+                            </td>
+                        </tr>`;
+                    });
+                }
+
+            } catch (err) {
+                console.error("Error loading admin metadata:", err);
+            }
+        }
+
+        async function addMetadataItem(e, category) {
+            e.preventDefault();
+            let body = {};
+            if (category === 'aftermarket-brands') {
+                const el = document.getElementById('add-brand-name');
+                body = { name: el.value.trim() };
+                el.value = '';
+            } else if (category === 'car-brands') {
+                const el = document.getElementById('add-car-brand-name');
+                body = { name: el.value.trim() };
+                el.value = '';
+            } else if (category === 'car-years') {
+                const el = document.getElementById('add-year-value');
+                body = { year: el.value.trim() };
+                el.value = '';
+            }
+
+            try {
+                const res = await fetch(`/api/admin/metadata/${category}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("เพิ่มตัวเลือกเสร็จเรียบร้อย", "success");
+                    loadMetadataAdminPanel();
+                    loadMetadataDropdowns();
+                } else {
+                    showToast(data.detail || "ไม่สามารถเพิ่มข้อมูลได้", "danger");
+                }
+            } catch (err) {
+                showToast("เครือข่ายขัดข้อง", "danger");
+            }
+        }
+
+        async function addCarModelItem(e) {
+            e.preventDefault();
+            const brandSelect = document.getElementById('add-model-car-brand');
+            const modelInput = document.getElementById('add-model-name');
+            const body = {
+                car_brand: brandSelect.value,
+                name: modelInput.value.trim()
+            };
+
+            try {
+                const res = await fetch('/api/admin/metadata/car-models', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("เพิ่มรุ่นรถสำเร็จ", "success");
+                    modelInput.value = '';
+                    loadMetadataAdminPanel();
+                    loadMetadataDropdowns();
+                } else {
+                    showToast(data.detail || "ไม่สามารถเพิ่มได้", "danger");
+                }
+            } catch (err) {
+                showToast("เครือข่ายขัดข้อง", "danger");
+            }
+        }
+
+        // Custom Metadata Edit Modal Open
+        function openMetaEditModal(id, category, value, carBrand = '') {
+            document.getElementById('edit-meta-id').value = id;
+            document.getElementById('edit-meta-category').value = category;
+            document.getElementById('edit-meta-value').value = value;
+            
+            const brandContainer = document.getElementById('edit-meta-brand-container');
+            const labelEl = document.getElementById('edit-meta-label');
+            const titleEl = document.getElementById('edit-meta-title');
+            
+            if (category === 'car-models') {
+                brandContainer.style.display = 'block';
+                document.getElementById('edit-meta-car-brand').value = carBrand;
+                labelEl.textContent = "ชื่อรุ่นรถยนต์ (Car Model Name)";
+                titleEl.textContent = "แก้ไขข้อมูลรุ่นรถยนต์ (Edit Car Model)";
+            } else {
+                brandContainer.style.display = 'none';
+                if (category === 'car-years') {
+                    labelEl.textContent = "ปีรถยนต์ (Car Year)";
+                    titleEl.textContent = "แก้ไขข้อมูลปีรถยนต์ (Edit Car Year)";
+                } else if (category === 'car-brands') {
+                    labelEl.textContent = "ยี่ห้อรถยนต์ (Car Brand)";
+                    titleEl.textContent = "แก้ไขข้อมูลยี่ห้อรถยนต์ (Edit Car Brand)";
+                } else {
+                    labelEl.textContent = "แบรนด์สินค้าทดแทน (Aftermarket Brand)";
+                    titleEl.textContent = "แก้ไขแบรนด์สินค้าทดแทน (Edit Aftermarket Brand)";
+                }
+            }
+            
+            document.getElementById('edit-metadata-modal').classList.add('active');
+        }
+
+        function closeMetaEditModal() {
+            document.getElementById('edit-metadata-modal').classList.remove('active');
+        }
+
+        // Submit metadata modifications via PUT
+        async function submitMetadataEdit(e) {
+            e.preventDefault();
+            const id = document.getElementById('edit-meta-id').value;
+            const category = document.getElementById('edit-meta-category').value;
+            const value = document.getElementById('edit-meta-value').value.trim();
+            const carBrand = document.getElementById('edit-meta-car-brand').value.trim();
+
+            if (value === "") return;
+            
+            let body = {};
+            if (category === 'car-models') {
+                body = { car_brand: carBrand, name: value };
+            } else if (category === 'car-years') {
+                body = { year: value };
+            } else {
+                body = { name: value };
+            }
+
+            closeMetaEditModal();
+
+            try {
+                const res = await fetch(`/api/admin/metadata/${category}/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("แก้ไขรายละเอียดตัวเลือกสำเร็จแล้ว", "success");
+                    loadMetadataAdminPanel();
+                    loadMetadataDropdowns();
+                } else {
+                    showToast("การแก้ไขข้อมูลล้มเหลว", "danger");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("เครือข่ายขัดข้อง", "danger");
+            }
+        }
+
+        async function deleteMetadataItem(id, category) {
+            if (!confirm("คุณแน่ใจว่าต้องการลบตัวเลือกนี้?")) return;
+            try {
+                const res = await fetch(`/api/admin/metadata/${category}/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("ลบตัวเลือกเรียบร้อยแล้ว", "success");
+                    loadMetadataAdminPanel();
+                    loadMetadataDropdowns();
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // ================= SUPER ADMIN SPECIALIZED OPERATIONS =================
+        async function loadAIKeysConfig() {
+            const tbody = document.getElementById('ai-keys-list-body');
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดคีย์ระบบ...</td></tr>';
+            try {
+                const res = await fetch('/api/superadmin/ai-keys', { headers: getAuthHeaders() });
+                const data = await res.json();
+                if (data.success) {
+                    tbody.innerHTML = '';
+                    if (data.results.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--text-secondary);">ยังไม่มีคีย์โมเดล AI พิเศษลงทะเบียน (ใช้ Fallback คีย์เริ่มต้นระบบ)</td></tr>';
+                        return;
+                    }
+                    data.results.forEach(x => {
+                        const tr = document.createElement('tr');
+                        const maskedKey = x.api_key.substring(0, 8) + '...' + x.api_key.substring(x.api_key.length - 4);
+                        const statusBadge = x.is_active === 1
+                            ? '<span class="badge badge-success">Active</span>'
+                            : '<span class="badge badge-warning">Inactive</span>';
+                            
+                        tr.innerHTML = `
+                            <td><strong>${x.model_name}</strong></td>
+                            <td><code>${maskedKey}</code></td>
+                            <td>${statusBadge}</td>
+                            <td><small>${new Date(x.updated_at).toLocaleString()}</small></td>
+                            <td style="text-align: right;">
+                                <i class="fa-solid fa-trash-can text-action" style="color: var(--danger); cursor: pointer;" title="ลบ" onclick="deleteAIKeyConfig(${x.id})"></i>
+                            </td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function handleSaveAIKey(e) {
+            e.preventDefault();
+            const model = document.getElementById('ai-model-select').value;
+            const key = document.getElementById('ai-key-input').value.trim();
+            const status = parseInt(document.getElementById('ai-status-select').value);
+
+            try {
+                const res = await fetch('/api/superadmin/ai-keys', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    body: JSON.stringify({ model_name: model, api_key: key, is_active: status })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("บันทึกข้อมูลคีย์โมเดล AI สำเร็จแล้ว", "success");
+                    document.getElementById('ai-key-input').value = '';
+                    loadAIKeysConfig();
+                } else {
+                    showToast("ไม่สามารถจัดเก็บคีย์ได้", "danger");
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function deleteAIKeyConfig(id) {
+            if (!confirm("คุณแน่ใจว่าต้องการลบคีย์โมเดลนี้?")) return;
+            try {
+                const res = await fetch(`/api/superadmin/ai-keys/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("ลบคีย์ตัวเลือก AI สำเร็จแล้ว", "success");
+                    loadAIKeysConfig();
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function loadAIUsageStats() {
+            const tbody = document.getElementById('ai-usage-list-body');
+            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดประวัติสถิติ...</td></tr>';
+            try {
+                const res = await fetch('/api/superadmin/ai-usage', { headers: getAuthHeaders() });
+                const data = await res.json();
+                if (data.success) {
+                    tbody.innerHTML = '';
+                    if (data.results.length === 0) {
+                        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color: var(--text-secondary);">ยังไม่มีสถิติการใช้งานเกิดขึ้น</td></tr>';
+                        return;
+                    }
+                    data.results.forEach(x => {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td><strong>${x.usage_date}</strong></td>
+                            <td><span class="badge badge-info">${x.model_name}</span></td>
+                            <td><strong>${x.call_count}</strong> ครั้ง (Calls)</td>
+                        `;
+                        tbody.appendChild(tr);
+                    });
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        // Toast Messages
+        function showToast(message, type = "info") {
+            const toastBox = document.getElementById('toast-box');
+            const toast = document.createElement('div');
+            toast.className = `toast`;
+            
+            let icon = '<i class="fa-solid fa-circle-info"></i>';
+            if (type === 'success') {
+                toast.style.borderLeftColor = 'var(--secondary)';
+                icon = '<i class="fa-solid fa-circle-check" style="color: var(--secondary)"></i>';
+            } else if (type === 'warning') {
+                toast.style.borderLeftColor = 'var(--warning)';
+                icon = '<i class="fa-solid fa-triangle-exclamation" style="color: var(--warning)"></i>';
+            } else if (type === 'danger') {
+                toast.style.borderLeftColor = 'var(--danger)';
+                icon = '<i class="fa-solid fa-circle-xmark" style="color: var(--danger)"></i>';
+            }
+            
+            toast.innerHTML = `${icon} <span>${message}</span>`;
+            toastBox.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('active'), 50);
+            
+            setTimeout(() => {
+                toast.classList.remove('active');
+                setTimeout(() => toast.remove(), 300);
+            }, 4000);
         }
     </script>
 </body>

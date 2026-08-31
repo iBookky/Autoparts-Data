@@ -2644,39 +2644,68 @@ from sheets_helper import SheetsHelper
 
 async def call_gemini_json(prompt: str) -> dict:
     """Helper to query Gemini API with a JSON-producing prompt."""
+    # Read custom configs from database
+    from backend.database import get_ai_keys_config, log_ai_usage
+    configs = []
+    try:
+        configs = get_ai_keys_config()
+    except Exception as e:
+        print(f"Error loading AI keys config: {e}")
+        
+    active_keys = {c["model_name"]: c["api_key"] for c in configs if c["is_active"] == 1}
+
     gemini_models = [
+        "gemini-3.6-flash",
+        "gemini-3.5-flash",
+        "gemini-3.5-flash-lite",
         "gemini-2.0-flash",
         "gemini-flash-latest",
         "gemini-2.0-flash-lite",
+        "gemini-1.5-flash",
+        "gemini-1.5-pro",
     ]
-    headers = {"Content-Type": "application/json"}
-    if GEMINI_API_KEY:
-        if GEMINI_API_KEY.startswith("ya29."):
-            headers["Authorization"] = f"Bearer {GEMINI_API_KEY}"
-        else:
-            headers["x-goog-api-key"] = GEMINI_API_KEY
-    else:
-        print("[call_gemini_json] WARNING: GEMINI_API_KEY is missing!")
-        return {}
-
-    payload = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": 0, "responseMimeType": "application/json"},
-    }
-
+    
+    errors = []
     for model_name in gemini_models:
+        model_api_key = active_keys.get(model_name) or GEMINI_API_KEY
+        if not model_api_key:
+            continue
+            
+        headers = {"Content-Type": "application/json"}
+        if model_api_key.startswith("ya29."):
+            headers["Authorization"] = f"Bearer {model_api_key}"
+        else:
+            headers["x-goog-api-key"] = model_api_key
+
+        payload = {
+            "contents": [{"parts": [{"text": prompt}]}],
+            "generationConfig": {"temperature": 0, "responseMimeType": "application/json"},
+        }
+
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 response = await client.post(url, json=payload, headers=headers)
                 if response.status_code == 429:
                     print(f"[call_gemini_json] Gemini {model_name} rate limited (429). Switching model...")
+                    errors.append(f"{model_name} (429: Rate limited)")
                     rate_limit_var.set(True)
                     await asyncio.sleep(0.5)
                     continue
                 elif response.status_code != 200:
-                    print(f"[call_gemini_json] Gemini {model_name} failed with status {response.status_code}")
+                    try:
+                        detail = response.json().get("error", {}).get("message", response.text)
+                    except:
+                        detail = response.text
+                    print(f"[call_gemini_json] Gemini {model_name} failed with status {response.status_code}: {detail}")
+                    errors.append(f"{model_name} ({response.status_code}: {detail[:80]})")
                     continue
+
+                # Log usage successfully
+                try:
+                    log_ai_usage(model_name)
+                except Exception as log_err:
+                    print(f"Failed to log AI usage: {log_err}")
 
                 res_json = response.json()
                 candidates = res_json.get("candidates", [])
@@ -2710,8 +2739,11 @@ async def call_gemini_json(prompt: str) -> dict:
                         continue
         except Exception as e:
             print(f"[call_gemini_json] Gemini {model_name} network error: {e}")
+            errors.append(f"{model_name} (Network error: {str(e)[:80]})")
             continue
-    rate_limit_var.set(True)
+            
+    if errors:
+        raise RuntimeError(" | ".join(errors[:2]))
     return {}
 
 def make_verify_sheets_prompt(oem_code: str, product_name: str, existing_rows: list[dict], search_context: str = "") -> str:
@@ -3155,6 +3187,23 @@ async def perform_web_search(query: str) -> str:
 
     # Try Google CSE first
     results = await scrape_google_cse(query)
+    
+    # Check if Google CSE results contain relevant auto parts keywords
+    is_relevant = False
+    auto_keywords = [
+        "part", "auto", "car", "oem", "brake", "bushing", "shock", "filter", "pad", "plug", "disc", "suspension",
+        "aftermarket", "compatibility", "fitment", "skr", "trw", "aisin", "bosch", "denso", "brembo",
+        "อะไหล่", "รถ", "ปีกนก", "ผ้าเบรก", "โช๊ค", "กรอง", "ลูกหมาก", "บูช", "จานเบรก"
+    ]
+    if results:
+        results_str = "\n".join(results).lower()
+        if any(kw in results_str for kw in auto_keywords):
+            is_relevant = True
+            
+    if not is_relevant and results:
+        print(f"[perform_web_search] Google CSE results for '{query}' are irrelevant (possibly restricted). Bypassing CSE.")
+        results = []
+        
     if not results:
         # Fallback to DDG
         results = await scrape_ddg(query)

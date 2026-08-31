@@ -1,0 +1,25 @@
+{
+  "search_url_template": "https://www.carparts-mock-service.com/search?q={query}",
+  "headers": {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8"
+  },
+  "selectors": {
+    "product_item": ".product-card",
+    "brand": ".product-brand",
+    "part_number": ".product-sku",
+    "oem_number": ".product-oem",
+    "product_name_th": ".product-title-th",
+    "product_name_en": ".product-title-en",
+    "car_brand": ".compat-brand",
+    "car_model": ".compat-model",
+    "year_start": ".compat-year-start",
+    "year_end": ".compat-year-end",
+    "engine": ".compat-engine",
+    "fuel": ".compat-fuel",
+    "transmission": ".compat-transmission",
+    "description": ".product-desc",
+    "cost_unit": ".product-price",
+    "notes": ".product-notes"
+  }
+}
