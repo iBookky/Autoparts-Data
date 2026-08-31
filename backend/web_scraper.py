@@ -20,7 +20,7 @@ def load_config():
     with open(CONFIG_PATH, "r", encoding="utf-8") as f:
         return json.load(f)
 
-async def scrape_external_parts(query: str, source_type: str = 'ON_DEMAND', custom_url: str = None, insert_to_db: bool = True, target_brand: str = None, target_product_name: str = None):
+async def scrape_external_parts(query: str, source_type: str = 'ON_DEMAND', custom_url: str = None, insert_to_db: bool = True, target_brand: str = None, target_product_name: str = None, car_brand: str = None, car_model: str = None, car_year: str = None):
     config = load_config()
     headers = config.get("headers", {})
     selectors = config.get("selectors", {})
@@ -94,17 +94,23 @@ async def scrape_external_parts(query: str, source_type: str = 'ON_DEMAND', cust
         import asyncio
         from scraper import perform_web_search
 
-        # Build highly-focused search queries to get clean auto parts snippets without generic fallbacks
-        queries_to_search = [query]
-        if target_brand:
-            queries_to_search.append(f"{query} {target_brand}")
-        else:
-            queries_to_search.append(f"{query} auto parts")
-            
-        if target_product_name:
-            queries_to_search.append(f"{query} {target_product_name}")
-        else:
-            queries_to_search.append(f"{query} replacement")
+        # Build highly-focused search queries to get clean auto parts snippets using only non-empty terms
+        queries_to_search = []
+        car_query = f"{car_brand or ''} {car_model or ''} {car_year or ''}".strip()
+        
+        if query and query.strip():
+            queries_to_search.append(query.strip())
+            if car_query:
+                queries_to_search.append(f"{query.strip()} {car_query}")
+            if target_brand and target_brand.strip():
+                queries_to_search.append(f"{query.strip()} {target_brand.strip()}")
+            if target_product_name and target_product_name.strip():
+                queries_to_search.append(f"{query.strip()} {target_product_name.strip()}")
+        elif car_query:
+            if target_product_name and target_product_name.strip():
+                queries_to_search.append(f"{car_query} {target_product_name.strip()}")
+            else:
+                queries_to_search.append(car_query)
 
         # Perform searches in parallel
         search_results_list = []
@@ -122,23 +128,40 @@ async def scrape_external_parts(query: str, source_type: str = 'ON_DEMAND', cust
             
         brand_instruction = f"Search ONLY for the specified target aftermarket brand: '{target_brand}'. Ignore other aftermarket brands." if target_brand else f"Search and retrieve equivalent parts from ALL popular aftermarket brands in the system dropdown: {brand_list_str}."
 
+        STRICT_VEHICLE_INSTRUCTION = ""
+        if car_brand or car_model:
+            brand_term = car_brand or "Any"
+            model_term = car_model or "Any"
+            year_term = car_year or "Any"
+            STRICT_VEHICLE_INSTRUCTION = f"""
+        3. STRICT VEHICLE MATCHING: You MUST strictly filter the returned parts to match:
+           - CAR BRAND: "{brand_term}" (case-insensitive). Do NOT return parts compatible with other brands (e.g. if target is TOYOTA, do not return ISUZU, HONDA, or MAZDA).
+           - CAR MODEL: "{model_term}" (case-insensitive). Do NOT return parts for other models.
+           - CAR YEAR: "{year_term}". Only return parts fitting this model year if specified.
+        """
+        else:
+            STRICT_VEHICLE_INSTRUCTION = """
+        3. VEHICLE MATCHING: Extract the target car brand (e.g. TOYOTA, HONDA), car model (e.g. Hilux Revo, Civic), and product type from the search query and ONLY return parts compatible with that specific car brand and model.
+        """
+
         ai_prompt = f"""
         You are a professional auto parts database compiler and compatibility auditor.
-        We performed a global web search for the query "{query}" (Brand: {target_brand if target_brand else 'Any'}, Name: {target_product_name if target_product_name else 'Any'}).
+        We performed a global web search for the query "{query}" (Brand: {target_brand if target_brand else 'Any'}, Name: {target_product_name if target_product_name else 'Any'}, Car: {car_brand or 'Any'} {car_model or 'Any'} {car_year or 'Any'}).
         Here are the search results snippets found online:
         ---
         {search_text}
         ---
         
-        Extract ALL real aftermarket equivalent part numbers (such as AISIN, DENSO, BOSCH, TRW, KYB, BREMBO, SKF, GSP, etc.) that match the OEM/SKU query "{query}" STRICTLY from the provided web search results.
+        Extract ALL real aftermarket equivalent part numbers (such as AISIN, DENSO, BOSCH, TRW, KYB, BREMBO, SKF, GSP, etc.) that match the OEM/SKU query "{query}".
         
         CRITICAL COMPATIBILITY & ACCURACY INSTRUCTIONS (100% CORRECTNESS IS REQUIRED):
-        1. STRICT GROUNDING: You must ONLY return aftermarket part numbers, SKU codes, and OEM numbers that are EXPLICITLY present in the web search results snippets provided. Do NOT guess, extrapolate, or assume equivalence. Do NOT use your internal training knowledge to generate part numbers that are not documented in the provided text snippets.
+        1. GROUNDING & INTERNAL INTEGRATION: Combine the provided web search snippets with your own extensive internal automotive databases and manufacturer reference catalogs. Reconstruct the correct and complete part numbers, model years, and vehicle compatibility. Ensure 100% real-world accuracy.
         2. AFTERMARKET BRAND FILTER: {brand_instruction}
-        3. CROSS-COMPATIBILITY: If the aftermarket part number fits MULTIPLE different car brands, models, or years (cross-compatibility) explicitly documented in the search snippets, return a SEPARATE result item for EACH compatible vehicle specification. List ALL of them exhaustively.
-        4. MULTI-BRAND OEM REPLACEMENT: If the query "{query}" is an OEM code, search for and retrieve equivalent parts from all matching brands found in the search text. Return all brands and equivalent numbers found.
-        5. SPECIFIC OEM NUMBER PER VEHICLE: For each compatible vehicle option returned, provide the actual real original OEM part number corresponding specifically to that vehicle model/year configuration as documented in the search text.
-        6. ZERO HALLUCINATION / 100% CORRECTNESS: The extracted aftermarket part numbers/SKUs and corresponding OEM part numbers must be 100% accurate and correct. Do NOT make up fake part numbers. If no valid, verified aftermarket parts matching the dropdown brands are found in the text, return an empty list: {{ "results": [] }}. It is better to return nothing than to return inaccurate or unverified data.
+        {STRICT_VEHICLE_INSTRUCTION}
+        4. CROSS-COMPATIBILITY: Within the allowed car brand/model, generate a SEPARATE result item for each compatible vehicle specification (e.g., different engine displacements, years, or sub-models). List them exhaustively.
+        5. MULTI-BRAND OEM REPLACEMENT: If the query "{query}" is an OEM code, search for and retrieve equivalent parts from all matching brands. Return all brands and equivalent numbers found.
+        6. SPECIFIC OEM NUMBER PER VEHICLE: For each compatible vehicle option returned, provide the actual real original OEM part number corresponding specifically to that vehicle model/year configuration.
+        7. ZERO HALLUCINATION / 100% CORRECTNESS: The extracted aftermarket part numbers/SKUs and corresponding OEM part numbers must be 100% accurate and correct. Do NOT make up fake part numbers. If no valid, verified aftermarket parts matching the dropdown brands and specified vehicle are found, return an empty list: {{ "results": [] }}. It is better to return nothing than to return inaccurate or unverified data.
         
         Return ONLY a valid JSON object matching this schema (do not include any markdown fences or explanation):
         {{
@@ -247,21 +270,40 @@ async def run_ai_parts_search(
         allowed_brands_upper = {b.upper() for b in meta_brands}
         brand_list_str = ", ".join(meta_brands)
 
-    # Perform highly-focused search queries
+    # Perform highly-focused search queries using only non-empty fields
     import asyncio
     from scraper import perform_web_search
-    query_ref = part_number if part_number else oem_number
+    query_ref = part_number.strip() if part_number else oem_number.strip() if oem_number else ""
     
-    queries_to_search = [query_ref]
-    if brand:
-        queries_to_search.append(f"{query_ref} {brand}")
+    queries_to_search = []
+    if query_ref:
+        queries_to_search.append(query_ref)
+        if brand and brand.strip():
+            queries_to_search.append(f"{query_ref} {brand.strip()}")
+        if product_name and product_name.strip():
+            queries_to_search.append(f"{query_ref} {product_name.strip()}")
+        if car_brand and car_brand.strip():
+            queries_to_search.append(f"{query_ref} {car_brand.strip()}")
+            if car_model and car_model.strip():
+                queries_to_search.append(f"{query_ref} {car_brand.strip()} {car_model.strip()}")
     else:
-        queries_to_search.append(f"{query_ref} auto parts")
+        # If no part number / oem code is provided, search by vehicle specs + product name
+        base_query = ""
+        if car_brand and car_brand.strip():
+            base_query += f" {car_brand.strip()}"
+        if car_model and car_model.strip():
+            base_query += f" {car_model.strip()}"
+        base_query = base_query.strip()
         
-    if product_name:
-        queries_to_search.append(f"{query_ref} {product_name}")
-    else:
-        queries_to_search.append(f"{query_ref} replacement")
+        if base_query:
+            if product_name and product_name.strip():
+                queries_to_search.append(f"{base_query} {product_name.strip()}")
+                if brand and brand.strip():
+                    queries_to_search.append(f"{base_query} {product_name.strip()} {brand.strip()}")
+            else:
+                queries_to_search.append(base_query)
+                if brand and brand.strip():
+                    queries_to_search.append(f"{base_query} {brand.strip()}")
 
     search_results_list = []
     tasks = [perform_web_search(q) for q in queries_to_search]
@@ -293,11 +335,15 @@ async def run_ai_parts_search(
     ---
 
     CRITICAL COMPATIBILITY & ACCURACY INSTRUCTIONS (100% CORRECTNESS IS REQUIRED):
-    1. STRICT GROUNDING: You must ONLY return aftermarket part numbers, SKU codes, and OEM numbers that are EXPLICITLY present in the web search results snippets provided. Do NOT guess, extrapolate, or assume equivalence. Do NOT use your internal training knowledge to generate part numbers that are not documented in the provided text snippets.
-    2. AFTERMARKET BRAND FILTER: Search and retrieve equivalent parts from ALL popular aftermarket brands in the system dropdown: {brand_list_str}. Do NOT return any brand not in this list.
-    3. CROSS-COMPATIBILITY: If this part fits MULTIPLE other car brands, models, or years (e.g. fits Toyota Corolla and Vios, or Mazda 3, or multiple years/chassis) explicitly documented in the search text, generate a SEPARATE alternative item for EACH compatible vehicle specification. List ALL of them exhaustively.
-    4. SPECIFIC OEM NUMBER PER VEHICLE: For each compatibility alternative returned, find and provide the actual real original OEM part number corresponding specifically to that vehicle model/year configuration as documented in the search text.
-    5. ACCURACY: The extracted aftermarket part numbers/SKUs and corresponding OEM part numbers must be 100% accurate and correct. Do NOT make up fake part numbers. If no valid equivalents matching dropdown brands are found in the text, return an empty list: {{ "alternatives": [] }}.
+    1. GROUNDING & INTERNAL INTEGRATION: Combine the provided web search snippets with your own extensive internal automotive databases and manufacturer reference catalogs. Reconstruct the correct and complete part numbers, model years, and vehicle compatibility. Ensure 100% real-world accuracy.
+    2. STRICT INPUT MATCHING: You MUST strictly filter the returned parts to match the user's input specifications:
+       - CAR BRAND: You MUST ONLY return parts compatible with the car brand "{car_brand}" (case-insensitive). Do NOT return parts for other car brands (e.g. if the input is TOYOTA, do not return ISUZU, HONDA, or MAZDA).
+       - CAR MODEL: You MUST ONLY return parts compatible with the car model "{car_model}" (case-insensitive, e.g. Hilux Revo). Do NOT return parts for other models.
+       - AFTERMARKET BRAND: If a brand "{brand}" is specified (non-empty), you MUST ONLY return parts of this specific brand. Otherwise, return equivalents matching the popular aftermarket brands dropdown: {brand_list_str}.
+       - PRODUCT NAME: You MUST ONLY return parts that match the product name "{product_name}" (e.g. shock absorber / โช้คอัพ).
+    3. CROSS-COMPATIBILITY: Within the specified car brand and model, generate a SEPARATE alternative item for each compatible year/chassis/engine configuration.
+    4. SPECIFIC OEM NUMBER PER VEHICLE: For each compatibility alternative returned, find and provide the actual real original OEM part number corresponding specifically to that vehicle model/year configuration.
+    5. ACCURACY: The extracted aftermarket part numbers/SKUs and corresponding OEM part numbers must be 100% accurate and correct. If no valid equivalents matching the specified vehicle and criteria are found, return an empty list: {{ "alternatives": [] }}.
 
     Return ONLY a valid JSON object matching this schema (do not include any markdown fences or explanation):
     {{

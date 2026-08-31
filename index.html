@@ -83,7 +83,12 @@
                         <div class="grid-2">
                             <div class="input-group">
                                 <label><i class="fa-solid fa-fingerprint" style="color: #f43f5e;"></i> กรอกเลข VIN 17 หลัก</label>
-                                <input type="text" id="s-vin" class="form-control" placeholder="เช่น MR0KA3CD90..." maxlength="17">
+                                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                    <input type="text" id="s-vin" class="form-control" placeholder="เช่น MR0KA3CD90..." maxlength="17" style="flex: 1;">
+                                    <button type="button" class="btn btn-secondary" id="decode-vin-btn" onclick="decodeVinInput()" title="ถอดรหัสข้อมูลรถจาก VIN" style="padding: 0.5rem 0.75rem; border-color: var(--border-color); background: var(--bg-card); display: inline-flex; align-items: center; justify-content: center; height: 38px;">
+                                        <i class="fa-solid fa-wand-magic-sparkles" style="color: #fbbf24;"></i>
+                                    </button>
+                                </div>
                             </div>
                             <div class="input-group">
                                 <label><i class="fa-solid fa-car-side" style="color: #3b82f6;"></i> เลือกตามข้อมูลรถยนต์</label>
@@ -190,6 +195,18 @@
                     <button class="btn btn-warning" id="live-search-trigger-btn-fallback" onclick="triggerLiveSearchFallback()">
                         <i class="fa-solid fa-bolt"></i> ค้นหาแบบเร่งด่วนจากภายนอก (Live Scrape)
                     </button>
+                    
+                    <!-- Troubleshooting Guidelines / วิธีการแก้ไขเมื่อไม่พบข้อมูล -->
+                    <div id="no-results-troubleshoot" style="margin-top: 2rem; text-align: left; padding: 1.5rem; background: rgba(255, 255, 255, 0.02); border: 1px solid var(--panel-border); border-radius: 8px;">
+                        <h4 style="color: var(--warning); margin-bottom: 0.75rem;"><i class="fa-solid fa-circle-info"></i> คำแนะนำและแนวทางการแก้ไข (Troubleshooting & Resolution Guidelines)</h4>
+                        <ul style="list-style-type: decimal; padding-left: 1.25rem; font-size: 0.85rem; line-height: 1.6; color: var(--text-secondary);">
+                            <li><strong>ตรวจสอบความถูกต้องของข้อมูล (Verify Input Details):</strong> ตรวจสอบว่าพิมพ์รหัส OEM หรือรหัสอะไหล่ถูกต้องหรือไม่ (เช่น การสะกดตัวอักษร, เครื่องหมายขีดกลาง, หรือเว้นวรรค)</li>
+                            <li><strong>ขยายขอบเขตการค้นหาให้กว้างขึ้น (Broaden Search Filters):</strong> หากระบุเงื่อนไขมากเกินไป (เช่น ระบุทั้งยี่ห้ออะไหล่, ยี่ห้อรถ, รุ่นรถ, และประเภทสินค้า) ลองนำเงื่อนไขบางช่องออก เช่น ไม่ฟิลเตอร์ยี่ห้ออะไหล่ เพื่อดูสินค้าเทียบเคียงทั้งหมด</li>
+                            <li><strong>ใช้รหัสทดแทนในการค้นหา (Try Alternative Codes):</strong> หากค้นหาด้วยรหัสอะไหล่ทดแทน (Aftermarket Part) ไม่พบ ให้ลองค้นหาด้วยรหัสแท้โรงงาน (OEM Code) หรือกลับกัน เพื่อช่วยให้ระบบและ Google Scraper จับคู่ข้อมูลได้ง่ายขึ้น</li>
+                            <li><strong>ตรวจสอบความเข้ากันได้ของรุ่นและปีรถ (Validate Year/Model Range):</strong> ตรวจสอบว่าปีรถยนต์ที่ระบุเข้าเกณฑ์รุ่นรถนั้นๆ หรือไม่ (เช่น รถกระบะ Toyota Hilux Revo เริ่มผลิตตั้งแต่ปี 2015 เป็นต้นไป)</li>
+                            <li><strong>ติดต่อผู้ดูแลระบบเพื่อบันทึกข้อมูล (Contact System Admin):</strong> หากเป็นอะไหล่หายากหรือเพิ่งออกใหม่ ท่านสามารถส่งข้อมูลให้ผู้ดูแลระบบตรวจสอบและบันทึกรหัสจับคู่ใหม่เข้าระบบ Master Parts ได้โดยตรง</li>
+                        </ul>
+                    </div>
                 </div>
             </div>
         </section>
@@ -494,23 +511,14 @@
                 <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
                     สามารถใส่และจัดสรรคีย์ API แยกตามรุ่นโมเดล (กรณีไม่ใส่คีย์ หรือปิดใช้งาน จะใช้คีย์เริ่มต้นระบบใน .env เป็น Fallback)
                 </p>
-                <form onsubmit="handleSaveAIKey(event)" class="grid-2" style="margin-bottom: 2rem;">
+                <form onsubmit="handleSaveAIKey(event)" class="grid-2" style="margin-bottom: 2rem;" autocomplete="off">
                     <div class="input-group">
                         <label>เลือกโมเดลปัญญาประดิษฐ์</label>
-                        <select id="ai-model-select" class="form-control" required>
-                            <option value="gemini-3.6-flash">gemini-3.6-flash (โมเดลตัวใหม่ล่าสุด)</option>
-                            <option value="gemini-3.5-flash">gemini-3.5-flash (โมเดลประสิทธิภาพสูง)</option>
-                            <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite (Flash Lite)</option>
-                            <option value="gemini-2.0-flash">gemini-2.0-flash (Flash เกรดสอง)</option>
-                            <option value="gemini-flash-latest">gemini-flash-latest</option>
-                            <option value="gemini-2.0-flash-lite">gemini-2.0-flash-lite</option>
-                            <option value="gemini-1.5-flash">gemini-1.5-flash</option>
-                            <option value="gemini-1.5-pro">gemini-1.5-pro (เกรดวิเคราะห์ข้อมูลเชิงลึก)</option>
-                        </select>
+                        <input type="text" id="ai-model-select" class="form-control" placeholder="ระบุชื่อโมเดล เช่น gemini-3.1-pro-preview" autocomplete="off" required>
                     </div>
                     <div class="input-group">
                         <label>API Key ของโมเดล</label>
-                        <input type="password" id="ai-key-input" class="form-control" placeholder="ใส่ API Key ขึ้นต้นด้วย AIzaSy..." required>
+                        <input type="password" id="ai-key-input" class="form-control" placeholder="ใส่ API Key (เว้นว่างไว้เพื่อใช้คีย์เริ่มต้นจาก .env)" autocomplete="new-password">
                     </div>
                     <div class="input-group" style="grid-column: span 2;">
                         <label>สถานะการเปิดใช้งาน</label>
@@ -532,6 +540,7 @@
                                 <th>API Key (ซ่อนบางส่วน)</th>
                                 <th>สถานะ</th>
                                 <th>วันที่ปรับปรุง</th>
+                                <th style="text-align: center;">จัดการ</th>
                                 <th style="text-align: right;">ลบ</th>
                             </tr>
                         </thead>
@@ -544,7 +553,15 @@
 
             <!-- AI Usage Statistics Panel -->
             <div class="panel">
-                <h2 class="panel-title"><i class="fa-solid fa-chart-line" style="color: var(--secondary);"></i> สถิติการใช้งานโมเดลแต่ละวัน (Usage History Logs)</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+                    <h2 class="panel-title" style="margin-bottom: 0;"><i class="fa-solid fa-chart-line" style="color: var(--secondary);"></i> สถิติการใช้งานโมเดลแต่ละวัน</h2>
+                    <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <input type="date" id="usage-start-date" class="form-control" style="width: auto;">
+                        <span>-</span>
+                        <input type="date" id="usage-end-date" class="form-control" style="width: auto;">
+                        <button class="btn btn-primary" onclick="loadAIUsageStats()"><i class="fa-solid fa-filter"></i> กรอง</button>
+                    </div>
+                </div>
                 <div class="table-wrapper">
                     <table>
                         <thead>
@@ -552,6 +569,7 @@
                                 <th>วันที่ประมวลผล</th>
                                 <th>รุ่นโมเดล</th>
                                 <th>จำนวนครั้งที่เรียกใช้ (Calls Count)</th>
+                                <th>จำนวน Token (Tokens Used)</th>
                             </tr>
                         </thead>
                         <tbody id="ai-usage-list-body">
@@ -841,6 +859,107 @@
             }
         }
 
+        async function decodeVinInput() {
+            const vinInput = document.getElementById('s-vin');
+            const vin = vinInput.value.trim();
+            if (!vin || vin.length !== 17) {
+                showToast("กรุณากรอกเลข VIN ให้ครบ 17 หลักก่อนกดถอดรหัส", "warning");
+                return;
+            }
+
+            const btn = document.getElementById('decode-vin-btn');
+            const originalHtml = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin" style="color: #fbbf24;"></i>`;
+
+            try {
+                showToast("กำลังวิเคราะห์และถอดรหัสเลข VIN...", "info");
+                const response = await fetch(`/api/parts/decode-vin?vin=${encodeURIComponent(vin)}`);
+                const resData = await response.json();
+                
+                if (response.ok && resData.success) {
+                    const data = resData.results || {};
+                    let fillCount = 0;
+
+                    // 1. Brand selection
+                    if (data.make) {
+                        const brandSelect = document.getElementById('s-car-brand');
+                        const makeUpper = data.make.toUpperCase();
+                        let foundBrand = false;
+                        for (let opt of brandSelect.options) {
+                            if (opt.value.toUpperCase() === makeUpper) {
+                                brandSelect.value = opt.value;
+                                foundBrand = true;
+                                break;
+                            }
+                        }
+                        onSalesCarBrandChanged();
+                        if (foundBrand) fillCount++;
+                    }
+
+                    // 2. Model selection
+                    if (data.model) {
+                        const modelSelect = document.getElementById('s-car-model');
+                        const modelUpper = data.model.toUpperCase();
+                        let foundModel = false;
+                        for (let opt of modelSelect.options) {
+                            if (opt.value.toUpperCase() === modelUpper || modelUpper.includes(opt.value.toUpperCase())) {
+                                modelSelect.value = opt.value;
+                                foundModel = true;
+                                break;
+                            }
+                        }
+                        if (!foundModel && data.model) {
+                            const newOpt = document.createElement("option");
+                            newOpt.value = data.model;
+                            newOpt.textContent = data.model;
+                            modelSelect.appendChild(newOpt);
+                            modelSelect.value = data.model;
+                            foundModel = true;
+                        }
+                        if (foundModel) fillCount++;
+                    }
+
+                    // 3. Year selection
+                    if (data.year) {
+                        const yearSelect = document.getElementById('s-car-year');
+                        let foundYear = false;
+                        for (let opt of yearSelect.options) {
+                            if (opt.value === String(data.year)) {
+                                yearSelect.value = opt.value;
+                                foundYear = true;
+                                break;
+                            }
+                        }
+                        if (!foundYear && data.year) {
+                            const newOpt = document.createElement("option");
+                            newOpt.value = String(data.year);
+                            newOpt.textContent = String(data.year);
+                            yearSelect.appendChild(newOpt);
+                            yearSelect.value = String(data.year);
+                            foundYear = true;
+                        }
+                        if (foundYear) fillCount++;
+                    }
+
+                    if (fillCount > 0) {
+                        showToast(`ถอดรหัสสำเร็จ: ${data.make || ''} ${data.model || ''} ${data.year || ''}`, "success");
+                    } else {
+                        showToast("ไม่พบข้อมูลยี่ห้อ/รุ่น/ปี ในผลการถอดรหัสเลข VIN นี้", "warning");
+                    }
+                } else {
+                    const detail = resData.detail || "การถอดรหัสไม่สำเร็จ";
+                    showToast(`ผิดพลาด: ${detail}`, "danger");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("ไม่สามารถเชื่อมต่อระบบถอดรหัส VIN ได้", "danger");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        }
+
         // Filter Models when Brand dropdown changes in Sales form
         function onSalesCarBrandChanged() {
             const brandVal = document.getElementById('s-car-brand').value;
@@ -1003,7 +1122,15 @@
             const oem = document.getElementById('s-oem-code').value.trim();
             const part = document.getElementById('s-aftermarket-part').value.trim();
             const vin = document.getElementById('s-vin').value.trim();
-            const queryVal = oem || part || vin || "อะไหล่รถยนต์";
+            
+            const carBrand = document.getElementById('s-car-brand').value;
+            const carModel = document.getElementById('s-car-model').value;
+            const carYear = document.getElementById('s-car-year').value;
+            
+            let queryVal = oem || part || vin || "";
+            if (!queryVal) {
+                queryVal = `${carBrand} ${carModel} ${carYear}`.trim() || "อะไหล่รถยนต์";
+            }
 
             const targetBrand = document.getElementById('s-aftermarket-brand').value;
             const targetProductName = document.getElementById('s-oem-name').value.trim();
@@ -1025,6 +1152,15 @@
                 }
                 if (targetProductName) {
                     formData.append('product_name', targetProductName);
+                }
+                if (carBrand) {
+                    formData.append('car_brand', carBrand);
+                }
+                if (carModel) {
+                    formData.append('car_model', carModel);
+                }
+                if (carYear) {
+                    formData.append('car_year', carYear);
                 }
 
                 const response = await fetch('/api/parts/live-search', {
@@ -1831,34 +1967,60 @@
         // ================= SUPER ADMIN SPECIALIZED OPERATIONS =================
         async function loadAIKeysConfig() {
             const tbody = document.getElementById('ai-keys-list-body');
-            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดคีย์ระบบ...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดคีย์ระบบ...</td></tr>';
             try {
                 const res = await fetch('/api/superadmin/ai-keys', { headers: getAuthHeaders() });
                 const data = await res.json();
                 if (data.success) {
                     tbody.innerHTML = '';
                     if (data.results.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center; color: var(--text-secondary);">ยังไม่มีคีย์โมเดล AI พิเศษลงทะเบียน (ใช้ Fallback คีย์เริ่มต้นระบบ)</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color: var(--text-secondary);">ยังไม่มีคีย์โมเดล AI พิเศษลงทะเบียน (ใช้ Fallback คีย์เริ่มต้นระบบ)</td></tr>';
                         return;
                     }
                     data.results.forEach(x => {
                         const tr = document.createElement('tr');
-                        const maskedKey = x.api_key.substring(0, 8) + '...' + x.api_key.substring(x.api_key.length - 4);
+                        const maskedKey = x.api_key 
+                            ? (x.api_key.substring(0, 8) + '...' + x.api_key.substring(x.api_key.length - 4))
+                            : '<span style="color: var(--text-muted); font-style: italic;">(ใช้คีย์หลักจาก .env)</span>';
+                        
                         const statusBadge = x.is_active === 1
                             ? '<span class="badge badge-success">Active</span>'
                             : '<span class="badge badge-warning">Inactive</span>';
+                            
+                        const actionBtn = x.is_active === 1
+                            ? '<span style="color: var(--secondary); font-weight: 600;"><i class="fa-solid fa-circle-check"></i> กำลังใช้งาน</span>'
+                            : `<button class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="activateAIKeyConfig(${x.id})"><i class="fa-solid fa-power-off"></i> เปิดใช้งาน</button>`;
                             
                         tr.innerHTML = `
                             <td><strong>${x.model_name}</strong></td>
                             <td><code>${maskedKey}</code></td>
                             <td>${statusBadge}</td>
                             <td><small>${new Date(x.updated_at).toLocaleString()}</small></td>
+                            <td style="text-align: center;">${actionBtn}</td>
                             <td style="text-align: right;">
                                 <i class="fa-solid fa-trash-can text-action" style="color: var(--danger); cursor: pointer;" title="ลบ" onclick="deleteAIKeyConfig(${x.id})"></i>
                             </td>
                         `;
                         tbody.appendChild(tr);
                     });
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        async function activateAIKeyConfig(id) {
+            try {
+                const res = await fetch(`/api/superadmin/ai-keys/${id}/activate`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("เปิดใช้งานโมเดลนี้เรียบร้อยแล้ว", "success");
+                    loadAIKeysConfig();
+                } else {
+                    showToast("ไม่สามารถเปิดใช้งานโมเดลได้", "danger");
                 }
             } catch (err) {
                 console.error(err);
@@ -1909,14 +2071,23 @@
 
         async function loadAIUsageStats() {
             const tbody = document.getElementById('ai-usage-list-body');
-            tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดประวัติสถิติ...</td></tr>';
+            const startDate = document.getElementById('usage-start-date')?.value || '';
+            const endDate = document.getElementById('usage-end-date')?.value || '';
+            
+            tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดประวัติสถิติ...</td></tr>';
             try {
-                const res = await fetch('/api/superadmin/ai-usage', { headers: getAuthHeaders() });
+                let url = '/api/superadmin/ai-usage';
+                const params = new URLSearchParams();
+                if (startDate) params.append('start_date', startDate);
+                if (endDate) params.append('end_date', endDate);
+                if (params.toString()) url += '?' + params.toString();
+                
+                const res = await fetch(url, { headers: getAuthHeaders() });
                 const data = await res.json();
                 if (data.success) {
                     tbody.innerHTML = '';
                     if (data.results.length === 0) {
-                        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center; color: var(--text-secondary);">ยังไม่มีสถิติการใช้งานเกิดขึ้น</td></tr>';
+                        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color: var(--text-secondary);">ยังไม่มีสถิติการใช้งานเกิดขึ้นในช่วงเวลานี้</td></tr>';
                         return;
                     }
                     data.results.forEach(x => {
@@ -1925,6 +2096,7 @@
                             <td><strong>${x.usage_date}</strong></td>
                             <td><span class="badge badge-info">${x.model_name}</span></td>
                             <td><strong>${x.call_count}</strong> ครั้ง (Calls)</td>
+                            <td><strong>${x.tokens_used || 0}</strong> Tokens</td>
                         `;
                         tbody.appendChild(tr);
                     });

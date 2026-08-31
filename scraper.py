@@ -1375,7 +1375,7 @@ def get_make_from_wmi(vin: str) -> str:
         "WDB": "MERCEDES-BENZ", "WDD": "MERCEDES-BENZ", "WDC": "MERCEDES-BENZ", 
         "W1K": "MERCEDES-BENZ", "9BM": "MERCEDES-BENZ TRUCKS",
         # Mazda
-        "MM8": "MAZDA", "MM0": "MAZDA", "JM1": "MAZDA", "JMY": "MAZDA", "JM6": "MAZDA", 
+        "MMT": "MAZDA", "MM8": "MAZDA", "MM0": "MAZDA", "JM1": "MAZDA", "JMY": "MAZDA", "JM6": "MAZDA", 
         "JM7": "MAZDA", "JM0": "MAZDA",
         # Ford
         "RLF": "FORD", "MNB": "FORD", "1FA": "FORD", "1FT": "FORD", "1F5": "FORD", 
@@ -1514,6 +1514,7 @@ def get_model_from_vds(vin: str) -> str:
             "ANH2": "Alphard", "GGH2": "Alphard",
             "ZYX1": "C-HR", "NGX5": "C-HR",
             "MXPH": "Corolla Cross", "MXXH": "Corolla Cross",
+            "ZZ": "Corolla Altis",
         }
         # Match by 4-char VDS prefix first, then 3-char
         for prefix, model in toyota_th_map.items():
@@ -1592,13 +1593,14 @@ def get_model_from_vds(vin: str) -> str:
         return ""
 
     # === Mazda (Thailand / AAT) ===
-    if wmi in ("MM8", "MM0"):
+    if wmi in ("MM8", "MM0", "MMT"):
         mazda_th_map = {
             "UN": "BT-50", "UP": "BT-50", "UR": "BT-50",
             "BM": "Mazda3", "BN": "Mazda3",
             "GJ": "Mazda6", "GL": "Mazda6",
             "DK": "CX-3", "DM": "CX-5", "KF": "CX-5",
             "DJ": "Mazda2",
+            "STA": "Mazda2",
         }
         for prefix, model in mazda_th_map.items():
             if vds5.startswith(prefix) or vds.startswith(prefix):
@@ -1713,157 +1715,70 @@ def get_engine_from_vds(vin: str) -> str:
 
 async def decode_vin(vin: str, default_brand: str = "") -> dict:
     """
-    Decodes a 17-digit VIN using the public NHTSA vPIC API and fallback dynamic web search.
-    No hardcoded WMI or year mappings in the code.
+    Decodes a 17-digit VIN using web search verified by Gemini AI, with local fallbacks.
     """
     vin = vin.strip().upper()
     if len(vin) != 17:
         return {}
 
-    make = get_make_from_wmi(vin) or default_brand.upper()
+    make = ""
     model = ""
     year = ""
-    engine = ""  # left empty until determined from NHTSA or local VDS engine map; never fabricate a displacement
-    fuel_type = "เบนซิน"
-    transmission = "อัตโนมัติ (Automatic)"
+    engine = ""
+    fuel_type = ""
+    transmission = ""
 
-    # 1. Try NHTSA API first
-    url = f"https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/{vin}?format=json"
+    # Try Web Search + Gemini Verification (relying heavily on Google AI intelligence)
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            r = await client.get(url)
-            if r.status_code == 200:
-                data = r.json()
-                if "Results" in data and len(data["Results"]) > 0:
-                    res = data["Results"][0]
-                    
-                    nhtsa_make = res.get("Make") or ""
-                    if nhtsa_make:
-                        make = nhtsa_make
-                    nhtsa_model = res.get("Model") or ""
-                    if nhtsa_model:
-                        model = nhtsa_model
-                    nhtsa_year = res.get("ModelYear") or ""
-                    if nhtsa_year:
-                        year = nhtsa_year
-                    
-                    fuel_raw = res.get("FuelTypePrimary") or ""
-                    if fuel_raw:
-                        if "diesel" in fuel_raw.lower():
-                            fuel_type = "ดีเซล"
-                        elif "hybrid" in fuel_raw.lower() or "electric" in fuel_raw.lower():
-                            fuel_type = "เบนซิน-ไฮบริด / ไฟฟ้า"
-                        else:
-                            fuel_type = fuel_raw
+        search_text = await perform_web_search(vin)
+        prompt = f"""
+        You are a professional car VIN decoder and vehicle specs auditor.
+        Please decode this 17-digit VIN code: "{vin}".
+        
+        Utilize BOTH the provided web search text AND your own extensive internal knowledge of automotive databases, manufacturer WMI (World Manufacturer Identifier) lists, VDS (Vehicle Descriptor Section) patterns, and VIS (Vehicle Identifier Section) model years to determine the exact make, model, and year.
+        
+        Here is the web search results text for this VIN if available:
+        ---
+        {search_text if search_text and len(search_text.strip()) > 50 else 'No web search snippets available.'}
+        ---
 
-                    trans_raw = res.get("TransmissionStyle") or ""
-                    if trans_raw:
-                        transmission = trans_raw
-
-                    displacement = res.get("DisplacementL") or ""
-                    engine_model = res.get("EngineModel") or ""
-                    if displacement or engine_model:
-                        engine = f"{displacement}L {engine_model}".strip()
+        Determine the exact vehicle make, model, year, engine size/displacement, fuel type, and transmission.
+        Ensure 100% accuracy.
+        
+        Return ONLY a valid JSON object matching this schema (no markdown formatting or explanation):
+        {{
+            "make": "TOYOTA", // Car brand name in uppercase (e.g. TOYOTA, HONDA, MAZDA, FORD, ISUZU, MITSUBISHI)
+            "model": "Yaris", // Car model name (e.g. Yaris, Civic, Fighter, Triton)
+            "year": "2018", // 4-digit model year (e.g. 2002, 2020)
+            "engine": "1.2", // Engine displacement (e.g. 1.2, 2.5, 3.0) or empty
+            "fuel_type": "เบนซิน", // Fuel type in Thai: "เบนซิน" or "ดีเซล"
+            "transmission": "เกียร์อัตโนมัติ" // Transmission in Thai: "เกียร์อัตโนมัติ" or "เกียร์ธรรมดา"
+        }}
+        """
+        ai_data = await call_gemini_json(prompt)
+        if ai_data:
+            make = ai_data.get("make", "").strip().upper()
+            model = ai_data.get("model", "").strip()
+            year = ai_data.get("year", "").strip()
+            engine = ai_data.get("engine", "").strip()
+            fuel_type = ai_data.get("fuel_type", "").strip()
+            transmission = ai_data.get("transmission", "").strip()
     except Exception as e:
-        print(f"Error querying NHTSA: {e}")
+        print(f"[decode_vin] Web AI decode failed: {e}")
 
-    # 2. Dynamic Web Search Fallback (if Make or Model is missing)
-    if not make or not model or model.lower() == "general model":
-        try:
-            ddg_url = f"https://html.duckduckgo.com/html/?q={urllib.parse.quote(vin)}"
-            headers = {
-                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
-            }
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                r = await client.get(ddg_url, headers=headers)
-                if r.status_code == 200:
-                    soup = BeautifulSoup(r.text, 'html.parser')
-                    snippets = []
-                    for a in soup.find_all('a', class_='result__snippet'):
-                        parent = a.find_parent('div', class_='result__body')
-                        if parent:
-                            title_el = parent.find('a', class_='result__a')
-                            title = title_el.text.strip() if title_el else ""
-                            snippets.append((title, a.text.strip()))
-
-                    brands_list = [
-                        "Toyota", "Honda", "Isuzu", "Mitsubishi", "Nissan", "Ford", "Mazda", 
-                        "Chevrolet", "Suzuki", "Hyundai", "Kia", "MG", "BMW", "Mercedes", "Volvo", 
-                        "Subaru", "Lexus", "Audi", "Porsche", "Haval", "BYD"
-                    ]
-
-                    # Score and rank snippets to prioritize automotive-related matches
-                    vehicle_keywords = ["vin", "car", "vehicle", "auto", "spec", "toyotaparts", "history", "report", "toyodiy", "decode", "model", "drive", "engine", "chassis"]
-                    non_vehicle_keywords = ["servo", "motor", "brushless", "electric", "shaft", "coupling", "amplifier", "melservo"]
-
-                    scored_snippets = []
-                    for title, snippet in snippets:
-                        text = f"{title} {snippet}".lower()
-                        score = 0
-                        for kw in vehicle_keywords:
-                            if kw in text:
-                                score += 2
-                        for kw in non_vehicle_keywords:
-                            if kw in text:
-                                score -= 10
-                        scored_snippets.append((score, title, snippet))
-
-                    scored_snippets.sort(key=lambda x: x[0], reverse=True)
-
-                    web_make = ""
-                    web_model = ""
-                    web_year = ""
-
-                    for score, title, snippet in scored_snippets:
-                        text = f"{title} {snippet}"
-                        
-                        # Only extract year from positive-scoring (automotive) snippets
-                        if score > 0:
-                            year_match = re.search(r'\b(19\d{2}|20[0-2]\d)\b', text)
-                            if year_match and not web_year:
-                                web_year = year_match.group(1)
-
-                        for b in brands_list:
-                            if b.lower() in text.lower():
-                                # Only match if it aligns with our known WMI or user make (if we have one)
-                                if make and b.upper() != make.upper():
-                                    continue
-                                if not web_make:
-                                    web_make = b
-                                pattern = rf"\b{b}\s+([A-Za-z0-9-]+(?:\s+[A-Za-z0-9-]+)?)"
-                                model_match = re.search(pattern, text, re.IGNORECASE)
-                                if model_match and not web_model:
-                                    web_model = model_match.group(1).strip()
-                                break
-                        
-                        if web_make and web_year:
-                            break
-
-                    if not make and web_make:
-                        make = web_make.upper()
-                    if (not model or model.lower() == "general model") and web_model:
-                        model = web_model.title()
-                    if not year and web_year:
-                        year = web_year
-        except Exception as e:
-            print(f"Error extracting VIN specs from web: {e}")
-
-    # 3. Local VIN structure decoding (Thai/ASEAN manufactured vehicles)
-    if not model or model.lower() in ["general model", "universal model", ""]:
-        local_model = get_model_from_vds(vin)
-        if local_model:
-            model = local_model
-
-    if not engine:
-        local_engine = get_engine_from_vds(vin)
-        if local_engine:
-            engine = local_engine
-
-    if not year:
-        year = get_year_from_vin(vin)
-
+    # Fallback to Local/ISO 3779 VIN conventions if not determined
     if not make:
-        make = get_make_from_wmi(vin)
+        make = get_make_from_wmi(vin) or default_brand.upper()
+    if not model or model.lower() in ["general model", "universal model", ""]:
+        model = get_model_from_vds(vin) or ""
+    if not year:
+        year = get_year_from_vin(vin) or ""
+    if not engine:
+        engine = get_engine_from_vds(vin) or ""
+    if not fuel_type:
+        fuel_type = "ดีเซล" if "DIESEL" in engine.upper() else "เบนซิน"
+    if not transmission:
+        transmission = "เกียร์อัตโนมัติ"
 
     return {
         "make": get_brand_display_name(make) if make else "",
@@ -1873,6 +1788,7 @@ async def decode_vin(vin: str, default_brand: str = "") -> dict:
         "fuel_type": fuel_type,
         "transmission": transmission
     }
+
 
 def merge_vehicle_fields(result: dict, vin_info: dict, vin: str, brand: str) -> dict:
     """
@@ -2042,11 +1958,6 @@ async def discover_car_parts(vin: str, brand: str, product_name: str) -> dict:
     decoded_year = vin_info.get("year") or get_year_from_vin(clean_vin)
     year_start, year_end = estimate_generation_years(decoded_model, decoded_year)
 
-    gemini_models = [
-        "gemini-flash-latest",
-        "gemini-2.0-flash",
-    ]
-
     prompt = f"""
     คุณคือฐานข้อมูลระบบแคตตาล็อกอะไหล่รถยนต์ศูนย์แท้สากล (Global Automotive Genuine OEM Parts Catalog Expert)
     จงตรวจสอบวิเคราะห์เลขตัวถังรถ (VIN): "{clean_vin}" แบรนด์/ยี่ห้อรถยนต์: "{decoded_make}" รุ่น: "{decoded_model}" ปี: "{decoded_year}" และค้นหารหัสอะไหล่แท้ของชิ้นส่วน: "{clean_product}"
@@ -2079,48 +1990,20 @@ async def discover_car_parts(vin: str, brand: str, product_name: str) -> dict:
     }}
     """
 
-    headers = {"Content-Type": "application/json"}
-    if GEMINI_API_KEY:
-        if GEMINI_API_KEY.startswith("ya29."):
-            headers["Authorization"] = f"Bearer {GEMINI_API_KEY}"
-        else:
-            headers["x-goog-api-key"] = GEMINI_API_KEY
+    try:
+        result = await call_gemini_json(prompt)
+        if result and isinstance(result, dict) and "เบอร์ OEM" in result:
+            result = merge_vehicle_fields(result, vin_info, clean_vin, clean_brand)
 
-    payload = {
-        "contents": [{"parts": [{"text": prompt}]}],
-        "generationConfig": {"temperature": 0, "responseMimeType": "application/json"},
-    }
+            # Ensure aftermarket brands list exists
+            if "aftermarket_brands" not in result or not result["aftermarket_brands"]:
+                recs = get_aftermarket_recommendations_list(clean_product)
+                result["aftermarket_brands"] = recs
 
-    if GEMINI_API_KEY:
-        for model_name in gemini_models:
-            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
-            try:
-                async with httpx.AsyncClient(timeout=35.0) as client:
-                    response = await client.post(url, json=payload, headers=headers)
-                    if response.status_code == 429:
-                        print(f"Gemini {model_name} rate limited, trying next...")
-                        await asyncio.sleep(5)
-                        continue
-                    if response.status_code == 200:
-                        res_json = response.json()
-                        ai_text = res_json["candidates"][0]["content"]["parts"][0]["text"].strip()
-                        clean_json_str = re.sub(r"```json\s*|```", "", ai_text).strip()
-                        result = json.loads(clean_json_str)
-                        result = merge_vehicle_fields(result, vin_info, clean_vin, clean_brand)
-
-                        # Ensure aftermarket brands list exists
-                        if "aftermarket_brands" not in result or not result["aftermarket_brands"]:
-                            recs = get_aftermarket_recommendations_list(clean_product)
-                            result["aftermarket_brands"] = recs
-
-                        result["vehicle"] = build_vehicle_summary(clean_vin, result)
-                        return _finalize_result(result)
-                    else:
-                        print(f"Gemini {model_name} returned {response.status_code}")
-            except Exception as e:
-                print(f"Gemini {model_name} error: {e}")
-    else:
-        print("No GEMINI_API_KEY set, using web scraper fallback...")
+            result["vehicle"] = build_vehicle_summary(clean_vin, result)
+            return _finalize_result(result)
+    except Exception as e:
+        print(f"Gemini AI parts search call failed: {e}")
     # 2. Fallback to Local Web Scraper
     try:
         car_brand = decoded_make or clean_brand.upper() or "TOYOTA"
@@ -2654,20 +2537,35 @@ async def call_gemini_json(prompt: str) -> dict:
         
     active_keys = {c["model_name"]: c["api_key"] for c in configs if c["is_active"] == 1}
 
-    gemini_models = [
+    # Sequence models prioritizing the user's active configurations
+    models_to_try = []
+    for model_name, key in active_keys.items():
+        use_key = key.strip() if (key and key.strip()) else GEMINI_API_KEY
+        if use_key:
+            models_to_try.append((model_name, use_key))
+
+    default_models = [
+        "gemini-2.0-flash",
         "gemini-3.6-flash",
         "gemini-3.5-flash",
         "gemini-3.5-flash-lite",
-        "gemini-2.0-flash",
-        "gemini-flash-latest",
+        "gemini-3.1-pro-preview",
+        "gemini-3.1-pro",
         "gemini-2.0-flash-lite",
-        "gemini-1.5-flash",
-        "gemini-1.5-pro",
     ]
-    
+    if not models_to_try and GEMINI_API_KEY:
+        for dm in default_models:
+            if dm not in active_keys:
+                models_to_try.append((dm, GEMINI_API_KEY))
+
+    # Intercept alias: gemini-3.1-pro might not exist yet, map to preview
+    models_to_try = [
+        ("gemini-3.1-pro-preview" if m == "gemini-3.1-pro" else m, k)
+        for m, k in models_to_try
+    ]
+
     errors = []
-    for model_name in gemini_models:
-        model_api_key = active_keys.get(model_name) or GEMINI_API_KEY
+    for model_name, model_api_key in models_to_try:
         if not model_api_key:
             continue
             
@@ -2683,15 +2581,23 @@ async def call_gemini_json(prompt: str) -> dict:
         }
 
         url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
-        try:
-            async with httpx.AsyncClient(timeout=10.0) as client:
-                response = await client.post(url, json=payload, headers=headers)
+        
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                async with httpx.AsyncClient(timeout=30.0) as client:
+                    response = await client.post(url, json=payload, headers=headers)
+                
                 if response.status_code == 429:
-                    print(f"[call_gemini_json] Gemini {model_name} rate limited (429). Switching model...")
-                    errors.append(f"{model_name} (429: Rate limited)")
+                    print(f"[call_gemini_json] Gemini {model_name} rate limited (429). Attempt {attempt+1}/{max_retries}...")
                     rate_limit_var.set(True)
-                    await asyncio.sleep(0.5)
-                    continue
+                    if attempt < max_retries - 1:
+                        await asyncio.sleep(1.5 * (attempt + 1))
+                        continue
+                    else:
+                        print(f"[call_gemini_json] Gemini {model_name} rate limit exceeded. Switching model...")
+                        errors.append(f"{model_name} (429: Rate limited)")
+                        break # Give up on this model
                 elif response.status_code != 200:
                     try:
                         detail = response.json().get("error", {}).get("message", response.text)
@@ -2699,21 +2605,24 @@ async def call_gemini_json(prompt: str) -> dict:
                         detail = response.text
                     print(f"[call_gemini_json] Gemini {model_name} failed with status {response.status_code}: {detail}")
                     errors.append(f"{model_name} ({response.status_code}: {detail[:80]})")
-                    continue
+                    break # Give up on this model immediately
 
-                # Log usage successfully
+                res_json = response.json()
+
+                # 200 OK - Log usage successfully
                 try:
-                    log_ai_usage(model_name)
+                    usage_meta = res_json.get("usageMetadata", {})
+                    total_tokens = usage_meta.get("totalTokenCount", 0)
+                    log_ai_usage(model_name, total_tokens)
                 except Exception as log_err:
                     print(f"Failed to log AI usage: {log_err}")
 
-                res_json = response.json()
                 candidates = res_json.get("candidates", [])
                 if not candidates:
-                    continue
+                    break
                 parts = candidates[0].get("content", {}).get("parts", [])
                 if not parts:
-                    continue
+                    break
                 ai_text = parts[0].get("text", "").strip()
                 clean_json_str = re.sub(r"```json\s*|```", "", ai_text).strip()
                 
@@ -2736,11 +2645,14 @@ async def call_gemini_json(prompt: str) -> dict:
                         return json.loads(escaped_str)
                     except Exception:
                         print(f"[call_gemini_json] Could not parse AI JSON text.")
-                        continue
-        except Exception as e:
-            print(f"[call_gemini_json] Gemini {model_name} network error: {e}")
-            errors.append(f"{model_name} (Network error: {str(e)[:80]})")
-            continue
+                        break
+
+            except Exception as e:
+                import traceback
+                print(f"[call_gemini_json] Gemini {model_name} network error ({type(e).__name__}): {e}")
+                traceback.print_exc()
+                errors.append(f"{model_name} (Network error: {str(e)[:80]})")
+                break # Give up on this model on network error
             
     if errors:
         raise RuntimeError(" | ".join(errors[:2]))
@@ -3129,12 +3041,15 @@ async def perform_web_search(query: str) -> str:
                 if r.status_code == 200:
                     items = r.json().get("items", [])
                     return [f"{item.get('title')}: {item.get('snippet')}" for item in items]
+                else:
+                    print(f"[perform_web_search] Google CSE returned status {r.status_code}: {r.text}")
         except Exception as e:
             print(f"[perform_web_search] Google CSE error: {e}")
         return []
 
     async def scrape_ddg(q: str) -> list[str]:
-        url = f"https://html.duckduckgo.com/html/?q={urllib.parse.quote(q)}"
+        # Target Thailand search region to return correct localized parts/vehicles
+        url = f"https://html.duckduckgo.com/html/?q={urllib.parse.quote(q)}&kl=th-th"
         try:
             async with httpx.AsyncClient(timeout=10.0, follow_redirects=True) as client:
                 r = await client.get(url, headers=make_headers())
@@ -3153,11 +3068,12 @@ async def perform_web_search(query: str) -> str:
         return []
 
     async def scrape_bing(q: str) -> list[str]:
-        url = f"https://www.bing.com/search?q={urllib.parse.quote(q)}&setlang=en&cc=US"
+        # Target Thailand region on Bing for correct Thai part results
+        url = f"https://www.bing.com/search?q={urllib.parse.quote(q)}&setlang=th&cc=TH"
         bing_headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0",
             "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-            "Accept-Language": "en-US,en;q=0.9",
+            "Accept-Language": "th-TH,th;q=0.9,en;q=0.8",
             "Referer": "https://www.bing.com/",
             "Upgrade-Insecure-Requests": "1",
         }
@@ -3188,17 +3104,23 @@ async def perform_web_search(query: str) -> str:
     # Try Google CSE first
     results = await scrape_google_cse(query)
     
+    # Skip relevance check if the query is a 17-character VIN
+    is_vin = len(query.strip()) == 17 and query.strip().isalnum()
+    
     # Check if Google CSE results contain relevant auto parts keywords
     is_relevant = False
-    auto_keywords = [
-        "part", "auto", "car", "oem", "brake", "bushing", "shock", "filter", "pad", "plug", "disc", "suspension",
-        "aftermarket", "compatibility", "fitment", "skr", "trw", "aisin", "bosch", "denso", "brembo",
-        "อะไหล่", "รถ", "ปีกนก", "ผ้าเบรก", "โช๊ค", "กรอง", "ลูกหมาก", "บูช", "จานเบรก"
-    ]
-    if results:
-        results_str = "\n".join(results).lower()
-        if any(kw in results_str for kw in auto_keywords):
-            is_relevant = True
+    if is_vin:
+        is_relevant = True
+    else:
+        auto_keywords = [
+            "part", "auto", "car", "oem", "brake", "bushing", "shock", "filter", "pad", "plug", "disc", "suspension",
+            "aftermarket", "compatibility", "fitment", "skr", "trw", "aisin", "bosch", "denso", "brembo",
+            "อะไหล่", "รถ", "ปีกนก", "ผ้าเบรก", "โช๊ค", "กรอง", "ลูกหมาก", "บูช", "จานเบรก"
+        ]
+        if results:
+            results_str = "\n".join(results).lower()
+            if any(kw in results_str for kw in auto_keywords):
+                is_relevant = True
             
     if not is_relevant and results:
         print(f"[perform_web_search] Google CSE results for '{query}' are irrelevant (possibly restricted). Bypassing CSE.")

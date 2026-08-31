@@ -45,6 +45,7 @@ from backend.database import (
     get_ai_keys_config,
     set_ai_key_config,
     delete_ai_key_config,
+    activate_ai_key_config,
     get_ai_usage_stats,
     log_ai_usage
 )
@@ -219,7 +220,10 @@ async def ai_search(
 async def live_search(
     q: str = Form(...), 
     brand: Optional[str] = Form(None),
-    product_name: Optional[str] = Form(None)
+    product_name: Optional[str] = Form(None),
+    car_brand: Optional[str] = Form(None),
+    car_model: Optional[str] = Form(None),
+    car_year: Optional[str] = Form(None)
 ):
     if not q or not q.strip():
         raise HTTPException(status_code=400, detail="Search query is required")
@@ -228,7 +232,10 @@ async def live_search(
             q.strip(), 
             source_type='ON_DEMAND',
             target_brand=brand.strip() if brand else None,
-            target_product_name=product_name.strip() if product_name else None
+            target_product_name=product_name.strip() if product_name else None,
+            car_brand=car_brand.strip() if car_brand else None,
+            car_model=car_model.strip() if car_model else None,
+            car_year=car_year.strip() if car_year else None
         )
         for item in scraped_items:
             item["source"] = "TEMP"
@@ -481,6 +488,18 @@ class MetaModelRequest(BaseModel):
 class MetaYearRequest(BaseModel):
     year: str
 
+@app.get("/api/parts/decode-vin")
+async def decode_vin_endpoint(vin: str):
+    vin_cleaned = vin.strip().upper()
+    if not vin_cleaned or len(vin_cleaned) != 17:
+        raise HTTPException(status_code=400, detail="รูปแบบเลข VIN ไม่ถูกต้อง ต้องมีความยาว 17 หลัก")
+    try:
+        from scraper import decode_vin
+        decoded_data = await decode_vin(vin_cleaned)
+        return {"success": True, "results": decoded_data}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 # PUBLIC METADATA GET ENDPOINTS
 @app.get("/api/metadata/aftermarket-brands")
 async def get_metadata_aftermarket_brands():
@@ -570,7 +589,7 @@ async def update_metadata_car_year(id: int, req: MetaYearRequest, admin = Depend
 # Super Admin AI key configuration Pydantic schema
 class AIKeySaveRequest(BaseModel):
     model_name: str
-    api_key: str
+    api_key: Optional[str] = None
     is_active: int = 1
 
 # SUPER ADMIN SPECIALIZED ENDPOINTS
@@ -586,16 +605,21 @@ async def superadmin_save_ai_key(req: AIKeySaveRequest, user = Depends(require_s
     success = set_ai_key_config(req.model_name, req.api_key, req.is_active)
     return {"success": success}
 
+@app.post("/api/superadmin/ai-keys/{id}/activate")
+async def superadmin_activate_ai_key(id: int, user = Depends(require_super_admin)):
+    success = activate_ai_key_config(id)
+    return {"success": success}
+
 @app.delete("/api/superadmin/ai-keys/{id}")
 async def superadmin_delete_ai_key(id: int, user = Depends(require_super_admin)):
     success = delete_ai_key_config(id)
     return {"success": success}
 
 @app.get("/api/superadmin/ai-usage")
-async def superadmin_get_ai_usage(user = Depends(require_super_admin)):
+async def superadmin_get_ai_usage(start_date: str = None, end_date: str = None, user = Depends(require_super_admin)):
     return {
         "success": True,
-        "results": get_ai_usage_stats()
+        "results": get_ai_usage_stats(start_date, end_date)
     }
 
 # Serving single frontend SPA

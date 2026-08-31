@@ -692,10 +692,15 @@ def get_ai_keys_config():
     conn.close()
     return [dict(r) for r in rows]
 
-def set_ai_key_config(model_name: str, api_key: str, is_active: int = 1):
+def set_ai_key_config(model_name: str, api_key: str = None, is_active: int = 1):
     conn = get_db_connection()
     cursor = conn.cursor()
+    key_val = api_key.strip() if api_key else ""
     try:
+        # If setting this model as active, deactivate all others first
+        if is_active == 1:
+            cursor.execute("UPDATE ai_keys_config SET is_active = 0")
+            
         cursor.execute("""
             INSERT INTO ai_keys_config (model_name, api_key, is_active, updated_at)
             VALUES (?, ?, ?, CURRENT_TIMESTAMP)
@@ -703,11 +708,25 @@ def set_ai_key_config(model_name: str, api_key: str, is_active: int = 1):
                 api_key = excluded.api_key,
                 is_active = excluded.is_active,
                 updated_at = CURRENT_TIMESTAMP
-        """, (model_name.strip(), api_key.strip(), is_active))
+        """, (model_name.strip(), key_val, is_active))
         conn.commit()
         return True
     except Exception as e:
         print(f"Error setting AI key: {e}")
+        return False
+    finally:
+        conn.close()
+
+def activate_ai_key_config(config_id: int):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE ai_keys_config SET is_active = 0")
+        cursor.execute("UPDATE ai_keys_config SET is_active = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?", (config_id,))
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"Error activating AI key config: {e}")
         return False
     finally:
         conn.close()
@@ -725,18 +744,19 @@ def delete_ai_key_config(config_id: int):
     finally:
         conn.close()
 
-def log_ai_usage(model_name: str):
+def log_ai_usage(model_name: str, tokens: int = 0):
     import datetime
     conn = get_db_connection()
     cursor = conn.cursor()
     today_str = datetime.date.today().isoformat() # 'YYYY-MM-DD'
     try:
         cursor.execute("""
-            INSERT INTO ai_usage_stats (model_name, usage_date, call_count)
-            VALUES (?, ?, 1)
+            INSERT INTO ai_usage_stats (model_name, usage_date, call_count, tokens_used)
+            VALUES (?, ?, 1, ?)
             ON CONFLICT(model_name, usage_date) DO UPDATE SET
-                call_count = call_count + 1
-        """, (model_name.strip(), today_str))
+                call_count = call_count + 1,
+                tokens_used = tokens_used + ?
+        """, (model_name.strip(), today_str, tokens, tokens))
         conn.commit()
         return True
     except Exception as e:
@@ -745,10 +765,26 @@ def log_ai_usage(model_name: str):
     finally:
         conn.close()
 
-def get_ai_usage_stats():
+def get_ai_usage_stats(start_date: str = None, end_date: str = None):
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM ai_usage_stats ORDER BY usage_date DESC, model_name ASC")
+    
+    query = "SELECT * FROM ai_usage_stats"
+    params = []
+    
+    if start_date and end_date:
+        query += " WHERE usage_date >= ? AND usage_date <= ?"
+        params.extend([start_date, end_date])
+    elif start_date:
+        query += " WHERE usage_date >= ?"
+        params.append(start_date)
+    elif end_date:
+        query += " WHERE usage_date <= ?"
+        params.append(end_date)
+        
+    query += " ORDER BY usage_date DESC, model_name ASC"
+    
+    cursor.execute(query, tuple(params))
     rows = cursor.fetchall()
     conn.close()
     return [dict(r) for r in rows]

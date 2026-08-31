@@ -579,3 +579,43 @@ td i.fa-solid {
 td i.fa-solid:hover {
     transform: scale(1.2);
 }
+
+/* ================= RESPONSIVE STYLES ================= */
+@media (max-width: 768px) {
+    .header-container {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 1rem;
+        padding: 1rem;
+    }
+    
+    .nav-tabs {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .tab-btn {
+        flex: 1 1 auto;
+        text-align: center;
+        padding: 0.5rem;
+        font-size: 0.9rem;
+    }
+    
+    .grid-2, .grid-3 {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    .panel {
+        padding: 1rem;
+    }
+    
+    .auth-card {
+        margin: 1rem;
+        padding: 2rem 1.5rem;
+    }
+}

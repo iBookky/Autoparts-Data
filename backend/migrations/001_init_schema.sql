@@ -93,6 +93,7 @@ CREATE TABLE IF NOT EXISTS ai_usage_stats (
     model_name TEXT NOT NULL,
     usage_date TEXT NOT NULL,
     call_count INTEGER DEFAULT 1,
+    tokens_used INTEGER DEFAULT 0,
     UNIQUE(model_name, usage_date)
 );
 
