@@ -89,6 +89,9 @@
                                         <i class="fa-solid fa-wand-magic-sparkles" style="color: #fbbf24;"></i>
                                     </button>
                                 </div>
+                                <div id="vin-decoded-badge" style="display:none; margin-top: 0.4rem; padding: 0.35rem 0.6rem; background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 6px; font-size: 0.8rem; color: #93c5fd;">
+                                    <i class="fa-solid fa-circle-check" style="color: #38bdf8;"></i> <span id="vin-badge-text"></span>
+                                </div>
                             </div>
                             <div class="input-group">
                                 <label><i class="fa-solid fa-car-side" style="color: #3b82f6;"></i> เลือกตามข้อมูลรถยนต์</label>
@@ -388,9 +391,9 @@
 
             <!-- SUB TAB 4: Metadata settings panel (จัดการตัวเลือก) -->
             <div id="metadata-management-tab" class="admin-sub-view" style="display: none;">
-                <div class="grid-2">
-                    <!-- Column 1: Aftermarket Brands Management -->
-                    <div class="panel" style="padding: 1.25rem;">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 1rem;">
+                    <!-- Card 1: Aftermarket Brands Management -->
+                    <div class="panel" style="padding: 1.25rem; margin-bottom: 0;">
                         <h3 style="font-size:1rem; margin-bottom:1rem;"><i class="fa-solid fa-industry" style="color: var(--secondary)"></i> แบรนด์สินค้าทดแทน</h3>
                         <form onsubmit="addMetadataItem(event, 'aftermarket-brands')" style="display:flex; gap:0.5rem; margin-bottom:1rem;">
                             <input type="text" id="add-brand-name" class="form-control" placeholder="แบรนด์ใหม่ เช่น TRW" required>
@@ -403,8 +406,8 @@
                         </div>
                     </div>
 
-                    <!-- Column 2: Car Brands Management -->
-                    <div class="panel" style="padding: 1.25rem;">
+                    <!-- Card 2: Car Brands Management -->
+                    <div class="panel" style="padding: 1.25rem; margin-bottom: 0;">
                         <h3 style="font-size:1rem; margin-bottom:1rem;"><i class="fa-solid fa-car" style="color: var(--primary)"></i> ยี่ห้อรถยนต์</h3>
                         <form onsubmit="addMetadataItem(event, 'car-brands')" style="display:flex; gap:0.5rem; margin-bottom:1rem;">
                             <input type="text" id="add-car-brand-name" class="form-control" placeholder="ยี่ห้อใหม่ เช่น HONDA" required>
@@ -416,11 +419,9 @@
                             </table>
                         </div>
                     </div>
-                </div>
 
-                <div class="grid-2" style="margin-top: 1rem;">
-                    <!-- Column 3: Car Models Management -->
-                    <div class="panel" style="padding: 1.25rem;">
+                    <!-- Card 3: Car Models Management -->
+                    <div class="panel" style="padding: 1.25rem; margin-bottom: 0;">
                         <h3 style="font-size:1rem; margin-bottom:1rem;"><i class="fa-solid fa-car-side" style="color: var(--purple)"></i> รุ่นรถยนต์</h3>
                         <form onsubmit="addCarModelItem(event)" style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1rem;">
                             <select id="add-model-car-brand" class="form-control" required>
@@ -438,8 +439,8 @@
                         </div>
                     </div>
 
-                    <!-- Column 4: Car Years Management -->
-                    <div class="panel" style="padding: 1.25rem;">
+                    <!-- Card 4: Car Years Management -->
+                    <div class="panel" style="padding: 1.25rem; margin-bottom: 0;">
                         <h3 style="font-size:1rem; margin-bottom:1rem;"><i class="fa-solid fa-calendar-days" style="color: var(--warning)"></i> ปีรถยนต์</h3>
                         <form onsubmit="addMetadataItem(event, 'car-years')" style="display:flex; gap:0.5rem; margin-bottom:1rem;">
                             <input type="number" id="add-year-value" class="form-control" placeholder="ปีใหม่ เช่น 2027" required>
@@ -448,6 +449,23 @@
                         <div class="table-wrapper" style="max-height: 250px; overflow-y: auto;">
                             <table>
                                 <tbody id="meta-car-years-list-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Card 5: Categories Management (หมวดหมู่สินค้า) -->
+                    <div class="panel" style="padding: 1.25rem; margin-bottom: 0;">
+                        <h3 style="font-size:1rem; margin-bottom:1rem;"><i class="fa-solid fa-layer-group" style="color: var(--success)"></i> หมวดหมู่สินค้า (Categories)</h3>
+                        <form onsubmit="addCategoryItem(event)" style="display:flex; flex-direction:column; gap:0.5rem; margin-bottom:1rem;">
+                            <input type="text" id="add-category-name" class="form-control" placeholder="ชื่อหมวดหมู่ภาษาไทย เช่น ระบบเบรก" required>
+                            <div style="display:flex; gap:0.5rem;">
+                                <input type="text" id="add-category-name-en" class="form-control" placeholder="ชื่อภาษาอังกฤษ (ถ้ามี) เช่น Brake System">
+                                <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-plus"></i></button>
+                            </div>
+                        </form>
+                        <div class="table-wrapper" style="max-height: 250px; overflow-y: auto;">
+                            <table>
+                                <tbody id="meta-categories-list-body"></tbody>
                             </table>
                         </div>
                     </div>
@@ -505,30 +523,59 @@
 
         <!-- ================= SUPER ADMIN VIEW ================= -->
         <section id="superadmin-view" class="app-view">
-            <!-- AI Key Management Panel -->
+            <!-- AI Automotive Agent Skills & Intelligence Architecture Card -->
+            <div class="panel" style="background: linear-gradient(135deg, rgba(30, 41, 59, 0.7), rgba(15, 23, 42, 0.9)); border: 1px solid rgba(99, 102, 241, 0.3);">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+                    <div>
+                        <h2 class="panel-title" style="margin-bottom: 0.25rem; color: #818cf8;">
+                            <i class="fa-solid fa-brain" style="color: #6366f1;"></i> สถาปัตยกรรมความฉลาด AI Automotive Agent (Domain Skills)
+                        </h2>
+                        <p style="color: var(--text-secondary); margin-bottom: 0; font-size: 0.85rem;">
+                            ยกระดับโมเดล LLM สู่การเป็น <strong>Autonomous Automotive Parts Agent</strong> ที่มีความเชี่ยวชาญเฉพาะด้าน (Domain-Specific Intelligence)
+                        </p>
+                    </div>
+                    <div>
+                        <span class="badge" style="background: rgba(99, 102, 241, 0.2); color: #818cf8; border: 1px solid #6366f1; padding: 0.4rem 0.8rem; font-size: 0.85rem;">
+                            <i class="fa-solid fa-sparkles"></i> ระดับความฉลาด: Auto Specialist (EPC / TecDoc Expert)
+                        </span>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1rem;" id="agent-skills-list-container">
+                    <!-- Populated dynamically with skills -->
+                </div>
+            </div>
+
+            <!-- AI Model Selector (Antigravity Style) & API Keys Panel -->
             <div class="panel">
-                <h2 class="panel-title"><i class="fa-solid fa-key" style="color: var(--warning);"></i> ตั้งค่ากุญแจเชื่อมต่อ AI (Gemini APIs Key Config)</h2>
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1rem;">
+                    <h2 class="panel-title" style="margin-bottom: 0;"><i class="fa-solid fa-microchip" style="color: var(--warning);"></i> เลือกและสลับโมเดล AI (1-Click Antigravity Model Switcher)</h2>
+                    <button class="btn btn-secondary btn-sm" onclick="openAddCustomModelModal()"><i class="fa-solid fa-plus"></i> เพิ่มโมเดลใหม่ในอนาคต</button>
+                </div>
                 <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">
-                    สามารถใส่และจัดสรรคีย์ API แยกตามรุ่นโมเดล (กรณีไม่ใส่คีย์ หรือปิดใช้งาน จะใช้คีย์เริ่มต้นระบบใน .env เป็น Fallback)
+                    เลือกโมเดลที่ต้องการใช้งานในระบบได้ทันทีแบบคลิกเดียวเหมือน Google Antigravity พร้อมระบุ API Key เฉพาะรุ่น (หากไม่ใส่คีย์จะใช้ค่าใน .env เป็น Fallback)
                 </p>
+
                 <form onsubmit="handleSaveAIKey(event)" class="grid-2" style="margin-bottom: 2rem;" autocomplete="off">
                     <div class="input-group">
-                        <label>เลือกโมเดลปัญญาประดิษฐ์</label>
-                        <input type="text" id="ai-model-select" class="form-control" placeholder="ระบุชื่อโมเดล เช่น gemini-3.1-pro-preview" autocomplete="off" required>
+                        <label>เลือกโมเดลที่ต้องการใช้งาน (Model Selector)</label>
+                        <select id="ai-model-select" class="form-control" onchange="onPresetModelChanged()" required>
+                            <!-- Populated dynamically -->
+                        </select>
                     </div>
                     <div class="input-group">
-                        <label>API Key ของโมเดล</label>
-                        <input type="password" id="ai-key-input" class="form-control" placeholder="ใส่ API Key (เว้นว่างไว้เพื่อใช้คีย์เริ่มต้นจาก .env)" autocomplete="new-password">
+                        <label>API Key ของโมเดล (เว้นว่างไว้เพื่อใช้คีย์หลักจาก .env)</label>
+                        <input type="password" id="ai-key-input" class="form-control" placeholder="ใส่ API Key ประจำโมเดล" autocomplete="new-password">
                     </div>
                     <div class="input-group" style="grid-column: span 2;">
-                        <label>สถานะการเปิดใช้งาน</label>
+                        <label>สถานะการเปิดใช้งาน (Active Status)</label>
                         <select id="ai-status-select" class="form-control">
-                            <option value="1">เปิดใช้งาน (Active)</option>
-                            <option value="0">ปิดใช้งานชั่วคราว (Inactive)</option>
+                            <option value="1">เปิดใช้งานทันที (Active & Primary)</option>
+                            <option value="0">บันทึกไว้แต่ยังไม่เปิดใช้ (Inactive)</option>
                         </select>
                     </div>
                     <button type="submit" class="btn btn-primary" style="grid-column: span 2; margin-top: 1rem;">
-                        <i class="fa-solid fa-floppy-disk"></i> บันทึกคีย์โมเดล
+                        <i class="fa-solid fa-bolt"></i> บันทึกและเปิดใช้งานโมเดลนี้
                     </button>
                 </form>
 
@@ -705,6 +752,40 @@
         </div>
     </div>
 
+    <!-- Add Custom AI Model Modal -->
+    <div class="modal-overlay" id="add-custom-model-modal">
+        <div class="modal-content" style="max-width: 440px;">
+            <div class="modal-header">
+                <h3 class="modal-title"><i class="fa-solid fa-plus-circle" style="color: var(--secondary);"></i> เพิ่มโมเดล AI ใหม่ในระบบ</h3>
+                <button class="close-btn" onclick="closeAddCustomModelModal()">&times;</button>
+            </div>
+            <form onsubmit="submitCustomAIModel(event)">
+                <div class="input-group" style="margin-bottom: 1rem;">
+                    <label>ชื่อโมเดล AI (Model ID)</label>
+                    <input type="text" id="new-custom-model-name" class="form-control" placeholder="เช่น gemini-3.0-pro หรือ gpt-5" required>
+                </div>
+                <div class="input-group" style="margin-bottom: 1rem;">
+                    <label>ผู้พัฒนา / ค่ายโมเดล (Provider)</label>
+                    <select id="new-custom-model-provider" class="form-control">
+                        <option value="Google">Google (Gemini)</option>
+                        <option value="Anthropic">Anthropic (Claude)</option>
+                        <option value="OpenAI">OpenAI (ChatGPT)</option>
+                        <option value="DeepSeek">DeepSeek</option>
+                        <option value="Custom">Custom / Other</option>
+                    </select>
+                </div>
+                <div class="input-group" style="margin-bottom: 1.5rem;">
+                    <label>คำอธิบายความสามารถ / หมายเหตุ</label>
+                    <input type="text" id="new-custom-model-desc" class="form-control" placeholder="เช่น รุ่นการคิดวิเคราะห์เหตุผลสูง">
+                </div>
+                <div style="display: flex; justify-content: flex-end; gap: 0.75rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddCustomModelModal()">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus"></i> เพิ่มโมเดลเข้าระบบ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Staff Note Dialog Modal -->
     <div class="modal-overlay" id="note-modal">
         <div class="modal-content" style="max-width: 450px;">
@@ -854,6 +935,21 @@
                     });
                 }
 
+                // Fetch Categories dynamically
+                const resCategories = await fetch('/api/metadata/categories');
+                const catData = await resCategories.json();
+                const sCatSelect = document.getElementById('s-category');
+                if (sCatSelect) {
+                    const curVal = sCatSelect.value;
+                    sCatSelect.innerHTML = '<option value="">หมวดหมู่: ทั้งหมด</option>';
+                    if (catData.success) {
+                        catData.results.forEach(c => {
+                            sCatSelect.innerHTML += `<option value="${c.name}">${c.name}${c.name_en ? ' (' + c.name_en + ')' : ''}</option>`;
+                        });
+                    }
+                    if (curVal) sCatSelect.value = curVal;
+                }
+
             } catch (err) {
                 console.error("Error loading dropdown options:", err);
             }
@@ -893,6 +989,14 @@
                                 break;
                             }
                         }
+                        if (!foundBrand && data.make) {
+                            const newOpt = document.createElement("option");
+                            newOpt.value = data.make.toUpperCase();
+                            newOpt.textContent = data.make.toUpperCase();
+                            brandSelect.appendChild(newOpt);
+                            brandSelect.value = data.make.toUpperCase();
+                            foundBrand = true;
+                        }
                         onSalesCarBrandChanged();
                         if (foundBrand) fillCount++;
                     }
@@ -903,7 +1007,9 @@
                         const modelUpper = data.model.toUpperCase();
                         let foundModel = false;
                         for (let opt of modelSelect.options) {
-                            if (opt.value.toUpperCase() === modelUpper || modelUpper.includes(opt.value.toUpperCase())) {
+                            if (!opt.value) continue;
+                            const optUpper = opt.value.toUpperCase();
+                            if (optUpper === modelUpper || modelUpper.includes(optUpper) || optUpper.includes(modelUpper)) {
                                 modelSelect.value = opt.value;
                                 foundModel = true;
                                 break;
@@ -913,6 +1019,7 @@
                             const newOpt = document.createElement("option");
                             newOpt.value = data.model;
                             newOpt.textContent = data.model;
+                            newOpt.selected = true;
                             modelSelect.appendChild(newOpt);
                             modelSelect.value = data.model;
                             foundModel = true;
@@ -942,6 +1049,19 @@
                         if (foundYear) fillCount++;
                     }
 
+                    // 4. Update VIN Details Badge
+                    const vinBadge = document.getElementById('vin-decoded-badge');
+                    const vinBadgeText = document.getElementById('vin-badge-text');
+                    if (vinBadge && vinBadgeText) {
+                        const specs = [];
+                        if (data.engine) specs.push(`เครื่องยนต์: ${data.engine}`);
+                        if (data.fuel_type) specs.push(`เชื้อเพลิง: ${data.fuel_type}`);
+                        if (data.transmission) specs.push(`เกียร์: ${data.transmission}`);
+                        const specStr = specs.length > 0 ? ` (${specs.join(' | ')})` : '';
+                        vinBadgeText.textContent = `${data.make || ''} ${data.model || ''} ${data.year || ''}${specStr}`;
+                        vinBadge.style.display = 'block';
+                    }
+
                     if (fillCount > 0) {
                         showToast(`ถอดรหัสสำเร็จ: ${data.make || ''} ${data.model || ''} ${data.year || ''}`, "success");
                     } else {
@@ -962,17 +1082,37 @@
 
         // Filter Models when Brand dropdown changes in Sales form
         function onSalesCarBrandChanged() {
-            const brandVal = document.getElementById('s-car-brand').value;
+            const brandVal = (document.getElementById('s-car-brand').value || '').trim();
             const modelSelect = document.getElementById('s-car-model');
+            const previousModel = modelSelect.value;
             modelSelect.innerHTML = '<option value="">รุ่น: ทั้งหมด</option>';
 
             const filtered = brandVal 
-                ? allCarModelsList.filter(m => m.car_brand === brandVal)
+                ? allCarModelsList.filter(m => (m.car_brand || '').trim().toUpperCase() === brandVal.toUpperCase())
                 : allCarModelsList;
 
+            // Sort alphabetically by name
+            filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+            let preserved = false;
             filtered.forEach(m => {
-                modelSelect.innerHTML += `<option value="${m.name}">${m.name}</option>`;
+                const opt = document.createElement("option");
+                opt.value = m.name;
+                opt.textContent = m.name;
+                if (previousModel && (m.name.toUpperCase() === previousModel.toUpperCase())) {
+                    opt.selected = true;
+                    preserved = true;
+                }
+                modelSelect.appendChild(opt);
             });
+
+            if (previousModel && !preserved && brandVal) {
+                const newOpt = document.createElement("option");
+                newOpt.value = previousModel;
+                newOpt.textContent = previousModel;
+                newOpt.selected = true;
+                modelSelect.appendChild(newOpt);
+            }
         }
 
         // View tabs switcher
@@ -1016,6 +1156,8 @@
             document.getElementById('s-oem-name').value = '';
             document.getElementById('s-aftermarket-brand').value = '';
             document.getElementById('s-aftermarket-part').value = '';
+            const vinBadge = document.getElementById('vin-decoded-badge');
+            if (vinBadge) vinBadge.style.display = 'none';
             onSalesCarBrandChanged();
 
             // Clear search results display and hide results panel
@@ -1126,14 +1268,14 @@
             const carBrand = document.getElementById('s-car-brand').value;
             const carModel = document.getElementById('s-car-model').value;
             const carYear = document.getElementById('s-car-year').value;
+            const cat = document.getElementById('s-category').value;
+            const targetBrand = document.getElementById('s-aftermarket-brand').value;
+            const targetProductName = document.getElementById('s-oem-name').value.trim() || cat || "";
             
-            let queryVal = oem || part || vin || "";
+            let queryVal = oem || part || targetProductName || "";
             if (!queryVal) {
                 queryVal = `${carBrand} ${carModel} ${carYear}`.trim() || "อะไหล่รถยนต์";
             }
-
-            const targetBrand = document.getElementById('s-aftermarket-brand').value;
-            const targetProductName = document.getElementById('s-oem-name').value.trim();
 
             const btn1 = document.getElementById('live-search-trigger-btn');
             const btn2 = document.getElementById('live-search-trigger-btn-fallback');
@@ -1799,8 +1941,56 @@
                     });
                 }
 
+                // 5. Categories (หมวดหมู่สินค้า)
+                const res5 = await fetch('/api/metadata/categories');
+                const d5 = await res5.json();
+                const b5 = document.getElementById('meta-categories-list-body');
+                b5.innerHTML = '';
+                if (d5.success) {
+                    d5.results.forEach(x => {
+                        const enText = x.name_en ? `<span style="color: var(--text-secondary); font-size: 0.8rem;"> (${x.name_en})</span>` : '';
+                        b5.innerHTML += `<tr>
+                            <td><strong>${x.name}</strong>${enText}</td>
+                            <td style="text-align:right;">
+                                <i class="fa-solid fa-pen text-action" style="color: var(--secondary); cursor: pointer; margin-right: 0.85rem;" title="แก้ไข" onclick="openMetaEditModal(${x.id}, 'categories', '${x.name}')"></i>
+                                <i class="fa-solid fa-trash-can text-action" style="color: var(--danger); cursor: pointer;" title="ลบ" onclick="deleteMetadataItem(${x.id}, 'categories')"></i>
+                            </td>
+                        </tr>`;
+                    });
+                }
+
             } catch (err) {
                 console.error("Error loading admin metadata:", err);
+            }
+        }
+
+        async function addCategoryItem(e) {
+            e.preventDefault();
+            const nameEl = document.getElementById('add-category-name');
+            const nameEnEl = document.getElementById('add-category-name-en');
+            const body = {
+                name: nameEl.value.trim(),
+                name_en: nameEnEl.value.trim()
+            };
+
+            try {
+                const res = await fetch('/api/admin/metadata/categories', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("เพิ่มหมวดหมู่สินค้าสำเร็จ", "success");
+                    nameEl.value = '';
+                    nameEnEl.value = '';
+                    loadMetadataAdminPanel();
+                    loadMetadataDropdowns();
+                } else {
+                    showToast(data.detail || "ไม่สามารถเพิ่มหมวดหมู่ได้", "danger");
+                }
+            } catch (err) {
+                showToast("เครือข่ายขัดข้อง", "danger");
             }
         }
 
@@ -1884,6 +2074,10 @@
                 document.getElementById('edit-meta-car-brand').value = carBrand;
                 labelEl.textContent = "ชื่อรุ่นรถยนต์ (Car Model Name)";
                 titleEl.textContent = "แก้ไขข้อมูลรุ่นรถยนต์ (Edit Car Model)";
+            } else if (category === 'categories') {
+                brandContainer.style.display = 'none';
+                labelEl.textContent = "ชื่อหมวดหมู่สินค้า (Category Name)";
+                titleEl.textContent = "แก้ไขหมวดหมู่สินค้า (Edit Category)";
             } else {
                 brandContainer.style.display = 'none';
                 if (category === 'car-years') {
@@ -1920,6 +2114,8 @@
                 body = { car_brand: carBrand, name: value };
             } else if (category === 'car-years') {
                 body = { year: value };
+            } else if (category === 'categories') {
+                body = { name: value };
             } else {
                 body = { name: value };
             }
@@ -1965,10 +2161,144 @@
         }
 
         // ================= SUPER ADMIN SPECIALIZED OPERATIONS =================
+        async function loadPresetAIModels() {
+            try {
+                const res = await fetch('/api/metadata/ai-models');
+                const data = await res.json();
+                const select = document.getElementById('ai-model-select');
+                if (!select) return;
+                
+                const curVal = select.value;
+                select.innerHTML = '<option value="">-- เลือกโมเดล AI (1-Click Switcher) --</option>';
+                if (data.success && data.results) {
+                    const groups = {};
+                    data.results.forEach(m => {
+                        const prov = m.provider || 'Other';
+                        if (!groups[prov]) groups[prov] = [];
+                        groups[prov].push(m);
+                    });
+                    
+                    for (const [provider, models] of Object.entries(groups)) {
+                        let optGroup = `<optgroup label="${provider}">`;
+                        models.forEach(m => {
+                            optGroup += `<option value="${m.model_name}">${m.model_name} - ${m.description || ''}</option>`;
+                        });
+                        optGroup += `</optgroup>`;
+                        select.innerHTML += optGroup;
+                    }
+                }
+                if (curVal) select.value = curVal;
+            } catch (err) {
+                console.error("Error loading preset AI models:", err);
+            }
+        }
+
+        function onPresetModelChanged() {
+            // Dropdown selection triggers immediately
+        }
+
+        function openAddCustomModelModal() {
+            document.getElementById('new-custom-model-name').value = '';
+            document.getElementById('new-custom-model-desc').value = '';
+            document.getElementById('add-custom-model-modal').classList.add('active');
+        }
+
+        function closeAddCustomModelModal() {
+            document.getElementById('add-custom-model-modal').classList.remove('active');
+        }
+
+        async function submitCustomAIModel(e) {
+            e.preventDefault();
+            const modelName = document.getElementById('new-custom-model-name').value.trim();
+            const provider = document.getElementById('new-custom-model-provider').value;
+            const desc = document.getElementById('new-custom-model-desc').value.trim();
+
+            try {
+                const res = await fetch('/api/admin/metadata/ai-models', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    body: JSON.stringify({ model_name: modelName, provider: provider, description: desc })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`เพิ่มโมเดล ${modelName} เข้าระบบเรียบร้อยแล้ว`, "success");
+                    closeAddCustomModelModal();
+                    await loadPresetAIModels();
+                    document.getElementById('ai-model-select').value = modelName;
+                } else {
+                    showToast(data.detail || "ไม่สามารถเพิ่มโมเดลได้", "danger");
+                }
+            } catch (err) {
+                showToast("เกิดข้อผิดพลาดในการเชื่อมต่อ", "danger");
+            }
+        }
+
+        async function loadAgentSkills() {
+            const container = document.getElementById('agent-skills-list-container');
+            if (!container) return;
+            try {
+                const res = await fetch('/api/admin/agent-skills', { headers: getAuthHeaders() });
+                const data = await res.json();
+                if (data.success && data.results) {
+                    container.innerHTML = '';
+                    const icons = {
+                        'oem_cross_ref': 'fa-solid fa-arrows-split-up-and-left',
+                        'fitment_auditor': 'fa-solid fa-shield-halved',
+                        'asean_market_naming': 'fa-solid fa-earth-asia',
+                        'global_catalog_parser': 'fa-solid fa-globe'
+                    };
+                    data.results.forEach(s => {
+                        const icon = icons[s.skill_key] || 'fa-solid fa-microchip';
+                        const isChecked = s.is_active === 1 ? 'checked' : '';
+                        const card = document.createElement('div');
+                        card.style.cssText = 'background: rgba(15, 23, 42, 0.6); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 8px; padding: 1rem; display: flex; flex-direction: column; justify-content: space-between; gap: 0.75rem;';
+                        card.innerHTML = `
+                            <div>
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.4rem;">
+                                    <strong style="color: #cbd5e1; font-size: 0.95rem;"><i class="${icon}" style="color: #818cf8; margin-right: 0.4rem;"></i> ${s.skill_name}</strong>
+                                    <label style="position: relative; display: inline-block; width: 38px; height: 20px; flex-shrink: 0; margin-bottom: 0;">
+                                        <input type="checkbox" ${isChecked} onchange="toggleAgentSkill('${s.skill_key}', this.checked)" style="opacity: 0; width: 0; height: 0;">
+                                        <span style="position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: ${s.is_active ? '#6366f1' : '#475569'}; transition: .3s; border-radius: 20px;"></span>
+                                    </label>
+                                </div>
+                                <p style="color: var(--text-secondary); font-size: 0.8rem; margin: 0; line-height: 1.4;">${s.description}</p>
+                            </div>
+                            <div style="font-size: 0.75rem; color: ${s.is_active ? '#34d399' : '#94a3b8'}; font-weight: 500;">
+                                <i class="fa-solid ${s.is_active ? 'fa-circle-check' : 'fa-circle-pause'}"></i> ${s.is_active ? 'สกิลเปิดใช้งาน (Active Skill)' : 'ปิดการทำงานชั่วคราว'}
+                            </div>
+                        `;
+                        container.appendChild(card);
+                    });
+                }
+            } catch (err) {
+                console.error("Error loading agent skills:", err);
+            }
+        }
+
+        async function toggleAgentSkill(key, isActive) {
+            try {
+                const res = await fetch(`/api/admin/agent-skills/${key}/toggle`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    body: JSON.stringify({ is_active: isActive ? 1 : 0 })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`ปรับสถานะสกิลเรียบร้อยแล้ว`, "success");
+                    loadAgentSkills();
+                }
+            } catch (err) {
+                showToast("ไม่สามารถปรับสถานะสกิลได้", "danger");
+            }
+        }
+
         async function loadAIKeysConfig() {
             const tbody = document.getElementById('ai-keys-list-body');
             tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดคีย์ระบบ...</td></tr>';
             try {
+                await loadPresetAIModels();
+                await loadAgentSkills();
+
                 const res = await fetch('/api/superadmin/ai-keys', { headers: getAuthHeaders() });
                 const data = await res.json();
                 if (data.success) {

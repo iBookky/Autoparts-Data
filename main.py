@@ -30,18 +30,27 @@ from backend.database import (
     get_meta_car_brands,
     get_meta_car_models,
     get_meta_car_years,
+    get_meta_categories,
+    get_preset_ai_models,
+    get_agent_skills,
     add_meta_aftermarket_brand,
     add_meta_car_brand,
     add_meta_car_model,
     add_meta_car_year,
+    add_meta_category,
+    add_preset_ai_model,
     delete_meta_aftermarket_brand,
     delete_meta_car_brand,
     delete_meta_car_model,
     delete_meta_car_year,
+    delete_meta_category,
+    delete_preset_ai_model,
     update_meta_aftermarket_brand,
     update_meta_car_brand,
     update_meta_car_model,
     update_meta_car_year,
+    update_meta_category,
+    update_agent_skill,
     get_ai_keys_config,
     set_ai_key_config,
     delete_ai_key_config,
@@ -488,6 +497,18 @@ class MetaModelRequest(BaseModel):
 class MetaYearRequest(BaseModel):
     year: str
 
+class MetaCategoryRequest(BaseModel):
+    name: str
+    name_en: Optional[str] = ""
+
+class MetaAIModelRequest(BaseModel):
+    model_name: str
+    provider: Optional[str] = "Custom"
+    description: Optional[str] = ""
+
+class AgentSkillToggleRequest(BaseModel):
+    is_active: int
+
 @app.get("/api/parts/decode-vin")
 async def decode_vin_endpoint(vin: str):
     vin_cleaned = vin.strip().upper()
@@ -516,6 +537,23 @@ async def get_metadata_car_models(car_brand: Optional[str] = None):
 @app.get("/api/metadata/car-years")
 async def get_metadata_car_years():
     return {"success": True, "results": get_meta_car_years()}
+
+@app.get("/api/metadata/categories")
+async def get_metadata_categories():
+    return {"success": True, "results": get_meta_categories()}
+
+@app.get("/api/metadata/ai-models")
+async def get_metadata_ai_models():
+    return {"success": True, "results": get_preset_ai_models()}
+
+@app.get("/api/admin/agent-skills")
+async def get_metadata_agent_skills(admin = Depends(require_admin)):
+    return {"success": True, "results": get_agent_skills()}
+
+@app.post("/api/admin/agent-skills/{key}/toggle")
+async def toggle_metadata_agent_skill(key: str, req: AgentSkillToggleRequest, admin = Depends(require_admin)):
+    success = update_agent_skill(key, req.is_active)
+    return {"success": success}
 
 # ADMIN METADATA CRUD ENDPOINTS (POST & DELETE)
 @app.post("/api/admin/metadata/aftermarket-brands")
@@ -546,6 +584,20 @@ async def create_metadata_car_year(req: MetaYearRequest, admin = Depends(require
         raise HTTPException(status_code=400, detail=res["error"])
     return res
 
+@app.post("/api/admin/metadata/categories")
+async def create_metadata_category(req: MetaCategoryRequest, admin = Depends(require_admin)):
+    res = add_meta_category(req.name, req.name_en or "")
+    if not res["success"]:
+        raise HTTPException(status_code=400, detail=res["error"])
+    return res
+
+@app.post("/api/admin/metadata/ai-models")
+async def create_metadata_ai_model(req: MetaAIModelRequest, admin = Depends(require_admin)):
+    res = add_preset_ai_model(req.model_name, req.provider or "Custom", req.description or "")
+    if not res["success"]:
+        raise HTTPException(status_code=400, detail=res["error"])
+    return res
+
 @app.delete("/api/admin/metadata/aftermarket-brands/{id}")
 async def delete_metadata_aftermarket_brand(id: int, admin = Depends(require_admin)):
     success = delete_meta_aftermarket_brand(id)
@@ -566,6 +618,16 @@ async def delete_metadata_car_year(id: int, admin = Depends(require_admin)):
     success = delete_meta_car_year(id)
     return {"success": success}
 
+@app.delete("/api/admin/metadata/categories/{id}")
+async def delete_metadata_category(id: int, admin = Depends(require_admin)):
+    success = delete_meta_category(id)
+    return {"success": success}
+
+@app.delete("/api/admin/metadata/ai-models/{id}")
+async def delete_metadata_ai_model(id: int, admin = Depends(require_admin)):
+    success = delete_preset_ai_model(id)
+    return {"success": success}
+
 @app.put("/api/admin/metadata/aftermarket-brands/{id}")
 async def update_metadata_aftermarket_brand(id: int, req: MetaBrandRequest, admin = Depends(require_admin)):
     success = update_meta_aftermarket_brand(id, req.name)
@@ -584,6 +646,11 @@ async def update_metadata_car_model(id: int, req: MetaModelRequest, admin = Depe
 @app.put("/api/admin/metadata/car-years/{id}")
 async def update_metadata_car_year(id: int, req: MetaYearRequest, admin = Depends(require_admin)):
     success = update_meta_car_year(id, req.year)
+    return {"success": success}
+
+@app.put("/api/admin/metadata/categories/{id}")
+async def update_metadata_category(id: int, req: MetaCategoryRequest, admin = Depends(require_admin)):
+    success = update_meta_category(id, req.name, req.name_en or "")
     return {"success": success}
 
 # Super Admin AI key configuration Pydantic schema

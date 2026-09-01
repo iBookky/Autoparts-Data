@@ -97,20 +97,23 @@ async def scrape_external_parts(query: str, source_type: str = 'ON_DEMAND', cust
         # Build highly-focused search queries to get clean auto parts snippets using only non-empty terms
         queries_to_search = []
         car_query = f"{car_brand or ''} {car_model or ''} {car_year or ''}".strip()
+        part_term = (target_product_name or query or '').strip()
         
         if query and query.strip():
-            queries_to_search.append(query.strip())
-            if car_query:
-                queries_to_search.append(f"{query.strip()} {car_query}")
+            main_q = f"{car_query} {query.strip()}".strip()
+            queries_to_search.append(main_q)
             if target_brand and target_brand.strip():
-                queries_to_search.append(f"{query.strip()} {target_brand.strip()}")
-            if target_product_name and target_product_name.strip():
-                queries_to_search.append(f"{query.strip()} {target_product_name.strip()}")
+                queries_to_search.append(f"{main_q} {target_brand.strip()} part number")
+            elif part_term and part_term not in main_q:
+                queries_to_search.append(f"{main_q} {part_term} OEM cross reference")
         elif car_query:
-            if target_product_name and target_product_name.strip():
-                queries_to_search.append(f"{car_query} {target_product_name.strip()}")
+            if part_term:
+                queries_to_search.append(f"{car_query} {part_term} OEM part number")
             else:
-                queries_to_search.append(car_query)
+                queries_to_search.append(f"{car_query} auto parts catalog OEM cross reference")
+        
+        # Deduplicate and limit to top 2 queries for ultra-fast parallel scraping
+        queries_to_search = list(dict.fromkeys([q for q in queries_to_search if q.strip()]))[:2]
 
         # Perform searches in parallel
         search_results_list = []
@@ -134,7 +137,7 @@ async def scrape_external_parts(query: str, source_type: str = 'ON_DEMAND', cust
             model_term = car_model or "Any"
             year_term = car_year or "Any"
             STRICT_VEHICLE_INSTRUCTION = f"""
-        3. STRICT VEHICLE MATCHING: You MUST strictly filter the returned parts to match:
+        3. STRICT VEHICLE MATCHING (100% ACCURACY): You MUST strictly filter the returned parts to match:
            - CAR BRAND: "{brand_term}" (case-insensitive). Do NOT return parts compatible with other brands (e.g. if target is TOYOTA, do not return ISUZU, HONDA, or MAZDA).
            - CAR MODEL: "{model_term}" (case-insensitive). Do NOT return parts for other models.
            - CAR YEAR: "{year_term}". Only return parts fitting this model year if specified.
@@ -146,20 +149,25 @@ async def scrape_external_parts(query: str, source_type: str = 'ON_DEMAND', cust
 
         ai_prompt = f"""
         You are a professional auto parts database compiler and compatibility auditor.
-        We performed a global web search for the query "{query}" (Brand: {target_brand if target_brand else 'Any'}, Name: {target_product_name if target_product_name else 'Any'}, Car: {car_brand or 'Any'} {car_model or 'Any'} {car_year or 'Any'}).
-        Here are the search results snippets found online:
+        We performed a global web search across worldwide automotive websites for:
+        - Query: "{query}"
+        - Vehicle: {car_brand or 'Any'} {car_model or 'Any'} ({car_year or 'Any'})
+        - Target Part / Category: {part_term or 'Any'}
+        - Target Aftermarket Brand: {target_brand or 'All Top Aftermarket Brands'}
+
+        Here are the worldwide search results snippets found online:
         ---
         {search_text}
         ---
         
-        Extract ALL real aftermarket equivalent part numbers (such as AISIN, DENSO, BOSCH, TRW, KYB, BREMBO, SKF, GSP, etc.) that match the OEM/SKU query "{query}".
+        Extract ALL real aftermarket equivalent part numbers (such as AISIN, DENSO, BOSCH, TRW, KYB, BREMBO, SKF, GSP, TOKICO, etc.) that match this specific vehicle and part requirement.
         
         CRITICAL COMPATIBILITY & ACCURACY INSTRUCTIONS (100% CORRECTNESS IS REQUIRED):
         1. GROUNDING & INTERNAL INTEGRATION: Combine the provided web search snippets with your own extensive internal automotive databases and manufacturer reference catalogs. Reconstruct the correct and complete part numbers, model years, and vehicle compatibility. Ensure 100% real-world accuracy.
         2. AFTERMARKET BRAND FILTER: {brand_instruction}
         {STRICT_VEHICLE_INSTRUCTION}
         4. CROSS-COMPATIBILITY: Within the allowed car brand/model, generate a SEPARATE result item for each compatible vehicle specification (e.g., different engine displacements, years, or sub-models). List them exhaustively.
-        5. MULTI-BRAND OEM REPLACEMENT: If the query "{query}" is an OEM code, search for and retrieve equivalent parts from all matching brands. Return all brands and equivalent numbers found.
+        5. MULTI-BRAND OEM REPLACEMENT: If the query is an OEM code or product name, search for and retrieve equivalent parts from all matching brands ({brand_list_str}). Return all brands and equivalent numbers found.
         6. SPECIFIC OEM NUMBER PER VEHICLE: For each compatible vehicle option returned, provide the actual real original OEM part number corresponding specifically to that vehicle model/year configuration.
         7. ZERO HALLUCINATION / 100% CORRECTNESS: The extracted aftermarket part numbers/SKUs and corresponding OEM part numbers must be 100% accurate and correct. Do NOT make up fake part numbers. If no valid, verified aftermarket parts matching the dropdown brands and specified vehicle are found, return an empty list: {{ "results": [] }}. It is better to return nothing than to return inaccurate or unverified data.
         
@@ -173,9 +181,9 @@ async def scrape_external_parts(query: str, source_type: str = 'ON_DEMAND', cust
                     "product_name_th": "ชื่อสินค้าภาษาไทย เช่น ผ้าเบรกหน้าเซรามิก",
                     "product_name_en": "Product Name in English",
                     "category": "หมวดหมู่อะไหล่ เช่น ระบบเบรก",
-                    "car_brand": "HONDA",
-                    "car_model": "Civic",
-                    "year_start": "2012",
+                    "car_brand": "{car_brand or 'Car Brand'}",
+                    "car_model": "{car_model or 'Car Model'}",
+                    "year_start": "2015",
                     "year_end": "2016",
                     "engine": "R18Z",
                     "fuel": "เบนซิน",
@@ -197,10 +205,10 @@ async def scrape_external_parts(query: str, source_type: str = 'ON_DEMAND', cust
                         "product_name_th": item.get("product_name_th", target_product_name or "อะไหล่รถยนต์"),
                         "product_name_en": item.get("product_name_en", "Car Part Alt"),
                         "category": item.get("category", target_product_name or "อะไหล่"),
-                        "car_brand": item.get("car_brand", "HONDA").strip().upper(),
-                        "car_model": item.get("car_model", "Civic FB"),
-                        "year_start": str(item.get("year_start", "2012")),
-                        "year_end": str(item.get("year_end", "2016")),
+                        "car_brand": (car_brand or item.get("car_brand", "")).strip().upper(),
+                        "car_model": (car_model or item.get("car_model", "")).strip(),
+                        "year_start": str(item.get("year_start", car_year or "2015")),
+                        "year_end": str(item.get("year_end", car_year or "2022")),
                         "engine": item.get("engine", ""),
                         "fuel": item.get("fuel", ""),
                         "transmission": item.get("transmission", ""),
@@ -219,6 +227,14 @@ async def scrape_external_parts(query: str, source_type: str = 'ON_DEMAND', cust
     saved_parts = []
     allowed_brands_upper = {b.upper() for b in meta_brands} if 'meta_brands' in locals() else set()
     for idx, part in enumerate(results):
+        # Strictly enforce requested car_brand if specified
+        if car_brand and part.get("car_brand", "").strip().upper() != car_brand.strip().upper():
+            print(f"Skipping part with brand {part.get('car_brand')} as it does not match requested car_brand {car_brand}")
+            continue
+        if car_model and car_model.strip().upper() not in part.get("car_model", "").strip().upper() and part.get("car_model", "").strip().upper() not in car_model.strip().upper():
+            print(f"Skipping part with model {part.get('car_model')} as it does not match requested car_model {car_model}")
+            continue
+
         if insert_to_db:
             try:
                 # Strictly filter out brands not in the dropdown list
@@ -228,18 +244,21 @@ async def scrape_external_parts(query: str, source_type: str = 'ON_DEMAND', cust
                     continue
                     
                 from backend.database import check_exact_duplicate
-                if check_exact_duplicate(
+                if not check_exact_duplicate(
                     part.get("brand"), part.get("part_number"), part.get("oem_number"),
                     part.get("car_brand"), part.get("car_model")
                 ):
-                    print(f"Skipping exact duplicate: {part.get('brand')} - {part.get('part_number')}")
-                    continue
-                temp_id = insert_temp_part(part)
-                part_copy = part.copy()
-                part_copy["id"] = temp_id
-                saved_parts.append(part_copy)
+                    temp_id = insert_temp_part(part)
+                    part_copy = part.copy()
+                    part_copy["id"] = temp_id
+                    saved_parts.append(part_copy)
+                else:
+                    part_copy = part.copy()
+                    saved_parts.append(part_copy)
             except Exception as db_err:
                 print(f"Error saving scraped part: {db_err}")
+                part_copy = part.copy()
+                saved_parts.append(part_copy)
         else:
             part_copy = part.copy()
             part_copy["id"] = idx
@@ -354,10 +373,10 @@ async def run_ai_parts_search(
                 "oem_number": "Corresponding OEM Part Number for this specific car brand/model/year combination",
                 "product_name_th": "ชื่อสินค้าภาษาไทย เช่น ผ้าเบรกหน้าเซรามิก",
                 "product_name_en": "Product Name in English",
-                "category": "{category}",
-                "car_brand": "TOYOTA",
-                "car_model": "Vios",
-                "year_start": "2012",
+                "category": "{category or 'Category'}",
+                "car_brand": "{car_brand or 'Car Brand'}",
+                "car_model": "{car_model or 'Car Model'}",
+                "year_start": "2015",
                 "year_end": "2016",
                 "engine": "R18Z",
                 "fuel": "เบนซิน",
@@ -382,9 +401,9 @@ async def run_ai_parts_search(
                     "product_name_th": item.get("product_name_th", "อะไหล่ทดแทนแบรนด์อื่น"),
                     "product_name_en": item.get("product_name_en", "Car Part Alt"),
                     "category": category or item.get("category", "อะไหล่"),
-                    "car_brand": item.get("car_brand", car_brand).strip().upper(),
-                    "car_model": item.get("car_model", car_model),
-                    "year_start": str(item.get("year_start", "2012")),
+                    "car_brand": (car_brand or item.get("car_brand", "")).strip().upper(),
+                    "car_model": (car_model or item.get("car_model", "")).strip(),
+                    "year_start": str(item.get("year_start", "2015")),
                     "year_end": str(item.get("year_end", "2016")),
                     "engine": item.get("engine", ""),
                     "fuel": item.get("fuel", ""),

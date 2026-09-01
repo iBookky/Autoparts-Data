@@ -126,14 +126,24 @@ def advanced_search_parts(
     where_clauses = []
     params = []
     
-    # 1. VIN matching
-    # In parts tables, if VIN is provided, we match via description/notes or match model/brand compatibility
-    # If the user searches by VIN, we'll try matching part compatibility by analyzing VIN pattern or matches.
-    # To keep it simple, we search if VIN is mentioned in notes or description, or if car_brand/model match the query.
-    if vin:
-        where_clauses.append("(description LIKE ? OR notes LIKE ?)")
-        params.append(f"%{vin}%")
-        params.append(f"%{vin}%")
+    # 1. Car Info (Primary basis of search)
+    # If VIN is provided but car_brand / car_model / car_year are missing, VIN is used as a helper to decode vehicle specs
+    if vin and (not car_brand or not car_model or not car_year):
+        try:
+            from scraper import decode_vin_wmi_specs, get_model_from_vds
+            wmi_dec = decode_vin_wmi_specs(vin)
+            if not car_brand and wmi_dec.get("brand"):
+                car_brand = wmi_dec["brand"]
+            if not car_model:
+                vds_model = get_model_from_vds(vin)
+                if vds_model:
+                    car_model = vds_model
+                elif wmi_dec.get("model") and wmi_dec.get("model") != "Standard Model":
+                    car_model = wmi_dec["model"].split("/")[0].strip()
+            if not car_year and wmi_dec.get("year"):
+                car_year = str(wmi_dec["year"])
+        except Exception as e:
+            print(f"Error decoding vehicle info from VIN helper: {e}")
         
     # 2. Car Info
     if car_brand:
@@ -527,6 +537,38 @@ def get_meta_car_years():
     conn.close()
     return [dict(r) for r in rows]
 
+def get_meta_categories():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM meta_categories ORDER BY name ASC")
+    rows = cursor.fetchall()
+    conn.close()
+    if rows:
+        return [dict(r) for r in rows]
+    return [
+        {"id": 1, "name": "ระบบเบรก", "name_en": "Brake System"},
+        {"id": 2, "name": "ระบบช่วงล่าง", "name_en": "Suspension"},
+        {"id": 3, "name": "กรองอากาศ / กรองน้ำมัน", "name_en": "Filters"},
+        {"id": 4, "name": "โช๊คอัพ", "name_en": "Shock Absorber"},
+        {"id": 5, "name": "สายพาน / ลูกรอก", "name_en": "Belts"},
+    ]
+
+def get_preset_ai_models():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM meta_ai_models ORDER BY provider ASC, model_name ASC")
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def get_agent_skills():
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM agent_skills_config ORDER BY id ASC")
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
 # 2. Insertion Operations
 def add_meta_aftermarket_brand(name: str):
     conn = get_db_connection()
@@ -573,6 +615,31 @@ def add_meta_car_year(year: str):
         return {"success": True, "id": cursor.lastrowid}
     except sqlite3.IntegrityError:
         return {"success": False, "error": "ปีรุ่นนี้มีอยู่แล้ว"}
+    finally:
+        conn.close()
+
+def add_meta_category(name: str, name_en: str = ""):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("INSERT INTO meta_categories (name, name_en) VALUES (?, ?)", (name.strip(), (name_en or "").strip()))
+        conn.commit()
+        return {"success": True, "id": cursor.lastrowid}
+    except sqlite3.IntegrityError:
+        return {"success": False, "error": "หมวดหมู่นี้มีอยู่แล้ว"}
+    finally:
+        conn.close()
+
+def add_preset_ai_model(model_name: str, provider: str = "Custom", description: str = ""):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("INSERT INTO meta_ai_models (model_name, provider, description, is_preset) VALUES (?, ?, ?, 0)", 
+                       (model_name.strip(), provider.strip(), description.strip()))
+        conn.commit()
+        return {"success": True, "id": cursor.lastrowid}
+    except sqlite3.IntegrityError:
+        return {"success": False, "error": "โมเดลนี้มีอยู่แล้วในรายการ"}
     finally:
         conn.close()
 
@@ -629,6 +696,32 @@ def delete_meta_car_year(year_id: int):
     finally:
         conn.close()
 
+def delete_meta_category(category_id: int):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM meta_categories WHERE id = ?", (category_id,))
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
+    finally:
+        conn.close()
+
+def delete_preset_ai_model(model_id: int):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM meta_ai_models WHERE id = ?", (model_id,))
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
+    finally:
+        conn.close()
+
 # 4. Update Operations
 def update_meta_aftermarket_brand(brand_id: int, new_name: str):
     conn = get_db_connection()
@@ -674,6 +767,32 @@ def update_meta_car_year(year_id: int, new_year: str):
     cursor = conn.cursor()
     try:
         cursor.execute("UPDATE meta_car_years SET year = ? WHERE id = ?", (new_year.strip(), year_id))
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
+    finally:
+        conn.close()
+
+def update_meta_category(category_id: int, new_name: str, new_name_en: str = ""):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE meta_categories SET name = ?, name_en = ? WHERE id = ?", (new_name.strip(), (new_name_en or "").strip(), category_id))
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"Error: {e}")
+        return False
+    finally:
+        conn.close()
+
+def update_agent_skill(skill_key: str, is_active: int):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("UPDATE agent_skills_config SET is_active = ? WHERE skill_key = ?", (is_active, skill_key))
         conn.commit()
         return True
     except Exception as e:
