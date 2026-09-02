@@ -47,7 +47,7 @@
             <div style="display: flex; align-items: center; gap: 1.5rem;">
                 <nav class="nav-tabs">
                     <button class="tab-btn active" onclick="switchView('sales-view', this)">
-                        <i class="fa-solid fa-cash-register"></i> ค้นหา & ขายหน้าร้าน
+                        <i class="fa-solid fa-magnifying-glass"></i> ค้นหาอะไหล่
                     </button>
                     <button class="tab-btn" id="admin-nav-tab" style="display: none;" onclick="switchView('admin-view', this)">
                         <i class="fa-solid fa-user-shield"></i> แผงควบคุมแอดมิน (Admin)
@@ -179,7 +179,6 @@
                                 <th>รหัส OEM แท้</th>
                                 <th>ชื่อสินค้า (ไทย)</th>
                                 <th>การรองรับ (รถยนต์)</th>
-                                <th>ราคาทุน</th>
                                 <th style="text-align: center;">สถานะ</th>
                                 <th>AI Search / Feedback</th>
                             </tr>
@@ -642,7 +641,9 @@
                 <div class="grid-2">
                     <div class="input-group">
                         <label>แบรนด์ของสินค้า</label>
-                        <input type="text" id="edit-brand" class="form-control" required>
+                        <select id="edit-brand" class="form-control" required>
+                            <option value="">-- เลือกแบรนด์สินค้า --</option>
+                        </select>
                     </div>
                     <div class="input-group">
                         <label>รหัสสินค้า (SKU)</label>
@@ -662,27 +663,37 @@
                 <div class="grid-2">
                     <div class="input-group">
                         <label>หมวดหมู่สินค้า</label>
-                        <input type="text" id="edit-category" class="form-control">
+                        <select id="edit-category" class="form-control">
+                            <option value="">-- เลือกหมวดหมู่สินค้า --</option>
+                        </select>
                     </div>
                     <div class="input-group">
                         <label>ยี่ห้อรถ</label>
-                        <input type="text" id="edit-car-brand" class="form-control">
+                        <select id="edit-car-brand" class="form-control" onchange="onEditCarBrandChanged()">
+                            <option value="">-- เลือกยี่ห้อรถ --</option>
+                        </select>
                     </div>
                 </div>
                 <div class="grid-2">
                     <div class="input-group">
                         <label>รุ่นรถ</label>
-                        <input type="text" id="edit-car-model" class="form-control">
+                        <select id="edit-car-model" class="form-control">
+                            <option value="">-- เลือกรุ่นรถ --</option>
+                        </select>
                     </div>
                     <div class="input-group">
                         <label>ปีเริ่มต้น</label>
-                        <input type="text" id="edit-year-start" class="form-control">
+                        <select id="edit-year-start" class="form-control">
+                            <option value="">-- ปีเริ่มต้น --</option>
+                        </select>
                     </div>
                 </div>
                 <div class="grid-2">
                     <div class="input-group">
                         <label>ปีสิ้นสุด</label>
-                        <input type="text" id="edit-year-end" class="form-control">
+                        <select id="edit-year-end" class="form-control">
+                            <option value="">-- ปีสิ้นสุด --</option>
+                        </select>
                     </div>
                     <div class="input-group">
                         <label>เครื่องยนต์</label>
@@ -898,22 +909,50 @@
                 const resBrands = await fetch('/api/metadata/aftermarket-brands');
                 const brandsData = await resBrands.json();
                 const sBrandSelect = document.getElementById('s-aftermarket-brand');
-                sBrandSelect.innerHTML = '<option value="">แบรนด์สินค้า: ทั้งหมด</option>';
-                if (brandsData.success) {
-                    brandsData.results.forEach(b => {
-                        sBrandSelect.innerHTML += `<option value="${b.name}">${b.name}</option>`;
-                    });
+                const editBrandSelect = document.getElementById('edit-brand');
+                
+                if (sBrandSelect) {
+                    sBrandSelect.innerHTML = '<option value="">แบรนด์สินค้า: ทั้งหมด</option>';
+                    if (brandsData.success) {
+                        brandsData.results.forEach(b => {
+                            sBrandSelect.innerHTML += `<option value="${b.name}">${b.name}</option>`;
+                        });
+                    }
+                }
+                if (editBrandSelect) {
+                    const curEditBrand = editBrandSelect.value;
+                    editBrandSelect.innerHTML = '<option value="">-- เลือกแบรนด์สินค้า --</option>';
+                    if (brandsData.success) {
+                        brandsData.results.forEach(b => {
+                            editBrandSelect.innerHTML += `<option value="${b.name}">${b.name}</option>`;
+                        });
+                    }
+                    if (curEditBrand) editBrandSelect.value = curEditBrand;
                 }
 
                 // Fetch Car Brands
                 const resCarBrands = await fetch('/api/metadata/car-brands');
                 const carBrandsData = await resCarBrands.json();
                 const sCarBrandSelect = document.getElementById('s-car-brand');
-                sCarBrandSelect.innerHTML = '<option value="">ยี่ห้อ: ทั้งหมด</option>';
-                if (carBrandsData.success) {
-                    carBrandsData.results.forEach(cb => {
-                        sCarBrandSelect.innerHTML += `<option value="${cb.name}">${cb.name}</option>`;
-                    });
+                const editCarBrandSelect = document.getElementById('edit-car-brand');
+                
+                if (sCarBrandSelect) {
+                    sCarBrandSelect.innerHTML = '<option value="">ยี่ห้อ: ทั้งหมด</option>';
+                    if (carBrandsData.success) {
+                        carBrandsData.results.forEach(cb => {
+                            sCarBrandSelect.innerHTML += `<option value="${cb.name}">${cb.name}</option>`;
+                        });
+                    }
+                }
+                if (editCarBrandSelect) {
+                    const curEditCarBrand = editCarBrandSelect.value;
+                    editCarBrandSelect.innerHTML = '<option value="">-- เลือกยี่ห้อรถ --</option>';
+                    if (carBrandsData.success) {
+                        carBrandsData.results.forEach(cb => {
+                            editCarBrandSelect.innerHTML += `<option value="${cb.name}">${cb.name}</option>`;
+                        });
+                    }
+                    if (curEditCarBrand) editCarBrandSelect.value = curEditCarBrand;
                 }
 
                 // Fetch Car Models
@@ -922,23 +961,51 @@
                 if (carModelsData.success) {
                     allCarModelsList = carModelsData.results;
                 }
-                onSalesCarBrandChanged(); // Clear/Reset models list
+                onSalesCarBrandChanged(); // Clear/Reset sales models list
+                onEditCarBrandChanged();  // Clear/Reset edit models list
 
                 // Fetch Car Years
                 const resYears = await fetch('/api/metadata/car-years');
                 const yearsData = await resYears.json();
                 const sYearSelect = document.getElementById('s-car-year');
-                sYearSelect.innerHTML = '<option value="">ปี: ทั้งหมด</option>';
-                if (yearsData.success) {
-                    yearsData.results.forEach(y => {
-                        sYearSelect.innerHTML += `<option value="${y.year}">${y.year}</option>`;
-                    });
+                const editYearStart = document.getElementById('edit-year-start');
+                const editYearEnd = document.getElementById('edit-year-end');
+                
+                if (sYearSelect) {
+                    sYearSelect.innerHTML = '<option value="">ปี: ทั้งหมด</option>';
+                    if (yearsData.success) {
+                        yearsData.results.forEach(y => {
+                            sYearSelect.innerHTML += `<option value="${y.year}">${y.year}</option>`;
+                        });
+                    }
+                }
+                if (editYearStart) {
+                    const curStart = editYearStart.value;
+                    editYearStart.innerHTML = '<option value="">-- ปีเริ่มต้น --</option>';
+                    if (yearsData.success) {
+                        yearsData.results.forEach(y => {
+                            editYearStart.innerHTML += `<option value="${y.year}">${y.year}</option>`;
+                        });
+                    }
+                    if (curStart) editYearStart.value = curStart;
+                }
+                if (editYearEnd) {
+                    const curEnd = editYearEnd.value;
+                    editYearEnd.innerHTML = '<option value="">-- ปีสิ้นสุด --</option>';
+                    if (yearsData.success) {
+                        yearsData.results.forEach(y => {
+                            editYearEnd.innerHTML += `<option value="${y.year}">${y.year}</option>`;
+                        });
+                    }
+                    if (curEnd) editYearEnd.value = curEnd;
                 }
 
                 // Fetch Categories dynamically
                 const resCategories = await fetch('/api/metadata/categories');
                 const catData = await resCategories.json();
                 const sCatSelect = document.getElementById('s-category');
+                const editCatSelect = document.getElementById('edit-category');
+                
                 if (sCatSelect) {
                     const curVal = sCatSelect.value;
                     sCatSelect.innerHTML = '<option value="">หมวดหมู่: ทั้งหมด</option>';
@@ -948,6 +1015,17 @@
                         });
                     }
                     if (curVal) sCatSelect.value = curVal;
+                }
+
+                if (editCatSelect) {
+                    const curEditVal = editCatSelect.value;
+                    editCatSelect.innerHTML = '<option value="">-- เลือกหมวดหมู่สินค้า --</option>';
+                    if (catData.success) {
+                        catData.results.forEach(c => {
+                            editCatSelect.innerHTML += `<option value="${c.name}">${c.name}${c.name_en ? ' (' + c.name_en + ')' : ''}</option>`;
+                        });
+                    }
+                    if (curEditVal) editCatSelect.value = curEditVal;
                 }
 
             } catch (err) {
@@ -1115,6 +1193,44 @@
             }
         }
 
+        // Filter Models when Brand dropdown changes in Edit modal
+        function onEditCarBrandChanged() {
+            const editBrandEl = document.getElementById('edit-car-brand');
+            if (!editBrandEl) return;
+            const brandVal = (editBrandEl.value || '').trim();
+            const modelSelect = document.getElementById('edit-car-model');
+            if (!modelSelect) return;
+            const previousModel = modelSelect.value;
+            modelSelect.innerHTML = '<option value="">-- เลือกรุ่นรถ --</option>';
+
+            const filtered = brandVal 
+                ? allCarModelsList.filter(m => (m.car_brand || '').trim().toUpperCase() === brandVal.toUpperCase())
+                : allCarModelsList;
+
+            // Sort alphabetically by name
+            filtered.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+            let preserved = false;
+            filtered.forEach(m => {
+                const opt = document.createElement("option");
+                opt.value = m.name;
+                opt.textContent = m.name;
+                if (previousModel && (m.name.toUpperCase() === previousModel.toUpperCase())) {
+                    opt.selected = true;
+                    preserved = true;
+                }
+                modelSelect.appendChild(opt);
+            });
+
+            if (previousModel && !preserved && brandVal) {
+                const newOpt = document.createElement("option");
+                newOpt.value = previousModel;
+                newOpt.textContent = previousModel;
+                newOpt.selected = true;
+                modelSelect.appendChild(newOpt);
+            }
+        }
+
         // View tabs switcher
         function switchView(viewId, btnEl) {
             document.querySelectorAll('.app-view').forEach(v => v.classList.remove('active'));
@@ -1185,7 +1301,7 @@
             const promptBox = document.getElementById('live-search-prompt');
             const countSpan = document.getElementById('results-count');
 
-            tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังจับคู่อะไหล่ตามเงื่อนไข...</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 2rem;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังจับคู่อะไหล่ตามเงื่อนไข...</td></tr>`;
             document.getElementById('results-panel').style.display = 'block';
             promptBox.style.display = 'none';
             // Show AI Scraping button after search clicked
@@ -1242,14 +1358,13 @@
                             <td><code>${item.oem_number || '-'}</code></td>
                             <td>${item.product_name_th || '-'}</td>
                             <td>${item.car_brand || ''} ${item.car_model || ''} (${item.year_start || '-'}-${item.year_end || '-'})</td>
-                            <td>฿${parseFloat(item.cost_unit || 0).toLocaleString()}</td>
                             <td style="text-align: center;">${statusIcon}</td>
                             <td>${actionHtml}</td>
                         `;
                         tbody.appendChild(tr);
                     });
                 } else {
-                    tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-secondary);">ไม่พบคู่สินค้าตรงกับที่ระบุ</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; padding: 3rem; color: var(--text-secondary);">ไม่พบคู่สินค้าตรงกับที่ระบุ</td></tr>`;
                     countSpan.textContent = '0';
                     promptBox.style.display = 'block';
                 }
@@ -1503,15 +1618,133 @@
         function openEditModal(item, sourceType = 'TEMP') {
             document.getElementById('edit-temp-id').value = item.id;
             document.getElementById('edit-source-type').value = sourceType;
-            document.getElementById('edit-brand').value = item.brand || '';
+            
+            // Set brand dropdown
+            const editBrandSelect = document.getElementById('edit-brand');
+            if (editBrandSelect) {
+                const itemBrand = (item.brand || '').trim();
+                let foundBrand = false;
+                for (let opt of editBrandSelect.options) {
+                    if (opt.value && opt.value.trim().toUpperCase() === itemBrand.toUpperCase()) {
+                        editBrandSelect.value = opt.value;
+                        foundBrand = true;
+                        break;
+                    }
+                }
+                if (!foundBrand && itemBrand) {
+                    const newOpt = document.createElement("option");
+                    newOpt.value = itemBrand;
+                    newOpt.textContent = itemBrand;
+                    newOpt.selected = true;
+                    editBrandSelect.appendChild(newOpt);
+                    editBrandSelect.value = itemBrand;
+                } else if (!itemBrand) {
+                    editBrandSelect.value = "";
+                }
+            }
+
             document.getElementById('edit-part-number').value = item.part_number || '';
             document.getElementById('edit-oem-number').value = item.oem_number || '';
             document.getElementById('edit-product-name-th').value = item.product_name_th || '';
-            document.getElementById('edit-category').value = item.category || '';
-            document.getElementById('edit-car-brand').value = item.car_brand || '';
-            document.getElementById('edit-car-model').value = item.car_model || '';
-            document.getElementById('edit-year-start').value = item.year_start || '';
-            document.getElementById('edit-year-end').value = item.year_end || '';
+            
+            // Set category dropdown
+            const editCatSelect = document.getElementById('edit-category');
+            if (editCatSelect) {
+                const itemCat = (item.category || '').trim();
+                let foundCat = false;
+                for (let opt of editCatSelect.options) {
+                    if (opt.value && opt.value.trim().toLowerCase() === itemCat.toLowerCase()) {
+                        editCatSelect.value = opt.value;
+                        foundCat = true;
+                        break;
+                    }
+                }
+                if (!foundCat && itemCat) {
+                    const newOpt = document.createElement("option");
+                    newOpt.value = itemCat;
+                    newOpt.textContent = itemCat;
+                    newOpt.selected = true;
+                    editCatSelect.appendChild(newOpt);
+                    editCatSelect.value = itemCat;
+                } else if (!itemCat) {
+                    editCatSelect.value = "";
+                }
+            }
+
+            // Set car brand dropdown and update model options
+            const editCarBrandSelect = document.getElementById('edit-car-brand');
+            if (editCarBrandSelect) {
+                const itemCarBrand = (item.car_brand || '').trim();
+                let foundCarBrand = false;
+                for (let opt of editCarBrandSelect.options) {
+                    if (opt.value && opt.value.trim().toUpperCase() === itemCarBrand.toUpperCase()) {
+                        editCarBrandSelect.value = opt.value;
+                        foundCarBrand = true;
+                        break;
+                    }
+                }
+                if (!foundCarBrand && itemCarBrand) {
+                    const newOpt = document.createElement("option");
+                    newOpt.value = itemCarBrand;
+                    newOpt.textContent = itemCarBrand;
+                    newOpt.selected = true;
+                    editCarBrandSelect.appendChild(newOpt);
+                    editCarBrandSelect.value = itemCarBrand;
+                } else if (!itemCarBrand) {
+                    editCarBrandSelect.value = "";
+                }
+                onEditCarBrandChanged();
+            }
+
+            // Set car model dropdown
+            const editCarModelSelect = document.getElementById('edit-car-model');
+            if (editCarModelSelect) {
+                const itemModel = (item.car_model || '').trim();
+                let foundModel = false;
+                for (let opt of editCarModelSelect.options) {
+                    if (opt.value && opt.value.trim().toLowerCase() === itemModel.toLowerCase()) {
+                        editCarModelSelect.value = opt.value;
+                        foundModel = true;
+                        break;
+                    }
+                }
+                if (!foundModel && itemModel) {
+                    const newOpt = document.createElement("option");
+                    newOpt.value = itemModel;
+                    newOpt.textContent = itemModel;
+                    newOpt.selected = true;
+                    editCarModelSelect.appendChild(newOpt);
+                    editCarModelSelect.value = itemModel;
+                } else if (!itemModel) {
+                    editCarModelSelect.value = "";
+                }
+            }
+
+            // Set year start & year end dropdowns
+            ['edit-year-start', 'edit-year-end'].forEach(id => {
+                const sel = document.getElementById(id);
+                const val = String(id === 'edit-year-start' ? (item.year_start || '') : (item.year_end || '')).trim();
+                if (sel) {
+                    let foundYear = false;
+                    for (let opt of sel.options) {
+                        if (opt.value && opt.value.trim() === val) {
+                            sel.value = opt.value;
+                            foundYear = true;
+                            break;
+                        }
+                    }
+                    if (!foundYear && val && val !== '-' && val !== 'None') {
+                        const newOpt = document.createElement("option");
+                        newOpt.value = val;
+                        newOpt.textContent = val;
+                        newOpt.selected = true;
+                        sel.appendChild(newOpt);
+                        sel.value = val;
+                    } else if (!val || val === '-' || val === 'None') {
+                        sel.value = "";
+                    }
+                }
+            });
             document.getElementById('edit-engine').value = item.engine || '';
             document.getElementById('edit-fuel').value = item.fuel || '';
             document.getElementById('edit-transmission').value = item.transmission || '';
