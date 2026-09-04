@@ -1,0 +1,1637 @@
+[
+  {
+    "path": "/api/auth/login",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "login",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/auth/register-trial",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "register_trial",
+    "doc": "Self-service 14-day free trial registration endpoint.",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/public/leads/contact",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "public_contact_lead",
+    "doc": "Inbound enterprise contact inquiry captured directly into CRM pipeline.",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/public/coverage-stats",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_public_coverage_stats",
+    "doc": "Returns platform coverage metrics for marketing landing page.",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/public/demo-search",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "public_demo_search",
+    "doc": "Public unauthenticated search teaser for interactive landing page demo.",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/users",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_users",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/users",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "create_user",
+    "doc": "",
+    "required_roles": [
+      "STAFF",
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/users/{user_id}",
+    "methods": [
+      "DELETE"
+    ],
+    "endpoint": "delete_user",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/parts/search",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "search_parts",
+    "doc": "",
+    "required_roles": [
+      "ADMIN",
+      "SUPER_ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": true,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/parts/product/{part_id}",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_product_detail",
+    "doc": "Direct product access endpoint protected against URL manipulation.",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": true,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/parts/ai-search",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "ai_search",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/parts/live-search",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "live_search",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/scrape-url",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "admin_scrape_url",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/save-scraped-preview",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "save_scraped_preview",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/parts/export-import-template",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "export_import_template",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/parts/import",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "import_parts",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/all-parts",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "admin_all_parts",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/temp-parts",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "admin_get_temp_parts",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/parts/staff-note",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "add_staff_note",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/review/{id}",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "admin_review_action",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/master/review/{id}",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "admin_master_review_action",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/parts/decode-vin",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "decode_vin_endpoint",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/metadata/aftermarket-brands",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_metadata_aftermarket_brands",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/metadata/car-brands",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_metadata_car_brands",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/metadata/car-models",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_metadata_car_models",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/metadata/car-years",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_metadata_car_years",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/metadata/categories",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_metadata_categories",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/metadata/ai-models",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_metadata_ai_models",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/agent-skills",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_metadata_agent_skills",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/agent-skills/{key}/toggle",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "toggle_metadata_agent_skill",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/metadata/aftermarket-brands",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "create_metadata_aftermarket_brand",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/metadata/car-brands",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "create_metadata_car_brand",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/metadata/car-models",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "create_metadata_car_model",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/metadata/car-years",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "create_metadata_car_year",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/metadata/categories",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "create_metadata_category",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/metadata/ai-models",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "create_metadata_ai_model",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/metadata/aftermarket-brands/{id}",
+    "methods": [
+      "DELETE"
+    ],
+    "endpoint": "delete_metadata_aftermarket_brand",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/metadata/car-brands/{id}",
+    "methods": [
+      "DELETE"
+    ],
+    "endpoint": "delete_metadata_car_brand",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/metadata/car-models/{id}",
+    "methods": [
+      "DELETE"
+    ],
+    "endpoint": "delete_metadata_car_model",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/metadata/car-years/{id}",
+    "methods": [
+      "DELETE"
+    ],
+    "endpoint": "delete_metadata_car_year",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/metadata/categories/{id}",
+    "methods": [
+      "DELETE"
+    ],
+    "endpoint": "delete_metadata_category",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/metadata/ai-models/{id}",
+    "methods": [
+      "DELETE"
+    ],
+    "endpoint": "delete_metadata_ai_model",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/metadata/aftermarket-brands/{id}",
+    "methods": [
+      "PUT"
+    ],
+    "endpoint": "update_metadata_aftermarket_brand",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/metadata/car-brands/{id}",
+    "methods": [
+      "PUT"
+    ],
+    "endpoint": "update_metadata_car_brand",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/metadata/car-models/{id}",
+    "methods": [
+      "PUT"
+    ],
+    "endpoint": "update_metadata_car_model",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/metadata/car-years/{id}",
+    "methods": [
+      "PUT"
+    ],
+    "endpoint": "update_metadata_car_year",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/metadata/categories/{id}",
+    "methods": [
+      "PUT"
+    ],
+    "endpoint": "update_metadata_category",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/superadmin/ai-keys",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "superadmin_get_ai_keys",
+    "doc": "",
+    "required_roles": [
+      "SUPER_ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/superadmin/ai-keys",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "superadmin_save_ai_key",
+    "doc": "",
+    "required_roles": [
+      "SUPER_ADMIN"
+    ],
+    "is_authenticated": true,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/superadmin/ai-keys/{id}/activate",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "superadmin_activate_ai_key",
+    "doc": "",
+    "required_roles": [
+      "SUPER_ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/superadmin/ai-keys/{id}",
+    "methods": [
+      "DELETE"
+    ],
+    "endpoint": "superadmin_delete_ai_key",
+    "doc": "",
+    "required_roles": [
+      "SUPER_ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/superadmin/ai-usage",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "superadmin_get_ai_usage",
+    "doc": "",
+    "required_roles": [
+      "SUPER_ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/context",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_saas_context",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": true,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/plans",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_saas_plans",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/plans/{plan_id}",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_saas_plan_by_id",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/add-ons",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_saas_addons",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/billing/calculate",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "calculate_saas_billing",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/coupons/validate",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "validate_saas_coupon",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/subscription",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_saas_subscription",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/subscription/upgrade",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "upgrade_saas_subscription",
+    "doc": "",
+    "required_roles": [
+      "ADMIN",
+      "SUPER_ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": true,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/subscription/downgrade",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "downgrade_saas_subscription",
+    "doc": "",
+    "required_roles": [
+      "ADMIN",
+      "SUPER_ADMIN"
+    ],
+    "is_authenticated": true,
+    "org_scoped": true,
+    "entitlement_checked": true,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/subscription/cancel",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "cancel_saas_subscription",
+    "doc": "",
+    "required_roles": [
+      "ADMIN",
+      "SUPER_ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/subscription/reactivate",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "reactivate_saas_subscription",
+    "doc": "",
+    "required_roles": [
+      "ADMIN",
+      "SUPER_ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/payments/charge",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "charge_payment",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": true,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/webhooks/{provider}",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "handle_payment_webhook",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/invoices/{invoice_id}/verify-payment",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "verify_corporate_invoice_payment",
+    "doc": "",
+    "required_roles": [
+      "ADMIN",
+      "SUPER_ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/invoices/{invoice_id}",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_saas_invoice_detail",
+    "doc": "",
+    "required_roles": [
+      "ADMIN",
+      "SUPER_ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/data-coverage",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_saas_data_coverage",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/usage",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_saas_usage",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/favorites",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_saas_favorites",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/favorites/toggle",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "toggle_saas_favorite",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/history",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_saas_history",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/history/{log_id}",
+    "methods": [
+      "DELETE"
+    ],
+    "endpoint": "delete_saas_history_item",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/api-keys",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_saas_api_keys",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": true,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/api-keys",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "create_saas_api_key",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": true,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/api-keys/{key_id}",
+    "methods": [
+      "DELETE"
+    ],
+    "endpoint": "delete_saas_api_key",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": true,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/invoices",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_saas_invoices",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/admin/saas/metrics",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_saas_metrics",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/export",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "export_saas_parts",
+    "doc": "",
+    "required_roles": [
+      "STAFF",
+      "ADMIN",
+      "SUPER_ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": true
+  },
+  {
+    "path": "/api/saas/organization",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_saas_organization",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/organization",
+    "methods": [
+      "PUT"
+    ],
+    "endpoint": "update_saas_organization",
+    "doc": "",
+    "required_roles": [
+      "ADMIN",
+      "SUPER_ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/organization/members",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_saas_org_members",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/organization/invite",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "invite_saas_org_member",
+    "doc": "",
+    "required_roles": [
+      "STAFF",
+      "ADMIN",
+      "SUPER_ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/organization/invitations",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_saas_org_invitations",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/organization/invitations/{invitation_id}",
+    "methods": [
+      "DELETE"
+    ],
+    "endpoint": "revoke_saas_org_invitation",
+    "doc": "",
+    "required_roles": [
+      "ADMIN",
+      "SUPER_ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/organization/members/{target_user_id}/role",
+    "methods": [
+      "PUT"
+    ],
+    "endpoint": "update_saas_member_role",
+    "doc": "",
+    "required_roles": [
+      "ADMIN",
+      "SUPER_ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/organization/members/{target_user_id}/status",
+    "methods": [
+      "PUT"
+    ],
+    "endpoint": "update_saas_member_status",
+    "doc": "",
+    "required_roles": [
+      "ADMIN",
+      "SUPER_ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/organization/members/{target_user_id}",
+    "methods": [
+      "DELETE"
+    ],
+    "endpoint": "remove_saas_member",
+    "doc": "",
+    "required_roles": [
+      "ADMIN",
+      "SUPER_ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/saas/organization/audit",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_saas_org_audit",
+    "doc": "",
+    "required_roles": [
+      "ADMIN",
+      "SUPER_ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/owner/overview",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_owner_overview_metrics",
+    "doc": "",
+    "required_roles": [
+      "SYSTEM_OWNER"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/owner/metrics",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_owner_overview_metrics",
+    "doc": "",
+    "required_roles": [
+      "SYSTEM_OWNER"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/owner/revenue",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_owner_revenue_analytics",
+    "doc": "",
+    "required_roles": [
+      "SYSTEM_OWNER"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/owner/customers",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_owner_customers_analytics",
+    "doc": "",
+    "required_roles": [
+      "SYSTEM_OWNER"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/owner/customers/{org_id}/360",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_owner_customer_360",
+    "doc": "",
+    "required_roles": [
+      "SYSTEM_OWNER"
+    ],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/owner/subscriptions",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_owner_subscriptions_analytics",
+    "doc": "",
+    "required_roles": [
+      "SYSTEM_OWNER"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/owner/search-analytics",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_owner_automotive_usage_analytics",
+    "doc": "",
+    "required_roles": [
+      "SYSTEM_OWNER"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/owner/usage",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_owner_automotive_usage_analytics",
+    "doc": "",
+    "required_roles": [
+      "SYSTEM_OWNER"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/owner/opportunities",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_owner_opportunities_and_health",
+    "doc": "",
+    "required_roles": [
+      "SYSTEM_OWNER"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/owner/plans-performance",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_owner_plans_performance",
+    "doc": "",
+    "required_roles": [
+      "SYSTEM_OWNER"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/owner/alerts",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_owner_alerts_list",
+    "doc": "",
+    "required_roles": [
+      "SYSTEM_OWNER"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/owner/alerts/{alert_id}/dismiss",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "dismiss_owner_alert_endpoint",
+    "doc": "",
+    "required_roles": [
+      "SYSTEM_OWNER"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/owner/reports/export",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "export_owner_report",
+    "doc": "",
+    "required_roles": [
+      "SYSTEM_OWNER"
+    ],
+    "is_authenticated": false,
+    "org_scoped": true,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/owner/pipeline",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_pipeline_leads",
+    "doc": "",
+    "required_roles": [
+      "STAFF"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/owner/pipeline",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "create_pipeline_lead",
+    "doc": "",
+    "required_roles": [
+      "STAFF"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/owner/pipeline/{lead_id}/stage",
+    "methods": [
+      "PUT"
+    ],
+    "endpoint": "update_pipeline_lead_stage",
+    "doc": "",
+    "required_roles": [
+      "STAFF"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/owner/roles",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_roles_and_permissions",
+    "doc": "",
+    "required_roles": [
+      "SYSTEM_OWNER"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/owner/roles/permission",
+    "methods": [
+      "POST"
+    ],
+    "endpoint": "update_permission_toggle",
+    "doc": "",
+    "required_roles": [
+      "SYSTEM_OWNER"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/owner/plans/{plan_id}",
+    "methods": [
+      "PUT"
+    ],
+    "endpoint": "edit_plan_pricing",
+    "doc": "",
+    "required_roles": [
+      "SYSTEM_OWNER"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": true,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/superadmin/system-health",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_system_health",
+    "doc": "",
+    "required_roles": [
+      "SUPER_ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/superadmin/audit-logs",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_audit_trail",
+    "doc": "",
+    "required_roles": [
+      "ADMIN"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/parts/cross-reference-matrix",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_cross_ref_matrix",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/api/staff/tasks",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_staff_tasks",
+    "doc": "",
+    "required_roles": [
+      "STAFF"
+    ],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  },
+  {
+    "path": "/",
+    "methods": [
+      "GET"
+    ],
+    "endpoint": "get_index",
+    "doc": "",
+    "required_roles": [],
+    "is_authenticated": false,
+    "org_scoped": false,
+    "entitlement_checked": false,
+    "has_export_block": false
+  }
+]

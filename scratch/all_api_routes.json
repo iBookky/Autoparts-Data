@@ -1,0 +1,1361 @@
+[
+  {
+    "path": "/api/auth/login",
+    "methods": [
+      "POST"
+    ],
+    "name": "login",
+    "endpoint": "login",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/auth/register-trial",
+    "methods": [
+      "POST"
+    ],
+    "name": "register_trial",
+    "endpoint": "register_trial",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": "Self-service 14-day free trial registration endpoint."
+  },
+  {
+    "path": "/api/public/leads/contact",
+    "methods": [
+      "POST"
+    ],
+    "name": "public_contact_lead",
+    "endpoint": "public_contact_lead",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": "Inbound enterprise contact inquiry captured directly into CRM pipeline."
+  },
+  {
+    "path": "/api/public/coverage-stats",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_public_coverage_stats",
+    "endpoint": "get_public_coverage_stats",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": "Returns platform coverage metrics for marketing landing page."
+  },
+  {
+    "path": "/api/public/demo-search",
+    "methods": [
+      "GET"
+    ],
+    "name": "public_demo_search",
+    "endpoint": "public_demo_search",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": "Public unauthenticated search teaser for interactive landing page demo."
+  },
+  {
+    "path": "/api/admin/users",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_users",
+    "endpoint": "get_users",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/users",
+    "methods": [
+      "POST"
+    ],
+    "name": "create_user",
+    "endpoint": "create_user",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/users/{user_id}",
+    "methods": [
+      "DELETE"
+    ],
+    "name": "delete_user",
+    "endpoint": "delete_user",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/parts/search",
+    "methods": [
+      "GET"
+    ],
+    "name": "search_parts",
+    "endpoint": "search_parts",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/parts/product/{part_id}",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_product_detail",
+    "endpoint": "get_product_detail",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": "Direct product access endpoint protected against URL manipulation."
+  },
+  {
+    "path": "/api/parts/ai-search",
+    "methods": [
+      "POST"
+    ],
+    "name": "ai_search",
+    "endpoint": "ai_search",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/parts/live-search",
+    "methods": [
+      "POST"
+    ],
+    "name": "live_search",
+    "endpoint": "live_search",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/scrape-url",
+    "methods": [
+      "POST"
+    ],
+    "name": "admin_scrape_url",
+    "endpoint": "admin_scrape_url",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/save-scraped-preview",
+    "methods": [
+      "POST"
+    ],
+    "name": "save_scraped_preview",
+    "endpoint": "save_scraped_preview",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/parts/export-import-template",
+    "methods": [
+      "GET"
+    ],
+    "name": "export_import_template",
+    "endpoint": "export_import_template",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/parts/import",
+    "methods": [
+      "POST"
+    ],
+    "name": "import_parts",
+    "endpoint": "import_parts",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/all-parts",
+    "methods": [
+      "GET"
+    ],
+    "name": "admin_all_parts",
+    "endpoint": "admin_all_parts",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/temp-parts",
+    "methods": [
+      "GET"
+    ],
+    "name": "admin_get_temp_parts",
+    "endpoint": "admin_get_temp_parts",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/parts/staff-note",
+    "methods": [
+      "POST"
+    ],
+    "name": "add_staff_note",
+    "endpoint": "add_staff_note",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/review/{id}",
+    "methods": [
+      "POST"
+    ],
+    "name": "admin_review_action",
+    "endpoint": "admin_review_action",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/master/review/{id}",
+    "methods": [
+      "POST"
+    ],
+    "name": "admin_master_review_action",
+    "endpoint": "admin_master_review_action",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/parts/decode-vin",
+    "methods": [
+      "GET"
+    ],
+    "name": "decode_vin_endpoint",
+    "endpoint": "decode_vin_endpoint",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/metadata/aftermarket-brands",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_metadata_aftermarket_brands",
+    "endpoint": "get_metadata_aftermarket_brands",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/metadata/car-brands",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_metadata_car_brands",
+    "endpoint": "get_metadata_car_brands",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/metadata/car-models",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_metadata_car_models",
+    "endpoint": "get_metadata_car_models",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/metadata/car-years",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_metadata_car_years",
+    "endpoint": "get_metadata_car_years",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/metadata/categories",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_metadata_categories",
+    "endpoint": "get_metadata_categories",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/metadata/ai-models",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_metadata_ai_models",
+    "endpoint": "get_metadata_ai_models",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/agent-skills",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_metadata_agent_skills",
+    "endpoint": "get_metadata_agent_skills",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/agent-skills/{key}/toggle",
+    "methods": [
+      "POST"
+    ],
+    "name": "toggle_metadata_agent_skill",
+    "endpoint": "toggle_metadata_agent_skill",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/metadata/aftermarket-brands",
+    "methods": [
+      "POST"
+    ],
+    "name": "create_metadata_aftermarket_brand",
+    "endpoint": "create_metadata_aftermarket_brand",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/metadata/car-brands",
+    "methods": [
+      "POST"
+    ],
+    "name": "create_metadata_car_brand",
+    "endpoint": "create_metadata_car_brand",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/metadata/car-models",
+    "methods": [
+      "POST"
+    ],
+    "name": "create_metadata_car_model",
+    "endpoint": "create_metadata_car_model",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/metadata/car-years",
+    "methods": [
+      "POST"
+    ],
+    "name": "create_metadata_car_year",
+    "endpoint": "create_metadata_car_year",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/metadata/categories",
+    "methods": [
+      "POST"
+    ],
+    "name": "create_metadata_category",
+    "endpoint": "create_metadata_category",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/metadata/ai-models",
+    "methods": [
+      "POST"
+    ],
+    "name": "create_metadata_ai_model",
+    "endpoint": "create_metadata_ai_model",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/metadata/aftermarket-brands/{id}",
+    "methods": [
+      "DELETE"
+    ],
+    "name": "delete_metadata_aftermarket_brand",
+    "endpoint": "delete_metadata_aftermarket_brand",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/metadata/car-brands/{id}",
+    "methods": [
+      "DELETE"
+    ],
+    "name": "delete_metadata_car_brand",
+    "endpoint": "delete_metadata_car_brand",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/metadata/car-models/{id}",
+    "methods": [
+      "DELETE"
+    ],
+    "name": "delete_metadata_car_model",
+    "endpoint": "delete_metadata_car_model",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/metadata/car-years/{id}",
+    "methods": [
+      "DELETE"
+    ],
+    "name": "delete_metadata_car_year",
+    "endpoint": "delete_metadata_car_year",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/metadata/categories/{id}",
+    "methods": [
+      "DELETE"
+    ],
+    "name": "delete_metadata_category",
+    "endpoint": "delete_metadata_category",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/metadata/ai-models/{id}",
+    "methods": [
+      "DELETE"
+    ],
+    "name": "delete_metadata_ai_model",
+    "endpoint": "delete_metadata_ai_model",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/metadata/aftermarket-brands/{id}",
+    "methods": [
+      "PUT"
+    ],
+    "name": "update_metadata_aftermarket_brand",
+    "endpoint": "update_metadata_aftermarket_brand",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/metadata/car-brands/{id}",
+    "methods": [
+      "PUT"
+    ],
+    "name": "update_metadata_car_brand",
+    "endpoint": "update_metadata_car_brand",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/metadata/car-models/{id}",
+    "methods": [
+      "PUT"
+    ],
+    "name": "update_metadata_car_model",
+    "endpoint": "update_metadata_car_model",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/metadata/car-years/{id}",
+    "methods": [
+      "PUT"
+    ],
+    "name": "update_metadata_car_year",
+    "endpoint": "update_metadata_car_year",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/metadata/categories/{id}",
+    "methods": [
+      "PUT"
+    ],
+    "name": "update_metadata_category",
+    "endpoint": "update_metadata_category",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/superadmin/ai-keys",
+    "methods": [
+      "GET"
+    ],
+    "name": "superadmin_get_ai_keys",
+    "endpoint": "superadmin_get_ai_keys",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_super_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/superadmin/ai-keys",
+    "methods": [
+      "POST"
+    ],
+    "name": "superadmin_save_ai_key",
+    "endpoint": "superadmin_save_ai_key",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_super_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/superadmin/ai-keys/{id}/activate",
+    "methods": [
+      "POST"
+    ],
+    "name": "superadmin_activate_ai_key",
+    "endpoint": "superadmin_activate_ai_key",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_super_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/superadmin/ai-keys/{id}",
+    "methods": [
+      "DELETE"
+    ],
+    "name": "superadmin_delete_ai_key",
+    "endpoint": "superadmin_delete_ai_key",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_super_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/superadmin/ai-usage",
+    "methods": [
+      "GET"
+    ],
+    "name": "superadmin_get_ai_usage",
+    "endpoint": "superadmin_get_ai_usage",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_super_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/context",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_saas_context",
+    "endpoint": "get_saas_context",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/plans",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_saas_plans",
+    "endpoint": "get_saas_plans",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/plans/{plan_id}",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_saas_plan_by_id",
+    "endpoint": "get_saas_plan_by_id",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/add-ons",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_saas_addons",
+    "endpoint": "get_saas_addons",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/billing/calculate",
+    "methods": [
+      "POST"
+    ],
+    "name": "calculate_saas_billing",
+    "endpoint": "calculate_saas_billing",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/coupons/validate",
+    "methods": [
+      "POST"
+    ],
+    "name": "validate_saas_coupon",
+    "endpoint": "validate_saas_coupon",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/subscription",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_saas_subscription",
+    "endpoint": "get_saas_subscription",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/subscription/upgrade",
+    "methods": [
+      "POST"
+    ],
+    "name": "upgrade_saas_subscription",
+    "endpoint": "upgrade_saas_subscription",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/subscription/downgrade",
+    "methods": [
+      "POST"
+    ],
+    "name": "downgrade_saas_subscription",
+    "endpoint": "downgrade_saas_subscription",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/subscription/cancel",
+    "methods": [
+      "POST"
+    ],
+    "name": "cancel_saas_subscription",
+    "endpoint": "cancel_saas_subscription",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/subscription/reactivate",
+    "methods": [
+      "POST"
+    ],
+    "name": "reactivate_saas_subscription",
+    "endpoint": "reactivate_saas_subscription",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/payments/charge",
+    "methods": [
+      "POST"
+    ],
+    "name": "charge_payment",
+    "endpoint": "charge_payment",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/webhooks/{provider}",
+    "methods": [
+      "POST"
+    ],
+    "name": "handle_payment_webhook",
+    "endpoint": "handle_payment_webhook",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/invoices/{invoice_id}/verify-payment",
+    "methods": [
+      "POST"
+    ],
+    "name": "verify_corporate_invoice_payment",
+    "endpoint": "verify_corporate_invoice_payment",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/invoices/{invoice_id}",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_saas_invoice_detail",
+    "endpoint": "get_saas_invoice_detail",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/data-coverage",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_saas_data_coverage",
+    "endpoint": "get_saas_data_coverage",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/usage",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_saas_usage",
+    "endpoint": "get_saas_usage",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/favorites",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_saas_favorites",
+    "endpoint": "get_saas_favorites",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/favorites/toggle",
+    "methods": [
+      "POST"
+    ],
+    "name": "toggle_saas_favorite",
+    "endpoint": "toggle_saas_favorite",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/history",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_saas_history",
+    "endpoint": "get_saas_history",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/history/{log_id}",
+    "methods": [
+      "DELETE"
+    ],
+    "name": "delete_saas_history_item",
+    "endpoint": "delete_saas_history_item",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/api-keys",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_saas_api_keys",
+    "endpoint": "get_saas_api_keys",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/api-keys",
+    "methods": [
+      "POST"
+    ],
+    "name": "create_saas_api_key",
+    "endpoint": "create_saas_api_key",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/api-keys/{key_id}",
+    "methods": [
+      "DELETE"
+    ],
+    "name": "delete_saas_api_key",
+    "endpoint": "delete_saas_api_key",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/invoices",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_saas_invoices",
+    "endpoint": "get_saas_invoices",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/admin/saas/metrics",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_saas_metrics",
+    "endpoint": "get_saas_metrics",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/export",
+    "methods": [
+      "POST"
+    ],
+    "name": "export_saas_parts",
+    "endpoint": "export_saas_parts",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/organization",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_saas_organization",
+    "endpoint": "get_saas_organization",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/organization",
+    "methods": [
+      "PUT"
+    ],
+    "name": "update_saas_organization",
+    "endpoint": "update_saas_organization",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/organization/members",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_saas_org_members",
+    "endpoint": "get_saas_org_members",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/organization/invite",
+    "methods": [
+      "POST"
+    ],
+    "name": "invite_saas_org_member",
+    "endpoint": "invite_saas_org_member",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/organization/invitations",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_saas_org_invitations",
+    "endpoint": "get_saas_org_invitations",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/organization/invitations/{invitation_id}",
+    "methods": [
+      "DELETE"
+    ],
+    "name": "revoke_saas_org_invitation",
+    "endpoint": "revoke_saas_org_invitation",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/organization/members/{target_user_id}/role",
+    "methods": [
+      "PUT"
+    ],
+    "name": "update_saas_member_role",
+    "endpoint": "update_saas_member_role",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/organization/members/{target_user_id}/status",
+    "methods": [
+      "PUT"
+    ],
+    "name": "update_saas_member_status",
+    "endpoint": "update_saas_member_status",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/organization/members/{target_user_id}",
+    "methods": [
+      "DELETE"
+    ],
+    "name": "remove_saas_member",
+    "endpoint": "remove_saas_member",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/saas/organization/audit",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_saas_org_audit",
+    "endpoint": "get_saas_org_audit",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/owner/overview",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_owner_overview_metrics",
+    "endpoint": "get_owner_overview_metrics",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_owner"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/owner/metrics",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_owner_overview_metrics",
+    "endpoint": "get_owner_overview_metrics",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_owner"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/owner/revenue",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_owner_revenue_analytics",
+    "endpoint": "get_owner_revenue_analytics",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_owner"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/owner/customers",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_owner_customers_analytics",
+    "endpoint": "get_owner_customers_analytics",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_owner"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/owner/customers/{org_id}/360",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_owner_customer_360",
+    "endpoint": "get_owner_customer_360",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_owner"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/owner/subscriptions",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_owner_subscriptions_analytics",
+    "endpoint": "get_owner_subscriptions_analytics",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_owner"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/owner/search-analytics",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_owner_automotive_usage_analytics",
+    "endpoint": "get_owner_automotive_usage_analytics",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_owner"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/owner/usage",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_owner_automotive_usage_analytics",
+    "endpoint": "get_owner_automotive_usage_analytics",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_owner"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/owner/opportunities",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_owner_opportunities_and_health",
+    "endpoint": "get_owner_opportunities_and_health",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_owner"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/owner/plans-performance",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_owner_plans_performance",
+    "endpoint": "get_owner_plans_performance",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_owner"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/owner/alerts",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_owner_alerts_list",
+    "endpoint": "get_owner_alerts_list",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_owner"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/owner/alerts/{alert_id}/dismiss",
+    "methods": [
+      "POST"
+    ],
+    "name": "dismiss_owner_alert_endpoint",
+    "endpoint": "dismiss_owner_alert_endpoint",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_owner"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/owner/reports/export",
+    "methods": [
+      "GET"
+    ],
+    "name": "export_owner_report",
+    "endpoint": "export_owner_report",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_owner"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/owner/pipeline",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_pipeline_leads",
+    "endpoint": "get_pipeline_leads",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_staff"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/owner/pipeline",
+    "methods": [
+      "POST"
+    ],
+    "name": "create_pipeline_lead",
+    "endpoint": "create_pipeline_lead",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_staff"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/owner/pipeline/{lead_id}/stage",
+    "methods": [
+      "PUT"
+    ],
+    "name": "update_pipeline_lead_stage",
+    "endpoint": "update_pipeline_lead_stage",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_staff"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/owner/roles",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_roles_and_permissions",
+    "endpoint": "get_roles_and_permissions",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_owner"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/owner/roles/permission",
+    "methods": [
+      "POST"
+    ],
+    "name": "update_permission_toggle",
+    "endpoint": "update_permission_toggle",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_owner"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/owner/plans/{plan_id}",
+    "methods": [
+      "PUT"
+    ],
+    "name": "edit_plan_pricing",
+    "endpoint": "edit_plan_pricing",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_owner"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/superadmin/system-health",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_system_health",
+    "endpoint": "get_system_health",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_super_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/superadmin/audit-logs",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_audit_trail",
+    "endpoint": "get_audit_trail",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_admin"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/api/parts/cross-reference-matrix",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_cross_ref_matrix",
+    "endpoint": "get_cross_ref_matrix",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  },
+  {
+    "path": "/api/staff/tasks",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_staff_tasks",
+    "endpoint": "get_staff_tasks",
+    "dependencies": [],
+    "param_dependencies": [
+      "require_staff"
+    ],
+    "doc": ""
+  },
+  {
+    "path": "/",
+    "methods": [
+      "GET"
+    ],
+    "name": "get_index",
+    "endpoint": "get_index",
+    "dependencies": [],
+    "param_dependencies": [],
+    "doc": ""
+  }
+]

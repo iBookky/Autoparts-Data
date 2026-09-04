@@ -1333,6 +1333,8 @@ def decode_vin_wmi_specs(vin: str) -> dict:
         "JHA": {"brand": "HINO TRUCKS", "model": "Profia / 700 Series"},
         "MNB": {"brand": "FORD", "model": "Ranger / Everest"},
         "WF0": {"brand": "FORD", "model": "Fiesta / Focus"},
+        "1FM": {"brand": "FORD", "model": "Escape / Explorer"},
+        "1FA": {"brand": "FORD", "model": "Focus / Mustang"},
         "MMM": {"brand": "CHEVROLET", "model": "Colorado / Trailblazer"}
     }
     

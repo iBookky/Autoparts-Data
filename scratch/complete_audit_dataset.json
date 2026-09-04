@@ -1,0 +1,2937 @@
+{
+  "roles": [
+    {
+      "id": "owner",
+      "name": "System Owner",
+      "portal_access": "/owner",
+      "tier_level": 1,
+      "description": "Highest business authority. Controls MRR, CRM pipeline, pricing, plans, add-ons, and policies.",
+      "created_at": "2026-09-02 15:01:16"
+    },
+    {
+      "id": "super_admin",
+      "name": "Super Admin",
+      "portal_access": "/super-admin",
+      "tier_level": 2,
+      "description": "Technical platform & data authority. Controls search engine, scrapers, AI skills, and health.",
+      "created_at": "2026-09-02 15:01:16"
+    },
+    {
+      "id": "admin",
+      "name": "Operations Admin",
+      "portal_access": "/admin",
+      "tier_level": 3,
+      "description": "Daily business operations. Manages customer organizations, subscriptions, invoices, and support.",
+      "created_at": "2026-09-02 15:01:16"
+    },
+    {
+      "id": "staff_cs",
+      "name": "Customer Success",
+      "portal_access": "/staff",
+      "tier_level": 4,
+      "description": "Customer success manager. Monitors usage health, renewals, and onboarding.",
+      "created_at": "2026-09-02 15:01:16"
+    },
+    {
+      "id": "staff_data",
+      "name": "Data Staff",
+      "portal_access": "/staff",
+      "tier_level": 4,
+      "description": "Automotive data specialist. Reviews scraped queue, verifies fitment, and cross-references.",
+      "created_at": "2026-09-02 15:01:16"
+    },
+    {
+      "id": "staff_sales",
+      "name": "Sales Staff",
+      "portal_access": "/staff",
+      "tier_level": 4,
+      "description": "Sales specialist. Manages leads, pipeline, demos, and trial onboarding.",
+      "created_at": "2026-09-02 15:01:16"
+    },
+    {
+      "id": "staff_support",
+      "name": "Support Staff",
+      "portal_access": "/staff",
+      "tier_level": 4,
+      "description": "Technical support specialist. Resolves customer inquiries and tickets.",
+      "created_at": "2026-09-02 15:01:16"
+    },
+    {
+      "id": "customer_member",
+      "name": "Customer Member",
+      "portal_access": "/app",
+      "tier_level": 5,
+      "description": "External organization member. Accesses parts search and cross-reference.",
+      "created_at": "2026-09-02 15:01:16"
+    },
+    {
+      "id": "customer_owner",
+      "name": "Customer Owner",
+      "portal_access": "/app",
+      "tier_level": 5,
+      "description": "External organization owner. Manages organization subscription and user seats.",
+      "created_at": "2026-09-02 15:01:16"
+    },
+    {
+      "id": "org_manager",
+      "name": "Organization Manager",
+      "portal_access": "/app",
+      "tier_level": 5,
+      "description": "Manage organization team members, view usage analytics, and execute parts cross-references.",
+      "created_at": "2026-09-02 15:38:17"
+    },
+    {
+      "id": "org_owner",
+      "name": "Organization Owner",
+      "portal_access": "/app",
+      "tier_level": 5,
+      "description": "Full administrative control over tenant team, subscription, API keys, and automotive parts data.",
+      "created_at": "2026-09-02 15:38:17"
+    },
+    {
+      "id": "org_staff",
+      "name": "Organization Staff",
+      "portal_access": "/app",
+      "tier_level": 5,
+      "description": "Standard search, VIN lookup, vehicle fitment, and bookmarking workspace.",
+      "created_at": "2026-09-02 15:38:17"
+    }
+  ],
+  "permissions": [
+    {
+      "id": "ai.config.manage",
+      "module": "AI",
+      "name": "Configure AI Models & Skills",
+      "description": "Toggle domain skills and modify AI API keys"
+    },
+    {
+      "id": "api.manage",
+      "module": "API",
+      "name": "Manage API Keys",
+      "description": "Generate and revoke REST API keys."
+    },
+    {
+      "id": "api.use",
+      "module": "API",
+      "name": "Access REST API",
+      "description": "Make programmatic REST API calls"
+    },
+    {
+      "id": "api.view",
+      "module": "API",
+      "name": "View API Keys",
+      "description": "Inspect active API credentials and rate limits."
+    },
+    {
+      "id": "audit.view",
+      "module": "AUDIT",
+      "name": "View Organization Audit Log",
+      "description": "View chronological log of team activities."
+    },
+    {
+      "id": "mrr.view",
+      "module": "BILLING",
+      "name": "View MRR & Revenue Analytics",
+      "description": "Access business revenue and financial command center metrics"
+    },
+    {
+      "id": "pricing.manage",
+      "module": "BILLING",
+      "name": "Manage Plans & Pricing",
+      "description": "Edit subscription plan pricing and commercial add-ons"
+    },
+    {
+      "id": "subscription.manage",
+      "module": "BILLING",
+      "name": "Manage Subscriptions",
+      "description": "Upgrade, downgrade, cancel, and adjust subscription items"
+    },
+    {
+      "id": "subscription.view",
+      "module": "BILLING",
+      "name": "View Subscription & Invoices",
+      "description": "View commercial subscription details and download tax receipts."
+    },
+    {
+      "id": "usage.view",
+      "module": "BILLING",
+      "name": "View Usage Analytics",
+      "description": "Monitor search quotas and credit meters."
+    },
+    {
+      "id": "master_parts.manage",
+      "module": "CATALOG",
+      "name": "Manage Master Automotive Data",
+      "description": "Directly edit, publish, and delete master parts database"
+    },
+    {
+      "id": "temp_parts.review",
+      "module": "CATALOG",
+      "name": "Review Scraped Parts Queue",
+      "description": "Approve, edit, or reject scraped raw parts"
+    },
+    {
+      "id": "customer.manage",
+      "module": "CRM",
+      "name": "Manage Customer Orgs",
+      "description": "Create and modify customer organization details"
+    },
+    {
+      "id": "pipeline.manage",
+      "module": "CRM",
+      "name": "Manage Lead CRM Pipeline",
+      "description": "Move leads through stages from Lead to Subscribed"
+    },
+    {
+      "id": "organization.update",
+      "module": "ORGANIZATION",
+      "name": "Update Organization Profile",
+      "description": "Edit corporate profile, tax id, address, and billing email."
+    },
+    {
+      "id": "organization.view",
+      "module": "ORGANIZATION",
+      "name": "View Organization Profile",
+      "description": "View corporate profile and settings."
+    },
+    {
+      "id": "parts.save",
+      "module": "PARTS",
+      "name": "Save & Bookmark Parts",
+      "description": "Manage personal and organization saved favorites."
+    },
+    {
+      "id": "parts.view",
+      "module": "PARTS",
+      "name": "View Product Details",
+      "description": "Inspect full technical specifications and OE interchanges."
+    },
+    {
+      "id": "export.use",
+      "module": "SEARCH",
+      "name": "Export Parts Data",
+      "description": "Download CSV/Excel parts reports"
+    },
+    {
+      "id": "parts.search",
+      "module": "SEARCH",
+      "name": "Execute Parts Search",
+      "description": "Search automotive parts catalog"
+    },
+    {
+      "id": "search.cross_reference",
+      "module": "SEARCH",
+      "name": "Cross Reference Matrix",
+      "description": "Access typed OE and aftermarket cross-reference relationships."
+    },
+    {
+      "id": "search.use",
+      "module": "SEARCH",
+      "name": "Execute Parts Search",
+      "description": "Perform OEM, SKU, and keyword searches."
+    },
+    {
+      "id": "search.vehicle",
+      "module": "SEARCH",
+      "name": "Vehicle Fitment Search",
+      "description": "Filter automotive parts by make, model, and year."
+    },
+    {
+      "id": "search.vin",
+      "module": "SEARCH",
+      "name": "VIN Lookup Engine",
+      "description": "Decode 17-digit VINs and estimate vehicle specifications."
+    },
+    {
+      "id": "scraper.manage",
+      "module": "SYSTEM",
+      "name": "Run & Configure Web Scrapers",
+      "description": "Trigger external catalog scraping"
+    },
+    {
+      "id": "users.invite",
+      "module": "USERS",
+      "name": "Invite Team Members",
+      "description": "Send invitation links to prospective team members."
+    },
+    {
+      "id": "users.remove",
+      "module": "USERS",
+      "name": "Remove Member",
+      "description": "Remove a user from organization membership."
+    },
+    {
+      "id": "users.suspend",
+      "module": "USERS",
+      "name": "Suspend / Deactivate User",
+      "description": "Temporarily suspend or disable an organization member."
+    },
+    {
+      "id": "users.update_role",
+      "module": "USERS",
+      "name": "Change Team Member Role",
+      "description": "Promote or modify roles for organization users."
+    },
+    {
+      "id": "users.view",
+      "module": "USERS",
+      "name": "View Team Members",
+      "description": "View list of organization users and invitation statuses."
+    }
+  ],
+  "role_permissions": [
+    {
+      "role_id": "owner",
+      "permission_id": "mrr.view",
+      "role_name": "System Owner",
+      "tier_level": 1,
+      "perm_name": "View MRR & Revenue Analytics",
+      "perm_module": "BILLING",
+      "perm_desc": "Access business revenue and financial command center metrics"
+    },
+    {
+      "role_id": "owner",
+      "permission_id": "pricing.manage",
+      "role_name": "System Owner",
+      "tier_level": 1,
+      "perm_name": "Manage Plans & Pricing",
+      "perm_module": "BILLING",
+      "perm_desc": "Edit subscription plan pricing and commercial add-ons"
+    },
+    {
+      "role_id": "owner",
+      "permission_id": "subscription.manage",
+      "role_name": "System Owner",
+      "tier_level": 1,
+      "perm_name": "Manage Subscriptions",
+      "perm_module": "BILLING",
+      "perm_desc": "Upgrade, downgrade, cancel, and adjust subscription items"
+    },
+    {
+      "role_id": "owner",
+      "permission_id": "customer.manage",
+      "role_name": "System Owner",
+      "tier_level": 1,
+      "perm_name": "Manage Customer Orgs",
+      "perm_module": "CRM",
+      "perm_desc": "Create and modify customer organization details"
+    },
+    {
+      "role_id": "owner",
+      "permission_id": "pipeline.manage",
+      "role_name": "System Owner",
+      "tier_level": 1,
+      "perm_name": "Manage Lead CRM Pipeline",
+      "perm_module": "CRM",
+      "perm_desc": "Move leads through stages from Lead to Subscribed"
+    },
+    {
+      "role_id": "owner",
+      "permission_id": "parts.search",
+      "role_name": "System Owner",
+      "tier_level": 1,
+      "perm_name": "Execute Parts Search",
+      "perm_module": "SEARCH",
+      "perm_desc": "Search automotive parts catalog"
+    },
+    {
+      "role_id": "super_admin",
+      "permission_id": "ai.config.manage",
+      "role_name": "Super Admin",
+      "tier_level": 2,
+      "perm_name": "Configure AI Models & Skills",
+      "perm_module": "AI",
+      "perm_desc": "Toggle domain skills and modify AI API keys"
+    },
+    {
+      "role_id": "super_admin",
+      "permission_id": "master_parts.manage",
+      "role_name": "Super Admin",
+      "tier_level": 2,
+      "perm_name": "Manage Master Automotive Data",
+      "perm_module": "CATALOG",
+      "perm_desc": "Directly edit, publish, and delete master parts database"
+    },
+    {
+      "role_id": "super_admin",
+      "permission_id": "temp_parts.review",
+      "role_name": "Super Admin",
+      "tier_level": 2,
+      "perm_name": "Review Scraped Parts Queue",
+      "perm_module": "CATALOG",
+      "perm_desc": "Approve, edit, or reject scraped raw parts"
+    },
+    {
+      "role_id": "super_admin",
+      "permission_id": "parts.search",
+      "role_name": "Super Admin",
+      "tier_level": 2,
+      "perm_name": "Execute Parts Search",
+      "perm_module": "SEARCH",
+      "perm_desc": "Search automotive parts catalog"
+    },
+    {
+      "role_id": "super_admin",
+      "permission_id": "scraper.manage",
+      "role_name": "Super Admin",
+      "tier_level": 2,
+      "perm_name": "Run & Configure Web Scrapers",
+      "perm_module": "SYSTEM",
+      "perm_desc": "Trigger external catalog scraping"
+    },
+    {
+      "role_id": "admin",
+      "permission_id": "subscription.manage",
+      "role_name": "Operations Admin",
+      "tier_level": 3,
+      "perm_name": "Manage Subscriptions",
+      "perm_module": "BILLING",
+      "perm_desc": "Upgrade, downgrade, cancel, and adjust subscription items"
+    },
+    {
+      "role_id": "admin",
+      "permission_id": "temp_parts.review",
+      "role_name": "Operations Admin",
+      "tier_level": 3,
+      "perm_name": "Review Scraped Parts Queue",
+      "perm_module": "CATALOG",
+      "perm_desc": "Approve, edit, or reject scraped raw parts"
+    },
+    {
+      "role_id": "admin",
+      "permission_id": "customer.manage",
+      "role_name": "Operations Admin",
+      "tier_level": 3,
+      "perm_name": "Manage Customer Orgs",
+      "perm_module": "CRM",
+      "perm_desc": "Create and modify customer organization details"
+    },
+    {
+      "role_id": "admin",
+      "permission_id": "pipeline.manage",
+      "role_name": "Operations Admin",
+      "tier_level": 3,
+      "perm_name": "Manage Lead CRM Pipeline",
+      "perm_module": "CRM",
+      "perm_desc": "Move leads through stages from Lead to Subscribed"
+    },
+    {
+      "role_id": "admin",
+      "permission_id": "parts.search",
+      "role_name": "Operations Admin",
+      "tier_level": 3,
+      "perm_name": "Execute Parts Search",
+      "perm_module": "SEARCH",
+      "perm_desc": "Search automotive parts catalog"
+    },
+    {
+      "role_id": "staff_data",
+      "permission_id": "temp_parts.review",
+      "role_name": "Data Staff",
+      "tier_level": 4,
+      "perm_name": "Review Scraped Parts Queue",
+      "perm_module": "CATALOG",
+      "perm_desc": "Approve, edit, or reject scraped raw parts"
+    },
+    {
+      "role_id": "staff_data",
+      "permission_id": "parts.search",
+      "role_name": "Data Staff",
+      "tier_level": 4,
+      "perm_name": "Execute Parts Search",
+      "perm_module": "SEARCH",
+      "perm_desc": "Search automotive parts catalog"
+    },
+    {
+      "role_id": "staff_sales",
+      "permission_id": "pipeline.manage",
+      "role_name": "Sales Staff",
+      "tier_level": 4,
+      "perm_name": "Manage Lead CRM Pipeline",
+      "perm_module": "CRM",
+      "perm_desc": "Move leads through stages from Lead to Subscribed"
+    },
+    {
+      "role_id": "staff_sales",
+      "permission_id": "parts.search",
+      "role_name": "Sales Staff",
+      "tier_level": 4,
+      "perm_name": "Execute Parts Search",
+      "perm_module": "SEARCH",
+      "perm_desc": "Search automotive parts catalog"
+    },
+    {
+      "role_id": "customer_member",
+      "permission_id": "parts.search",
+      "role_name": "Customer Member",
+      "tier_level": 5,
+      "perm_name": "Execute Parts Search",
+      "perm_module": "SEARCH",
+      "perm_desc": "Search automotive parts catalog"
+    },
+    {
+      "role_id": "customer_owner",
+      "permission_id": "api.use",
+      "role_name": "Customer Owner",
+      "tier_level": 5,
+      "perm_name": "Access REST API",
+      "perm_module": "API",
+      "perm_desc": "Make programmatic REST API calls"
+    },
+    {
+      "role_id": "customer_owner",
+      "permission_id": "export.use",
+      "role_name": "Customer Owner",
+      "tier_level": 5,
+      "perm_name": "Export Parts Data",
+      "perm_module": "SEARCH",
+      "perm_desc": "Download CSV/Excel parts reports"
+    },
+    {
+      "role_id": "customer_owner",
+      "permission_id": "parts.search",
+      "role_name": "Customer Owner",
+      "tier_level": 5,
+      "perm_name": "Execute Parts Search",
+      "perm_module": "SEARCH",
+      "perm_desc": "Search automotive parts catalog"
+    },
+    {
+      "role_id": "org_manager",
+      "permission_id": "api.view",
+      "role_name": "Organization Manager",
+      "tier_level": 5,
+      "perm_name": "View API Keys",
+      "perm_module": "API",
+      "perm_desc": "Inspect active API credentials and rate limits."
+    },
+    {
+      "role_id": "org_manager",
+      "permission_id": "subscription.view",
+      "role_name": "Organization Manager",
+      "tier_level": 5,
+      "perm_name": "View Subscription & Invoices",
+      "perm_module": "BILLING",
+      "perm_desc": "View commercial subscription details and download tax receipts."
+    },
+    {
+      "role_id": "org_manager",
+      "permission_id": "usage.view",
+      "role_name": "Organization Manager",
+      "tier_level": 5,
+      "perm_name": "View Usage Analytics",
+      "perm_module": "BILLING",
+      "perm_desc": "Monitor search quotas and credit meters."
+    },
+    {
+      "role_id": "org_manager",
+      "permission_id": "organization.view",
+      "role_name": "Organization Manager",
+      "tier_level": 5,
+      "perm_name": "View Organization Profile",
+      "perm_module": "ORGANIZATION",
+      "perm_desc": "View corporate profile and settings."
+    },
+    {
+      "role_id": "org_manager",
+      "permission_id": "parts.save",
+      "role_name": "Organization Manager",
+      "tier_level": 5,
+      "perm_name": "Save & Bookmark Parts",
+      "perm_module": "PARTS",
+      "perm_desc": "Manage personal and organization saved favorites."
+    },
+    {
+      "role_id": "org_manager",
+      "permission_id": "parts.view",
+      "role_name": "Organization Manager",
+      "tier_level": 5,
+      "perm_name": "View Product Details",
+      "perm_module": "PARTS",
+      "perm_desc": "Inspect full technical specifications and OE interchanges."
+    },
+    {
+      "role_id": "org_manager",
+      "permission_id": "export.use",
+      "role_name": "Organization Manager",
+      "tier_level": 5,
+      "perm_name": "Export Parts Data",
+      "perm_module": "SEARCH",
+      "perm_desc": "Download CSV/Excel parts reports"
+    },
+    {
+      "role_id": "org_manager",
+      "permission_id": "search.cross_reference",
+      "role_name": "Organization Manager",
+      "tier_level": 5,
+      "perm_name": "Cross Reference Matrix",
+      "perm_module": "SEARCH",
+      "perm_desc": "Access typed OE and aftermarket cross-reference relationships."
+    },
+    {
+      "role_id": "org_manager",
+      "permission_id": "search.use",
+      "role_name": "Organization Manager",
+      "tier_level": 5,
+      "perm_name": "Execute Parts Search",
+      "perm_module": "SEARCH",
+      "perm_desc": "Perform OEM, SKU, and keyword searches."
+    },
+    {
+      "role_id": "org_manager",
+      "permission_id": "search.vehicle",
+      "role_name": "Organization Manager",
+      "tier_level": 5,
+      "perm_name": "Vehicle Fitment Search",
+      "perm_module": "SEARCH",
+      "perm_desc": "Filter automotive parts by make, model, and year."
+    },
+    {
+      "role_id": "org_manager",
+      "permission_id": "search.vin",
+      "role_name": "Organization Manager",
+      "tier_level": 5,
+      "perm_name": "VIN Lookup Engine",
+      "perm_module": "SEARCH",
+      "perm_desc": "Decode 17-digit VINs and estimate vehicle specifications."
+    },
+    {
+      "role_id": "org_manager",
+      "permission_id": "users.invite",
+      "role_name": "Organization Manager",
+      "tier_level": 5,
+      "perm_name": "Invite Team Members",
+      "perm_module": "USERS",
+      "perm_desc": "Send invitation links to prospective team members."
+    },
+    {
+      "role_id": "org_manager",
+      "permission_id": "users.view",
+      "role_name": "Organization Manager",
+      "tier_level": 5,
+      "perm_name": "View Team Members",
+      "perm_module": "USERS",
+      "perm_desc": "View list of organization users and invitation statuses."
+    },
+    {
+      "role_id": "org_owner",
+      "permission_id": "api.manage",
+      "role_name": "Organization Owner",
+      "tier_level": 5,
+      "perm_name": "Manage API Keys",
+      "perm_module": "API",
+      "perm_desc": "Generate and revoke REST API keys."
+    },
+    {
+      "role_id": "org_owner",
+      "permission_id": "api.view",
+      "role_name": "Organization Owner",
+      "tier_level": 5,
+      "perm_name": "View API Keys",
+      "perm_module": "API",
+      "perm_desc": "Inspect active API credentials and rate limits."
+    },
+    {
+      "role_id": "org_owner",
+      "permission_id": "audit.view",
+      "role_name": "Organization Owner",
+      "tier_level": 5,
+      "perm_name": "View Organization Audit Log",
+      "perm_module": "AUDIT",
+      "perm_desc": "View chronological log of team activities."
+    },
+    {
+      "role_id": "org_owner",
+      "permission_id": "subscription.manage",
+      "role_name": "Organization Owner",
+      "tier_level": 5,
+      "perm_name": "Manage Subscriptions",
+      "perm_module": "BILLING",
+      "perm_desc": "Upgrade, downgrade, cancel, and adjust subscription items"
+    },
+    {
+      "role_id": "org_owner",
+      "permission_id": "subscription.view",
+      "role_name": "Organization Owner",
+      "tier_level": 5,
+      "perm_name": "View Subscription & Invoices",
+      "perm_module": "BILLING",
+      "perm_desc": "View commercial subscription details and download tax receipts."
+    },
+    {
+      "role_id": "org_owner",
+      "permission_id": "usage.view",
+      "role_name": "Organization Owner",
+      "tier_level": 5,
+      "perm_name": "View Usage Analytics",
+      "perm_module": "BILLING",
+      "perm_desc": "Monitor search quotas and credit meters."
+    },
+    {
+      "role_id": "org_owner",
+      "permission_id": "organization.update",
+      "role_name": "Organization Owner",
+      "tier_level": 5,
+      "perm_name": "Update Organization Profile",
+      "perm_module": "ORGANIZATION",
+      "perm_desc": "Edit corporate profile, tax id, address, and billing email."
+    },
+    {
+      "role_id": "org_owner",
+      "permission_id": "organization.view",
+      "role_name": "Organization Owner",
+      "tier_level": 5,
+      "perm_name": "View Organization Profile",
+      "perm_module": "ORGANIZATION",
+      "perm_desc": "View corporate profile and settings."
+    },
+    {
+      "role_id": "org_owner",
+      "permission_id": "parts.save",
+      "role_name": "Organization Owner",
+      "tier_level": 5,
+      "perm_name": "Save & Bookmark Parts",
+      "perm_module": "PARTS",
+      "perm_desc": "Manage personal and organization saved favorites."
+    },
+    {
+      "role_id": "org_owner",
+      "permission_id": "parts.view",
+      "role_name": "Organization Owner",
+      "tier_level": 5,
+      "perm_name": "View Product Details",
+      "perm_module": "PARTS",
+      "perm_desc": "Inspect full technical specifications and OE interchanges."
+    },
+    {
+      "role_id": "org_owner",
+      "permission_id": "export.use",
+      "role_name": "Organization Owner",
+      "tier_level": 5,
+      "perm_name": "Export Parts Data",
+      "perm_module": "SEARCH",
+      "perm_desc": "Download CSV/Excel parts reports"
+    },
+    {
+      "role_id": "org_owner",
+      "permission_id": "search.cross_reference",
+      "role_name": "Organization Owner",
+      "tier_level": 5,
+      "perm_name": "Cross Reference Matrix",
+      "perm_module": "SEARCH",
+      "perm_desc": "Access typed OE and aftermarket cross-reference relationships."
+    },
+    {
+      "role_id": "org_owner",
+      "permission_id": "search.use",
+      "role_name": "Organization Owner",
+      "tier_level": 5,
+      "perm_name": "Execute Parts Search",
+      "perm_module": "SEARCH",
+      "perm_desc": "Perform OEM, SKU, and keyword searches."
+    },
+    {
+      "role_id": "org_owner",
+      "permission_id": "search.vehicle",
+      "role_name": "Organization Owner",
+      "tier_level": 5,
+      "perm_name": "Vehicle Fitment Search",
+      "perm_module": "SEARCH",
+      "perm_desc": "Filter automotive parts by make, model, and year."
+    },
+    {
+      "role_id": "org_owner",
+      "permission_id": "search.vin",
+      "role_name": "Organization Owner",
+      "tier_level": 5,
+      "perm_name": "VIN Lookup Engine",
+      "perm_module": "SEARCH",
+      "perm_desc": "Decode 17-digit VINs and estimate vehicle specifications."
+    },
+    {
+      "role_id": "org_owner",
+      "permission_id": "users.invite",
+      "role_name": "Organization Owner",
+      "tier_level": 5,
+      "perm_name": "Invite Team Members",
+      "perm_module": "USERS",
+      "perm_desc": "Send invitation links to prospective team members."
+    },
+    {
+      "role_id": "org_owner",
+      "permission_id": "users.remove",
+      "role_name": "Organization Owner",
+      "tier_level": 5,
+      "perm_name": "Remove Member",
+      "perm_module": "USERS",
+      "perm_desc": "Remove a user from organization membership."
+    },
+    {
+      "role_id": "org_owner",
+      "permission_id": "users.suspend",
+      "role_name": "Organization Owner",
+      "tier_level": 5,
+      "perm_name": "Suspend / Deactivate User",
+      "perm_module": "USERS",
+      "perm_desc": "Temporarily suspend or disable an organization member."
+    },
+    {
+      "role_id": "org_owner",
+      "permission_id": "users.update_role",
+      "role_name": "Organization Owner",
+      "tier_level": 5,
+      "perm_name": "Change Team Member Role",
+      "perm_module": "USERS",
+      "perm_desc": "Promote or modify roles for organization users."
+    },
+    {
+      "role_id": "org_owner",
+      "permission_id": "users.view",
+      "role_name": "Organization Owner",
+      "tier_level": 5,
+      "perm_name": "View Team Members",
+      "perm_module": "USERS",
+      "perm_desc": "View list of organization users and invitation statuses."
+    },
+    {
+      "role_id": "org_staff",
+      "permission_id": "parts.save",
+      "role_name": "Organization Staff",
+      "tier_level": 5,
+      "perm_name": "Save & Bookmark Parts",
+      "perm_module": "PARTS",
+      "perm_desc": "Manage personal and organization saved favorites."
+    },
+    {
+      "role_id": "org_staff",
+      "permission_id": "parts.view",
+      "role_name": "Organization Staff",
+      "tier_level": 5,
+      "perm_name": "View Product Details",
+      "perm_module": "PARTS",
+      "perm_desc": "Inspect full technical specifications and OE interchanges."
+    },
+    {
+      "role_id": "org_staff",
+      "permission_id": "search.cross_reference",
+      "role_name": "Organization Staff",
+      "tier_level": 5,
+      "perm_name": "Cross Reference Matrix",
+      "perm_module": "SEARCH",
+      "perm_desc": "Access typed OE and aftermarket cross-reference relationships."
+    },
+    {
+      "role_id": "org_staff",
+      "permission_id": "search.use",
+      "role_name": "Organization Staff",
+      "tier_level": 5,
+      "perm_name": "Execute Parts Search",
+      "perm_module": "SEARCH",
+      "perm_desc": "Perform OEM, SKU, and keyword searches."
+    },
+    {
+      "role_id": "org_staff",
+      "permission_id": "search.vehicle",
+      "role_name": "Organization Staff",
+      "tier_level": 5,
+      "perm_name": "Vehicle Fitment Search",
+      "perm_module": "SEARCH",
+      "perm_desc": "Filter automotive parts by make, model, and year."
+    },
+    {
+      "role_id": "org_staff",
+      "permission_id": "search.vin",
+      "role_name": "Organization Staff",
+      "tier_level": 5,
+      "perm_name": "VIN Lookup Engine",
+      "perm_module": "SEARCH",
+      "perm_desc": "Decode 17-digit VINs and estimate vehicle specifications."
+    }
+  ],
+  "tables": [
+    "add_on_plan_compatibility",
+    "add_ons",
+    "agent_skills_config",
+    "ai_keys_config",
+    "ai_usage_stats",
+    "api_keys",
+    "commercial_audit_logs",
+    "coupon_redemptions",
+    "coupons",
+    "cross_reference_relations",
+    "customer_leads",
+    "entitlements",
+    "invoice_items",
+    "invoices",
+    "master_parts",
+    "meta_aftermarket_brands",
+    "meta_ai_models",
+    "meta_car_brands",
+    "meta_car_models",
+    "meta_car_years",
+    "meta_categories",
+    "organization_audit_logs",
+    "organization_invitations",
+    "organization_members",
+    "organizations",
+    "owner_alerts",
+    "payment_transactions",
+    "permissions",
+    "plan_entitlements",
+    "plan_features",
+    "plan_versions",
+    "plans",
+    "platform_audit_logs",
+    "role_permissions",
+    "roles",
+    "search_logs",
+    "subscription_entitlements_snapshot",
+    "subscription_items",
+    "subscriptions",
+    "temp_parts",
+    "usage_records",
+    "user_favorites",
+    "user_roles",
+    "users"
+  ],
+  "api_routes": [
+    {
+      "path": "/api/auth/login",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "login",
+      "doc": "",
+      "is_authenticated": false,
+      "required_roles": [
+        "PUBLIC"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "None",
+      "scope": "Public / None",
+      "source_snippet": "@app.post(\"/api/auth/login\")\nasync def login(req: LoginRequest):\n    user = get_user_by_username(req.username)\n    if not user:\n        return {\"success\": False, \"error\": \"\u0e44\u0e21\u0e48\u0e1e\u0e1a\u0e0a\u0e37\u0e48\u0e2d\u0e1c\u0e39\u0e49\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19\u0e19\u0e35\u0e49\"}\n    "
+    },
+    {
+      "path": "/api/auth/register-trial",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "register_trial",
+      "doc": "Self-service 14-day free trial registration endpoint.",
+      "is_authenticated": false,
+      "required_roles": [
+        "PUBLIC"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "None",
+      "scope": "Public / None",
+      "source_snippet": "@app.post(\"/api/auth/register-trial\")\nasync def register_trial(req: TrialRegisterRequest):\n    \"\"\"Self-service 14-day free trial registration endpoint.\"\"\"\n    res = register_trial_tenant_db(req.dict()"
+    },
+    {
+      "path": "/api/public/leads/contact",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "public_contact_lead",
+      "doc": "Inbound enterprise contact inquiry captured directly into CRM pipeline.",
+      "is_authenticated": false,
+      "required_roles": [
+        "PUBLIC"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "None",
+      "scope": "Public / None",
+      "source_snippet": "@app.post(\"/api/public/leads/contact\")\nasync def public_contact_lead(req: PublicContactLeadRequest):\n    \"\"\"Inbound enterprise contact inquiry captured directly into CRM pipeline.\"\"\"\n    try:\n        "
+    },
+    {
+      "path": "/api/public/coverage-stats",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_public_coverage_stats",
+      "doc": "Returns platform coverage metrics for marketing landing page.",
+      "is_authenticated": false,
+      "required_roles": [
+        "PUBLIC"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "None",
+      "scope": "Public / None",
+      "source_snippet": "@app.get(\"/api/public/coverage-stats\")\nasync def get_public_coverage_stats():\n    \"\"\"Returns platform coverage metrics for marketing landing page.\"\"\"\n    stats = get_public_coverage_stats_db()\n    ret"
+    },
+    {
+      "path": "/api/public/demo-search",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "public_demo_search",
+      "doc": "Public unauthenticated search teaser for interactive landing page demo.",
+      "is_authenticated": false,
+      "required_roles": [
+        "PUBLIC"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "SEARCH_QUOTA",
+      "subscription": "None",
+      "scope": "Public / None",
+      "source_snippet": "@app.get(\"/api/public/demo-search\")\nasync def public_demo_search(query: Optional[str] = \"04465\"):\n    \"\"\"Public unauthenticated search teaser for interactive landing page demo.\"\"\"\n    if not query or "
+    },
+    {
+      "path": "/api/admin/users",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_users",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.get(\"/api/admin/users\")\nasync def get_users(admin = Depends(require_admin)):\n    try:\n        users = get_all_db_users()\n        return {\"success\": True, \"users\": users}\n    except Exception as e"
+    },
+    {
+      "path": "/api/admin/users",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "create_user",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.post(\"/api/admin/users\")\nasync def create_user(req: CreateUserRequest, admin = Depends(require_admin)):\n    if len(req.password) < 6:\n        return {\"success\": False, \"error\": \"\u0e23\u0e2b\u0e31\u0e2a\u0e1c\u0e48\u0e32\u0e19\u0e15\u0e49\u0e2d\u0e07\u0e21\u0e35\u0e04\u0e27\u0e32"
+    },
+    {
+      "path": "/api/admin/users/{user_id}",
+      "methods": [
+        "DELETE"
+      ],
+      "endpoint": "delete_user",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.delete(\"/api/admin/users/{user_id}\")\nasync def delete_user(user_id: int, admin = Depends(require_admin)):\n    res = delete_db_user(user_id)\n    return res\n"
+    },
+    {
+      "path": "/api/parts/search",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "search_parts",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "SEARCH_QUOTA",
+      "subscription": "ACTIVE",
+      "scope": "Public / None",
+      "source_snippet": "@app.get(\"/api/parts/search\")\nasync def search_parts(\n    vin: Optional[str] = None,\n    car_brand: Optional[str] = None,\n    car_model: Optional[str] = None,\n    car_year: Optional[str] = None,\n    c"
+    },
+    {
+      "path": "/api/parts/product/{part_id}",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_product_detail",
+      "doc": "Direct product access endpoint protected against URL manipulation.",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Public / None",
+      "source_snippet": "@app.get(\"/api/parts/product/{part_id}\")\nasync def get_product_detail(\n    part_id: int,\n    source: Optional[str] = \"MASTER\",\n    x_username: Optional[str] = Header(\"admin\"),\n    x_user_role: Optiona"
+    },
+    {
+      "path": "/api/parts/ai-search",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "ai_search",
+      "doc": "",
+      "is_authenticated": false,
+      "required_roles": [
+        "PUBLIC"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "AI_SEARCH (Tier: PRO+)",
+      "subscription": "None",
+      "scope": "Public / None",
+      "source_snippet": "@app.post(\"/api/parts/ai-search\")\nasync def ai_search(\n    brand: str = Form(...),\n    part_number: str = Form(...),\n    oem_number: str = Form(...),\n    car_brand: str = Form(...),\n    car_model: str"
+    },
+    {
+      "path": "/api/parts/live-search",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "live_search",
+      "doc": "",
+      "is_authenticated": false,
+      "required_roles": [
+        "PUBLIC"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "SEARCH_QUOTA",
+      "subscription": "None",
+      "scope": "Public / None",
+      "source_snippet": "@app.post(\"/api/parts/live-search\")\nasync def live_search(\n    q: str = Form(...), \n    brand: Optional[str] = Form(None),\n    product_name: Optional[str] = Form(None),\n    car_brand: Optional[str] = "
+    },
+    {
+      "path": "/api/admin/scrape-url",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "admin_scrape_url",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.post(\"/api/admin/scrape-url\")\nasync def admin_scrape_url(custom_url: str = Form(...), query: str = Form(\"\"), admin = Depends(require_admin)):\n    if not custom_url or not custom_url.strip():\n    "
+    },
+    {
+      "path": "/api/admin/save-scraped-preview",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "save_scraped_preview",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.post(\"/api/admin/save-scraped-preview\")\nasync def save_scraped_preview(req: SavePreviewRequest, admin = Depends(require_admin)):\n    try:\n        count = 0\n        for item in req.items:\n        "
+    },
+    {
+      "path": "/api/parts/export-import-template",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "export_import_template",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "PERMANENT CUSTOMER DENY: Bulk Automotive Data Extraction",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.get(\"/api/parts/export-import-template\")\nasync def export_import_template(admin = Depends(require_admin)):\n    headers = [\n        \"\u0e41\u0e1a\u0e23\u0e19\u0e14\u0e4c\u0e02\u0e2d\u0e07\u0e2a\u0e34\u0e19\u0e04\u0e49\u0e32\", \"\u0e23\u0e2b\u0e31\u0e2a\u0e2a\u0e34\u0e19\u0e04\u0e49\u0e32\", \"\u0e40\u0e1a\u0e2d\u0e23\u0e4c OEM\", \"\u0e0a\u0e37\u0e48\u0e2d\u0e2a\u0e34\u0e19\u0e04\u0e49\u0e32 (\u0e44\u0e17\u0e22)\""
+    },
+    {
+      "path": "/api/parts/import",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "import_parts",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.post(\"/api/parts/import\")\nasync def import_parts(file: UploadFile = File(...), admin = Depends(require_admin)):\n    filename = file.filename.lower()\n    content = await file.read()\n    try:\n     "
+    },
+    {
+      "path": "/api/admin/all-parts",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "admin_all_parts",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.get(\"/api/admin/all-parts\")\nasync def admin_all_parts(\n    filter_brand: Optional[str] = None,\n    filter_car: Optional[str] = None,\n    filter_source: Optional[str] = None,\n    admin = Depends(r"
+    },
+    {
+      "path": "/api/admin/temp-parts",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "admin_get_temp_parts",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.get(\"/api/admin/temp-parts\")\nasync def admin_get_temp_parts(admin = Depends(require_admin)):\n    try:\n        temp_items = get_temp_parts_admin()\n        for item in temp_items:\n            item["
+    },
+    {
+      "path": "/api/parts/staff-note",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "add_staff_note",
+      "doc": "",
+      "is_authenticated": false,
+      "required_roles": [
+        "PUBLIC"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "None",
+      "scope": "Public / None",
+      "source_snippet": "@app.post(\"/api/parts/staff-note\")\nasync def add_staff_note(temp_id: int = Form(...), note: str = Form(...)):\n    try:\n        success = edit_temp_part(temp_id, {\"staff_note\": note})\n        return {\""
+    },
+    {
+      "path": "/api/admin/review/{id}",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "admin_review_action",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.post(\"/api/admin/review/{id}\")\nasync def admin_review_action(id: int, action: str = Form(...), updated_data: Optional[str] = Form(None), admin = Depends(require_admin)):\n    try:\n        if actio"
+    },
+    {
+      "path": "/api/admin/master/review/{id}",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "admin_master_review_action",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.post(\"/api/admin/master/review/{id}\")\nasync def admin_master_review_action(id: int, action: str = Form(...), updated_data: Optional[str] = Form(None), admin = Depends(require_admin)):\n    try:\n  "
+    },
+    {
+      "path": "/api/parts/decode-vin",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "decode_vin_endpoint",
+      "doc": "",
+      "is_authenticated": false,
+      "required_roles": [
+        "PUBLIC"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "VIN_LOOKUP (Tier: PRO+)",
+      "subscription": "None",
+      "scope": "Public / None",
+      "source_snippet": "@app.get(\"/api/parts/decode-vin\")\nasync def decode_vin_endpoint(vin: str):\n    vin_cleaned = vin.strip().upper()\n    if not vin_cleaned or len(vin_cleaned) != 17:\n        raise HTTPException(status_co"
+    },
+    {
+      "path": "/api/metadata/aftermarket-brands",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_metadata_aftermarket_brands",
+      "doc": "",
+      "is_authenticated": false,
+      "required_roles": [
+        "PUBLIC"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "None",
+      "scope": "Public / None",
+      "source_snippet": "@app.get(\"/api/metadata/aftermarket-brands\")\nasync def get_metadata_aftermarket_brands():\n    return {\"success\": True, \"results\": get_meta_aftermarket_brands()}\n"
+    },
+    {
+      "path": "/api/metadata/car-brands",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_metadata_car_brands",
+      "doc": "",
+      "is_authenticated": false,
+      "required_roles": [
+        "PUBLIC"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "None",
+      "scope": "Public / None",
+      "source_snippet": "@app.get(\"/api/metadata/car-brands\")\nasync def get_metadata_car_brands():\n    return {\"success\": True, \"results\": get_meta_car_brands()}\n"
+    },
+    {
+      "path": "/api/metadata/car-models",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_metadata_car_models",
+      "doc": "",
+      "is_authenticated": false,
+      "required_roles": [
+        "PUBLIC"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "None",
+      "scope": "Public / None",
+      "source_snippet": "@app.get(\"/api/metadata/car-models\")\nasync def get_metadata_car_models(car_brand: Optional[str] = None):\n    return {\"success\": True, \"results\": get_meta_car_models(car_brand)}\n"
+    },
+    {
+      "path": "/api/metadata/car-years",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_metadata_car_years",
+      "doc": "",
+      "is_authenticated": false,
+      "required_roles": [
+        "PUBLIC"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "None",
+      "scope": "Public / None",
+      "source_snippet": "@app.get(\"/api/metadata/car-years\")\nasync def get_metadata_car_years():\n    return {\"success\": True, \"results\": get_meta_car_years()}\n"
+    },
+    {
+      "path": "/api/metadata/categories",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_metadata_categories",
+      "doc": "",
+      "is_authenticated": false,
+      "required_roles": [
+        "PUBLIC"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "None",
+      "scope": "Public / None",
+      "source_snippet": "@app.get(\"/api/metadata/categories\")\nasync def get_metadata_categories():\n    return {\"success\": True, \"results\": get_meta_categories()}\n"
+    },
+    {
+      "path": "/api/metadata/ai-models",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_metadata_ai_models",
+      "doc": "",
+      "is_authenticated": false,
+      "required_roles": [
+        "PUBLIC"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "AI_SEARCH (Tier: PRO+)",
+      "subscription": "None",
+      "scope": "Public / None",
+      "source_snippet": "@app.get(\"/api/metadata/ai-models\")\nasync def get_metadata_ai_models():\n    return {\"success\": True, \"results\": get_preset_ai_models()}\n"
+    },
+    {
+      "path": "/api/admin/agent-skills",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_metadata_agent_skills",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.get(\"/api/admin/agent-skills\")\nasync def get_metadata_agent_skills(admin = Depends(require_admin)):\n    return {\"success\": True, \"results\": get_agent_skills()}\n"
+    },
+    {
+      "path": "/api/admin/agent-skills/{key}/toggle",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "toggle_metadata_agent_skill",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.post(\"/api/admin/agent-skills/{key}/toggle\")\nasync def toggle_metadata_agent_skill(key: str, req: AgentSkillToggleRequest, admin = Depends(require_admin)):\n    success = update_agent_skill(key, r"
+    },
+    {
+      "path": "/api/admin/metadata/aftermarket-brands",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "create_metadata_aftermarket_brand",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.post(\"/api/admin/metadata/aftermarket-brands\")\nasync def create_metadata_aftermarket_brand(req: MetaBrandRequest, admin = Depends(require_admin)):\n    res = add_meta_aftermarket_brand(req.name)\n "
+    },
+    {
+      "path": "/api/admin/metadata/car-brands",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "create_metadata_car_brand",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.post(\"/api/admin/metadata/car-brands\")\nasync def create_metadata_car_brand(req: MetaBrandRequest, admin = Depends(require_admin)):\n    res = add_meta_car_brand(req.name)\n    if not res[\"success\"]"
+    },
+    {
+      "path": "/api/admin/metadata/car-models",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "create_metadata_car_model",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.post(\"/api/admin/metadata/car-models\")\nasync def create_metadata_car_model(req: MetaModelRequest, admin = Depends(require_admin)):\n    res = add_meta_car_model(req.car_brand, req.name)\n    if not"
+    },
+    {
+      "path": "/api/admin/metadata/car-years",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "create_metadata_car_year",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.post(\"/api/admin/metadata/car-years\")\nasync def create_metadata_car_year(req: MetaYearRequest, admin = Depends(require_admin)):\n    res = add_meta_car_year(req.year)\n    if not res[\"success\"]:\n  "
+    },
+    {
+      "path": "/api/admin/metadata/categories",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "create_metadata_category",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.post(\"/api/admin/metadata/categories\")\nasync def create_metadata_category(req: MetaCategoryRequest, admin = Depends(require_admin)):\n    res = add_meta_category(req.name, req.name_en or \"\")\n    i"
+    },
+    {
+      "path": "/api/admin/metadata/ai-models",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "create_metadata_ai_model",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "AI_SEARCH (Tier: PRO+)",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.post(\"/api/admin/metadata/ai-models\")\nasync def create_metadata_ai_model(req: MetaAIModelRequest, admin = Depends(require_admin)):\n    res = add_preset_ai_model(req.model_name, req.provider or \"C"
+    },
+    {
+      "path": "/api/admin/metadata/aftermarket-brands/{id}",
+      "methods": [
+        "DELETE"
+      ],
+      "endpoint": "delete_metadata_aftermarket_brand",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.delete(\"/api/admin/metadata/aftermarket-brands/{id}\")\nasync def delete_metadata_aftermarket_brand(id: int, admin = Depends(require_admin)):\n    success = delete_meta_aftermarket_brand(id)\n    ret"
+    },
+    {
+      "path": "/api/admin/metadata/car-brands/{id}",
+      "methods": [
+        "DELETE"
+      ],
+      "endpoint": "delete_metadata_car_brand",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.delete(\"/api/admin/metadata/car-brands/{id}\")\nasync def delete_metadata_car_brand(id: int, admin = Depends(require_admin)):\n    success = delete_meta_car_brand(id)\n    return {\"success\": success}"
+    },
+    {
+      "path": "/api/admin/metadata/car-models/{id}",
+      "methods": [
+        "DELETE"
+      ],
+      "endpoint": "delete_metadata_car_model",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.delete(\"/api/admin/metadata/car-models/{id}\")\nasync def delete_metadata_car_model(id: int, admin = Depends(require_admin)):\n    success = delete_meta_car_model(id)\n    return {\"success\": success}"
+    },
+    {
+      "path": "/api/admin/metadata/car-years/{id}",
+      "methods": [
+        "DELETE"
+      ],
+      "endpoint": "delete_metadata_car_year",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.delete(\"/api/admin/metadata/car-years/{id}\")\nasync def delete_metadata_car_year(id: int, admin = Depends(require_admin)):\n    success = delete_meta_car_year(id)\n    return {\"success\": success}\n"
+    },
+    {
+      "path": "/api/admin/metadata/categories/{id}",
+      "methods": [
+        "DELETE"
+      ],
+      "endpoint": "delete_metadata_category",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.delete(\"/api/admin/metadata/categories/{id}\")\nasync def delete_metadata_category(id: int, admin = Depends(require_admin)):\n    success = delete_meta_category(id)\n    return {\"success\": success}\n"
+    },
+    {
+      "path": "/api/admin/metadata/ai-models/{id}",
+      "methods": [
+        "DELETE"
+      ],
+      "endpoint": "delete_metadata_ai_model",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "AI_SEARCH (Tier: PRO+)",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.delete(\"/api/admin/metadata/ai-models/{id}\")\nasync def delete_metadata_ai_model(id: int, admin = Depends(require_admin)):\n    success = delete_preset_ai_model(id)\n    return {\"success\": success}\n"
+    },
+    {
+      "path": "/api/admin/metadata/aftermarket-brands/{id}",
+      "methods": [
+        "PUT"
+      ],
+      "endpoint": "update_metadata_aftermarket_brand",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.put(\"/api/admin/metadata/aftermarket-brands/{id}\")\nasync def update_metadata_aftermarket_brand(id: int, req: MetaBrandRequest, admin = Depends(require_admin)):\n    success = update_meta_aftermark"
+    },
+    {
+      "path": "/api/admin/metadata/car-brands/{id}",
+      "methods": [
+        "PUT"
+      ],
+      "endpoint": "update_metadata_car_brand",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.put(\"/api/admin/metadata/car-brands/{id}\")\nasync def update_metadata_car_brand(id: int, req: MetaBrandRequest, admin = Depends(require_admin)):\n    success = update_meta_car_brand(id, req.name)\n "
+    },
+    {
+      "path": "/api/admin/metadata/car-models/{id}",
+      "methods": [
+        "PUT"
+      ],
+      "endpoint": "update_metadata_car_model",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.put(\"/api/admin/metadata/car-models/{id}\")\nasync def update_metadata_car_model(id: int, req: MetaModelRequest, admin = Depends(require_admin)):\n    success = update_meta_car_model(id, req.car_bra"
+    },
+    {
+      "path": "/api/admin/metadata/car-years/{id}",
+      "methods": [
+        "PUT"
+      ],
+      "endpoint": "update_metadata_car_year",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.put(\"/api/admin/metadata/car-years/{id}\")\nasync def update_metadata_car_year(id: int, req: MetaYearRequest, admin = Depends(require_admin)):\n    success = update_meta_car_year(id, req.year)\n    r"
+    },
+    {
+      "path": "/api/admin/metadata/categories/{id}",
+      "methods": [
+        "PUT"
+      ],
+      "endpoint": "update_metadata_category",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.put(\"/api/admin/metadata/categories/{id}\")\nasync def update_metadata_category(id: int, req: MetaCategoryRequest, admin = Depends(require_admin)):\n    success = update_meta_category(id, req.name, "
+    },
+    {
+      "path": "/api/superadmin/ai-keys",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "superadmin_get_ai_keys",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "SUPER_ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "AI_SEARCH (Tier: PRO+)",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.get(\"/api/superadmin/ai-keys\")\nasync def superadmin_get_ai_keys(user = Depends(require_super_admin)):\n    return {\n        \"success\": True,\n        \"results\": get_ai_keys_config()\n    }\n"
+    },
+    {
+      "path": "/api/superadmin/ai-keys",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "superadmin_save_ai_key",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "SUPER_ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "AI_SEARCH (Tier: PRO+)",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.post(\"/api/superadmin/ai-keys\")\nasync def superadmin_save_ai_key(req: AIKeySaveRequest, user = Depends(require_super_admin)):\n    success = set_ai_key_config(req.model_name, req.api_key, req.is_a"
+    },
+    {
+      "path": "/api/superadmin/ai-keys/{id}/activate",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "superadmin_activate_ai_key",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "SUPER_ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "AI_SEARCH (Tier: PRO+)",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.post(\"/api/superadmin/ai-keys/{id}/activate\")\nasync def superadmin_activate_ai_key(id: int, user = Depends(require_super_admin)):\n    success = activate_ai_key_config(id)\n    return {\"success\": s"
+    },
+    {
+      "path": "/api/superadmin/ai-keys/{id}",
+      "methods": [
+        "DELETE"
+      ],
+      "endpoint": "superadmin_delete_ai_key",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "SUPER_ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "AI_SEARCH (Tier: PRO+)",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.delete(\"/api/superadmin/ai-keys/{id}\")\nasync def superadmin_delete_ai_key(id: int, user = Depends(require_super_admin)):\n    success = delete_ai_key_config(id)\n    return {\"success\": success}\n"
+    },
+    {
+      "path": "/api/superadmin/ai-usage",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "superadmin_get_ai_usage",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "SUPER_ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "AI_SEARCH (Tier: PRO+)",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.get(\"/api/superadmin/ai-usage\")\nasync def superadmin_get_ai_usage(start_date: str = None, end_date: str = None, user = Depends(require_super_admin)):\n    return {\n        \"success\": True,\n       "
+    },
+    {
+      "path": "/api/saas/context",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_saas_context",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.get(\"/api/saas/context\")\nasync def get_saas_context(x_username: Optional[str] = Header(\"admin\")):\n    username = x_username or \"admin\"\n    ctx = get_user_tenant_context(username)\n    if not ctx:\n"
+    },
+    {
+      "path": "/api/saas/plans",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_saas_plans",
+      "doc": "",
+      "is_authenticated": false,
+      "required_roles": [
+        "PUBLIC"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "None",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.get(\"/api/saas/plans\")\nasync def get_saas_plans(status: Optional[str] = \"ACTIVE\"):\n    return {\n        \"success\": True,\n        \"plans\": get_all_plans_with_versions(status),\n        \"addons\": ge"
+    },
+    {
+      "path": "/api/saas/plans/{plan_id}",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_saas_plan_by_id",
+      "doc": "",
+      "is_authenticated": false,
+      "required_roles": [
+        "PUBLIC"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "None",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.get(\"/api/saas/plans/{plan_id}\")\nasync def get_saas_plan_by_id(plan_id: str, interval: str = \"MONTHLY\"):\n    plan = get_plan_details(plan_id, interval)\n    if not plan:\n        raise HTTPExceptio"
+    },
+    {
+      "path": "/api/saas/add-ons",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_saas_addons",
+      "doc": "",
+      "is_authenticated": false,
+      "required_roles": [
+        "PUBLIC"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "None",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.get(\"/api/saas/add-ons\")\nasync def get_saas_addons(plan_id: Optional[str] = None):\n    addons = get_all_add_ons(plan_id)\n    return {\"success\": True, \"add_ons\": addons}\n"
+    },
+    {
+      "path": "/api/saas/billing/calculate",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "calculate_saas_billing",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.post(\"/api/saas/billing/calculate\")\nasync def calculate_saas_billing(req: CalculateBillingRequest, x_username: Optional[str] = Header(\"admin\")):\n    ctx = get_user_tenant_context(x_username or \"a"
+    },
+    {
+      "path": "/api/saas/coupons/validate",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "validate_saas_coupon",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.post(\"/api/saas/coupons/validate\")\nasync def validate_saas_coupon(req: ValidateCouponRequest, x_username: Optional[str] = Header(\"admin\")):\n    ctx = get_user_tenant_context(x_username or \"admin\""
+    },
+    {
+      "path": "/api/saas/subscription",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_saas_subscription",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.get(\"/api/saas/subscription\")\nasync def get_saas_subscription(x_username: Optional[str] = Header(\"admin\")):\n    ctx = get_user_tenant_context(x_username or \"admin\")\n    org_id = ctx[\"organization"
+    },
+    {
+      "path": "/api/saas/subscription/upgrade",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "upgrade_saas_subscription",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.post(\"/api/saas/subscription/upgrade\")\nasync def upgrade_saas_subscription(req: UpgradePlanRequest, x_username: Optional[str] = Header(\"admin\")):\n    ctx = get_user_tenant_context(x_username or \""
+    },
+    {
+      "path": "/api/saas/subscription/downgrade",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "downgrade_saas_subscription",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.post(\"/api/saas/subscription/downgrade\")\nasync def downgrade_saas_subscription(req: UpgradePlanRequest, x_username: Optional[str] = Header(\"admin\")):\n    ctx = get_user_tenant_context(x_username "
+    },
+    {
+      "path": "/api/saas/subscription/cancel",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "cancel_saas_subscription",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.post(\"/api/saas/subscription/cancel\")\nasync def cancel_saas_subscription(req: CancelSubscriptionRequest, x_username: Optional[str] = Header(\"admin\")):\n    ctx = get_user_tenant_context(x_username"
+    },
+    {
+      "path": "/api/saas/subscription/reactivate",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "reactivate_saas_subscription",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.post(\"/api/saas/subscription/reactivate\")\nasync def reactivate_saas_subscription(req: ReactivateSubscriptionRequest, x_username: Optional[str] = Header(\"admin\")):\n    ctx = get_user_tenant_contex"
+    },
+    {
+      "path": "/api/saas/payments/charge",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "charge_payment",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.post(\"/api/saas/payments/charge\")\nasync def charge_payment(req: PaymentChargeRequest, x_username: Optional[str] = Header(\"admin\")):\n    ctx = get_user_tenant_context(x_username or \"admin\")\n    or"
+    },
+    {
+      "path": "/api/saas/webhooks/{provider}",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "handle_payment_webhook",
+      "doc": "",
+      "is_authenticated": false,
+      "required_roles": [
+        "PUBLIC"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "None",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.post(\"/api/saas/webhooks/{provider}\")\nasync def handle_payment_webhook(provider: str, payload: dict, x_signature: Optional[str] = Header(None)):\n    res = PaymentGateway.process_webhook_event(pro"
+    },
+    {
+      "path": "/api/admin/invoices/{invoice_id}/verify-payment",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "verify_corporate_invoice_payment",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.post(\"/api/admin/invoices/{invoice_id}/verify-payment\")\nasync def verify_corporate_invoice_payment(\n    invoice_id: int,\n    req: VerifyBankTransferRequest,\n    x_username: Optional[str] = Header"
+    },
+    {
+      "path": "/api/saas/invoices/{invoice_id}",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_saas_invoice_detail",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.get(\"/api/saas/invoices/{invoice_id}\")\nasync def get_saas_invoice_detail(invoice_id: int, x_username: Optional[str] = Header(\"admin\")):\n    ctx = get_user_tenant_context(x_username or \"admin\")\n  "
+    },
+    {
+      "path": "/api/saas/data-coverage",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_saas_data_coverage",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.get(\"/api/saas/data-coverage\")\nasync def get_saas_data_coverage(x_username: Optional[str] = Header(\"admin\")):\n    ctx = get_user_tenant_context(x_username or \"admin\")\n    org_id = ctx[\"organizati"
+    },
+    {
+      "path": "/api/saas/usage",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_saas_usage",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.get(\"/api/saas/usage\")\nasync def get_saas_usage(x_username: Optional[str] = Header(\"admin\")):\n    ctx = get_user_tenant_context(x_username or \"admin\")\n    if not ctx:\n        raise HTTPException("
+    },
+    {
+      "path": "/api/saas/favorites",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_saas_favorites",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.get(\"/api/saas/favorites\")\nasync def get_saas_favorites(x_username: Optional[str] = Header(\"admin\")):\n    ctx = get_user_tenant_context(x_username or \"admin\")\n    user_id = ctx[\"user\"][\"id\"] if c"
+    },
+    {
+      "path": "/api/saas/favorites/toggle",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "toggle_saas_favorite",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.post(\"/api/saas/favorites/toggle\")\nasync def toggle_saas_favorite(req: ToggleFavoriteRequest, x_username: Optional[str] = Header(\"admin\")):\n    ctx = get_user_tenant_context(x_username or \"admin\""
+    },
+    {
+      "path": "/api/saas/history",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_saas_history",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.get(\"/api/saas/history\")\nasync def get_saas_history(x_username: Optional[str] = Header(\"admin\"), limit: int = 20):\n    ctx = get_user_tenant_context(x_username or \"admin\")\n    org_id = ctx[\"organ"
+    },
+    {
+      "path": "/api/saas/history/{log_id}",
+      "methods": [
+        "DELETE"
+      ],
+      "endpoint": "delete_saas_history_item",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.delete(\"/api/saas/history/{log_id}\")\nasync def delete_saas_history_item(log_id: int, x_username: Optional[str] = Header(\"admin\")):\n    ctx = get_user_tenant_context(x_username or \"admin\")\n    org"
+    },
+    {
+      "path": "/api/saas/api-keys",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_saas_api_keys",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "API_ACCESS (Tier: BIZ+)",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.get(\"/api/saas/api-keys\")\nasync def get_saas_api_keys(x_username: Optional[str] = Header(\"admin\")):\n    ctx = get_user_tenant_context(x_username or \"admin\")\n    org_id = ctx[\"organization\"][\"id\"]"
+    },
+    {
+      "path": "/api/saas/api-keys",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "create_saas_api_key",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "API_ACCESS (Tier: BIZ+)",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.post(\"/api/saas/api-keys\")\nasync def create_saas_api_key(req: CreateApiKeyRequest, x_username: Optional[str] = Header(\"admin\")):\n    ctx = get_user_tenant_context(x_username or \"admin\")\n    org_i"
+    },
+    {
+      "path": "/api/saas/api-keys/{key_id}",
+      "methods": [
+        "DELETE"
+      ],
+      "endpoint": "delete_saas_api_key",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "API_ACCESS (Tier: BIZ+)",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.delete(\"/api/saas/api-keys/{key_id}\")\nasync def delete_saas_api_key(key_id: int, x_username: Optional[str] = Header(\"admin\")):\n    ctx = get_user_tenant_context(x_username or \"admin\")\n    org_id "
+    },
+    {
+      "path": "/api/saas/invoices",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_saas_invoices",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.get(\"/api/saas/invoices\")\nasync def get_saas_invoices(x_username: Optional[str] = Header(\"admin\")):\n    ctx = get_user_tenant_context(x_username or \"admin\")\n    org_id = ctx[\"organization\"][\"id\"]"
+    },
+    {
+      "path": "/api/admin/saas/metrics",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_saas_metrics",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.get(\"/api/admin/saas/metrics\")\nasync def get_saas_metrics(admin = Depends(require_admin)):\n    metrics = get_admin_saas_metrics()\n    return {\"success\": True, \"metrics\": metrics}\n"
+    },
+    {
+      "path": "/api/saas/export",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "export_saas_parts",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "PERMANENT CUSTOMER DENY: Bulk Automotive Data Extraction",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.post(\"/api/saas/export\")\nasync def export_saas_parts(req: ExportRequest, x_username: Optional[str] = Header(\"admin\"), x_user_role: Optional[str] = Header(None)):\n    ctx = get_user_tenant_context"
+    },
+    {
+      "path": "/api/saas/organization",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_saas_organization",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.get(\"/api/saas/organization\")\nasync def get_saas_organization(x_username: Optional[str] = Header(\"admin\")):\n    ctx = get_user_tenant_context(x_username or \"admin\")\n    if not ctx:\n        raise "
+    },
+    {
+      "path": "/api/saas/organization",
+      "methods": [
+        "PUT"
+      ],
+      "endpoint": "update_saas_organization",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.put(\"/api/saas/organization\")\nasync def update_saas_organization(req: OrgProfileUpdateRequest, x_username: Optional[str] = Header(\"admin\")):\n    ctx = get_user_tenant_context(x_username or \"admin"
+    },
+    {
+      "path": "/api/saas/organization/members",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_saas_org_members",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.get(\"/api/saas/organization/members\")\nasync def get_saas_org_members(x_username: Optional[str] = Header(\"admin\")):\n    ctx = get_user_tenant_context(x_username or \"admin\")\n    if not ctx:\n       "
+    },
+    {
+      "path": "/api/saas/organization/invite",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "invite_saas_org_member",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.post(\"/api/saas/organization/invite\")\nasync def invite_saas_org_member(req: OrgInviteRequest, x_username: Optional[str] = Header(\"admin\")):\n    ctx = get_user_tenant_context(x_username or \"admin\""
+    },
+    {
+      "path": "/api/saas/organization/invitations",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_saas_org_invitations",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.get(\"/api/saas/organization/invitations\")\nasync def get_saas_org_invitations(x_username: Optional[str] = Header(\"admin\")):\n    ctx = get_user_tenant_context(x_username or \"admin\")\n    if not ctx:"
+    },
+    {
+      "path": "/api/saas/organization/invitations/{invitation_id}",
+      "methods": [
+        "DELETE"
+      ],
+      "endpoint": "revoke_saas_org_invitation",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.delete(\"/api/saas/organization/invitations/{invitation_id}\")\nasync def revoke_saas_org_invitation(invitation_id: int, x_username: Optional[str] = Header(\"admin\")):\n    ctx = get_user_tenant_conte"
+    },
+    {
+      "path": "/api/saas/organization/members/{target_user_id}/role",
+      "methods": [
+        "PUT"
+      ],
+      "endpoint": "update_saas_member_role",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.put(\"/api/saas/organization/members/{target_user_id}/role\")\nasync def update_saas_member_role(target_user_id: int, req: MemberRoleUpdateRequest, x_username: Optional[str] = Header(\"admin\")):\n    "
+    },
+    {
+      "path": "/api/saas/organization/members/{target_user_id}/status",
+      "methods": [
+        "PUT"
+      ],
+      "endpoint": "update_saas_member_status",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.put(\"/api/saas/organization/members/{target_user_id}/status\")\nasync def update_saas_member_status(target_user_id: int, req: MemberStatusUpdateRequest, x_username: Optional[str] = Header(\"admin\"))"
+    },
+    {
+      "path": "/api/saas/organization/members/{target_user_id}",
+      "methods": [
+        "DELETE"
+      ],
+      "endpoint": "remove_saas_member",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.delete(\"/api/saas/organization/members/{target_user_id}\")\nasync def remove_saas_member(target_user_id: int, x_username: Optional[str] = Header(\"admin\")):\n    ctx = get_user_tenant_context(x_usern"
+    },
+    {
+      "path": "/api/saas/organization/audit",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_saas_org_audit",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "AUTHENTICATED"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Organization Scoped",
+      "source_snippet": "@app.get(\"/api/saas/organization/audit\")\nasync def get_saas_org_audit(x_username: Optional[str] = Header(\"admin\"), limit: int = 50):\n    ctx = get_user_tenant_context(x_username or \"admin\")\n    if not"
+    },
+    {
+      "path": "/api/owner/overview",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_owner_overview_metrics",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "SYSTEM_OWNER"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.get(\"/api/owner/metrics\")\n@app.get(\"/api/owner/overview\")\nasync def get_owner_overview_metrics(user = Depends(require_owner)):\n    kpis = OwnerAnalyticsService.get_overview_kpis()\n    return {\"su"
+    },
+    {
+      "path": "/api/owner/metrics",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_owner_overview_metrics",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "SYSTEM_OWNER"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.get(\"/api/owner/metrics\")\n@app.get(\"/api/owner/overview\")\nasync def get_owner_overview_metrics(user = Depends(require_owner)):\n    kpis = OwnerAnalyticsService.get_overview_kpis()\n    return {\"su"
+    },
+    {
+      "path": "/api/owner/revenue",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_owner_revenue_analytics",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "SYSTEM_OWNER"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.get(\"/api/owner/revenue\")\nasync def get_owner_revenue_analytics(range_days: int = 30, user = Depends(require_owner)):\n    rev = OwnerAnalyticsService.get_revenue_analytics(range_days=range_days)\n"
+    },
+    {
+      "path": "/api/owner/customers",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_owner_customers_analytics",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "SYSTEM_OWNER"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.get(\"/api/owner/customers\")\nasync def get_owner_customers_analytics(user = Depends(require_owner)):\n    data = OwnerAnalyticsService.get_customers_analytics()\n    return {\"success\": True, **data}"
+    },
+    {
+      "path": "/api/owner/customers/{org_id}/360",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_owner_customer_360",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "SYSTEM_OWNER"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.get(\"/api/owner/customers/{org_id}/360\")\nasync def get_owner_customer_360(org_id: int, user = Depends(require_owner)):\n    profile = OwnerAnalyticsService.get_customer_360(org_id)\n    if not prof"
+    },
+    {
+      "path": "/api/owner/subscriptions",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_owner_subscriptions_analytics",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "SYSTEM_OWNER"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.get(\"/api/owner/subscriptions\")\nasync def get_owner_subscriptions_analytics(user = Depends(require_owner)):\n    subs = OwnerAnalyticsService.get_subscriptions_analytics()\n    return {\"success\": T"
+    },
+    {
+      "path": "/api/owner/search-analytics",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_owner_automotive_usage_analytics",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "SYSTEM_OWNER"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "SEARCH_QUOTA",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.get(\"/api/owner/usage\")\n@app.get(\"/api/owner/search-analytics\")\nasync def get_owner_automotive_usage_analytics(user = Depends(require_owner)):\n    usage_data = OwnerAnalyticsService.get_automotiv"
+    },
+    {
+      "path": "/api/owner/usage",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_owner_automotive_usage_analytics",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "SYSTEM_OWNER"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.get(\"/api/owner/usage\")\n@app.get(\"/api/owner/search-analytics\")\nasync def get_owner_automotive_usage_analytics(user = Depends(require_owner)):\n    usage_data = OwnerAnalyticsService.get_automotiv"
+    },
+    {
+      "path": "/api/owner/opportunities",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_owner_opportunities_and_health",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "SYSTEM_OWNER"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.get(\"/api/owner/opportunities\")\nasync def get_owner_opportunities_and_health(user = Depends(require_owner)):\n    data = OwnerAnalyticsService.get_opportunities_and_health()\n    return {\"success\":"
+    },
+    {
+      "path": "/api/owner/plans-performance",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_owner_plans_performance",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "SYSTEM_OWNER"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.get(\"/api/owner/plans-performance\")\nasync def get_owner_plans_performance(user = Depends(require_owner)):\n    perf = OwnerAnalyticsService.get_plans_and_addons_performance()\n    return {\"success\""
+    },
+    {
+      "path": "/api/owner/alerts",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_owner_alerts_list",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "SYSTEM_OWNER"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.get(\"/api/owner/alerts\")\nasync def get_owner_alerts_list(is_dismissed: Optional[bool] = False, severity: Optional[str] = None, user = Depends(require_owner)):\n    alerts = get_owner_alerts(is_dis"
+    },
+    {
+      "path": "/api/owner/alerts/{alert_id}/dismiss",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "dismiss_owner_alert_endpoint",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "SYSTEM_OWNER"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.post(\"/api/owner/alerts/{alert_id}/dismiss\")\nasync def dismiss_owner_alert_endpoint(alert_id: int, user = Depends(require_owner)):\n    user_id = user.get(\"id\", 1)\n    success = dismiss_owner_aler"
+    },
+    {
+      "path": "/api/owner/reports/export",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "export_owner_report",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "SYSTEM_OWNER"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.get(\"/api/owner/reports/export\")\nasync def export_owner_report(report_type: str = \"REVENUE\", format: str = \"csv\", user = Depends(require_owner)):\n    try:\n        content, filename = OwnerAnalyti"
+    },
+    {
+      "path": "/api/owner/pipeline",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_pipeline_leads",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "SYSTEM_OWNER",
+        "STAFF"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.get(\"/api/owner/pipeline\")\nasync def get_pipeline_leads(stage: Optional[str] = None, user = Depends(require_staff)):\n    leads = get_crm_leads(stage=stage)\n    return {\"success\": True, \"leads\": l"
+    },
+    {
+      "path": "/api/owner/pipeline",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "create_pipeline_lead",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "SYSTEM_OWNER",
+        "STAFF"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.post(\"/api/owner/pipeline\")\nasync def create_pipeline_lead(req: LeadCreateRequest, user = Depends(require_staff)):\n    res = create_crm_lead(req.dict())\n    if res.get(\"success\"):\n        log_aud"
+    },
+    {
+      "path": "/api/owner/pipeline/{lead_id}/stage",
+      "methods": [
+        "PUT"
+      ],
+      "endpoint": "update_pipeline_lead_stage",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "SYSTEM_OWNER",
+        "STAFF"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.put(\"/api/owner/pipeline/{lead_id}/stage\")\nasync def update_pipeline_lead_stage(lead_id: int, req: LeadStageUpdateRequest, user = Depends(require_staff)):\n    success = update_crm_lead_stage(lead"
+    },
+    {
+      "path": "/api/owner/roles",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_roles_and_permissions",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "SYSTEM_OWNER"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.get(\"/api/owner/roles\")\nasync def get_roles_and_permissions(user = Depends(require_owner)):\n    data = get_all_roles_with_permissions()\n    return {\"success\": True, \"data\": data}\n"
+    },
+    {
+      "path": "/api/owner/roles/permission",
+      "methods": [
+        "POST"
+      ],
+      "endpoint": "update_permission_toggle",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "SYSTEM_OWNER"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.post(\"/api/owner/roles/permission\")\nasync def update_permission_toggle(req: RolePermissionUpdateRequest, user = Depends(require_owner)):\n    success = update_role_permission(req.role_id, req.perm"
+    },
+    {
+      "path": "/api/owner/plans/{plan_id}",
+      "methods": [
+        "PUT"
+      ],
+      "endpoint": "edit_plan_pricing",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "SYSTEM_OWNER"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.put(\"/api/owner/plans/{plan_id}\")\nasync def edit_plan_pricing(plan_id: str, req: PlanPricingUpdateRequest, user = Depends(require_owner)):\n    success = update_plan_pricing(plan_id, req.price_mon"
+    },
+    {
+      "path": "/api/superadmin/system-health",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_system_health",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "SUPER_ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.get(\"/api/superadmin/system-health\")\nasync def get_system_health(user = Depends(require_super_admin)):\n    return {\n        \"success\": True,\n        \"health\": {\n            \"status\": \"HEALTHY\",\n "
+    },
+    {
+      "path": "/api/superadmin/audit-logs",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_audit_trail",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "SUPER_ADMIN",
+        "ADMIN"
+      ],
+      "is_customer_denied": true,
+      "deny_reason": "INTERNAL ONLY WORKSPACE",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.get(\"/api/superadmin/audit-logs\")\nasync def get_audit_trail(limit: int = 50, user = Depends(require_admin)):\n    logs = get_platform_audit_logs(limit=limit)\n    return {\"success\": True, \"logs\": l"
+    },
+    {
+      "path": "/api/parts/cross-reference-matrix",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_cross_ref_matrix",
+      "doc": "",
+      "is_authenticated": false,
+      "required_roles": [
+        "PUBLIC"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "CROSS_REFERENCE",
+      "subscription": "None",
+      "scope": "Public / None",
+      "source_snippet": "@app.get(\"/api/parts/cross-reference-matrix\")\nasync def get_cross_ref_matrix(part_number: Optional[str] = None):\n    matrix = get_cross_reference_matrix(part_number)\n    return {\"success\": True, \"matr"
+    },
+    {
+      "path": "/api/staff/tasks",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_staff_tasks",
+      "doc": "",
+      "is_authenticated": true,
+      "required_roles": [
+        "STAFF"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "ACTIVE",
+      "scope": "Platform Global",
+      "source_snippet": "@app.get(\"/api/staff/tasks\")\nasync def get_staff_tasks(user = Depends(require_staff)):\n    leads = get_crm_leads()\n    conn = get_db_connection()\n    cursor = conn.cursor()\n    cursor.execute(\"SELECT "
+    },
+    {
+      "path": "/",
+      "methods": [
+        "GET"
+      ],
+      "endpoint": "get_index",
+      "doc": "",
+      "is_authenticated": false,
+      "required_roles": [
+        "PUBLIC"
+      ],
+      "is_customer_denied": false,
+      "deny_reason": "",
+      "entitlement": "None",
+      "subscription": "None",
+      "scope": "Public / None",
+      "source_snippet": "@app.get(\"/\", response_class=HTMLResponse)\nasync def get_index():\n    index_path = os.path.join(os.path.dirname(__file__), \"index.html\")\n    if not os.path.exists(index_path):\n        return HTMLRespo"
+    }
+  ]
+}
