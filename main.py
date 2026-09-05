@@ -26,8 +26,11 @@ from backend.database import (
     get_temp_parts_admin,
     check_is_new_pair,
     approve_temp_part,
+    bulk_approve_temp_parts,
     edit_temp_part,
     reject_temp_part,
+    bulk_reject_temp_parts,
+    export_master_parts_dataset,
     edit_master_part,
     delete_master_part,
     get_meta_aftermarket_brands,
@@ -82,6 +85,10 @@ from backend.database import (
     get_all_roles_with_permissions,
     update_role_permission,
     update_plan_pricing,
+    create_plan,
+    update_full_plan,
+    delete_plan,
+    get_all_plans_detailed,
     get_cross_reference_matrix,
     get_platform_audit_logs,
     log_audit_action,
@@ -650,21 +657,25 @@ async def save_scraped_preview(req: SavePreviewRequest, admin = Depends(require_
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Export CSV template for imports
+class BulkReviewRequest(BaseModel):
+    action: str
+    temp_ids: List[int]
+
+# Export CSV template for imports (16 standard columns)
 from fastapi.responses import StreamingResponse
 import csv
 
 @app.get("/api/parts/export-import-template")
 async def export_import_template(admin = Depends(require_admin)):
     headers = [
-        "แบรนด์ของสินค้า", "รหัสสินค้า", "เบอร์ OEM", "ชื่อสินค้า (ไทย)", "ชื่อสินค้า (อังกฤษ)",
+        "แบรนด์ของสินค้า", "หมวดหมู่สินค้า", "รหัสสินค้า", "เบอร์ OEM", "ชื่อสินค้า (ไทย)", "ชื่อสินค้า (อังกฤษ)",
         "ยี่ห้อรถ", "รุ่นรถ", "ปีเริ่มต้น", "ปีสิ้นสุด", "เครื่องยนต์", "น้ำมัน", "เกียร์",
         "รายละเอียดสินค้า", "หน่วยราคาทุน", "หมายเหตุ"
     ]
     sample_row = [
-        "SKR", "SMZCAB-033", "UH71-34-470", "บูชปีกนกล่าง", "Lower Control Arm Bushing",
-        "MAZDA", "Fighter", "1996", "2006", "WL", "ดีเซล", "ธรรมดา",
-        "บูชปีกนกคุณภาพพรีเมียมนำเข้า", "450.00", "ใช้ร่วมกับ Ford Ranger ปี 1996-2006 ได้"
+        "TRW", "ระบบเบรก", "GDB328DT", "04465-0K090", "ผ้าเบรคหน้า D-Max / Hilux Vigo", "Front Brake Pad",
+        "TOYOTA", "Hilux Vigo", "2004", "2015", "1KD / 2KD", "ดีเซล", "อัตโนมัติ / ธรรมดา",
+        "ผ้าเบรคเกรดพรีเมียม DTEC ไร้ฝุ่นดำ", "1250.00", "ใส่ได้ทั้ง 2WD และ 4WD"
     ]
     import io
     output = io.StringIO()
@@ -678,6 +689,53 @@ async def export_import_template(admin = Depends(require_admin)):
         media_type="text/csv"
     )
     response.headers["Content-Disposition"] = "attachment; filename=parts_import_template.csv"
+    return response
+
+# Export Excel (.xlsx) template for imports
+@app.get("/api/parts/export-import-template-xlsx")
+async def export_import_template_xlsx(admin = Depends(require_admin)):
+    import openpyxl
+    from openpyxl.styles import Font, PatternFill, Alignment
+    
+    headers = [
+        "แบรนด์ของสินค้า", "หมวดหมู่สินค้า", "รหัสสินค้า", "เบอร์ OEM", "ชื่อสินค้า (ไทย)", "ชื่อสินค้า (อังกฤษ)",
+        "ยี่ห้อรถ", "รุ่นรถ", "ปีเริ่มต้น", "ปีสิ้นสุด", "เครื่องยนต์", "น้ำมัน", "เกียร์",
+        "รายละเอียดสินค้า", "หน่วยราคาทุน", "หมายเหตุ"
+    ]
+    sample_rows = [
+        ["TRW", "ระบบเบรก", "GDB328DT", "04465-0K090", "ผ้าเบรคหน้า D-Max / Hilux Vigo", "Front Brake Pad", "TOYOTA", "Hilux Vigo", "2004", "2015", "1KD / 2KD", "ดีเซล", "อัตโนมัติ / ธรรมดา", "ผ้าเบรคเกรดพรีเมียม DTEC ไร้ฝุ่นดำ", "1250.00", "ใส่ได้ทั้ง 2WD และ 4WD"],
+        ["BOSCH", "กรองอากาศ / กรองน้ำมัน", "0986AF0058", "17801-0C010", "ไส้กรองอากาศ TOYOTA", "Air Filter Element", "TOYOTA", "Fortuner", "2005", "2015", "1KD / 2TR", "ดีเซล / เบนซิน", "อัตโนมัติ", "กรองอากาศมาตรฐาน OEM ป้องกันฝุ่นละอองสูง", "280.00", "ควรเปลี่ยนทุก 20,000 กม."]
+    ]
+    
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Parts_Template"
+    ws.append(headers)
+    
+    header_fill = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid")
+    header_font = Font(name="Segoe UI", size=11, bold=True, color="FFFFFF")
+    for cell in ws[1]:
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+        
+    for row in sample_rows:
+        ws.append(row)
+        
+    for col in ws.columns:
+        max_len = max(len(str(cell.value or '')) for cell in col)
+        col_letter = openpyxl.utils.get_column_letter(col[0].column)
+        ws.column_dimensions[col_letter].width = max(max_len + 4, 14)
+        
+    out = io.BytesIO()
+    wb.save(out)
+    out.seek(0)
+    
+    response = StreamingResponse(
+        out,
+        media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response.headers["Content-Disposition"] = "attachment; filename=parts_import_template.xlsx"
     return response
 
 # Import Excel/CSV files (restricted to ADMIN)
@@ -698,6 +756,99 @@ async def import_parts(file: UploadFile = File(...), admin = Depends(require_adm
         return result
     except Exception as e:
         return {"success": False, "error": f"เกิดข้อผิดพลาด: {str(e)}"}
+
+# Master Catalog Export (Excel / CSV)
+@app.get("/api/admin/master-parts/export")
+async def export_master_parts(format: str = "xlsx", admin = Depends(require_admin)):
+    import io
+    import csv
+    parts = export_master_parts_dataset()
+    headers = [
+        "แบรนด์ของสินค้า", "หมวดหมู่สินค้า", "รหัสสินค้า", "เบอร์ OEM", "ชื่อสินค้า (ไทย)", "ชื่อสินค้า (อังกฤษ)",
+        "ยี่ห้อรถ", "รุ่นรถ", "ปีเริ่มต้น", "ปีสิ้นสุด", "เครื่องยนต์", "น้ำมัน", "เกียร์",
+        "รายละเอียดสินค้า", "หน่วยราคาทุน", "หมายเหตุ"
+    ]
+    if format.lower() == "csv":
+        output = io.StringIO()
+        output.write('\ufeff') # UTF-8 BOM
+        writer = csv.writer(output)
+        writer.writerow(headers)
+        for p in parts:
+            writer.writerow([
+                p.get("brand", ""),
+                p.get("category", ""),
+                p.get("part_number", ""),
+                p.get("oem_number", ""),
+                p.get("product_name_th", ""),
+                p.get("product_name_en", ""),
+                p.get("car_brand", ""),
+                p.get("car_model", ""),
+                p.get("year_start", ""),
+                p.get("year_end", ""),
+                p.get("engine", ""),
+                p.get("fuel", ""),
+                p.get("transmission", ""),
+                p.get("description", ""),
+                p.get("cost_unit", ""),
+                p.get("notes", "")
+            ])
+        response = StreamingResponse(
+            io.BytesIO(output.getvalue().encode("utf-8")),
+            media_type="text/csv"
+        )
+        response.headers["Content-Disposition"] = "attachment; filename=master_catalog_parts.csv"
+        return response
+    else:
+        # XLSX
+        import openpyxl
+        from openpyxl.styles import Font, PatternFill, Alignment
+        wb = openpyxl.Workbook()
+        ws = wb.active
+        ws.title = "Master_Catalog"
+        ws.append(headers)
+        
+        header_fill = PatternFill(start_color="1E293B", end_color="1E293B", fill_type="solid")
+        header_font = Font(name="Segoe UI", size=11, bold=True, color="FFFFFF")
+        for cell in ws[1]:
+            cell.fill = header_fill
+            cell.font = header_font
+            cell.alignment = Alignment(horizontal="center", vertical="center")
+            
+        for p in parts:
+            ws.append([
+                p.get("brand", ""),
+                p.get("category", ""),
+                p.get("part_number", ""),
+                p.get("oem_number", ""),
+                p.get("product_name_th", ""),
+                p.get("product_name_en", ""),
+                p.get("car_brand", ""),
+                p.get("car_model", ""),
+                p.get("year_start", ""),
+                p.get("year_end", ""),
+                p.get("engine", ""),
+                p.get("fuel", ""),
+                p.get("transmission", ""),
+                p.get("description", ""),
+                p.get("cost_unit", ""),
+                p.get("notes", "")
+            ])
+            
+        for col in ws.columns:
+            max_len = max(len(str(cell.value or '')) for cell in col)
+            col_letter = openpyxl.utils.get_column_letter(col[0].column)
+            ws.column_dimensions[col_letter].width = max(min(max_len + 4, 40), 12)
+            
+        out = io.BytesIO()
+        wb.save(out)
+        out.seek(0)
+        
+        response = StreamingResponse(
+            out,
+            media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        response.headers["Content-Disposition"] = "attachment; filename=master_catalog_parts.xlsx"
+        return response
 
 # System-wide Filter View (Master & Temp) for admin dashboard
 @app.get("/api/admin/all-parts")
@@ -744,6 +895,32 @@ async def add_staff_note(temp_id: int = Form(...), note: str = Form(...)):
     try:
         success = edit_temp_part(temp_id, {"staff_note": note})
         return {"success": success}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+# Bulk Review Action (Approve / Reject multiple temp parts)
+@app.post("/api/admin/review/bulk")
+async def admin_bulk_review_action(req: BulkReviewRequest, admin = Depends(require_admin)):
+    try:
+        if not req.temp_ids:
+            raise HTTPException(status_code=400, detail="กรุณาเลือกรายการอย่างน้อย 1 รายการ")
+            
+        if req.action == "confirm":
+            count = bulk_approve_temp_parts(req.temp_ids)
+            return {
+                "success": True,
+                "count": count,
+                "message": f"อนุมัติและย้ายข้อมูลเข้า Master Catalog สำเร็จ {count} รายการ"
+            }
+        elif req.action == "reject":
+            count = bulk_reject_temp_parts(req.temp_ids)
+            return {
+                "success": True,
+                "count": count,
+                "message": f"ปฏิเสธและลบรายการออกจากคิวสำเร็จ {count} รายการ"
+            }
+        else:
+            raise HTTPException(status_code=400, detail="Action ไม่ถูกต้อง (รองรับ confirm หรือ reject)")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -1748,11 +1925,29 @@ class RolePermissionUpdateRequest(BaseModel):
     is_granted: bool
 
 class PlanPricingUpdateRequest(BaseModel):
+    name: Optional[str] = None
     price_monthly: int
     monthly_search_quota: int
     max_brands: int
     max_categories: int
     max_users: int
+    vin_search_enabled: Optional[bool] = False
+    api_access_enabled: Optional[bool] = False
+    export_enabled: Optional[bool] = False
+    ai_search_enabled: Optional[bool] = False
+
+class PlanCreateRequest(BaseModel):
+    id: str
+    name: str
+    price_monthly: int
+    max_brands: int = 5
+    max_categories: int = 5
+    max_users: int = 1
+    monthly_search_quota: int = 1000
+    vin_search_enabled: bool = False
+    api_access_enabled: bool = False
+    export_enabled: bool = False
+    ai_search_enabled: bool = False
 
 # 1. Platform Owner Command Center Business Analytics
 @app.get("/api/owner/metrics")
@@ -1870,14 +2065,35 @@ async def update_permission_toggle(req: RolePermissionUpdateRequest, user = Depe
         return {"success": True}
     return {"success": False, "error": "Failed to update permission"}
 
-# 4. Plan Pricing Editor
+# 4. Plan Management CRUD (Add, Edit, Delete, View)
+@app.get("/api/owner/plans")
+async def get_owner_plans_list(user = Depends(require_owner)):
+    plans = get_all_plans_detailed()
+    return {"success": True, "plans": plans}
+
+@app.post("/api/owner/plans")
+async def create_new_plan_endpoint(req: PlanCreateRequest, user = Depends(require_owner)):
+    success, msg = create_plan(req.dict())
+    if success:
+        log_audit_action(user.get("id", 1), user["username"], user["role"], "CREATE_PLAN", "plans", req.id, None, str(req.dict()))
+        return {"success": True, "message": msg}
+    return {"success": False, "error": msg}
+
 @app.put("/api/owner/plans/{plan_id}")
 async def edit_plan_pricing(plan_id: str, req: PlanPricingUpdateRequest, user = Depends(require_owner)):
-    success = update_plan_pricing(plan_id, req.price_monthly, req.monthly_search_quota, req.max_brands, req.max_categories, req.max_users)
+    success, msg = update_full_plan(plan_id, req.dict(exclude_unset=True))
     if success:
-        log_audit_action(user.get("id", 1), user["username"], user["role"], "UPDATE_PLAN_PRICING", "plans", plan_id, None, str(req.dict()))
-        return {"success": True}
-    return {"success": False, "error": "Failed to update plan pricing"}
+        log_audit_action(user.get("id", 1), user["username"], user["role"], "UPDATE_PLAN", "plans", plan_id, None, str(req.dict(exclude_unset=True)))
+        return {"success": True, "message": msg}
+    return {"success": False, "error": msg}
+
+@app.delete("/api/owner/plans/{plan_id}")
+async def delete_plan_endpoint(plan_id: str, user = Depends(require_owner)):
+    success, msg = delete_plan(plan_id)
+    if success:
+        log_audit_action(user.get("id", 1), user["username"], user["role"], "DELETE_PLAN", "plans", plan_id, None, "DELETED")
+        return {"success": True, "message": msg}
+    return {"success": False, "error": msg}
 
 # 5. Super Admin System Health & Technical Monitoring
 @app.get("/api/superadmin/system-health")

@@ -714,6 +714,96 @@ def reject_temp_part(temp_id: int):
     finally:
         conn.close()
 
+def bulk_approve_temp_parts(temp_ids: list):
+    """Approves multiple temp parts by IDs into master_parts in a single transaction."""
+    if not temp_ids:
+        return 0
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    approved_count = 0
+    try:
+        placeholders = ','.join('?' for _ in temp_ids)
+        cursor.execute(f"SELECT * FROM temp_parts WHERE id IN ({placeholders})", temp_ids)
+        rows = cursor.fetchall()
+        
+        master_keys = [
+            'brand', 'part_number', 'oem_number', 'product_name_th', 'product_name_en', 'category',
+            'car_brand', 'car_model', 'year_start', 'year_end', 'engine', 'fuel',
+            'transmission', 'description', 'cost_unit', 'notes'
+        ]
+        upsert_sql = """
+            INSERT OR REPLACE INTO master_parts (
+                brand, part_number, oem_number, product_name_th, product_name_en, category,
+                car_brand, car_model, year_start, year_end, engine, fuel,
+                transmission, description, cost_unit, notes, updated_at
+            ) VALUES (
+                :brand, :part_number, :oem_number, :product_name_th, :product_name_en, :category,
+                :car_brand, :car_model, :year_start, :year_end, :engine, :fuel,
+                :transmission, :description, :cost_unit, :notes, CURRENT_TIMESTAMP
+            )
+        """
+        for r in rows:
+            data = dict(r)
+            master_data = {k: data.get(k) for k in master_keys}
+            cursor.execute(upsert_sql, master_data)
+            approved_count += 1
+            
+        cursor.execute(f"DELETE FROM temp_parts WHERE id IN ({placeholders})", temp_ids)
+        conn.commit()
+        return approved_count
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        conn.close()
+
+def bulk_reject_temp_parts(temp_ids: list):
+    """Rejects (deletes) multiple temp parts by IDs in a single transaction."""
+    if not temp_ids:
+        return 0
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        placeholders = ','.join('?' for _ in temp_ids)
+        cursor.execute(f"DELETE FROM temp_parts WHERE id IN ({placeholders})", temp_ids)
+        deleted_count = cursor.rowcount
+        conn.commit()
+        return deleted_count
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        conn.close()
+
+def export_master_parts_dataset():
+    """Fetches all master parts structured for Excel/CSV export."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT 
+            COALESCE(brand, '') as brand,
+            COALESCE(category, '') as category,
+            COALESCE(part_number, '') as part_number,
+            COALESCE(oem_number, '') as oem_number,
+            COALESCE(product_name_th, '') as product_name_th,
+            COALESCE(product_name_en, '') as product_name_en,
+            COALESCE(car_brand, '') as car_brand,
+            COALESCE(car_model, '') as car_model,
+            COALESCE(year_start, '') as year_start,
+            COALESCE(year_end, '') as year_end,
+            COALESCE(engine, '') as engine,
+            COALESCE(fuel, '') as fuel,
+            COALESCE(transmission, '') as transmission,
+            COALESCE(description, '') as description,
+            COALESCE(cost_unit, '') as cost_unit,
+            COALESCE(notes, '') as notes
+        FROM master_parts 
+        ORDER BY brand ASC, car_brand ASC, car_model ASC, part_number ASC
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
 def edit_master_part(master_id: int, updated_fields: dict):
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -1739,6 +1829,119 @@ def update_plan_pricing(plan_id: str, price_monthly: int, monthly_search_quota: 
         return False
     finally:
         conn.close()
+
+def create_plan(plan_data: Dict[str, Any]) -> Tuple[bool, str]:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        plan_id = str(plan_data.get("id", "")).strip().lower()
+        if not plan_id:
+            return False, "Plan ID is required"
+            
+        cursor.execute("SELECT id FROM plans WHERE id = ?", (plan_id,))
+        if cursor.fetchone():
+            return False, f"Plan with ID '{plan_id}' already exists"
+            
+        cursor.execute("""
+            INSERT INTO plans (
+                id, name, price_monthly, max_brands, max_categories, max_users, 
+                monthly_search_quota, vin_search_enabled, api_access_enabled, export_enabled, ai_search_enabled
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            plan_id,
+            plan_data.get("name", plan_id.upper()),
+            int(plan_data.get("price_monthly", 0)),
+            int(plan_data.get("max_brands", 5)),
+            int(plan_data.get("max_categories", 5)),
+            int(plan_data.get("max_users", 1)),
+            int(plan_data.get("monthly_search_quota", 1000)),
+            1 if plan_data.get("vin_search_enabled") else 0,
+            1 if plan_data.get("api_access_enabled") else 0,
+            1 if plan_data.get("export_enabled") else 0,
+            1 if plan_data.get("ai_search_enabled") else 0
+        ))
+        conn.commit()
+        return True, "Plan created successfully"
+    except Exception as e:
+        print(f"Error creating plan: {e}")
+        return False, str(e)
+    finally:
+        conn.close()
+
+def update_full_plan(plan_id: str, plan_data: Dict[str, Any]) -> Tuple[bool, str]:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM plans WHERE id = ?", (plan_id,))
+        existing = cursor.fetchone()
+        if not existing:
+            return False, f"Plan '{plan_id}' not found"
+        
+        ex = dict(existing)
+        name = plan_data.get("name", ex["name"])
+        price_monthly = int(plan_data.get("price_monthly", ex["price_monthly"]))
+        max_brands = int(plan_data.get("max_brands", ex["max_brands"]))
+        max_categories = int(plan_data.get("max_categories", ex["max_categories"]))
+        max_users = int(plan_data.get("max_users", ex["max_users"]))
+        monthly_search_quota = int(plan_data.get("monthly_search_quota", ex["monthly_search_quota"]))
+        vin_search_enabled = 1 if plan_data.get("vin_search_enabled", ex["vin_search_enabled"]) else 0
+        api_access_enabled = 1 if plan_data.get("api_access_enabled", ex["api_access_enabled"]) else 0
+        export_enabled = 1 if plan_data.get("export_enabled", ex["export_enabled"]) else 0
+        ai_search_enabled = 1 if plan_data.get("ai_search_enabled", ex["ai_search_enabled"]) else 0
+            
+        cursor.execute("""
+            UPDATE plans 
+            SET name = ?, price_monthly = ?, max_brands = ?, max_categories = ?, max_users = ?, 
+                monthly_search_quota = ?, vin_search_enabled = ?, api_access_enabled = ?, export_enabled = ?, ai_search_enabled = ?
+            WHERE id = ?
+        """, (
+            name, price_monthly, max_brands, max_categories, max_users,
+            monthly_search_quota, vin_search_enabled, api_access_enabled, export_enabled, ai_search_enabled,
+            plan_id
+        ))
+        conn.commit()
+        return True, "Plan updated successfully"
+    except Exception as e:
+        print(f"Error updating plan: {e}")
+        return False, str(e)
+    finally:
+        conn.close()
+
+def delete_plan(plan_id: str) -> Tuple[bool, str]:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT id FROM plans WHERE id = ?", (plan_id,))
+        if not cursor.fetchone():
+            return False, f"Plan '{plan_id}' not found"
+            
+        cursor.execute("SELECT COUNT(*) FROM subscriptions WHERE plan_id = ? AND status = 'ACTIVE'", (plan_id,))
+        active_count = cursor.fetchone()[0]
+        if active_count > 0:
+            return False, f"Cannot delete plan '{plan_id}' because it has {active_count} active subscriber(s)."
+            
+        cursor.execute("DELETE FROM plans WHERE id = ?", (plan_id,))
+        conn.commit()
+        return True, f"Plan '{plan_id}' deleted successfully"
+    except Exception as e:
+        print(f"Error deleting plan: {e}")
+        return False, str(e)
+    finally:
+        conn.close()
+
+def get_all_plans_detailed() -> List[Dict[str, Any]]:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT p.*, COUNT(s.id) as subscriber_count, COALESCE(SUM(s.base_price), 0) as total_mrr
+        FROM plans p
+        LEFT JOIN subscriptions s ON s.plan_id = p.id AND s.status IN ('ACTIVE', 'GRACE_PERIOD')
+        GROUP BY p.id
+        ORDER BY p.price_monthly ASC
+    """)
+    rows = [dict(r) for r in cursor.fetchall()]
+    conn.close()
+    return rows
 
 def get_cross_reference_matrix(part_number: str = None, limit: int = 50):
     conn = get_db_connection()

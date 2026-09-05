@@ -4,55 +4,85 @@ from backend.database import insert_temp_part
 
 HEADER_MAP = {
     "แบรนด์ของสินค้า": "brand",
+    "แบรนด์": "brand",
+    "หมวดหมู่สินค้า": "category",
+    "หมวดหมู่": "category",
     "รหัสสินค้า": "part_number",
+    "เบอร์ oem": "oem_number",
     "เบอร์ OEM": "oem_number",
+    "oem": "oem_number",
     "ชื่อสินค้า (ไทย)": "product_name_th",
+    "ชื่อสินค้าไทย": "product_name_th",
     "ชื่อสินค้า (อังกฤษ)": "product_name_en",
+    "ชื่อสินค้าอังกฤษ": "product_name_en",
     "ยี่ห้อรถ": "car_brand",
+    "ยี่ห้อ": "car_brand",
     "รุ่นรถ": "car_model",
+    "รุ่น": "car_model",
     "ปีเริ่มต้น": "year_start",
     "ปีสิ้นสุด": "year_end",
     "เครื่องยนต์": "engine",
     "น้ำมัน": "fuel",
     "เกียร์": "transmission",
     "รายละเอียดสินค้า": "description",
+    "รายละเอียด": "description",
     "หน่วยราคาทุน": "cost_unit",
+    "ราคาทุน": "cost_unit",
+    "ราคา": "cost_unit",
     "หมายเหตุ": "notes",
     # English equivalents for convenience
     "brand": "brand",
+    "category": "category",
     "part_number": "part_number",
+    "part_no": "part_number",
     "sku": "part_number",
     "oem_number": "oem_number",
-    "oem": "oem_number",
+    "oem_no": "oem_number",
     "product_name_th": "product_name_th",
     "product_name_en": "product_name_en",
     "car_brand": "car_brand",
+    "make": "car_brand",
     "car_model": "car_model",
+    "model": "car_model",
     "year_start": "year_start",
     "year_end": "year_end",
     "engine": "engine",
     "fuel": "fuel",
+    "fuel_type": "fuel",
     "transmission": "transmission",
     "description": "description",
     "cost_unit": "cost_unit",
-    "notes": "notes"
+    "cost": "cost_unit",
+    "price": "cost_unit",
+    "notes": "notes",
+    "note": "notes"
 }
 
-def parse_csv_file(file_content: bytes) -> list:
+def parse_csv_file(file_content: bytes) -> dict:
     """Parses a CSV file from bytes content and returns mapped dictionaries."""
-    text_content = file_content.decode("utf-8-sig", errors="ignore")
+    # Attempt UTF-8 with BOM first, then UTF-8, then TIS-620/Windows-874
+    text_content = None
+    for enc in ["utf-8-sig", "utf-8", "tis-620", "windows-874", "cp874", "latin-1"]:
+        try:
+            text_content = file_content.decode(enc)
+            break
+        except (UnicodeDecodeError, LookupError):
+            continue
+
+    if text_content is None:
+        text_content = file_content.decode("utf-8-sig", errors="ignore")
+
     reader = csv.reader(io.StringIO(text_content))
     
     try:
         headers = next(reader)
     except StopIteration:
-        raise ValueError("File is empty.")
+        raise ValueError("ไฟล์ CSV ว่างเปล่า")
 
     # Clean headers and map to DB fields
     mapped_headers = []
     for h in headers:
         cleaned_h = h.strip().lower()
-        # Find match in mapping (case-insensitive and exact matching)
         found = False
         for original_name, db_field in HEADER_MAP.items():
             if cleaned_h == original_name.lower():
@@ -66,11 +96,12 @@ def parse_csv_file(file_content: bytes) -> list:
     errors = []
     
     for line_idx, row in enumerate(reader, start=2):
-        if not row or all(val.strip() == "" for val in row):
+        if not row or all(str(val).strip() == "" for val in row):
             continue # skip empty rows
         
         part_data = {
             "brand": "GENUINE",
+            "category": "",
             "part_number": "",
             "oem_number": "",
             "product_name_th": "อะไหล่รถยนต์",
@@ -93,7 +124,7 @@ def parse_csv_file(file_content: bytes) -> list:
         for col_idx, cell_value in enumerate(row):
             if col_idx < len(mapped_headers) and mapped_headers[col_idx] is not None:
                 field_name = mapped_headers[col_idx]
-                part_data[field_name] = cell_value.strip()
+                part_data[field_name] = str(cell_value).strip()
 
         # Simple validation
         if not part_data["part_number"] and not part_data["oem_number"]:
@@ -112,10 +143,9 @@ def parse_csv_file(file_content: bytes) -> list:
         "errors": errors
     }
 
-def parse_excel_file(file_content: bytes) -> list:
+def parse_excel_file(file_content: bytes) -> dict:
     """
-    Parses an Excel file using openpyxl.
-    If openpyxl is not installed, raises an error.
+    Parses an Excel file (.xlsx or .xls) using openpyxl.
     """
     try:
         import openpyxl
@@ -153,6 +183,7 @@ def parse_excel_file(file_content: bytes) -> list:
             
         part_data = {
             "brand": "GENUINE",
+            "category": "",
             "part_number": "",
             "oem_number": "",
             "product_name_th": "อะไหล่รถยนต์",
