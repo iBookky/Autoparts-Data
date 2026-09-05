@@ -184,6 +184,7 @@
 [data-theme="light"] textarea,
 [data-theme="light"] .kpi-value,
 [data-theme="light"] .kpi-title,
+[data-theme="light"] .owner-kpi-title,
 [data-theme="light"] .stat-val,
 [data-theme="light"] .health-card-val,
 [data-theme="light"] .hero-title,
@@ -1307,6 +1308,10 @@ select.form-control option {
     border: 1px solid transparent;
     transition: var(--transition);
     font-family: var(--font-sans);
+    box-sizing: border-box;
+    max-width: 100%;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .btn-primary {
@@ -1860,9 +1865,10 @@ select.form-control option {
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-card);
     width: 100%;
-    max-width: 400px;
-    padding: 2.25rem;
+    max-width: 440px;
+    padding: 2.25rem 2rem;
     text-align: center;
+    box-sizing: border-box;
 }
 
 /* ================= 5-TIER PORTALS & WORKSPACE STYLES ================= */
@@ -2086,6 +2092,86 @@ select.form-control option {
     font-size: 1.4rem;
     font-weight: 700;
     color: var(--text-primary);
+}
+
+/* Executive AI & Platform Owner KPI Cards */
+.owner-kpi-grid {
+    display: grid !important;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)) !important;
+    gap: 1.25rem !important;
+    margin-bottom: 1.75rem !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+}
+
+.owner-kpi-card {
+    background-color: var(--bg-surface) !important;
+    border: 1px solid var(--border-color) !important;
+    border-radius: var(--radius-md) !important;
+    padding: 1.25rem 1.5rem !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08) !important;
+    transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease !important;
+    position: relative !important;
+    overflow: hidden !important;
+    box-sizing: border-box !important;
+}
+
+.owner-kpi-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.16) !important;
+    border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+[data-theme="light"] .owner-kpi-card {
+    background-color: #FFFFFF !important;
+    border-color: #E2E8F0 !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05) !important;
+}
+
+[data-theme="light"] .owner-kpi-card:hover {
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.09) !important;
+    border-color: #CBD5E1 !important;
+}
+
+.owner-kpi-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    margin-bottom: 0.75rem !important;
+}
+
+.owner-kpi-title {
+    font-size: 0.85rem !important;
+    font-weight: 600 !important;
+    color: var(--text-secondary) !important;
+    letter-spacing: 0.01em !important;
+}
+
+.owner-kpi-icon-badge {
+    width: 38px !important;
+    height: 38px !important;
+    border-radius: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 1.15rem !important;
+}
+
+.owner-kpi-value {
+    font-size: 1.8rem !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+    margin-bottom: 0.35rem !important;
+    font-family: var(--font-sans) !important;
+}
+
+.owner-kpi-sub {
+    font-size: 0.78rem !important;
+    color: var(--text-muted) !important;
+    font-weight: 500 !important;
 }
 
 /* Centralized SaaS Dark Theme Scrollbars */

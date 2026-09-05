@@ -39,6 +39,14 @@ from backend.database import (
     get_meta_car_years,
     get_meta_categories,
     get_preset_ai_models,
+    get_all_ai_models_admin,
+    add_owner_ai_model,
+    update_owner_ai_model,
+    delete_owner_ai_model,
+    set_default_owner_ai_model,
+    get_owner_ai_keys,
+    test_ai_key_connection,
+    get_owner_ai_analytics_detailed,
     get_agent_skills,
     add_meta_aftermarket_brand,
     add_meta_car_brand,
@@ -988,6 +996,7 @@ class MetaCategoryRequest(BaseModel):
     name_en: Optional[str] = ""
 
 class MetaAIModelRequest(BaseModel):
+    model_config = {"protected_namespaces": ()}
     model_name: str
     provider: Optional[str] = "Custom"
     description: Optional[str] = ""
@@ -1163,6 +1172,7 @@ async def update_metadata_category(id: int, req: MetaCategoryRequest, admin = De
 
 # Super Admin AI key configuration Pydantic schema
 class AIKeySaveRequest(BaseModel):
+    model_config = {"protected_namespaces": ()}
     model_name: str
     api_key: Optional[str] = None
     is_active: int = 1
@@ -2095,7 +2105,157 @@ async def delete_plan_endpoint(plan_id: str, user = Depends(require_owner)):
         return {"success": True, "message": msg}
     return {"success": False, "error": msg}
 
-# 5. Super Admin System Health & Technical Monitoring
+# 5. Platform Owner Automotive AI Engine, Models & Keys Orchestration
+class OwnerAIModelCreateRequest(BaseModel):
+    model_config = {"protected_namespaces": ()}
+    model_name: str
+    provider: Optional[str] = "Custom"
+    model_id: Optional[str] = None
+    description: Optional[str] = ""
+    max_tokens: Optional[int] = 8192
+    cost_per_1k_tokens: Optional[float] = 0.00015
+    is_active: Optional[int] = 1
+    is_default: Optional[int] = 0
+
+class OwnerAIModelUpdateRequest(BaseModel):
+    model_config = {"protected_namespaces": ()}
+    model_name: Optional[str] = None
+    model_id: Optional[str] = None
+    description: Optional[str] = None
+    provider: Optional[str] = None
+    max_tokens: Optional[int] = None
+    cost_per_1k_tokens: Optional[float] = None
+    is_active: Optional[int] = None
+    is_default: Optional[int] = None
+
+class OwnerAIKeySaveRequest(BaseModel):
+    model_config = {"protected_namespaces": ()}
+    provider: Optional[str] = None
+    model_name: Optional[str] = None
+    api_key: str
+    is_active: Optional[int] = 1
+
+class OwnerAIKeyTestRequest(BaseModel):
+    model_config = {"protected_namespaces": ()}
+    provider: str
+    api_key: Optional[str] = None
+
+class OwnerAISkillToggleRequest(BaseModel):
+    model_config = {"protected_namespaces": ()}
+    skill_key: str
+    is_active: int = 1
+
+@app.get("/api/owner/ai/overview")
+async def get_owner_ai_overview(range_days: int = 30, user = Depends(require_owner)):
+    data = get_owner_ai_analytics_detailed(range_days=range_days)
+    return {"success": True, "analytics": data, **data}
+
+@app.get("/api/owner/ai/models")
+async def get_owner_ai_models_endpoint(user = Depends(require_owner)):
+    models = get_all_ai_models_admin()
+    return {"success": True, "models": models, "results": models}
+
+@app.post("/api/owner/ai/models")
+async def create_owner_ai_model(req: OwnerAIModelCreateRequest, user = Depends(require_owner)):
+    model_identifier = req.model_id or req.model_name
+    res = add_owner_ai_model(
+        model_name=req.model_name,
+        provider=req.provider or "Custom",
+        description=req.description or f"Registered AI Model: {req.model_name}",
+        cost_per_1k_tokens=req.cost_per_1k_tokens or 0.00015,
+        is_active=req.is_active if req.is_active is not None else 1,
+        is_default=req.is_default or 0,
+        max_tokens=req.max_tokens or 8192,
+        model_id=model_identifier
+    )
+    if res.get("success"):
+        log_audit_action(user.get("id", 1), user["username"], user["role"], "ADD_AI_MODEL", "meta_ai_models", res.get("model_id", 0), None, req.model_name)
+    return res
+
+@app.put("/api/owner/ai/models/{model_id}")
+async def update_owner_ai_model_endpoint(model_id: int, req: OwnerAIModelUpdateRequest, user = Depends(require_owner)):
+    res = update_owner_ai_model(
+        model_id=model_id,
+        model_name=req.model_name,
+        model_identifier=req.model_id,
+        description=req.description,
+        provider=req.provider,
+        cost_per_1k_tokens=req.cost_per_1k_tokens,
+        is_active=req.is_active,
+        is_default=req.is_default,
+        max_tokens=req.max_tokens
+    )
+    if res.get("success"):
+        log_audit_action(user.get("id", 1), user["username"], user["role"], "UPDATE_AI_MODEL", "meta_ai_models", model_id, None, str(req.dict(exclude_unset=True)))
+    return res
+
+@app.delete("/api/owner/ai/models/{model_id}")
+async def delete_owner_ai_model_endpoint(model_id: int, user = Depends(require_owner)):
+    res = delete_owner_ai_model(model_id)
+    if res.get("success"):
+        log_audit_action(user.get("id", 1), user["username"], user["role"], "DELETE_AI_MODEL", "meta_ai_models", model_id, None, "DELETED")
+    return res
+
+@app.post("/api/owner/ai/models/{model_id}/default")
+async def set_default_ai_model_endpoint(model_id: int, user = Depends(require_owner)):
+    res = set_default_owner_ai_model(model_id)
+    if res.get("success"):
+        log_audit_action(user.get("id", 1), user["username"], user["role"], "SET_DEFAULT_AI_MODEL", "meta_ai_models", model_id, None, "DEFAULT")
+    return res
+
+@app.get("/api/owner/ai/keys")
+async def get_owner_ai_keys_endpoint(user = Depends(require_owner)):
+    keys = get_owner_ai_keys()
+    return {"success": True, "keys": keys, "results": keys}
+
+@app.post("/api/owner/ai/keys")
+async def save_owner_ai_key_endpoint(req: OwnerAIKeySaveRequest, user = Depends(require_owner)):
+    key_name = req.provider or req.model_name or "openai"
+    success = set_ai_key_config(key_name, req.api_key, req.is_active or 1)
+    if success:
+        log_audit_action(user.get("id", 1), user["username"], user["role"], "SAVE_AI_KEY", "ai_keys_config", 0, None, key_name)
+    return {"success": success}
+
+@app.post("/api/owner/ai/keys/{id}/activate")
+async def activate_owner_ai_key_endpoint(id: int, user = Depends(require_owner)):
+    success = activate_ai_key_config(id)
+    if success:
+        log_audit_action(user.get("id", 1), user["username"], user["role"], "ACTIVATE_AI_KEY", "ai_keys_config", id, None, "ACTIVATED")
+    return {"success": success}
+
+@app.delete("/api/owner/ai/keys/{id}")
+async def delete_owner_ai_key_endpoint(id: int, user = Depends(require_owner)):
+    success = delete_ai_key_config(id)
+    if success:
+        log_audit_action(user.get("id", 1), user["username"], user["role"], "DELETE_AI_KEY", "ai_keys_config", id, None, "DELETED")
+    return {"success": success}
+
+@app.post("/api/owner/ai/keys/test")
+async def test_owner_ai_key_endpoint(req: OwnerAIKeyTestRequest, user = Depends(require_owner)):
+    res = test_ai_key_connection(req.provider, req.api_key)
+    return res
+
+@app.get("/api/owner/ai/skills")
+async def get_owner_ai_skills_endpoint(user = Depends(require_owner)):
+    skills = get_agent_skills()
+    return {"success": True, "skills": skills, "results": skills}
+
+@app.post("/api/owner/ai/skills")
+async def toggle_owner_ai_skill_direct(req: OwnerAISkillToggleRequest, user = Depends(require_owner)):
+    success = update_agent_skill(req.skill_key, req.is_active)
+    if success:
+        log_audit_action(user.get("id", 1), user["username"], user["role"], "TOGGLE_AI_SKILL", "agent_skills", 0, None, f"{req.skill_key}:{req.is_active}")
+    return {"success": success}
+
+@app.post("/api/owner/ai/skills/{skill_key}/toggle")
+async def toggle_owner_ai_skill_endpoint(skill_key: str, req: dict = None, user = Depends(require_owner)):
+    is_active = (req or {}).get("is_active", 1) if req else 1
+    success = update_agent_skill(skill_key, is_active)
+    if success:
+        log_audit_action(user.get("id", 1), user["username"], user["role"], "TOGGLE_AI_SKILL", "agent_skills", 0, None, f"{skill_key}:{is_active}")
+    return {"success": success}
+
+# 6. Super Admin System Health & Technical Monitoring
 @app.get("/api/superadmin/system-health")
 async def get_system_health(user = Depends(require_super_admin)):
     return {
@@ -2189,9 +2349,8 @@ async def get_staff_tasks(user = Depends(require_staff)):
     }
 
 
-# Serving single frontend SPA
-@app.get("/", response_class=HTMLResponse)
-async def get_index():
+# Serving single frontend SPA with distinct clean web paths
+def serve_spa_page():
     index_path = os.path.join(os.path.dirname(__file__), "index.html")
     if not os.path.exists(index_path):
         return HTMLResponse(
@@ -2205,8 +2364,97 @@ async def get_index():
         headers={"Cache-Control": "no-store, no-cache, must-revalidate, max-age=0"}
     )
 
+# Customer Facing Routes
+@app.get("/", response_class=HTMLResponse)
+async def get_index():
+    return serve_spa_page()
+
+@app.get("/search", response_class=HTMLResponse)
+async def get_search_route():
+    return serve_spa_page()
+
+@app.get("/pricing", response_class=HTMLResponse)
+async def get_pricing_route():
+    return serve_spa_page()
+
+@app.get("/portal", response_class=HTMLResponse)
+@app.get("/settings", response_class=HTMLResponse)
+async def get_portal_route():
+    return serve_spa_page()
+
+@app.get("/coverage", response_class=HTMLResponse)
+async def get_coverage_route():
+    return serve_spa_page()
+
+@app.get("/crossref", response_class=HTMLResponse)
+async def get_crossref_route():
+    return serve_spa_page()
+
+@app.get("/favorites", response_class=HTMLResponse)
+async def get_favorites_route():
+    return serve_spa_page()
+
+@app.get("/history", response_class=HTMLResponse)
+async def get_history_route():
+    return serve_spa_page()
+
+@app.get("/invoices", response_class=HTMLResponse)
+async def get_invoices_route():
+    return serve_spa_page()
+
+@app.get("/usage", response_class=HTMLResponse)
+async def get_usage_route():
+    return serve_spa_page()
+
+@app.get("/api-hub", response_class=HTMLResponse)
+@app.get("/developer", response_class=HTMLResponse)
+async def get_apihub_route():
+    return serve_spa_page()
+
+# Internal Team / Admin Facing Routes
+@app.get("/owner", response_class=HTMLResponse)
+async def get_owner_route():
+    return serve_spa_page()
+
+@app.get("/admin", response_class=HTMLResponse)
+async def get_admin_route():
+    return serve_spa_page()
+
+@app.get("/superadmin", response_class=HTMLResponse)
+async def get_superadmin_route():
+    return serve_spa_page()
+
+@app.get("/staff", response_class=HTMLResponse)
+async def get_staff_route():
+    return serve_spa_page()
+
+@app.get("/app", response_class=HTMLResponse)
+async def get_app_route():
+    return serve_spa_page()
+
+# Healthcheck Endpoints for Docker / Caddy / Load Balancers
+@app.get("/health")
+@app.get("/api/health")
+async def healthcheck():
+    db_status = "connected"
+    try:
+        conn = get_db_connection()
+        conn.execute("SELECT 1").fetchone()
+        conn.close()
+    except Exception as e:
+        db_status = f"error: {str(e)}"
+
+    return {
+        "status": "healthy" if db_status == "connected" else "degraded",
+        "timestamp": datetime.now().isoformat(),
+        "version": "3.0.0",
+        "service": "autoparts-crossref-saas",
+        "database": db_status
+    }
+
 if __name__ == "__main__":
     import uvicorn
     from backend.database import init_db
     init_db()
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+

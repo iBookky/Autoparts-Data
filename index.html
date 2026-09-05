@@ -386,27 +386,27 @@
             </form>
 
             <!-- ONE-CLICK DEMO LOGIN SELECTOR -->
-            <div style="margin-top: 1.25rem; padding: 0.85rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); text-align: left;">
+            <div style="margin-top: 1.25rem; padding: 0.85rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); text-align: left; box-sizing: border-box; width: 100%;">
                 <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 0.6rem; display: flex; align-items: center; justify-content: space-between;">
                     <span><i class="fa-solid fa-bolt" style="color: #F59E0B;"></i> บัญชีทดสอบระบบ (Quick Login)</span>
                     <span style="font-size: 0.7rem; color: var(--text-muted);">Pass: admin123</span>
                 </div>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.4rem; margin-bottom: 0.4rem;">
-                    <button type="button" class="btn btn-sm btn-secondary" onclick="quickLogin('owner', 'admin123')" style="font-size: 0.75rem; justify-content: flex-start; padding: 0.4rem 0.6rem; border-color: rgba(245, 158, 11, 0.3);">
-                        👑 <strong style="color: #F59E0B; margin-left: 0.25rem;">Owner</strong> <span style="font-size: 0.68rem; color: var(--text-muted); margin-left: auto;">Cockpit</span>
+                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.45rem; margin-bottom: 0.45rem; width: 100%; box-sizing: border-box;">
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="quickLogin('owner', 'admin123')" style="font-size: 0.75rem; justify-content: flex-start; padding: 0.4rem 0.6rem; border-color: rgba(245, 158, 11, 0.3); width: 100%; min-width: 0; box-sizing: border-box;">
+                        <span>👑</span> <strong style="color: #F59E0B; margin-left: 0.25rem;">Owner</strong> <span style="font-size: 0.68rem; color: var(--text-muted); margin-left: auto;">Cockpit</span>
                     </button>
-                    <button type="button" class="btn btn-sm btn-secondary" onclick="quickLogin('superadmin', 'admin123')" style="font-size: 0.75rem; justify-content: flex-start; padding: 0.4rem 0.6rem; border-color: rgba(139, 92, 246, 0.3);">
-                        🛡️ <strong style="color: #A78BFA; margin-left: 0.25rem;">SuperAdmin</strong> <span style="font-size: 0.68rem; color: var(--text-muted); margin-left: auto;">Platform</span>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="quickLogin('superadmin', 'admin123')" style="font-size: 0.75rem; justify-content: flex-start; padding: 0.4rem 0.6rem; border-color: rgba(139, 92, 246, 0.3); width: 100%; min-width: 0; box-sizing: border-box;">
+                        <span>🛡️</span> <strong style="color: #A78BFA; margin-left: 0.25rem;">SuperAdmin</strong> <span style="font-size: 0.68rem; color: var(--text-muted); margin-left: auto;">Platform</span>
                     </button>
-                    <button type="button" class="btn btn-sm btn-secondary" onclick="quickLogin('admin', 'admin123')" style="font-size: 0.75rem; justify-content: flex-start; padding: 0.4rem 0.6rem; border-color: rgba(59, 130, 246, 0.3);">
-                        ⚙️ <strong style="color: #60A5FA; margin-left: 0.25rem;">Admin</strong> <span style="font-size: 0.68rem; color: var(--text-muted); margin-left: auto;">Ops</span>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="quickLogin('admin', 'admin123')" style="font-size: 0.75rem; justify-content: flex-start; padding: 0.4rem 0.6rem; border-color: rgba(59, 130, 246, 0.3); width: 100%; min-width: 0; box-sizing: border-box;">
+                        <span>⚙️</span> <strong style="color: #60A5FA; margin-left: 0.25rem;">Admin</strong> <span style="font-size: 0.68rem; color: var(--text-muted); margin-left: auto;">Ops</span>
                     </button>
-                    <button type="button" class="btn btn-sm btn-secondary" onclick="quickLogin('staff', 'admin123')" style="font-size: 0.75rem; justify-content: flex-start; padding: 0.4rem 0.6rem; border-color: rgba(16, 185, 129, 0.3);">
-                        💼 <strong style="color: #34D399; margin-left: 0.25rem;">Staff</strong> <span style="font-size: 0.68rem; color: var(--text-muted); margin-left: auto;">CRM</span>
+                    <button type="button" class="btn btn-sm btn-secondary" onclick="quickLogin('staff', 'admin123')" style="font-size: 0.75rem; justify-content: flex-start; padding: 0.4rem 0.6rem; border-color: rgba(16, 185, 129, 0.3); width: 100%; min-width: 0; box-sizing: border-box;">
+                        <span>💼</span> <strong style="color: #34D399; margin-left: 0.25rem;">Staff</strong> <span style="font-size: 0.68rem; color: var(--text-muted); margin-left: auto;">CRM</span>
                     </button>
                 </div>
-                <button type="button" class="btn btn-sm btn-secondary" onclick="quickLogin('user_starter', 'admin123')" style="width: 100%; font-size: 0.75rem; justify-content: center; padding: 0.4rem 0.6rem; border-color: rgba(56, 189, 248, 0.3);">
-                    👤 <strong style="color: #38BDF8; margin-left: 0.25rem;">Customer / Garage</strong> <span style="font-size: 0.68rem; color: var(--text-muted); margin-left: 0.4rem;">(Starter Plan Simulation)</span>
+                <button type="button" class="btn btn-sm btn-secondary" onclick="quickLogin('user_starter', 'admin123')" style="width: 100%; min-width: 0; box-sizing: border-box; font-size: 0.75rem; justify-content: center; padding: 0.45rem 0.6rem; border-color: rgba(56, 189, 248, 0.3);">
+                    <span>👤</span> <strong style="color: #38BDF8; margin-left: 0.25rem;">Customer / Garage</strong> <span style="font-size: 0.68rem; color: var(--text-muted); margin-left: 0.4rem;">(Starter Plan Simulation)</span>
                 </button>
             </div>
 
@@ -1285,9 +1285,6 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             <button class="btn btn-secondary btn-sm" id="tab-admin-meta" onclick="switchAdminTab('meta')">
                                 <i class="fa-solid fa-list-check"></i> <span data-i18n="admin.tabMeta">System Options</span>
                             </button>
-                            <button class="btn btn-purple btn-sm" id="tab-admin-ai" onclick="switchAdminTab('ai')">
-                                <i class="fa-solid fa-brain"></i> <span data-i18n="admin.tabAi">AI Automotive Engine</span>
-                            </button>
                         </div>
 
                         <!-- Actions: Import & Merged Template Dropdown (Right) -->
@@ -1525,16 +1522,6 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                         </div>
                     </div>
 
-                    <!-- Admin AI Engine Container -->
-                    <div id="admin-ai-view" style="display: none;">
-                        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem;">
-                            <h3 style="font-size: 1rem; margin-bottom: 0.5rem; color: #C084FC;" data-i18n="admin.aiSkillsTitle">AI Domain Skills Orchestration</h3>
-                            <p style="font-size: 0.85rem; margin-bottom: 1rem;" data-i18n="admin.aiSkillsSubtitle">Configure specialized AI capabilities for parts cross-referencing and fitment validation.</p>
-                            <div id="agent-skills-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-                                <!-- Populated dynamically -->
-                            </div>
-                        </div>
-                    </div>
                 </section>
 
                 <!-- ================= 11. SYSTEM OWNER BUSINESS COMMAND CENTER ================= -->
@@ -1608,6 +1595,9 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                         </button>
                         <button class="workspace-tab-btn" id="tab-owner-audit" onclick="switchOwnerTab('audit')">
                             <i class="fa-solid fa-clipboard-list"></i> <span data-i18n="owner.tab.audit">Platform Audit Trail</span>
+                        </button>
+                        <button class="workspace-tab-btn" id="tab-owner-ai" onclick="switchOwnerTab('ai')">
+                            <i class="fa-solid fa-brain" style="color: #C084FC;"></i> <span data-i18n="owner.tab.ai">Automotive AI Engine</span>
                         </button>
                     </div>
 
@@ -1946,6 +1936,182 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                     <!-- Populated dynamically -->
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+
+                    <!-- 11. Automotive AI Engine & Intelligence Command Center -->
+                    <div id="owner-sub-ai" style="display: none;">
+                        <!-- Section 1: AI Executive KPI Bar (Beautified Modern Cards) -->
+                        <div class="owner-kpi-grid">
+                            <div class="owner-kpi-card" style="border-left: 4px solid #8B5CF6;">
+                                <div class="owner-kpi-header">
+                                    <span class="owner-kpi-title" data-i18n="owner.ai.kpiActiveModels">โมเดลที่เปิดใช้งาน</span>
+                                    <div class="owner-kpi-icon-badge" style="background: rgba(139, 92, 246, 0.15); color: #A78BFA;">
+                                        <i class="fa-solid fa-brain"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="owner-kpi-value" id="owner-ai-kpi-active-models" style="color: #A78BFA;">--</div>
+                                    <div class="owner-kpi-sub" data-i18n="owner.ai.kpiActiveModelsSub">Active AI Models</div>
+                                </div>
+                            </div>
+                            <div class="owner-kpi-card" style="border-left: 4px solid #3B82F6;">
+                                <div class="owner-kpi-header">
+                                    <span class="owner-kpi-title" data-i18n="owner.ai.kpiTotalCalls">การเรียกใช้งานรวม</span>
+                                    <div class="owner-kpi-icon-badge" style="background: rgba(59, 130, 246, 0.15); color: #60A5FA;">
+                                        <i class="fa-solid fa-chart-line"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="owner-kpi-value" id="owner-ai-kpi-total-calls" style="color: #60A5FA;">--</div>
+                                    <div class="owner-kpi-sub" data-i18n="owner.ai.kpiTotalCallsSub">Total AI Inferences</div>
+                                </div>
+                            </div>
+                            <div class="owner-kpi-card" style="border-left: 4px solid #10B981;">
+                                <div class="owner-kpi-header">
+                                    <span class="owner-kpi-title" data-i18n="owner.ai.kpiTokensUsed">ปริมาณโทเค็นที่ประมวลผล</span>
+                                    <div class="owner-kpi-icon-badge" style="background: rgba(16, 185, 129, 0.15); color: #34D399;">
+                                        <i class="fa-solid fa-microchip"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="owner-kpi-value" id="owner-ai-kpi-tokens-used" style="color: #34D399;">--</div>
+                                    <div class="owner-kpi-sub" data-i18n="owner.ai.kpiTokensUsedSub">Tokens Processed</div>
+                                </div>
+                            </div>
+                            <div class="owner-kpi-card" style="border-left: 4px solid #F59E0B;">
+                                <div class="owner-kpi-header">
+                                    <span class="owner-kpi-title" data-i18n="owner.ai.kpiEstimatedCost">ประมาณการค่าใช้จ่าย AI</span>
+                                    <div class="owner-kpi-icon-badge" style="background: rgba(245, 158, 11, 0.15); color: #FBBF24;">
+                                        <i class="fa-solid fa-coins"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="owner-kpi-value" id="owner-ai-kpi-estimated-cost" style="color: #FBBF24;">--</div>
+                                    <div class="owner-kpi-sub" id="owner-ai-kpi-cost-thb" data-i18n="owner.ai.kpiEstimatedCostSub">Estimated AI Spend</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 2: Model Usage & Token Analytics -->
+                        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem; margin-bottom: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.5rem;">
+                                <div>
+                                    <h3 style="font-size: 1.1rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 0.5rem;" data-i18n="owner.ai.analyticsTitle">
+                                        <i class="fa-solid fa-chart-pie" style="color: #60A5FA;"></i> สถิติการใช้งานโมเดล & โทเค็น (Model Usage & Token Analytics)
+                                    </h3>
+                                    <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.2rem;" data-i18n="owner.ai.analyticsSubtitle">
+                                        ตรวจสอบอัตราการใช้งาน AI แยกตามโมเดล ฟังก์ชันยานยนต์ และต้นทุนแบบ Real-time
+                                    </p>
+                                </div>
+                                <button class="btn btn-secondary btn-sm" onclick="loadOwnerAiEngine()">
+                                    <i class="fa-solid fa-rotate"></i> Refresh
+                                </button>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.25rem;">
+                                <!-- Left: Model Utilization -->
+                                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.25rem;">
+                                    <h4 style="font-size: 0.92rem; font-weight: 700; color: #fff; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;" data-i18n="owner.ai.modelUsageShare">
+                                        <i class="fa-solid fa-chart-simple" style="color: #A78BFA;"></i> สัดส่วนการเรียกใช้งานแยกตามโมเดล (Model Utilization)
+                                    </h4>
+                                    <div id="owner-ai-model-usage-list" style="display: flex; flex-direction: column; gap: 0.85rem;">
+                                        <!-- Rendered dynamically -->
+                                    </div>
+                                </div>
+
+                                <!-- Right: Automotive Capabilities -->
+                                <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.25rem;">
+                                    <h4 style="font-size: 0.92rem; font-weight: 700; color: #fff; margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem;" data-i18n="owner.ai.capabilityUsage">
+                                        <i class="fa-solid fa-car" style="color: #34D399;"></i> การใช้งานแยกตามฟังก์ชัน AI ยานยนต์ (Automotive Capabilities)
+                                    </h4>
+                                    <div id="owner-ai-capability-usage-list" style="display: flex; flex-direction: column; gap: 0.85rem;">
+                                        <!-- Rendered dynamically -->
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Execution Logs Preview -->
+                            <div>
+                                <h4 style="font-size: 0.9rem; font-weight: 700; color: #fff; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.5rem;" data-i18n="owner.ai.recentExecutions">
+                                    <i class="fa-solid fa-clock-rotate-left" style="color: #FBBF24;"></i> ประวัติการประมวลผล AI ล่าสุด (Recent AI Executions)
+                                </h4>
+                                <div class="data-table-container" style="max-height: 240px; overflow-y: auto;">
+                                    <table class="data-table" style="font-size: 0.82rem;">
+                                        <thead>
+                                            <tr>
+                                                <th>เวลา</th>
+                                                <th>โมเดล</th>
+                                                <th>ฟังก์ชันยานยนต์</th>
+                                                <th>ผู้ใช้งาน / องค์กร</th>
+                                                <th>โทเค็น</th>
+                                                <th>เวลาตอบสนอง</th>
+                                                <th>สถานะ</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="owner-ai-recent-logs-body">
+                                            <!-- Rendered dynamically -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Section 3: Registered AI Models & Provider Credentials Hub (Consolidated) -->
+                        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem; margin-bottom: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+                                <div>
+                                    <h3 style="font-size: 1.1rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 0.5rem;" data-i18n="owner.ai.modelsTitle">
+                                        <i class="fa-solid fa-cubes-stacked" style="color: #C084FC;"></i> การจัดการโมเดล AI ในระบบ (Registered AI Models)
+                                    </h3>
+                                    <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.2rem;" data-i18n="owner.ai.modelsSubtitle">
+                                        เพิ่ม แก้ไข เปิด/ปิด และตั้งค่าโมเดลเริ่มต้นสำหรับงานเทียบเบอร์อะไหล่และถอดรหัส VIN
+                                    </p>
+                                </div>
+                                <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                                    <button class="btn btn-secondary btn-sm" onclick="openSaveAiKeyModal('openai')">
+                                        <i class="fa-solid fa-key" style="color: #F59E0B;"></i> <span>จัดการ API Keys</span>
+                                    </button>
+                                    <button class="btn btn-primary btn-sm" onclick="openAddAiModelModal()">
+                                        <i class="fa-solid fa-plus"></i> <span data-i18n="owner.ai.btnAddModel">+ เพิ่มโมเดล AI</span>
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div class="data-table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th data-i18n="owner.ai.colProvider">ผู้ให้บริการ</th>
+                                            <th data-i18n="owner.ai.colModelName">ชื่อโมเดล</th>
+                                            <th data-i18n="owner.ai.colModelId">Model ID</th>
+                                            <th data-i18n="owner.ai.colMaxTokens">Max Tokens</th>
+                                            <th data-i18n="owner.ai.colCost">ต้นทุน / 1k โทเค็น</th>
+                                            <th>API Key Status</th>
+                                            <th data-i18n="owner.ai.colStatus">สถานะ</th>
+                                            <th data-i18n="owner.ai.colActions">จัดการ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="owner-ai-models-table-body">
+                                        <!-- Rendered dynamically -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- Section 4: Automotive AI Skills & Automation Engine -->
+                        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem;">
+                            <div style="margin-bottom: 1.25rem;">
+                                <h3 style="font-size: 1.1rem; font-weight: 700; color: #C084FC; display: flex; align-items: center; gap: 0.5rem;" data-i18n="owner.ai.skillsTitle">
+                                    <i class="fa-solid fa-gears" style="color: #C084FC;"></i> การควบคุมทักษะ AI ยานยนต์ (Automotive AI Skills & Automation)
+                                </h3>
+                                <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.2rem;" data-i18n="owner.ai.skillsSubtitle">
+                                    เปิด-ปิด และควบคุมตรรกะ AI อัจฉริยะสำหรับระบบเทียบเบอร์อะไหล่และวิเคราะห์สเปกรถยนต์
+                                </p>
+                            </div>
+                            <div id="owner-ai-skills-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1rem;">
+                                <!-- Rendered dynamically -->
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -3203,6 +3369,102 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         </div>
     </div>
 
+    <!-- ================= ADD / EDIT AI MODEL MODAL ================= -->
+    <div class="modal-overlay" id="modal-add-ai-model" style="display: none;">
+        <div class="modal-card" style="max-width: 500px; width: 100%;">
+            <div class="modal-header">
+                <div>
+                    <h3 style="color: #fff; font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fa-solid fa-brain" style="color: #C084FC;"></i> <span data-i18n="owner.ai.modalAddModelTitle">เพิ่ม / แก้ไข โมเดล AI ในระบบ</span>
+                    </h3>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;">กำหนดค่าโมเดลสำหรับประมวลผลอะไหล่ยานยนต์</p>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="closeAddAiModelModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-add-ai-model" onsubmit="submitAddAiModel(event)">
+                <input type="hidden" id="ai-model-edit-id" value="">
+                <div class="modal-body" style="display: flex; flex-direction: column; gap: 1rem; padding: 1.25rem;">
+                    <div>
+                        <label style="font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.35rem; display: block;" data-i18n="owner.ai.lblProvider">ผู้ให้บริการ (AI Provider)</label>
+                        <select id="ai-model-provider" class="form-control" style="width: 100%;" required>
+                            <option value="Google">Google (Gemini)</option>
+                            <option value="OpenAI">OpenAI (ChatGPT)</option>
+                            <option value="Anthropic">Anthropic (Claude)</option>
+                            <option value="Groq">Groq (Llama / Mixtral)</option>
+                            <option value="DeepSeek">DeepSeek</option>
+                            <option value="Custom">Custom / Local LLM</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.35rem; display: block;" data-i18n="owner.ai.lblModelName">ชื่อเรียกโมเดล (Display Label)</label>
+                        <input type="text" id="ai-model-display-name" class="form-control" placeholder="เช่น Gemini 2.5 Flash, GPT-4o Mini" style="width: 100%;" required>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.35rem; display: block;" data-i18n="owner.ai.lblModelId">Model Identifier</label>
+                        <input type="text" id="ai-model-identifier" class="form-control" placeholder="เช่น gemini-2.5-flash, gpt-4o, claude-3-5-sonnet-20241022" style="width: 100%;" required>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                        <div>
+                            <label style="font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.35rem; display: block;" data-i18n="owner.ai.lblMaxTokens">Max Tokens</label>
+                            <input type="number" id="ai-model-max-tokens" class="form-control" value="8192" min="512" max="128000" style="width: 100%;" required>
+                        </div>
+                        <div>
+                            <label style="font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.35rem; display: block;" data-i18n="owner.ai.lblCostPer1k">ต้นทุน / 1k โทเค็น ($)</label>
+                            <input type="number" id="ai-model-cost" class="form-control" step="0.0001" min="0" value="0.00015" style="width: 100%;" required>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem; padding: 1rem 1.25rem; border-top: 1px solid var(--border-color);">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="closeAddAiModelModal()">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-save"></i> บันทึกโมเดล</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= CONFIGURE AI API KEY MODAL ================= -->
+    <div class="modal-overlay" id="modal-save-ai-key" style="display: none;">
+        <div class="modal-card" style="max-width: 480px; width: 100%;">
+            <div class="modal-header">
+                <div>
+                    <h3 style="color: #fff; font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fa-solid fa-key" style="color: #F59E0B;"></i> <span data-i18n="owner.ai.modalSaveKeyTitle">บันทึก API Key ผู้ให้บริการ AI</span>
+                    </h3>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;" id="ai-key-modal-subtitle">ตั้งค่ากุญแจเชื่อมต่อ API</p>
+                </div>
+                <button class="btn btn-secondary btn-sm" onclick="closeSaveAiKeyModal()"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <form id="form-save-ai-key" onsubmit="submitSaveAiKey(event)">
+                <div class="modal-body" style="display: flex; flex-direction: column; gap: 1rem; padding: 1.25rem;">
+                    <div>
+                        <label style="font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.35rem; display: block;" data-i18n="owner.ai.lblProvider">ผู้ให้บริการ (AI Provider)</label>
+                        <select id="ai-key-provider" class="form-control" style="width: 100%;" required>
+                            <option value="openai">OpenAI (sk-...)</option>
+                            <option value="gemini">Google Gemini (AIza...)</option>
+                            <option value="claude">Anthropic Claude (sk-ant-...)</option>
+                            <option value="groq">Groq (gsk_...)</option>
+                            <option value="deepseek">DeepSeek (sk-...)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label style="font-size: 0.82rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.35rem; display: block;" data-i18n="owner.ai.lblApiKey">API Key</label>
+                        <div style="position: relative;">
+                            <input type="password" id="ai-key-input" class="form-control" placeholder="กรอก API Key ใหม่ที่นี่..." style="width: 100%; padding-right: 2.5rem;" required>
+                            <button type="button" onclick="toggleKeyVisibility()" style="position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 0.25rem;">
+                                <i class="fa-solid fa-eye" id="ai-key-eye-icon"></i>
+                            </button>
+                        </div>
+                        <span style="font-size: 0.75rem; color: var(--text-muted); margin-top: 0.35rem; display: block;" data-i18n="owner.ai.lblApiKeyHint">คีย์จะถูกเข้ารหัสและปกปิดบางส่วนเพื่อความปลอดภัย</span>
+                    </div>
+                </div>
+                <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem; padding: 1rem 1.25rem; border-top: 1px solid var(--border-color);">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="closeSaveAiKeyModal()">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary btn-sm"><i class="fa-solid fa-shield-check"></i> บันทึก API Key</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- Toast Notifications -->
     <div id="toast-box" style="position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem;"></div>
 
@@ -3620,6 +3882,31 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             const cockpitToggleBtn = document.getElementById('owner-cockpit-toggle-btn');
             const customerNavTitle = document.getElementById('customer-nav-title');
             
+            // Path-aware initial routing
+            const initialPath = window.location.pathname.toLowerCase();
+            const PATH_MAP = {
+                '/owner': 'owner-view',
+                '/superadmin': 'superadmin-view',
+                '/admin': 'admin-view',
+                '/staff': 'staff-view',
+                '/pricing': 'subscription-view',
+                '/subscription': 'subscription-view',
+                '/coverage': 'coverage-view',
+                '/crossref': 'crossref-view',
+                '/portal': 'settings-view',
+                '/settings': 'settings-view',
+                '/invoices': 'invoices-view',
+                '/api-hub': 'api-view',
+                '/developer': 'api-view',
+                '/usage': 'usage-view',
+                '/history': 'history-view',
+                '/favorites': 'favorites-view',
+                '/search': 'search-view',
+                '/app': 'search-view'
+            };
+
+            const targetViewFromPath = PATH_MAP[initialPath];
+
             if (isOwner) {
                 if (cockpitToggleBtn) {
                     cockpitToggleBtn.style.display = 'inline-flex';
@@ -3633,8 +3920,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 document.getElementById('tenant-plan-badge').style.background = 'rgba(245, 158, 11, 0.2)';
                 document.getElementById('tenant-plan-badge').style.color = '#F59E0B';
                 
-                // Direct Entry to Owner Command Center
-                navigateToOwnerSection('overview');
+                if (targetViewFromPath && targetViewFromPath !== 'owner-view') {
+                    switchSaaSView(targetViewFromPath, null, false);
+                } else {
+                    navigateToOwnerSection('overview');
+                }
             } else if (isSuperAdmin) {
                 if (cockpitToggleBtn) cockpitToggleBtn.style.display = 'none';
                 if (customerNavTitle) customerNavTitle.textContent = 'Data & Parts Catalog';
@@ -3644,8 +3934,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 document.getElementById('tenant-plan-badge').style.background = 'rgba(139, 92, 246, 0.2)';
                 document.getElementById('tenant-plan-badge').style.color = '#A78BFA';
                 
-                // Direct Entry to Platform & Data Control Center
-                switchSaaSView('superadmin-view');
+                if (targetViewFromPath) {
+                    switchSaaSView(targetViewFromPath, null, false);
+                } else {
+                    switchSaaSView('superadmin-view', null, false);
+                }
                 loadSuperAdminHealth();
                 loadSuperAdminPermissionAudit();
             } else if (isAdmin) {
@@ -3657,7 +3950,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 document.getElementById('tenant-plan-badge').style.background = 'rgba(59, 130, 246, 0.2)';
                 document.getElementById('tenant-plan-badge').style.color = '#60A5FA';
                 
-                switchSaaSView('admin-view');
+                if (targetViewFromPath && !['owner-view', 'superadmin-view'].includes(targetViewFromPath)) {
+                    switchSaaSView(targetViewFromPath, null, false);
+                } else {
+                    switchSaaSView('admin-view', null, false);
+                }
                 loadAdminDashboard();
             } else if (isStaff) {
                 if (cockpitToggleBtn) cockpitToggleBtn.style.display = 'none';
@@ -3668,13 +3965,21 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 document.getElementById('tenant-plan-badge').style.background = 'rgba(16, 185, 129, 0.2)';
                 document.getElementById('tenant-plan-badge').style.color = '#34D399';
                 
-                switchSaaSView('staff-view');
+                if (targetViewFromPath && !['owner-view', 'superadmin-view', 'admin-view'].includes(targetViewFromPath)) {
+                    switchSaaSView(targetViewFromPath, null, false);
+                } else {
+                    switchSaaSView('staff-view', null, false);
+                }
                 loadStaffWorkspaces();
             } else {
                 if (cockpitToggleBtn) cockpitToggleBtn.style.display = 'none';
                 if (customerNavTitle) customerNavTitle.textContent = 'Main Menu';
                 
-                switchSaaSView('search-view');
+                if (targetViewFromPath && !['owner-view', 'superadmin-view', 'admin-view', 'staff-view'].includes(targetViewFromPath)) {
+                    switchSaaSView(targetViewFromPath, null, false);
+                } else {
+                    switchSaaSView('search-view', null, false);
+                }
             }
 
             await loadSaaSContext();
@@ -3785,7 +4090,53 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             }
         }
 
-        function switchSaaSView(viewId, element) {
+        const VIEW_TO_PATH = {
+            'owner-view': '/owner',
+            'superadmin-view': '/superadmin',
+            'admin-view': '/admin',
+            'staff-view': '/staff',
+            'search-view': '/search',
+            'subscription-view': '/pricing',
+            'coverage-view': '/coverage',
+            'crossref-view': '/crossref',
+            'favorites-view': '/favorites',
+            'history-view': '/history',
+            'invoices-view': '/invoices',
+            'api-view': '/api-hub',
+            'usage-view': '/usage',
+            'settings-view': '/portal'
+        };
+
+        const PATH_TO_VIEW = {
+            '/owner': 'owner-view',
+            '/superadmin': 'superadmin-view',
+            '/admin': 'admin-view',
+            '/staff': 'staff-view',
+            '/search': 'search-view',
+            '/': 'search-view',
+            '/pricing': 'subscription-view',
+            '/subscription': 'subscription-view',
+            '/coverage': 'coverage-view',
+            '/crossref': 'crossref-view',
+            '/favorites': 'favorites-view',
+            '/history': 'history-view',
+            '/invoices': 'invoices-view',
+            '/api-hub': 'api-view',
+            '/developer': 'api-view',
+            '/usage': 'usage-view',
+            '/portal': 'settings-view',
+            '/settings': 'settings-view',
+            '/app': 'search-view'
+        };
+
+        window.addEventListener('popstate', (e) => {
+            if (!currentUser) return;
+            const path = window.location.pathname.toLowerCase();
+            const viewId = (e.state && e.state.viewId) || PATH_TO_VIEW[path] || 'search-view';
+            switchSaaSView(viewId, null, false);
+        });
+
+        function switchSaaSView(viewId, element, updateUrl = true) {
             // Enforce Role Boundaries on View Switching
             const privilegedViews = {
                 'owner-view': ['OWNER', 'SUPER_ADMIN'],
@@ -3797,6 +4148,14 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             if (privilegedViews[viewId] && !privilegedViews[viewId].includes(role)) {
                 showToast("Access Denied: You do not have permission to access this internal workspace.", "danger");
                 viewId = 'search-view';
+            }
+
+            // Sync URL Bar seamlessly without page reload
+            if (updateUrl && window.history && window.history.pushState) {
+                const targetPath = VIEW_TO_PATH[viewId] || '/search';
+                if (window.location.pathname.toLowerCase() !== targetPath) {
+                    window.history.pushState({ viewId: viewId }, "", targetPath);
+                }
             }
 
             toggleMobileSidebar(false);
@@ -5651,7 +6010,6 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 if (window.currentAdminActiveTab === 'queue') loadAdminTempQueue();
                 else if (window.currentAdminActiveTab === 'master') loadAdminMasterParts();
                 else if (window.currentAdminActiveTab === 'meta') loadAdminMetaOptions();
-                else if (window.currentAdminActiveTab === 'ai') loadAdminSkills();
                 else loadAdminTempQueue();
             } catch (err) {
                 console.error(err);
@@ -5664,17 +6022,14 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             document.getElementById('tab-admin-queue').className = tabId === 'queue' ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm';
             document.getElementById('tab-admin-master').className = tabId === 'master' ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm';
             document.getElementById('tab-admin-meta').className = tabId === 'meta' ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm';
-            document.getElementById('tab-admin-ai').className = tabId === 'ai' ? 'btn btn-purple btn-sm' : 'btn btn-secondary btn-sm';
 
             document.getElementById('admin-queue-view').style.display = tabId === 'queue' ? 'block' : 'none';
             document.getElementById('admin-master-view').style.display = tabId === 'master' ? 'block' : 'none';
             document.getElementById('admin-meta-view').style.display = tabId === 'meta' ? 'block' : 'none';
-            document.getElementById('admin-ai-view').style.display = tabId === 'ai' ? 'block' : 'none';
 
             if (tabId === 'queue') loadAdminTempQueue();
             if (tabId === 'master') loadAdminMasterParts();
             if (tabId === 'meta') loadAdminMetaOptions();
-            if (tabId === 'ai') loadAdminSkills();
         }
 
         async function loadAdminTempQueue() {
@@ -6845,7 +7200,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         function switchOwnerTab(tab) {
             window.currentOwnerActiveTab = tab;
             document.querySelectorAll('#owner-view .workspace-tabs .workspace-tab-btn').forEach(btn => btn.classList.remove('active'));
-            ['overview', 'customers', 'subs', 'revenue', 'searchbi', 'opps', 'plans', 'pipe', 'roles', 'reports', 'audit'].forEach(t => {
+            ['overview', 'customers', 'subs', 'revenue', 'searchbi', 'opps', 'plans', 'pipe', 'roles', 'reports', 'audit', 'ai'].forEach(t => {
                 const el = document.getElementById(`owner-sub-${t}`);
                 if (el) el.style.display = 'none';
             });
@@ -6859,7 +7214,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 'overview': 'nav-owner',
                 'customers': 'nav-owner-customers',
                 'revenue': 'nav-owner-revenue',
-                'searchbi': 'nav-owner-searchbi'
+                'searchbi': 'nav-owner-searchbi',
+                'ai': 'nav-owner'
             };
             const targetNavId = navMap[tab] || 'nav-owner';
             document.querySelectorAll('#owner-nav-group .nav-item').forEach(btn => btn.classList.remove('active'));
@@ -6876,6 +7232,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             else if (tab === 'pipe') loadPipelineLeads();
             else if (tab === 'roles') loadRolesAndPermissions();
             else if (tab === 'audit') loadAuditLogs();
+            else if (tab === 'ai') loadOwnerAiEngine();
         }
 
         async function loadOwnerOverviewTab() {
@@ -7691,6 +8048,556 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 }
             } catch (err) {
                 console.error("Error loading audit logs:", err);
+            }
+        }
+
+        // ================= OWNER AUTOMOTIVE AI ENGINE CONTROLLER =================
+        async function loadOwnerAiEngine() {
+            try {
+                const [ovRes, modRes, keyRes, skillRes] = await Promise.all([
+                    fetch('/api/owner/ai/overview', { headers: getAuthHeaders() }),
+                    fetch('/api/owner/ai/models', { headers: getAuthHeaders() }),
+                    fetch('/api/owner/ai/keys', { headers: getAuthHeaders() }),
+                    fetch('/api/owner/ai/skills', { headers: getAuthHeaders() })
+                ]);
+
+                const ovData = await ovRes.json();
+                const modData = await modRes.json();
+                const keyData = await keyRes.json();
+                const skillData = await skillRes.json();
+
+                if (ovData.success) {
+                    renderOwnerAiOverview(ovData.analytics);
+                }
+                if (modData.success) {
+                    renderOwnerAiModels(modData.models, keyData.keys || keyData.results || []);
+                }
+                if (skillData.success) {
+                    renderOwnerAiSkills(skillData.skills);
+                }
+            } catch (err) {
+                console.error("Error loading Owner AI Engine:", err);
+                showToast("Failed to load AI Engine data", "error");
+            }
+        }
+
+        function renderOwnerAiOverview(a) {
+            if (!a) return;
+            // KPI Bar
+            const elActive = document.getElementById('owner-ai-kpi-active-models');
+            if (elActive) elActive.textContent = a.active_models_count || 0;
+
+            const elCalls = document.getElementById('owner-ai-kpi-total-calls');
+            if (elCalls) elCalls.textContent = (a.total_calls || 0).toLocaleString();
+
+            const elTokens = document.getElementById('owner-ai-kpi-tokens-used');
+            if (elTokens) elTokens.textContent = (a.total_tokens || 0).toLocaleString();
+
+            const elCost = document.getElementById('owner-ai-kpi-estimated-cost');
+            if (elCost) elCost.textContent = `$${(a.total_cost_usd || 0).toFixed(4)}`;
+
+            const elCostThb = document.getElementById('owner-ai-kpi-cost-thb');
+            if (elCostThb) elCostThb.textContent = `≈ ฿${(a.total_cost_thb || 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+            // Model Usage Breakdown (Left Column)
+            const modelUsageContainer = document.getElementById('owner-ai-model-usage-list');
+            if (modelUsageContainer) {
+                if (!a.model_usage || a.model_usage.length === 0) {
+                    modelUsageContainer.innerHTML = `<div style="font-size: 0.82rem; color: var(--text-muted); text-align: center; padding: 1rem;">No model usage data recorded yet.</div>`;
+                } else {
+                    modelUsageContainer.innerHTML = a.model_usage.map(m => `
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem; font-size: 0.82rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <strong style="color: #fff;">${m.model_name}</strong>
+                                    <span class="code-badge" style="font-size: 0.72rem;">${m.provider}</span>
+                                    ${m.is_default ? '<span class="status-badge verified" style="font-size: 0.7rem; padding: 0.1rem 0.4rem;">DEFAULT</span>' : ''}
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    <span style="color: var(--text-secondary); font-size: 0.78rem;">${(m.total_calls || 0).toLocaleString()} calls (${(m.total_tokens || 0).toLocaleString()} tokens)</span>
+                                    <span style="font-weight: 700; color: #FBBF24;">$${(m.total_cost_usd || 0).toFixed(4)}</span>
+                                    <span style="font-weight: 700; color: #A78BFA; min-width: 40px; text-align: right;">${m.percent_of_total || 0}%</span>
+                                </div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.06); height: 6px; border-radius: 3px; overflow: hidden;">
+                                <div style="width: ${m.percent_of_total || 0}%; background: linear-gradient(90deg, #8B5CF6, #3B82F6); height: 100%; border-radius: 3px;"></div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            // Automotive Capabilities (Right Column)
+            const capContainer = document.getElementById('owner-ai-capability-usage-list');
+            if (capContainer) {
+                if (!a.capability_breakdown || a.capability_breakdown.length === 0) {
+                    capContainer.innerHTML = `<div style="font-size: 0.82rem; color: var(--text-muted); text-align: center; padding: 1rem;">No capability breakdown data yet.</div>`;
+                } else {
+                    const capIcons = {
+                        'CROSS_REFERENCE': 'fa-code-compare',
+                        'WEB_SCRAPER': 'fa-spider',
+                        'VIN_DECODER': 'fa-id-card',
+                        'FITMENT_AUDIT': 'fa-shield-halved'
+                    };
+                    capContainer.innerHTML = a.capability_breakdown.map(c => `
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem; font-size: 0.82rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fa-solid ${capIcons[c.capability] || 'fa-gear'}" style="color: #34D399; font-size: 0.85rem;"></i>
+                                    <div>
+                                        <strong style="color: #fff;">${c.name}</strong>
+                                        <div style="font-size: 0.72rem; color: var(--text-muted);">${c.description}</div>
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-weight: 700; color: #34D399;">${(c.calls || 0).toLocaleString()} reqs</div>
+                                    <div style="font-size: 0.72rem; color: var(--text-muted);">${c.percent || 0}% load</div>
+                                </div>
+                            </div>
+                            <div style="background: rgba(255,255,255,0.06); height: 6px; border-radius: 3px; overflow: hidden;">
+                                <div style="width: ${c.percent || 0}%; background: linear-gradient(90deg, #10B981, #06B6D4); height: 100%; border-radius: 3px;"></div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            }
+
+            // Recent AI Executions Table
+            const logsBody = document.getElementById('owner-ai-recent-logs-body');
+            if (logsBody) {
+                if (!a.recent_logs || a.recent_logs.length === 0) {
+                    logsBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-muted); padding: 1rem;">No recent AI executions.</td></tr>`;
+                } else {
+                    logsBody.innerHTML = a.recent_logs.map(log => `
+                        <tr>
+                            <td><span style="font-size: 0.75rem; color: var(--text-muted);">${log.timestamp || '-'}</span></td>
+                            <td><strong style="color: #fff;">${log.model_name || log.model_id}</strong></td>
+                            <td><span class="code-badge" style="font-size: 0.72rem;">${log.capability || 'CROSS_REF'}</span></td>
+                            <td><span>${log.user || 'System'}</span> <span style="font-size: 0.72rem; color: var(--text-muted);">(${log.tenant || 'Global'})</span></td>
+                            <td><span style="font-family: var(--font-mono);">${(log.tokens || 0).toLocaleString()}</span></td>
+                            <td><span style="color: #60A5FA;">${log.latency_ms || 0}ms</span></td>
+                            <td><span class="status-badge ${log.status === 'SUCCESS' ? 'verified' : 'unverified'}">${log.status}</span></td>
+                        </tr>
+                    `).join('');
+                }
+            }
+        }
+
+        function renderOwnerAiModels(models, keys = []) {
+            const tbody = document.getElementById('owner-ai-models-table-body');
+            if (!tbody) return;
+            if (!models || models.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 1.5rem;">No AI models registered in database. Click '+ Register AI Model' to add one.</td></tr>`;
+                return;
+            }
+
+            const keyMap = {};
+            (keys || []).forEach(k => {
+                if (k.provider) keyMap[k.provider.toLowerCase()] = k;
+                if (k.name) keyMap[k.name.toLowerCase()] = k;
+            });
+
+            const providerIcons = {
+                'google': 'fa-brands fa-google',
+                'openai': 'fa-solid fa-bolt',
+                'anthropic': 'fa-solid fa-cube',
+                'groq': 'fa-solid fa-gauge-high',
+                'deepseek': 'fa-solid fa-compass',
+                'custom': 'fa-solid fa-server'
+            };
+
+            tbody.innerHTML = models.map(m => {
+                const provLower = (m.provider || '').toLowerCase();
+                const iconClass = providerIcons[provLower] || 'fa-solid fa-microchip';
+                const keyInfo = keyMap[provLower];
+                const hasKey = keyInfo && keyInfo.is_configured;
+                const maskedKey = keyInfo ? (keyInfo.masked_key || '') : '';
+
+                return `
+                    <tr>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="${iconClass}" style="color: #A78BFA; font-size: 0.95rem;"></i>
+                                <strong style="color: #fff;">${m.provider}</strong>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="font-weight: 600; color: #fff;">${m.model_name}</span>
+                                ${m.is_default ? `<span class="status-badge verified" style="font-size: 0.7rem; padding: 0.15rem 0.5rem;" data-i18n="owner.ai.defaultBadge">DEFAULT</span>` : ''}
+                            </div>
+                        </td>
+                        <td><code style="font-size: 0.8rem; color: #93C5FD; background: rgba(59,130,246,0.1); padding: 0.15rem 0.4rem; border-radius: 4px;">${m.model_id}</code></td>
+                        <td><span style="font-family: var(--font-mono); font-size: 0.8rem;">${(m.max_tokens || 8192).toLocaleString()}</span></td>
+                        <td><span style="color: #FBBF24; font-family: var(--font-mono); font-size: 0.8rem;">$${parseFloat(m.cost_per_1k_tokens || 0.00015).toFixed(5)}</span></td>
+                        <td>
+                            <div style="display: flex; align-items: center; gap: 0.4rem;">
+                                ${hasKey ? `
+                                    <span class="status-badge verified" style="font-size: 0.72rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.25rem;" onclick="testAiKeyConnection('${provLower}')" title="Click to test ping: ${maskedKey}">
+                                        <i class="fa-solid fa-circle-check"></i> Connected
+                                    </span>
+                                    <button class="btn btn-secondary btn-sm" style="padding: 0.15rem 0.4rem; font-size: 0.7rem;" onclick="testAiKeyConnection('${provLower}')" title="Ping Test">
+                                        <i class="fa-solid fa-bolt" style="color: #F59E0B;"></i> Ping
+                                    </button>
+                                ` : `
+                                    <button class="btn btn-secondary btn-sm" style="padding: 0.15rem 0.45rem; font-size: 0.72rem;" onclick="openSaveAiKeyModal('${provLower}')" title="Configure API Key">
+                                        <i class="fa-solid fa-key" style="color: #F59E0B;"></i> Set Key
+                                    </button>
+                                `}
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge ${m.is_active ? 'ai-matched' : 'unverified'}">
+                                ${m.is_active ? 'Active' : 'Disabled'}
+                            </span>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 0.35rem; align-items: center; flex-wrap: nowrap;">
+                                ${!m.is_default ? `
+                                    <button class="btn btn-secondary btn-sm" onclick="setDefaultAiModel(${m.id})" title="Set Default Model">
+                                        <i class="fa-solid fa-star" style="color: #F59E0B;"></i> Default
+                                    </button>
+                                ` : ''}
+                                <button class="btn btn-secondary btn-sm" onclick="toggleAiModelActive(${m.id}, ${m.is_active ? 0 : 1})" title="${m.is_active ? 'Disable' : 'Enable'}">
+                                    <i class="fa-solid ${m.is_active ? 'fa-pause' : 'fa-play'}"></i>
+                                </button>
+                                <button class="btn btn-secondary btn-sm" onclick='openAddAiModelModal(${JSON.stringify(m).replace(/'/g, "&apos;")})' title="Edit">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                ${!m.is_default ? `
+                                    <button class="btn btn-danger btn-sm" onclick="deleteAiModel(${m.id}, '${m.model_name}')" title="Delete">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderOwnerAiKeys(keys) {
+            const grid = document.getElementById('owner-ai-keys-grid');
+            if (!grid) return;
+            if (!keys || keys.length === 0) {
+                grid.innerHTML = `<div style="font-size: 0.82rem; color: var(--text-muted); text-align: center; grid-column: 1 / -1; padding: 1.5rem;">No provider keys configured.</div>`;
+                return;
+            }
+
+            const providerLogos = {
+                'openai': { name: 'OpenAI', icon: 'fa-solid fa-bolt', color: '#10B981', placeholder: 'sk-...' },
+                'gemini': { name: 'Google Gemini', icon: 'fa-brands fa-google', color: '#3B82F6', placeholder: 'AIza...' },
+                'claude': { name: 'Anthropic Claude', icon: 'fa-solid fa-cube', color: '#A78BFA', placeholder: 'sk-ant-...' },
+                'groq': { name: 'Groq Cloud', icon: 'fa-solid fa-gauge-high', color: '#F59E0B', placeholder: 'gsk_...' },
+                'deepseek': { name: 'DeepSeek AI', icon: 'fa-solid fa-compass', color: '#06B6D4', placeholder: 'sk-...' }
+            };
+
+            grid.innerHTML = keys.map(k => {
+                const provInfo = providerLogos[k.provider] || { name: k.provider.toUpperCase(), icon: 'fa-solid fa-key', color: '#fff', placeholder: '...' };
+                return `
+                    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                                    <div style="width: 34px; height: 34px; border-radius: 8px; background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center;">
+                                        <i class="${provInfo.icon}" style="color: ${provInfo.color}; font-size: 1.1rem;"></i>
+                                    </div>
+                                    <div>
+                                        <strong style="color: #fff; font-size: 0.95rem;">${provInfo.name}</strong>
+                                        <div style="font-size: 0.72rem; color: var(--text-muted);">${k.env_var_name}</div>
+                                    </div>
+                                </div>
+                                <span class="status-badge ${k.is_configured ? 'verified' : 'unverified'}">
+                                    ${k.is_configured ? 'Configured' : 'Not Set'}
+                                </span>
+                            </div>
+
+                            <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.6rem 0.75rem; margin-bottom: 1rem;">
+                                <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 0.2rem;">API Key Status:</div>
+                                <div style="font-family: var(--font-mono); font-size: 0.82rem; color: ${k.is_configured ? '#34D399' : 'var(--text-muted)'}; word-break: break-all;">
+                                    ${k.masked_key || 'No API key set in system environment'}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                            <button class="btn btn-secondary btn-sm" onclick="testAiKeyConnection('${k.provider}')" ${!k.is_configured ? 'disabled style="opacity: 0.5;"' : ''}>
+                                <i class="fa-solid fa-network-wired"></i> <span data-i18n="owner.ai.btnTestConn">Test Connection</span>
+                            </button>
+                            <button class="btn btn-primary btn-sm" onclick="openSaveAiKeyModal('${k.provider}')">
+                                <i class="fa-solid fa-pen-to-square"></i> <span data-i18n="owner.ai.btnUpdateKey">Update Key</span>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderOwnerAiSkills(skills) {
+            const container = document.getElementById('owner-ai-skills-container');
+            if (!container) return;
+            if (!skills || skills.length === 0) {
+                container.innerHTML = `<div style="font-size: 0.82rem; color: var(--text-muted); text-align: center; grid-column: 1 / -1; padding: 1.5rem;">No AI skills registered.</div>`;
+                return;
+            }
+
+            const skillIcons = {
+                'cross_reference_matching': 'fa-solid fa-code-compare',
+                'raw_parts_scraper_parser': 'fa-solid fa-spider',
+                'vin_decoder_engine': 'fa-solid fa-id-card',
+                'oem_fitment_validator': 'fa-solid fa-shield-halved'
+            };
+
+            container.innerHTML = skills.map(s => {
+                const icon = skillIcons[s.skill_key] || 'fa-solid fa-brain';
+                return `
+                    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.25rem; display: flex; flex-direction: column; justify-content: space-between;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.6rem;">
+                                <div style="display: flex; align-items: center; gap: 0.6rem;">
+                                    <div style="width: 32px; height: 32px; border-radius: 6px; background: rgba(192, 132, 252, 0.15); display: flex; align-items: center; justify-content: center;">
+                                        <i class="${icon}" style="color: #C084FC; font-size: 1rem;"></i>
+                                    </div>
+                                    <strong style="color: #fff; font-size: 0.92rem;">${s.skill_name}</strong>
+                                </div>
+                                <span class="status-badge ${s.is_active ? 'ai-matched' : 'unverified'}">
+                                    ${s.is_active ? 'Active' : 'Disabled'}
+                                </span>
+                            </div>
+                            <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.4;">${s.description}</p>
+                        </div>
+                        <button class="btn ${s.is_active ? 'btn-secondary' : 'btn-purple'} btn-sm" style="width: 100%;" onclick="toggleOwnerSkill('${s.skill_key}', ${s.is_active ? 0 : 1})">
+                            <i class="fa-solid ${s.is_active ? 'fa-pause' : 'fa-play'}"></i> ${s.is_active ? 'Disable Skill' : 'Activate Skill'}
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ================= OWNER AI MODALS & CRUD OPERATIONS =================
+        function openAddAiModelModal(modelData = null) {
+            const form = document.getElementById('form-add-ai-model');
+            if (form) form.reset();
+            const editId = document.getElementById('ai-model-edit-id');
+            if (modelData) {
+                if (editId) editId.value = modelData.id || '';
+                document.getElementById('ai-model-provider').value = modelData.provider || 'Google';
+                document.getElementById('ai-model-display-name').value = modelData.model_name || '';
+                document.getElementById('ai-model-identifier').value = modelData.model_id || '';
+                document.getElementById('ai-model-max-tokens').value = modelData.max_tokens || 8192;
+                document.getElementById('ai-model-cost').value = modelData.cost_per_1k_tokens || 0.00015;
+            } else {
+                if (editId) editId.value = '';
+            }
+            const modal = document.getElementById('modal-add-ai-model');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeAddAiModelModal() {
+            const modal = document.getElementById('modal-add-ai-model');
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function submitAddAiModel(e) {
+            if (e) e.preventDefault();
+            const editId = document.getElementById('ai-model-edit-id').value;
+            const payload = {
+                provider: document.getElementById('ai-model-provider').value,
+                model_name: document.getElementById('ai-model-display-name').value.trim(),
+                model_id: document.getElementById('ai-model-identifier').value.trim(),
+                max_tokens: parseInt(document.getElementById('ai-model-max-tokens').value) || 8192,
+                cost_per_1k_tokens: parseFloat(document.getElementById('ai-model-cost').value) || 0.00015
+            };
+
+            try {
+                let res;
+                if (editId) {
+                    res = await fetch(`/api/owner/ai/models/${editId}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                        body: JSON.stringify(payload)
+                    });
+                } else {
+                    res = await fetch('/api/owner/ai/models', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                        body: JSON.stringify(payload)
+                    });
+                }
+
+                const data = await res.json();
+                if (data.success) {
+                    showToast(editId ? "AI Model updated successfully" : "AI Model registered successfully", "success");
+                    closeAddAiModelModal();
+                    loadOwnerAiEngine();
+                } else {
+                    showToast(data.detail || "Failed to save AI Model", "error");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Network error saving AI Model", "error");
+            }
+        }
+
+        async function setDefaultAiModel(id) {
+            try {
+                const res = await fetch(`/api/owner/ai/models/${id}/default`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("Default AI Model updated", "success");
+                    loadOwnerAiEngine();
+                } else {
+                    showToast(data.detail || "Failed to set default model", "error");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Error updating default model", "error");
+            }
+        }
+
+        async function toggleAiModelActive(id, newStatus) {
+            try {
+                const res = await fetch(`/api/owner/ai/models/${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    body: JSON.stringify({ is_active: newStatus })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`Model ${newStatus ? 'activated' : 'disabled'} successfully`, "success");
+                    loadOwnerAiEngine();
+                } else {
+                    showToast(data.detail || "Failed to update model status", "error");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Error updating model status", "error");
+            }
+        }
+
+        async function deleteAiModel(id, name) {
+            if (!confirm(`Are you sure you want to delete AI model "${name}"?`)) return;
+            try {
+                const res = await fetch(`/api/owner/ai/models/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("AI Model deleted successfully", "success");
+                    loadOwnerAiEngine();
+                } else {
+                    showToast(data.detail || "Failed to delete AI model", "error");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Error deleting AI model", "error");
+            }
+        }
+
+        function openSaveAiKeyModal(provider = 'openai') {
+            const form = document.getElementById('form-save-ai-key');
+            if (form) form.reset();
+            const selProv = document.getElementById('ai-key-provider');
+            if (selProv) selProv.value = provider.toLowerCase();
+            const subTitle = document.getElementById('ai-key-modal-subtitle');
+            if (subTitle) subTitle.textContent = `Update credential for ${provider.toUpperCase()}`;
+            const keyInput = document.getElementById('ai-key-input');
+            if (keyInput) keyInput.type = 'password';
+            const eyeIcon = document.getElementById('ai-key-eye-icon');
+            if (eyeIcon) eyeIcon.className = 'fa-solid fa-eye';
+
+            const modal = document.getElementById('modal-save-ai-key');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeSaveAiKeyModal() {
+            const modal = document.getElementById('modal-save-ai-key');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function toggleKeyVisibility() {
+            const input = document.getElementById('ai-key-input');
+            const icon = document.getElementById('ai-key-eye-icon');
+            if (!input || !icon) return;
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.className = 'fa-solid fa-eye-slash';
+            } else {
+                input.type = 'password';
+                icon.className = 'fa-solid fa-eye';
+            }
+        }
+
+        async function submitSaveAiKey(e) {
+            if (e) e.preventDefault();
+            const provider = document.getElementById('ai-key-provider').value;
+            const apiKey = document.getElementById('ai-key-input').value.trim();
+            if (!apiKey) {
+                showToast("Please enter an API key", "warning");
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/owner/ai/keys', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    body: JSON.stringify({ provider, api_key: apiKey })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`API Key for ${provider.toUpperCase()} saved successfully`, "success");
+                    closeSaveAiKeyModal();
+                    loadOwnerAiEngine();
+                } else {
+                    showToast(data.detail || "Failed to save API Key", "error");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Error saving API Key", "error");
+            }
+        }
+
+        async function testAiKeyConnection(provider) {
+            showToast(`Testing connection to ${provider.toUpperCase()}...`, "info");
+            try {
+                const res = await fetch('/api/owner/ai/keys/test', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    body: JSON.stringify({ provider })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`Connected to ${provider.toUpperCase()} in ${data.latency_ms}ms (${data.model_status})`, "success");
+                } else {
+                    showToast(data.detail || `Connection to ${provider.toUpperCase()} failed`, "error");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast(`Network error testing ${provider.toUpperCase()} connection`, "error");
+            }
+        }
+
+        async function toggleOwnerSkill(skillKey, newStatus) {
+            try {
+                const res = await fetch('/api/owner/ai/skills', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    body: JSON.stringify({ skill_key: skillKey, is_active: newStatus })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("Automotive AI skill toggled", "success");
+                    loadOwnerAiEngine();
+                } else {
+                    showToast(data.detail || "Failed to toggle skill", "error");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Error toggling AI skill", "error");
             }
         }
 
