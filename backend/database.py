@@ -13,10 +13,21 @@ elif DB_PATH.startswith("sqlite://"):
 def get_db_connection():
     db_dir = os.path.dirname(DB_PATH)
     if db_dir and not os.path.exists(db_dir):
-        os.makedirs(db_dir, exist_ok=True)
+        try:
+            os.makedirs(db_dir, mode=0o777, exist_ok=True)
+        except Exception as e:
+            print(f"Warning creating db_dir {db_dir}: {e}")
+    if os.path.exists(DB_PATH):
+        try:
+            os.chmod(DB_PATH, 0o666)
+        except Exception:
+            pass
     conn = sqlite3.connect(DB_PATH, timeout=30.0)
     conn.row_factory = sqlite3.Row
-    conn.execute("PRAGMA journal_mode = WAL")
+    try:
+        conn.execute("PRAGMA journal_mode = WAL")
+    except Exception as e:
+        print(f"Warning setting WAL mode: {e}")
     return conn
 
 def init_db():

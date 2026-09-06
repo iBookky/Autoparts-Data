@@ -37,12 +37,12 @@ COPY index.html ./
 COPY main.py ./
 COPY scraper.py ./
 COPY sheets_helper.py ./
+COPY entrypoint.sh ./
 
-# Create data directory for SQLite persistence and set permissions
-RUN mkdir -p /app/data && chown -R appuser:appgroup /app
-
-# Switch to non-root user
-USER appuser
+# Create data directory for SQLite persistence and grant read/write permissions
+RUN mkdir -p /app/data && \
+    chmod +x /app/entrypoint.sh && \
+    chmod -R 777 /app/data
 
 # Expose HTTP port
 EXPOSE 8000
@@ -51,5 +51,6 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
     CMD curl -f http://localhost:8000/health || exit 1
 
-# Production Entrypoint (Runs database migration on startup and starts server)
-CMD ["python", "main.py"]
+# Production Entrypoint
+ENTRYPOINT ["/app/entrypoint.sh"]
+
