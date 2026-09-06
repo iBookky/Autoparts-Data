@@ -154,9 +154,34 @@ CREATE INDEX IF NOT EXISTS idx_user_fav ON user_favorites(user_id, org_id);
 
 -- ================= SEED INITIAL SAAS DATA =================
 
--- Seed Standard Plans (Production Definitions)
+-- Seed Standard Plans
 INSERT OR IGNORE INTO plans (id, name, price_monthly, max_brands, max_categories, max_users, monthly_search_quota, vin_search_enabled, api_access_enabled, export_enabled, ai_search_enabled) VALUES
 ('starter', 'STARTER', 1290, 1, 3, 1, 1000, 0, 0, 0, 0),
 ('professional', 'PROFESSIONAL', 2990, 5, 10, 5, 5000, 1, 0, 0, 1),
 ('business', 'BUSINESS', 5990, -1, -1, 20, 20000, 1, 1, 1, 1),
 ('enterprise', 'ENTERPRISE', 14900, -1, -1, 999, 100000, 1, 1, 1, 1);
+
+-- Seed Default Organization
+INSERT OR IGNORE INTO organizations (id, name, slug, plan_tier, billing_email, tax_id, address) VALUES
+(1, 'Siam Auto Supply Co., Ltd.', 'siam-auto-supply', 'PROFESSIONAL', 'billing@siamauto.co.th', '0105558012345', '888 Rama 9 Rd, Bangkok 10310'),
+(2, 'Apex Parts Distribution', 'apex-parts', 'BUSINESS', 'admin@apexparts.com', '0105561098765', '123 Sukhumvit Rd, Bangkok 10110');
+
+-- Link default users to organization 1
+INSERT OR IGNORE INTO organization_members (org_id, user_id, org_role)
+SELECT 1, id, CASE WHEN role = 'SUPER_ADMIN' THEN 'OWNER' WHEN role = 'ADMIN' THEN 'ADMIN' ELSE 'MEMBER' END
+FROM users;
+
+-- Seed Default Subscriptions for Org 1 & Org 2
+INSERT OR IGNORE INTO subscriptions (org_id, plan_id, status, billing_cycle, current_period_start, current_period_end, ai_power_pack, extra_searches) VALUES
+(1, 'professional', 'ACTIVE', 'MONTHLY', datetime('now', '-15 days'), datetime('now', '+15 days'), 1, 0),
+(2, 'business', 'ACTIVE', 'MONTHLY', datetime('now', '-5 days'), datetime('now', '+25 days'), 1, 5000);
+
+-- Seed Initial Usage Records
+INSERT OR IGNORE INTO usage_records (org_id, period_month, searches_used, vin_lookups_used, api_calls_used, exports_used, ai_credits_used) VALUES
+(1, strftime('%Y-%m', 'now'), 1248, 86, 0, 2, 45),
+(2, strftime('%Y-%m', 'now'), 4820, 310, 1280, 14, 180);
+
+-- Seed Sample Invoices for Org 1
+INSERT OR IGNORE INTO invoices (invoice_number, org_id, amount, vat_amount, total_amount, status, payment_method, period_start, period_end, created_at) VALUES
+('INV-2026-0801', 1, 4980, 348, 5328, 'PAID', 'CREDIT_CARD', date('now', '-30 days'), date('now'), datetime('now', '-30 days')),
+('INV-2026-0701', 1, 4980, 348, 5328, 'PAID', 'CREDIT_CARD', date('now', '-60 days'), date('now', '-30 days'), datetime('now', '-60 days'));
