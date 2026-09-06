@@ -59,6 +59,8 @@ CREATE TABLE IF NOT EXISTS cross_reference_relations (
     confidence_score INTEGER DEFAULT 100,
     verification_status VARCHAR(50) NOT NULL CHECK (verification_status IN ('VERIFIED', 'REVIEWED', 'AI_MATCHED', 'UNVERIFIED')) DEFAULT 'VERIFIED',
     verified_by_user_id INTEGER REFERENCES users(id),
+    verified_by VARCHAR(150),
+    verified_at TIMESTAMP WITH TIME ZONE,
     notes TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -87,9 +89,13 @@ CREATE TABLE IF NOT EXISTS platform_audit_logs (
     user_role VARCHAR(50),
     action VARCHAR(150) NOT NULL,
     target_resource VARCHAR(150),
+    target_entity VARCHAR(150),
     target_id VARCHAR(150),
+    before_state TEXT,
+    after_state TEXT,
     details TEXT,
     ip_address VARCHAR(100),
     user_agent TEXT,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+

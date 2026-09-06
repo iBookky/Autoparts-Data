@@ -16,7 +16,8 @@ CREATE TABLE IF NOT EXISTS organizations (
     contact_person VARCHAR(255),
     industry VARCHAR(100),
     country VARCHAR(100) DEFAULT 'Thailand',
-    timezone VARCHAR(100) DEFAULT 'Asia/Bangkok'
+    timezone VARCHAR(100) DEFAULT 'Asia/Bangkok',
+    currency VARCHAR(10) DEFAULT 'THB'
 );
 
 CREATE TABLE IF NOT EXISTS organization_members (
@@ -112,6 +113,7 @@ CREATE TABLE IF NOT EXISTS user_favorites (
     brand VARCHAR(150),
     part_number VARCHAR(150),
     oem_number VARCHAR(150),
+    product_name TEXT,
     product_name_th TEXT,
     product_name_en TEXT,
     car_brand VARCHAR(150),
@@ -127,8 +129,11 @@ CREATE TABLE IF NOT EXISTS api_keys (
     name VARCHAR(150) NOT NULL,
     key_prefix VARCHAR(50) NOT NULL,
     key_hash VARCHAR(255) UNIQUE NOT NULL,
+    rate_limit_per_min INTEGER DEFAULT 60,
+    is_active INTEGER DEFAULT 1,
+    last_used_at TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     expires_at TIMESTAMP WITH TIME ZONE,
-    last_used_at TIMESTAMP WITH TIME ZONE,
     status VARCHAR(50) DEFAULT 'ACTIVE'
 );
+

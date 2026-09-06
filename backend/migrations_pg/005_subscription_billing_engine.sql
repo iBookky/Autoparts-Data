@@ -53,10 +53,13 @@ CREATE TABLE IF NOT EXISTS add_ons (
     price_monthly INTEGER NOT NULL,
     price_yearly INTEGER,
     currency VARCHAR(10) NOT NULL DEFAULT 'THB',
-    add_on_type VARCHAR(50) NOT NULL CHECK (add_on_type IN ('QUOTA', 'FEATURE', 'SEATS', 'PACK')),
+    add_on_type VARCHAR(50) NOT NULL DEFAULT 'PACK',
     quota_delta INTEGER DEFAULT 0,
     feature_code VARCHAR(100),
     status VARCHAR(50) NOT NULL CHECK (status IN ('ACTIVE', 'ARCHIVED')) DEFAULT 'ACTIVE',
+    entitlement_type VARCHAR(50),
+    quota_increase INTEGER DEFAULT 0,
+    user_increase INTEGER DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -76,8 +79,9 @@ CREATE TABLE IF NOT EXISTS subscription_items (
     item_code VARCHAR(100) NOT NULL,
     item_name VARCHAR(150) NOT NULL,
     quantity INTEGER NOT NULL DEFAULT 1,
-    unit_price INTEGER NOT NULL,
-    total_price INTEGER NOT NULL,
+    unit_price INTEGER NOT NULL DEFAULT 0,
+    total_price INTEGER NOT NULL DEFAULT 0,
+    billing_interval VARCHAR(50) DEFAULT 'MONTHLY',
     currency VARCHAR(10) NOT NULL DEFAULT 'THB',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -91,8 +95,11 @@ CREATE TABLE IF NOT EXISTS subscription_entitlements_snapshot (
     max_categories INTEGER NOT NULL,
     max_users INTEGER NOT NULL,
     monthly_search_quota INTEGER NOT NULL,
+    vin_search_enabled INTEGER DEFAULT 0,
+    api_access_enabled INTEGER DEFAULT 0,
+    export_enabled INTEGER DEFAULT 0,
+    ai_search_enabled INTEGER DEFAULT 0,
     api_enabled INTEGER NOT NULL DEFAULT 0,
-    export_enabled INTEGER NOT NULL DEFAULT 0,
     ai_enabled INTEGER NOT NULL DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -104,6 +111,12 @@ CREATE TABLE IF NOT EXISTS coupons (
     discount_type VARCHAR(50) NOT NULL CHECK (discount_type IN ('PERCENTAGE', 'FIXED_AMOUNT')),
     discount_value INTEGER NOT NULL,
     currency VARCHAR(10) DEFAULT 'THB',
+    min_purchase INTEGER DEFAULT 0,
+    max_discount INTEGER DEFAULT 0,
+    usage_limit INTEGER DEFAULT -1,
+    used_count INTEGER DEFAULT 0,
+    per_org_limit INTEGER DEFAULT 1,
+    applicable_plans TEXT,
     max_redemptions INTEGER DEFAULT -1,
     redemptions_count INTEGER DEFAULT 0,
     is_active INTEGER NOT NULL DEFAULT 1,
@@ -134,9 +147,12 @@ CREATE TABLE IF NOT EXISTS invoice_items (
     description TEXT NOT NULL,
     item_type VARCHAR(50) NOT NULL CHECK (item_type IN ('BASE_PLAN', 'ADDON', 'DISCOUNT', 'VAT', 'PRORATION', 'TAX')),
     quantity INTEGER NOT NULL DEFAULT 1,
-    unit_amount INTEGER NOT NULL,
-    total_amount INTEGER NOT NULL
+    unit_amount INTEGER NOT NULL DEFAULT 0,
+    unit_price INTEGER NOT NULL DEFAULT 0,
+    amount INTEGER NOT NULL DEFAULT 0,
+    total_amount INTEGER NOT NULL DEFAULT 0
 );
+
 
 CREATE TABLE IF NOT EXISTS coupon_redemptions (
     id SERIAL PRIMARY KEY,

@@ -86,11 +86,32 @@ def migrate_to_postgres():
     print(f"\n[2/3] Migrating data across {len(sorted_tables)} tables...")
     total_migrated_records = 0
 
+    # Temporarily disable foreign key constraints for fast bulk import
+    try:
+        pg_cur.execute("SET session_replication_role = 'replica';")
+        pg_conn.commit()
+    except Exception:
+        pg_conn.rollback()
+
     for table in sorted_tables:
         sqlite_cur.execute(f"PRAGMA table_info({table})")
-        cols_info = sqlite_cur.fetchall()
-        cols = [c["name"] for c in cols_info]
-        has_id = any(c["name"] == "id" for c in cols_info)
+        sqlite_cols = [c["name"] for c in sqlite_cur.fetchall()]
+
+        # Get actual PostgreSQL columns for this table
+        pg_cur.execute("""
+            SELECT column_name 
+            FROM information_schema.columns 
+            WHERE table_name = %s AND table_schema = 'public';
+        """, (table,))
+        pg_cols = [r[0] for r in pg_cur.fetchall()]
+
+        if not pg_cols:
+            print(f"  ⚠️ Table '{table}' not found in PostgreSQL. Skipping.")
+            continue
+
+        # Intersect columns so only existing columns in PostgreSQL are inserted
+        cols = [c for c in sqlite_cols if c in pg_cols]
+        has_id = "id" in cols
 
         sqlite_cur.execute(f"SELECT * FROM {table}")
         rows = sqlite_cur.fetchall()
@@ -116,7 +137,7 @@ def migrate_to_postgres():
                 try:
                     pg_cur.execute(f"""
                         SELECT setval(
-                            pg_get_serial_sequence('{table}', 'id'),
+                            pg_get_serial_sequence('"{table}"', 'id'),
                             COALESCE((SELECT MAX(id) FROM "{table}"), 1),
                             true
                         );
@@ -130,6 +151,13 @@ def migrate_to_postgres():
         except Exception as e:
             pg_conn.rollback()
             print(f"  ❌ Error migrating table {table}: {e}")
+
+    # Re-enable foreign key checks
+    try:
+        pg_cur.execute("SET session_replication_role = 'origin';")
+        pg_conn.commit()
+    except Exception:
+        pg_conn.rollback()
 
     # 3. Final Verification
     print("\n[3/3] Verifying PostgreSQL database state...")
@@ -153,3 +181,4 @@ def migrate_to_postgres():
 
 if __name__ == "__main__":
     migrate_to_postgres()
+
