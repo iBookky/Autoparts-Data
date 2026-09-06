@@ -57,6 +57,29 @@ def migrate_to_postgres():
             pg_conn.rollback()
             print(f"  ⚠️ Warning applying {mf}: {e}")
 
+    # Relax legacy constraints on previously created tables if any
+    relax_statements = [
+        'ALTER TABLE "subscription_items" ALTER COLUMN "total_price" DROP NOT NULL;',
+        'ALTER TABLE "subscription_items" ALTER COLUMN "unit_price" DROP NOT NULL;',
+        'ALTER TABLE "add_ons" ALTER COLUMN "add_on_type" DROP NOT NULL;',
+        'ALTER TABLE "add_ons" DROP CONSTRAINT IF EXISTS "add_ons_status_check";',
+        'ALTER TABLE "add_on_plan_compatibility" DROP CONSTRAINT IF EXISTS "add_on_plan_compatibility_availability_check";',
+        'ALTER TABLE "coupons" DROP CONSTRAINT IF EXISTS "coupons_discount_type_check";',
+        'ALTER TABLE "invoice_items" ALTER COLUMN "unit_amount" DROP NOT NULL;',
+        'ALTER TABLE "invoice_items" ALTER COLUMN "total_amount" DROP NOT NULL;',
+        'ALTER TABLE "invoice_items" DROP CONSTRAINT IF EXISTS "invoice_items_item_type_check";',
+        'ALTER TABLE "payment_transactions" DROP CONSTRAINT IF EXISTS "payment_transactions_payment_method_check";',
+        'ALTER TABLE "payment_transactions" ALTER COLUMN "org_id" DROP NOT NULL;',
+        'ALTER TABLE "commercial_audit_logs" ALTER COLUMN "org_id" DROP NOT NULL;'
+    ]
+    for stmt in relax_statements:
+        try:
+            pg_cur.execute(stmt)
+            pg_conn.commit()
+        except Exception:
+            pg_conn.rollback()
+
+
     # 2. Get list of tables in dependency order
     sqlite_cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' ORDER BY name")
     tables = [r[0] for r in sqlite_cur.fetchall()]

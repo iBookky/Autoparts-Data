@@ -53,10 +53,10 @@ CREATE TABLE IF NOT EXISTS add_ons (
     price_monthly INTEGER NOT NULL,
     price_yearly INTEGER,
     currency VARCHAR(10) NOT NULL DEFAULT 'THB',
-    add_on_type VARCHAR(50) NOT NULL DEFAULT 'PACK',
+    add_on_type VARCHAR(50) DEFAULT 'PACK',
     quota_delta INTEGER DEFAULT 0,
     feature_code VARCHAR(100),
-    status VARCHAR(50) NOT NULL CHECK (status IN ('ACTIVE', 'ARCHIVED')) DEFAULT 'ACTIVE',
+    status VARCHAR(50) DEFAULT 'ACTIVE',
     entitlement_type VARCHAR(50),
     quota_increase INTEGER DEFAULT 0,
     user_increase INTEGER DEFAULT 0,
@@ -67,7 +67,7 @@ CREATE TABLE IF NOT EXISTS add_on_plan_compatibility (
     id SERIAL PRIMARY KEY,
     add_on_id VARCHAR(100) NOT NULL REFERENCES add_ons(id),
     plan_id VARCHAR(100) NOT NULL REFERENCES plans(id),
-    availability VARCHAR(50) NOT NULL CHECK (availability IN ('INCLUDED', 'ADDON_AVAILABLE', 'NOT_SUPPORTED')) DEFAULT 'ADDON_AVAILABLE',
+    availability VARCHAR(50) DEFAULT 'AVAILABLE',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     UNIQUE (add_on_id, plan_id)
 );
@@ -75,12 +75,12 @@ CREATE TABLE IF NOT EXISTS add_on_plan_compatibility (
 CREATE TABLE IF NOT EXISTS subscription_items (
     id SERIAL PRIMARY KEY,
     subscription_id INTEGER NOT NULL REFERENCES subscriptions(id) ON DELETE CASCADE,
-    item_type VARCHAR(50) NOT NULL CHECK (item_type IN ('PLAN', 'ADDON', 'ONE_OFF')),
+    item_type VARCHAR(50) NOT NULL DEFAULT 'PLAN',
     item_code VARCHAR(100) NOT NULL,
     item_name VARCHAR(150) NOT NULL,
     quantity INTEGER NOT NULL DEFAULT 1,
-    unit_price INTEGER NOT NULL DEFAULT 0,
-    total_price INTEGER NOT NULL DEFAULT 0,
+    unit_price INTEGER DEFAULT 0,
+    total_price INTEGER DEFAULT 0,
     billing_interval VARCHAR(50) DEFAULT 'MONTHLY',
     currency VARCHAR(10) NOT NULL DEFAULT 'THB',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -99,8 +99,8 @@ CREATE TABLE IF NOT EXISTS subscription_entitlements_snapshot (
     api_access_enabled INTEGER DEFAULT 0,
     export_enabled INTEGER DEFAULT 0,
     ai_search_enabled INTEGER DEFAULT 0,
-    api_enabled INTEGER NOT NULL DEFAULT 0,
-    ai_enabled INTEGER NOT NULL DEFAULT 0,
+    api_enabled INTEGER DEFAULT 0,
+    ai_enabled INTEGER DEFAULT 0,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -108,7 +108,7 @@ CREATE TABLE IF NOT EXISTS coupons (
     id VARCHAR(100) PRIMARY KEY,
     code VARCHAR(100) UNIQUE NOT NULL,
     description TEXT,
-    discount_type VARCHAR(50) NOT NULL CHECK (discount_type IN ('PERCENTAGE', 'FIXED_AMOUNT')),
+    discount_type VARCHAR(50) NOT NULL DEFAULT 'PERCENT',
     discount_value INTEGER NOT NULL,
     currency VARCHAR(10) DEFAULT 'THB',
     min_purchase INTEGER DEFAULT 0,
@@ -134,7 +134,7 @@ CREATE TABLE IF NOT EXISTS invoices (
     vat_amount INTEGER NOT NULL DEFAULT 0,
     total_amount INTEGER NOT NULL,
     currency VARCHAR(10) NOT NULL DEFAULT 'THB',
-    status VARCHAR(50) NOT NULL CHECK (status IN ('DRAFT', 'OPEN', 'PENDING', 'PAID', 'VOID', 'OVERDUE', 'REFUNDED')) DEFAULT 'OPEN',
+    status VARCHAR(50) DEFAULT 'OPEN',
     payment_method VARCHAR(100),
     period_start TIMESTAMP WITH TIME ZONE,
     period_end TIMESTAMP WITH TIME ZONE,
@@ -145,14 +145,13 @@ CREATE TABLE IF NOT EXISTS invoice_items (
     id SERIAL PRIMARY KEY,
     invoice_id INTEGER NOT NULL REFERENCES invoices(id) ON DELETE CASCADE,
     description TEXT NOT NULL,
-    item_type VARCHAR(50) NOT NULL CHECK (item_type IN ('BASE_PLAN', 'ADDON', 'DISCOUNT', 'VAT', 'PRORATION', 'TAX')),
+    item_type VARCHAR(50) DEFAULT 'BASE_PLAN',
     quantity INTEGER NOT NULL DEFAULT 1,
-    unit_amount INTEGER NOT NULL DEFAULT 0,
-    unit_price INTEGER NOT NULL DEFAULT 0,
-    amount INTEGER NOT NULL DEFAULT 0,
-    total_amount INTEGER NOT NULL DEFAULT 0
+    unit_amount INTEGER DEFAULT 0,
+    unit_price INTEGER DEFAULT 0,
+    amount INTEGER DEFAULT 0,
+    total_amount INTEGER DEFAULT 0
 );
-
 
 CREATE TABLE IF NOT EXISTS coupon_redemptions (
     id SERIAL PRIMARY KEY,
@@ -165,7 +164,7 @@ CREATE TABLE IF NOT EXISTS coupon_redemptions (
 
 CREATE TABLE IF NOT EXISTS commercial_audit_logs (
     id SERIAL PRIMARY KEY,
-    org_id INTEGER NOT NULL REFERENCES organizations(id),
+    org_id INTEGER REFERENCES organizations(id),
     actor_user_id INTEGER,
     actor_username VARCHAR(150),
     action VARCHAR(150) NOT NULL,
@@ -177,3 +176,4 @@ CREATE TABLE IF NOT EXISTS commercial_audit_logs (
     ip_address VARCHAR(100) DEFAULT '127.0.0.1',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+

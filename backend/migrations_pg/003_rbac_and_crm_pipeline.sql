@@ -70,9 +70,9 @@ CREATE TABLE IF NOT EXISTS cross_reference_relations (
 CREATE TABLE IF NOT EXISTS payment_transactions (
     id SERIAL PRIMARY KEY,
     invoice_id INTEGER,
-    org_id INTEGER NOT NULL REFERENCES organizations(id),
+    org_id INTEGER REFERENCES organizations(id),
     transaction_ref VARCHAR(255) UNIQUE NOT NULL,
-    payment_method VARCHAR(50) NOT NULL CHECK (payment_method IN ('PROMPTPAY_QR', 'CREDIT_CARD', 'BANK_TRANSFER')),
+    payment_method VARCHAR(50) NOT NULL CHECK (payment_method IN ('STRIPE', 'PROMPTPAY_QR', 'PROMPTPAY', 'CREDIT_CARD', 'BANK_TRANSFER', 'MANUAL', 'CASH')),
     amount INTEGER NOT NULL,
     currency VARCHAR(10) DEFAULT 'THB',
     status VARCHAR(50) NOT NULL CHECK (status IN ('PENDING', 'SUCCESS', 'FAILED', 'EXPIRED', 'REFUNDED')) DEFAULT 'PENDING',
@@ -81,6 +81,7 @@ CREATE TABLE IF NOT EXISTS payment_transactions (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
+
 
 CREATE TABLE IF NOT EXISTS platform_audit_logs (
     id SERIAL PRIMARY KEY,
