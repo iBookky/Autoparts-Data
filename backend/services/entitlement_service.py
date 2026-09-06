@@ -79,19 +79,20 @@ class EntitlementService:
 
         if snap_row:
             snap = dict(snap_row)
-            max_b = snap["max_brands"]
-            max_c = snap["max_categories"]
-            vin_enabled = bool(snap["vin_search_enabled"])
-            api_enabled = bool(snap["api_access_enabled"]) or "api_access_pack" in addon_codes
+            max_b = snap.get("max_brands", 5)
+            max_c = snap.get("max_categories", 3)
+            vin_enabled = bool(snap.get("vin_search_enabled", True))
+            api_enabled = bool(snap.get("api_access_enabled", False)) or bool(snap.get("api_enabled", False)) or "api_access_pack" in addon_codes
             export_enabled = False  # Permanent security rule: EXPORT_AUTOMOTIVE_DATA = DENIED for customers
-            ai_enabled = bool(snap["ai_search_enabled"]) or "ai_power_pack" in addon_codes
+            ai_enabled = bool(snap.get("ai_search_enabled", True)) or bool(snap.get("ai_enabled", True)) or "ai_power_pack" in addon_codes
         else:
-            max_b = sub["max_brands"] + (sub.get("extra_brands") or 0) if sub["max_brands"] != -1 else -1
-            max_c = sub["max_categories"] + (sub.get("extra_categories") or 0) if sub["max_categories"] != -1 else -1
-            vin_enabled = bool(sub["vin_search_enabled"])
-            api_enabled = bool(sub["api_access_enabled"]) or "api_access_pack" in addon_codes
+            max_b = sub.get("max_brands", 5) + (sub.get("extra_brands") or 0) if sub.get("max_brands", 5) != -1 else -1
+            max_c = sub.get("max_categories", 3) + (sub.get("extra_categories") or 0) if sub.get("max_categories", 3) != -1 else -1
+            vin_enabled = bool(sub.get("vin_search_enabled", True))
+            api_enabled = bool(sub.get("api_access_enabled", False)) or bool(sub.get("api_enabled", False)) or "api_access_pack" in addon_codes
             export_enabled = False  # Permanent security rule: EXPORT_AUTOMOTIVE_DATA = DENIED for customers
-            ai_enabled = bool(sub["ai_search_enabled"]) or "ai_power_pack" in addon_codes
+            ai_enabled = bool(sub.get("ai_search_enabled", True)) or bool(sub.get("ai_enabled", True)) or "ai_power_pack" in addon_codes
+
 
         # 2. Check explicit database-driven entitlements table first
         cursor.execute("SELECT entitlement_type, entitlement_value FROM entitlements WHERE org_id = ? AND is_granted = 1", (org_id,))
