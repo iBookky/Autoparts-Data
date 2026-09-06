@@ -38,6 +38,7 @@ COPY main.py ./
 COPY scraper.py ./
 COPY sheets_helper.py ./
 COPY entrypoint.sh ./
+COPY parts_cross_ref.db ./parts_cross_ref.db
 
 # Create data directory for SQLite persistence and grant read/write permissions
 RUN mkdir -p /app/data && \

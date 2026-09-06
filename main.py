@@ -196,6 +196,7 @@ def require_staff(user = Depends(get_current_user)):
 # ================= AUTH ENDPOINTS =================
 
 @app.post("/api/auth/login")
+@app.post("/api/login")
 async def login(req: LoginRequest):
     user = get_user_by_username(req.username.strip())
     if not user:
