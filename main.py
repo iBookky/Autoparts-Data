@@ -1976,13 +1976,13 @@ class PlanCreateRequest(BaseModel):
 # 1. Platform Owner Command Center Business Analytics
 @app.get("/api/owner/metrics")
 @app.get("/api/owner/overview")
-async def get_owner_overview_metrics(user = Depends(require_owner)):
-    kpis = OwnerAnalyticsService.get_overview_kpis()
+async def get_owner_overview_metrics(start_date: Optional[str] = None, end_date: Optional[str] = None, user = Depends(require_owner)):
+    kpis = OwnerAnalyticsService.get_overview_kpis(start_date=start_date, end_date=end_date)
     return {"success": True, "metrics": kpis}
 
 @app.get("/api/owner/revenue")
-async def get_owner_revenue_analytics(range_days: int = 30, user = Depends(require_owner)):
-    rev = OwnerAnalyticsService.get_revenue_analytics(range_days=range_days)
+async def get_owner_revenue_analytics(start_date: Optional[str] = None, end_date: Optional[str] = None, range_days: int = 30, user = Depends(require_owner)):
+    rev = OwnerAnalyticsService.get_revenue_analytics(start_date=start_date, end_date=end_date, range_days=range_days)
     return {"success": True, "revenue": rev}
 
 @app.get("/api/owner/customers")
@@ -2004,8 +2004,8 @@ async def get_owner_subscriptions_analytics(user = Depends(require_owner)):
 
 @app.get("/api/owner/usage")
 @app.get("/api/owner/search-analytics")
-async def get_owner_automotive_usage_analytics(user = Depends(require_owner)):
-    usage_data = OwnerAnalyticsService.get_automotive_usage_analytics()
+async def get_owner_automotive_usage_analytics(start_date: Optional[str] = None, end_date: Optional[str] = None, user = Depends(require_owner)):
+    usage_data = OwnerAnalyticsService.get_automotive_usage_analytics(start_date=start_date, end_date=end_date)
     return {"success": True, "usage": usage_data}
 
 @app.get("/api/owner/opportunities")

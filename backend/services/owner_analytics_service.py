@@ -13,9 +13,9 @@ class OwnerAnalyticsService:
     """
 
     @classmethod
-    def get_overview_kpis(cls) -> Dict[str, Any]:
+    def get_overview_kpis(cls, start_date: Optional[str] = None, end_date: Optional[str] = None) -> Dict[str, Any]:
         """
-        Top-level executive KPIs for the Owner Command Center overview.
+        Top-level executive KPIs for the Owner Command Center overview with optional date range filter.
         """
         conn = get_db_connection()
         cursor = conn.cursor()
@@ -79,9 +79,20 @@ class OwnerAnalyticsService:
         crm_trials = cursor.fetchone()["crm_trials"]
         total_trials = max(trial_count, crm_trials)
 
-        # 4. New Customers this month
-        current_month = datetime.datetime.now().strftime("%Y-%m")
-        cursor.execute("SELECT COUNT(*) as new_orgs FROM organizations WHERE strftime('%Y-%m', created_at) = ?", (current_month,))
+        # 4. New Customers in selected period (or this month if no filter)
+        if start_date or end_date:
+            c_where = []
+            c_params = []
+            if start_date:
+                c_where.append("date(created_at) >= date(?)")
+                c_params.append(start_date)
+            if end_date:
+                c_where.append("date(created_at) <= date(?)")
+                c_params.append(end_date)
+            cursor.execute(f"SELECT COUNT(*) as new_orgs FROM organizations WHERE {' AND '.join(c_where)}", tuple(c_params))
+        else:
+            current_month = datetime.datetime.now().strftime("%Y-%m")
+            cursor.execute("SELECT COUNT(*) as new_orgs FROM organizations WHERE strftime('%Y-%m', created_at) = ?", (current_month,))
         new_orgs_count = cursor.fetchone()["new_orgs"]
 
         # 5. Churn Metrics
@@ -102,13 +113,43 @@ class OwnerAnalyticsService:
         """)
         expiring_soon_count = cursor.fetchone()["expiring_soon"]
 
-        # 7. Outstanding Invoices & Failed Payments
-        cursor.execute("SELECT COUNT(*) as cnt, COALESCE(SUM(total_amount), 0) as total FROM invoices WHERE status IN ('OPEN', 'PENDING', 'OVERDUE')")
+        # 7. Outstanding Invoices & Failed Payments (with date filter if specified)
+        inv_where = ["status IN ('OPEN', 'PENDING', 'OVERDUE')"]
+        inv_params = []
+        if start_date:
+            inv_where.append("date(created_at) >= date(?)")
+            inv_params.append(start_date)
+        if end_date:
+            inv_where.append("date(created_at) <= date(?)")
+            inv_params.append(end_date)
+        cursor.execute(f"SELECT COUNT(*) as cnt, COALESCE(SUM(total_amount), 0) as total FROM invoices WHERE {' AND '.join(inv_where)}", tuple(inv_params))
         inv_row = cursor.fetchone()
         outstanding_revenue = inv_row["total"] if inv_row else 0
         outstanding_invoice_count = inv_row["cnt"] if inv_row else 0
 
-        cursor.execute("SELECT COUNT(*) as failed_tx FROM payment_transactions WHERE status = 'FAILED'")
+        # Period Realized Revenue
+        paid_where = ["status = 'PAID'"]
+        paid_params = []
+        if start_date:
+            paid_where.append("date(created_at) >= date(?)")
+            paid_params.append(start_date)
+        if end_date:
+            paid_where.append("date(created_at) <= date(?)")
+            paid_params.append(end_date)
+        cursor.execute(f"SELECT COALESCE(SUM(total_amount), 0) as period_rev, COUNT(id) as paid_cnt FROM invoices WHERE {' AND '.join(paid_where)}", tuple(paid_params))
+        p_row = cursor.fetchone()
+        period_revenue = p_row["period_rev"] if p_row else 0
+        period_paid_invoices = p_row["paid_cnt"] if p_row else 0
+
+        tx_where = ["status = 'FAILED'"]
+        tx_params = []
+        if start_date:
+            tx_where.append("date(created_at) >= date(?)")
+            tx_params.append(start_date)
+        if end_date:
+            tx_where.append("date(created_at) <= date(?)")
+            tx_params.append(end_date)
+        cursor.execute(f"SELECT COUNT(*) as failed_tx FROM payment_transactions WHERE {' AND '.join(tx_where)}", tuple(tx_params))
         failed_payments = cursor.fetchone()["failed_tx"]
 
         conn.close()
@@ -128,28 +169,41 @@ class OwnerAnalyticsService:
             "expiring_in_7_days": expiring_soon_count,
             "outstanding_revenue": outstanding_revenue,
             "outstanding_invoices_count": outstanding_invoice_count,
+            "period_revenue": period_revenue,
+            "period_paid_invoices": period_paid_invoices,
+            "failed_payments_count": failed_payments,
             "mrr_trend_pct": 0.0 if total_mrr == 0 else 12.4, # MoM Growth
-            "customer_growth_pct": 0.0 if total_orgs == 0 else 18.2
+            "customer_growth_pct": 0.0 if total_orgs == 0 else 18.2,
+            "start_date": start_date,
+            "end_date": end_date
         }
 
     @classmethod
-    def get_revenue_analytics(cls, range_days: int = 30) -> Dict[str, Any]:
+    def get_revenue_analytics(cls, start_date: Optional[str] = None, end_date: Optional[str] = None, range_days: int = 30) -> Dict[str, Any]:
         """
-        Detailed revenue reporting, VAT collection, discounts, payment methods and daily time-series trend.
+        Detailed revenue reporting, VAT collection, discounts, payment methods and daily time-series trend with date filtering.
         """
         conn = get_db_connection()
         cursor = conn.cursor()
 
-        # Gross & Net Paid Invoices
-        cursor.execute("""
+        # Gross & Net Paid Invoices with date filter
+        inv_where = ["status = 'PAID'"]
+        inv_params = []
+        if start_date:
+            inv_where.append("date(created_at) >= date(?)")
+            inv_params.append(start_date)
+        if end_date:
+            inv_where.append("date(created_at) <= date(?)")
+            inv_params.append(end_date)
+        cursor.execute(f"""
             SELECT 
                 COALESCE(SUM(total_amount), 0) as gross_revenue,
                 COALESCE(SUM(amount), 0) as net_revenue,
                 COALESCE(SUM(vat_amount), 0) as total_vat,
                 COUNT(id) as paid_invoices_count
             FROM invoices
-            WHERE status = 'PAID'
-        """)
+            WHERE {' AND '.join(inv_where)}
+        """, tuple(inv_params))
         rev_row = cursor.fetchone()
         gross_rev = rev_row["gross_revenue"]
         net_rev = rev_row["net_revenue"]
@@ -157,28 +211,58 @@ class OwnerAnalyticsService:
         paid_inv_count = rev_row["paid_invoices_count"]
 
         # Total Discounts recorded
-        cursor.execute("SELECT COALESCE(SUM(discount_amount), 0) as total_discounts FROM coupon_redemptions")
+        disc_where = []
+        disc_params = []
+        if start_date:
+            disc_where.append("date(created_at) >= date(?)")
+            disc_params.append(start_date)
+        if end_date:
+            disc_where.append("date(created_at) <= date(?)")
+            disc_params.append(end_date)
+        disc_sql = f"WHERE {' AND '.join(disc_where)}" if disc_where else ""
+        cursor.execute(f"SELECT COALESCE(SUM(discount_amount), 0) as total_discounts FROM coupon_redemptions {disc_sql}", tuple(disc_params))
         total_discounts = cursor.fetchone()["total_discounts"]
 
         # Payment Methods breakdown
-        cursor.execute("""
+        pm_where = ["status = 'SUCCESS'"]
+        pm_params = []
+        if start_date:
+            pm_where.append("date(created_at) >= date(?)")
+            pm_params.append(start_date)
+        if end_date:
+            pm_where.append("date(created_at) <= date(?)")
+            pm_params.append(end_date)
+        cursor.execute(f"""
             SELECT payment_method, COUNT(*) as count, COALESCE(SUM(amount), 0) as total
             FROM payment_transactions
-            WHERE status = 'SUCCESS'
+            WHERE {' AND '.join(pm_where)}
             GROUP BY payment_method
-        """)
+        """, tuple(pm_params))
         pm_rows = cursor.fetchall()
         payment_methods = [{"method": r["payment_method"] or "OTHER", "count": r["count"], "total": r["total"]} for r in pm_rows]
 
-        # Daily Revenue Time Series (Last 14-30 days)
-        cursor.execute("""
+        # Daily Revenue Time Series (Filtered or Last N days)
+        trend_where = ["status = 'PAID'"]
+        trend_params = []
+        if start_date:
+            trend_where.append("date(created_at) >= date(?)")
+            trend_params.append(start_date)
+        if end_date:
+            trend_where.append("date(created_at) <= date(?)")
+            trend_params.append(end_date)
+        
+        limit_sql = "" if (start_date or end_date) else "LIMIT ?"
+        if not (start_date or end_date):
+            trend_params.append(range_days)
+
+        cursor.execute(f"""
             SELECT date(created_at) as day_date, SUM(total_amount) as daily_total, COUNT(id) as invoice_count
             FROM invoices
-            WHERE status = 'PAID'
+            WHERE {' AND '.join(trend_where)}
             GROUP BY date(created_at)
             ORDER BY day_date ASC
-            LIMIT ?
-        """, (range_days,))
+            {limit_sql}
+        """, tuple(trend_params))
         trend_rows = cursor.fetchall()
         
         # If trend rows are sparse, generate formatted points
@@ -204,7 +288,9 @@ class OwnerAnalyticsService:
             "total_discounts": total_discounts,
             "paid_invoices_count": paid_inv_count,
             "payment_methods_breakdown": payment_methods,
-            "revenue_trend": revenue_trend
+            "revenue_trend": revenue_trend,
+            "start_date": start_date,
+            "end_date": end_date
         }
 
     @classmethod
@@ -506,33 +592,45 @@ class OwnerAnalyticsService:
         }
 
     @classmethod
-    def get_automotive_usage_analytics(cls) -> Dict[str, Any]:
+    def get_automotive_usage_analytics(cls, start_date: Optional[str] = None, end_date: Optional[str] = None) -> Dict[str, Any]:
         """
-        Automotive search intelligence: search types, success rate, top zero-result queries, top brands and categories.
+        Automotive search intelligence: search types, success rate, top zero-result queries, top brands and categories with date filtering.
         """
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        s_where = []
+        s_params = []
+        if start_date:
+            s_where.append("date(created_at) >= date(?)")
+            s_params.append(start_date)
+        if end_date:
+            s_where.append("date(created_at) <= date(?)")
+            s_params.append(end_date)
+        s_sql = f"WHERE {' AND '.join(s_where)}" if s_where else ""
+
         # Total searches & Success rate
-        cursor.execute("SELECT COUNT(*) as total_searches, COUNT(CASE WHEN results_count > 0 THEN 1 END) as success_searches FROM search_logs")
+        cursor.execute(f"SELECT COUNT(*) as total_searches, COUNT(CASE WHEN results_count > 0 THEN 1 END) as success_searches FROM search_logs {s_sql}", tuple(s_params))
         s_row = cursor.fetchone()
         total_searches = s_row["total_searches"] if s_row else 0
         success_searches = s_row["success_searches"] if s_row else 0
         success_rate_pct = round((success_searches / max(1, total_searches)) * 100, 1) if total_searches > 0 else 100.0
 
         # Search Type breakdown (OEM, SKU, VIN, VEHICLE, CROSS_REF, ADVANCED)
-        cursor.execute("SELECT search_type, COUNT(*) as count FROM search_logs GROUP BY search_type ORDER BY count DESC")
+        cursor.execute(f"SELECT search_type, COUNT(*) as count FROM search_logs {s_sql} GROUP BY search_type ORDER BY count DESC", tuple(s_params))
         search_types = [{"type": r["search_type"] or "GENERAL", "count": r["count"]} for r in cursor.fetchall()]
 
         # Top Zero-Result Queries (identifies catalog gaps)
-        cursor.execute("""
+        z_where = ["results_count = 0"] + s_where
+        z_sql = f"WHERE {' AND '.join(z_where)}"
+        cursor.execute(f"""
             SELECT search_query, search_type, COUNT(*) as search_count, MAX(created_at) as last_queried
             FROM search_logs
-            WHERE results_count = 0
+            {z_sql}
             GROUP BY search_query
             ORDER BY search_count DESC
             LIMIT 10
-        """)
+        """, tuple(s_params))
         zero_results = [dict(r) for r in cursor.fetchall()]
 
         # Top Searched Brands & Categories from queries
