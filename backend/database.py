@@ -72,11 +72,7 @@ def init_db():
             pwd_hash = "43a0d17178a9d26c9e0fe9a74b0b45e38d32f27aed887a008a54bf6e033bf7b9"
             default_seed_users = [
                 ("owner", pwd_hash, "OWNER"),
-                ("superadmin", pwd_hash, "SUPER_ADMIN"),
-                ("admin", pwd_hash, "ADMIN"),
-                ("staff", pwd_hash, "STAFF"),
-                ("customer", pwd_hash, "CUSTOMER"),
-                ("user_starter", pwd_hash, "CUSTOMER")
+                ("superadmin", pwd_hash, "SUPER_ADMIN")
             ]
             for u, p, r in default_seed_users:
                 cursor.execute("INSERT INTO users (username, password, role) VALUES (%s, %s, %s) ON CONFLICT (username) DO NOTHING", (u, p, r))
@@ -280,15 +276,11 @@ def init_db():
         if cursor.fetchone()[0] == 0:
             cursor.execute("UPDATE meta_ai_models SET is_default = 1 WHERE model_name = 'gemini-2.5-flash'")
 
-        # Seed default platform & customer accounts
+        # Seed default platform & customer accounts (Only Owner & SuperAdmin for production)
         pwd_hash = "43a0d17178a9d26c9e0fe9a74b0b45e38d32f27aed887a008a54bf6e033bf7b9" # SHA-256 for admin123
         default_seed_users = [
             ("owner", pwd_hash, "OWNER"),
-            ("superadmin", pwd_hash, "SUPER_ADMIN"),
-            ("admin", pwd_hash, "ADMIN"),
-            ("staff", pwd_hash, "STAFF"),
-            ("customer", pwd_hash, "CUSTOMER"),
-            ("user_starter", pwd_hash, "CUSTOMER")
+            ("superadmin", pwd_hash, "SUPER_ADMIN")
         ]
         for u, p, r in default_seed_users:
             cursor.execute("INSERT OR IGNORE INTO users (username, password, role) VALUES (?, ?, ?)", (u, p, r))
@@ -3472,41 +3464,129 @@ def clean_production_database() -> Dict[str, Any]:
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        # Clean parts catalogs
-        cursor.execute("DELETE FROM master_parts")
-        cursor.execute("DELETE FROM temp_parts")
-        cursor.execute("DELETE FROM cross_reference_relations")
+        # 1. Clean Revenue, Invoices, and Billing Transactions
+        try: cursor.execute("DELETE FROM invoice_items")
+        except Exception: pass
+        try: cursor.execute("DELETE FROM invoices")
+        except Exception: pass
+        try: cursor.execute("DELETE FROM payment_transactions")
+        except Exception: pass
+        try: cursor.execute("DELETE FROM subscription_items")
+        except Exception: pass
+        try: cursor.execute("DELETE FROM subscription_entitlements_snapshot")
+        except Exception: pass
+        try: cursor.execute("DELETE FROM customer_subscriptions")
+        except Exception: pass
+        try: cursor.execute("DELETE FROM subscriptions")
+        except Exception: pass
+        try: cursor.execute("DELETE FROM coupon_redemptions")
+        except Exception: pass
         
-        # Clean search logs and usage records
-        cursor.execute("DELETE FROM search_logs")
-        cursor.execute("DELETE FROM user_favorites")
-        cursor.execute("DELETE FROM ai_usage_stats")
+        # 2. Clean Customers & Organizations
+        try: cursor.execute("DELETE FROM organization_invitations")
+        except Exception: pass
+        try: cursor.execute("DELETE FROM organization_members")
+        except Exception: pass
+        try: cursor.execute("DELETE FROM customer_organizations")
+        except Exception: pass
+        try: cursor.execute("DELETE FROM organizations")
+        except Exception: pass
+        try: cursor.execute("DELETE FROM crm_leads")
+        except Exception: pass
+        try: cursor.execute("DELETE FROM customer_leads")
+        except Exception: pass
         
-        # Clean demo customer leads
-        cursor.execute("DELETE FROM customer_leads WHERE email NOT LIKE '%@autocentric.net'")
+        # 3. Clean Usage Logs, Search Analytics, and AI Stats
+        try: cursor.execute("DELETE FROM usage_logs")
+        except Exception: pass
+        try: cursor.execute("DELETE FROM usage_records")
+        except Exception: pass
+        try: cursor.execute("DELETE FROM search_analytics")
+        except Exception: pass
+        try: cursor.execute("DELETE FROM search_logs")
+        except Exception: pass
+        try: cursor.execute("DELETE FROM user_favorites")
+        except Exception: pass
+        try: cursor.execute("DELETE FROM ai_usage_stats")
+        except Exception: pass
         
-        # Clean test owner alerts
-        cursor.execute("DELETE FROM owner_alerts")
+        # 4. Clean Alerts & Audit Logs
+        try: cursor.execute("DELETE FROM owner_alerts")
+        except Exception: pass
+        try: cursor.execute("DELETE FROM platform_audit_logs")
+        except Exception: pass
+        try: cursor.execute("DELETE FROM commercial_audit_logs")
+        except Exception: pass
+        try: cursor.execute("DELETE FROM organization_audit_logs")
+        except Exception: pass
         
-        # Clean test audit logs
-        cursor.execute("DELETE FROM platform_audit_logs")
-        cursor.execute("DELETE FROM commercial_audit_logs")
-        cursor.execute("DELETE FROM organization_audit_logs")
+        # 5. Clean Temp / Pending Parts (Keep Master Parts Catalog intact)
+        try: cursor.execute("DELETE FROM temp_parts")
+        except Exception: pass
         
-        # Reset autoincrement sequences
+        # 6. Clean Staff, Admin, Customer Users (Keep ONLY Owner & SuperAdmin)
+        try: cursor.execute("DELETE FROM users WHERE LOWER(username) NOT IN ('owner', 'superadmin')")
+        except Exception: pass
+        
+        # Ensure Owner and SuperAdmin accounts exist with password admin123
+        try:
+            pwd_hash = hashlib.sha256("admin123".encode("utf-8")).hexdigest()
+            # Owner
+            cursor.execute("SELECT id FROM users WHERE LOWER(username) = 'owner'")
+            if not cursor.fetchone():
+                try:
+                    cursor.execute(
+                        "INSERT INTO users (username, password, role, email) VALUES (?, ?, ?, ?)",
+                        ("owner", pwd_hash, "OWNER", "owner@autocentric.net")
+                    )
+                except Exception:
+                    cursor.execute(
+                        "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
+                        ("owner", pwd_hash, "OWNER")
+                    )
+            else:
+                cursor.execute("UPDATE users SET password = ?, role = 'OWNER' WHERE LOWER(username) = 'owner'", (pwd_hash,))
+                
+            # Superadmin
+            cursor.execute("SELECT id FROM users WHERE LOWER(username) = 'superadmin'")
+            if not cursor.fetchone():
+                try:
+                    cursor.execute(
+                        "INSERT INTO users (username, password, role, email) VALUES (?, ?, ?, ?)",
+                        ("superadmin", pwd_hash, "SUPER_ADMIN", "superadmin@autocentric.net")
+                    )
+                except Exception:
+                    cursor.execute(
+                        "INSERT INTO users (username, password, role) VALUES (?, ?, ?)",
+                        ("superadmin", pwd_hash, "SUPER_ADMIN")
+                    )
+            else:
+                cursor.execute("UPDATE users SET password = ?, role = 'SUPER_ADMIN' WHERE LOWER(username) = 'superadmin'", (pwd_hash,))
+        except Exception as u_err:
+            print(f"Error ensuring owner/superadmin: {u_err}")
+        
+        # 7. Reset Sequences
         try:
             if is_postgres_mode():
-                cursor.execute("ALTER SEQUENCE IF EXISTS master_parts_id_seq RESTART WITH 1")
+                cursor.execute("ALTER SEQUENCE IF EXISTS invoices_id_seq RESTART WITH 1")
+                cursor.execute("ALTER SEQUENCE IF EXISTS payment_transactions_id_seq RESTART WITH 1")
+                cursor.execute("ALTER SEQUENCE IF EXISTS customer_subscriptions_id_seq RESTART WITH 1")
+                cursor.execute("ALTER SEQUENCE IF EXISTS customer_organizations_id_seq RESTART WITH 1")
+                cursor.execute("ALTER SEQUENCE IF EXISTS organization_members_id_seq RESTART WITH 1")
+                cursor.execute("ALTER SEQUENCE IF EXISTS crm_leads_id_seq RESTART WITH 1")
+                cursor.execute("ALTER SEQUENCE IF EXISTS usage_logs_id_seq RESTART WITH 1")
                 cursor.execute("ALTER SEQUENCE IF EXISTS temp_parts_id_seq RESTART WITH 1")
-                cursor.execute("ALTER SEQUENCE IF EXISTS cross_reference_relations_id_seq RESTART WITH 1")
-                cursor.execute("ALTER SEQUENCE IF EXISTS search_logs_id_seq RESTART WITH 1")
             else:
-                cursor.execute("DELETE FROM sqlite_sequence WHERE name IN ('master_parts', 'temp_parts', 'cross_reference_relations', 'search_logs')")
+                cursor.execute("DELETE FROM sqlite_sequence WHERE name IN ('invoices', 'payment_transactions', 'customer_subscriptions', 'customer_organizations', 'organization_members', 'crm_leads', 'usage_logs', 'temp_parts')")
         except Exception as sq_e:
             print(f"Note on sequence reset: {sq_e}")
             
         conn.commit()
-        return {"success": True, "message": "Production database cleaned and ready for inventory setup."}
+        return {
+            "success": True,
+            "message": "ล้างข้อมูลรายได้, ลูกค้า, บันทึกการใช้งาน และผู้ใช้ทดสอบเรียบร้อยแล้ว (คงเหลือเฉพาะบัญชี Owner และ SuperAdmin เพื่อให้ Owner เริ่มสร้างทีมงานและลูกค้าจริง)",
+            "preserved_accounts": ["owner", "superadmin"]
+        }
     except Exception as e:
         conn.rollback()
         print(f"Error in clean_production_database: {e}")

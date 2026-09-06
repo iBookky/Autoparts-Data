@@ -126,12 +126,10 @@ CREATE INDEX IF NOT EXISTS idx_master_search ON master_parts(part_number, oem_nu
 CREATE INDEX IF NOT EXISTS idx_temp_status ON temp_parts(status, created_at);
 CREATE INDEX IF NOT EXISTS idx_users_username ON users(username);
 
--- Seed default users:
+-- Seed default users (Only Owner & SuperAdmin for production):
 INSERT OR IGNORE INTO users (username, password, role) VALUES 
-('owner', '43a0d17178a9d26c9e0fe9a74b0b45e38d32f27aed887a008a54bf6e033bf7b9', 'SUPER_ADMIN'),
-('superadmin', 'e34f92a20532a873cb3184398070b4b82a8fa29cf48572c203dc5f0fa6158231', 'SUPER_ADMIN'),
-('admin', '240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9', 'ADMIN'),
-('staff', '10176e7b7b24d317acfcf8d2064cfd2f24e154f7b5a96603077d5ef813d6a6b6', 'STAFF');
+('owner', '43a0d17178a9d26c9e0fe9a74b0b45e38d32f27aed887a008a54bf6e033bf7b9', 'OWNER'),
+('superadmin', '43a0d17178a9d26c9e0fe9a74b0b45e38d32f27aed887a008a54bf6e033bf7b9', 'SUPER_ADMIN');
 
 -- Seed Aftermarket Brands
 INSERT OR IGNORE INTO meta_aftermarket_brands (name) VALUES 

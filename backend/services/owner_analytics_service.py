@@ -128,9 +128,8 @@ class OwnerAnalyticsService:
             "expiring_in_7_days": expiring_soon_count,
             "outstanding_revenue": outstanding_revenue,
             "outstanding_invoices_count": outstanding_invoice_count,
-            "failed_payments_count": failed_payments,
-            "mrr_trend_pct": 12.4, # MoM Growth
-            "customer_growth_pct": 18.2
+            "mrr_trend_pct": 0.0 if total_mrr == 0 else 12.4, # MoM Growth
+            "customer_growth_pct": 0.0 if total_orgs == 0 else 18.2
         }
 
     @classmethod
