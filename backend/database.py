@@ -11,13 +11,25 @@ if DB_PATH.startswith("sqlite:///"):
 elif DB_PATH.startswith("sqlite://"):
     DB_PATH = DB_PATH.replace("sqlite://", "")
 
+_pg_available = None
+
 def is_postgres_mode() -> bool:
-    return bool(DATABASE_URL and (DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgres://")))
+    global _pg_available
+    if not DATABASE_URL or not (DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgres://")):
+        return False
+    if _pg_available is False:
+        return False
+    return True
 
 def get_db_connection():
+    global _pg_available
     if is_postgres_mode():
-        from backend.pg_adapter import get_pg_connection
-        return get_pg_connection()
+        try:
+            from backend.pg_adapter import get_pg_connection
+            return get_pg_connection()
+        except Exception as e:
+            print(f"⚠️ [Database] PostgreSQL connection failed: {e}. Falling back to SQLite...")
+            _pg_available = False
 
     db_dir = os.path.dirname(DB_PATH)
     if db_dir and not os.path.exists(db_dir):
@@ -40,9 +52,10 @@ def get_db_connection():
 
 def init_db():
     """Reads migration schemas and initializes database tables (PostgreSQL or SQLite)."""
+    global _pg_available
     if is_postgres_mode():
-        conn = get_db_connection()
         try:
+            conn = get_db_connection()
             migrations_dir = os.path.join(os.path.dirname(__file__), "migrations_pg")
             if not os.path.exists(migrations_dir):
                 migrations_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend", "migrations_pg"))
@@ -69,13 +82,12 @@ def init_db():
                 cursor.execute("INSERT INTO users (username, password, role) VALUES (%s, %s, %s) ON CONFLICT (username) DO NOTHING", (u, p, r))
             conn.commit()
             print("PostgreSQL database initialized successfully with all migrations.")
-        except Exception as e:
-            print(f"Error initializing PostgreSQL database: {e}")
-            conn.rollback()
-            raise e
-        finally:
             conn.close()
-        return
+            return
+        except Exception as e:
+            print(f"⚠️ [Database] Could not initialize PostgreSQL: {e}. Falling back to SQLite...")
+            _pg_available = False
+
 
     migrations = [
         "001_init_schema.sql",

@@ -30,7 +30,7 @@ COPY requirements.txt .
 RUN pip install --no-cache-dir --upgrade pip && \
     pip install --no-cache-dir -r requirements.txt
 
-# Copy application files
+# Copy application files and pre-seeded database
 COPY backend/ ./backend/
 COPY frontend/ ./frontend/
 COPY docs/ ./docs/
@@ -40,12 +40,16 @@ COPY scraper.py ./
 COPY sheets_helper.py ./
 COPY view_db.py ./
 COPY migrate_sqlite_to_pg.py ./
+COPY init_database.py ./
 COPY entrypoint.sh ./
+COPY parts_cross_ref.db ./parts_cross_ref.db
 
 # Create data directory for persistence and grant read/write permissions
 RUN mkdir -p /app/data && \
+    cp /app/parts_cross_ref.db /app/data/parts_cross_ref.db 2>/dev/null || true && \
     chmod +x /app/entrypoint.sh && \
-    chmod -R 777 /app/data
+    chmod -R 777 /app/data /app/parts_cross_ref.db* 2>/dev/null || true
+
 
 
 # Expose HTTP port

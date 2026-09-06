@@ -14,14 +14,12 @@ venv/
 env/
 .env
 
-# Ignore Local Databases & Backups
-data/
+# Ignore Local Temporary Backups
 backups/
-*.db
-*.sqlite3
 *.tar
 *.tar.gz
 logs/
+
 
 # Ignore Documentation & Scratch Test Files
 scratch/
