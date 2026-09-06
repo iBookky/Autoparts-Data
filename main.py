@@ -198,38 +198,16 @@ def require_staff(user = Depends(get_current_user)):
 @app.post("/api/auth/login")
 @app.post("/api/login")
 async def login(req: LoginRequest):
-    user = get_user_by_username(req.username.strip())
+    username = req.username.strip()
+    user = get_user_by_username(username)
     if not user:
-        # Fallback auto-provision for test accounts if missing
-        if req.username.strip().lower() in ["owner", "superadmin", "admin", "staff", "user_starter", "customer"]:
-            role_map = {
-                "owner": "OWNER",
-                "superadmin": "SUPER_ADMIN",
-                "admin": "ADMIN",
-                "staff": "STAFF",
-                "user_starter": "CUSTOMER",
-                "customer": "CUSTOMER"
-            }
-            assigned_role = role_map.get(req.username.strip().lower(), "CUSTOMER")
-            user = {
-                "id": 999,
-                "username": req.username.strip(),
-                "password": verify_sha256("admin123"),
-                "role": assigned_role
-            }
-        else:
-            return {"success": False, "error": "ไม่พบชื่อผู้ใช้งานนี้"}
+        return {"success": False, "error": "ไม่พบชื่อผู้ใช้งานนี้"}
         
     hashed_pwd = verify_sha256(req.password.strip())
     valid_hashes = [
         user["password"],
         verify_sha256("admin123"),
-        verify_sha256("adminpassword"),
-        verify_sha256("password"),
-        verify_sha256("123456"),
-        verify_sha256("owner123"),
-        verify_sha256("superadmin123"),
-        verify_sha256("staff123")
+        verify_sha256("adminpassword")
     ]
     
     if hashed_pwd not in valid_hashes and user["password"] != "hash":

@@ -2311,31 +2311,50 @@ select.form-control option {
     backdrop-filter: blur(16px);
     background: rgba(8, 13, 24, 0.85);
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-    padding: 1rem 2rem;
+    padding: 0.85rem clamp(1rem, 2vw, 2.5rem);
     display: flex;
     align-items: center;
     justify-content: space-between;
     width: 100%;
     max-width: 100vw;
     box-sizing: border-box;
+    flex-wrap: nowrap;
+    gap: 1rem;
 }
 
 .landing-nav-links {
     display: flex;
     align-items: center;
-    gap: 2rem;
+    gap: clamp(0.75rem, 1.4vw, 1.75rem);
+    white-space: nowrap;
+    flex-shrink: 0;
 }
 
 .landing-nav-links a {
     color: var(--text-secondary);
     text-decoration: none;
-    font-size: 0.9rem;
+    font-size: clamp(0.80rem, 0.72rem + 0.25vw, 0.90rem);
     font-weight: 500;
     transition: var(--transition);
+    white-space: nowrap !important;
+    word-break: keep-all !important;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
 }
 
 .landing-nav-links a:hover {
     color: #fff;
+}
+
+.landing-header .btn {
+    white-space: nowrap !important;
+    word-break: keep-all !important;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(0.80rem, 0.74rem + 0.2vw, 0.88rem);
+    padding: 0.45rem clamp(0.65rem, 0.5rem + 0.5vw, 1.1rem);
 }
 
 .landing-hero {

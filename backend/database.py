@@ -4,13 +4,21 @@ import hashlib
 from datetime import datetime
 from typing import Optional, List, Dict, Any, Tuple
 
-DB_PATH = os.environ.get("DB_PATH", os.environ.get("DATABASE_URL", "parts_cross_ref.db"))
+DATABASE_URL = os.environ.get("DATABASE_URL", os.environ.get("POSTGRES_URL", ""))
+DB_PATH = os.environ.get("DB_PATH", "parts_cross_ref.db")
 if DB_PATH.startswith("sqlite:///"):
     DB_PATH = DB_PATH.replace("sqlite:///", "")
 elif DB_PATH.startswith("sqlite://"):
     DB_PATH = DB_PATH.replace("sqlite://", "")
 
+def is_postgres_mode() -> bool:
+    return bool(DATABASE_URL and (DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgres://")))
+
 def get_db_connection():
+    if is_postgres_mode():
+        from backend.pg_adapter import get_pg_connection
+        return get_pg_connection()
+
     db_dir = os.path.dirname(DB_PATH)
     if db_dir and not os.path.exists(db_dir):
         try:
@@ -31,7 +39,44 @@ def get_db_connection():
     return conn
 
 def init_db():
-    """Reads migration schemas and initializes database tables."""
+    """Reads migration schemas and initializes database tables (PostgreSQL or SQLite)."""
+    if is_postgres_mode():
+        conn = get_db_connection()
+        try:
+            migrations_dir = os.path.join(os.path.dirname(__file__), "migrations_pg")
+            if not os.path.exists(migrations_dir):
+                migrations_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend", "migrations_pg"))
+            if os.path.exists(migrations_dir):
+                migration_files = sorted([f for f in os.listdir(migrations_dir) if f.endswith(".sql")])
+                for mf in migration_files:
+                    mf_path = os.path.join(migrations_dir, mf)
+                    with open(mf_path, "r", encoding="utf-8") as f:
+                        sql = f.read()
+                    conn.executescript(sql)
+                    conn.commit()
+
+            cursor = conn.cursor()
+            pwd_hash = "43a0d17178a9d26c9e0fe9a74b0b45e38d32f27aed887a008a54bf6e033bf7b9"
+            default_seed_users = [
+                ("owner", pwd_hash, "OWNER"),
+                ("superadmin", pwd_hash, "SUPER_ADMIN"),
+                ("admin", pwd_hash, "ADMIN"),
+                ("staff", pwd_hash, "STAFF"),
+                ("customer", pwd_hash, "CUSTOMER"),
+                ("user_starter", pwd_hash, "CUSTOMER")
+            ]
+            for u, p, r in default_seed_users:
+                cursor.execute("INSERT INTO users (username, password, role) VALUES (%s, %s, %s) ON CONFLICT (username) DO NOTHING", (u, p, r))
+            conn.commit()
+            print("PostgreSQL database initialized successfully with all migrations.")
+        except Exception as e:
+            print(f"Error initializing PostgreSQL database: {e}")
+            conn.rollback()
+            raise e
+        finally:
+            conn.close()
+        return
+
     migrations = [
         "001_init_schema.sql",
         "002_saas_commercial_layer.sql",

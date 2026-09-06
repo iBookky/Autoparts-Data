@@ -1,6 +1,30 @@
 version: '3.8'
 
 services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: autoparts-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=autoparts_user
+      - POSTGRES_PASSWORD=autoparts_secure_pass123
+      - POSTGRES_DB=autoparts_db
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U autoparts_user -d autoparts_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
   app:
     build:
       context: .
@@ -9,12 +33,15 @@ services:
     restart: unless-stopped
     ports:
       - "${PORT:-8000}:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
     volumes:
-      # Persistent SQLite Data Directory
+      # Persistent App Data Directory
       - ./data:/app/data
     environment:
       - PORT=8000
-      - DB_PATH=/app/data/parts_cross_ref.db
+      - DATABASE_URL=postgresql://autoparts_user:autoparts_secure_pass123@postgres:5432/autoparts_db
       - ENVIRONMENT=production
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
       - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
@@ -33,3 +60,4 @@ services:
       options:
         max-size: "10m"
         max-file: "3"
+

@@ -48,10 +48,6 @@
                     <button type="button" class="lang-btn lang-btn-th active" onclick="setAppLanguage('th')">TH</button>
                     <button type="button" class="lang-btn lang-btn-en" onclick="setAppLanguage('en')">EN</button>
                 </div>
-                <!-- Clear Cache Button -->
-                <button type="button" class="btn btn-secondary btn-sm" onclick="clearAllCacheAndReset()" style="padding: 0.4rem 0.6rem; font-size: 0.8rem; border-color: rgba(255,255,255,0.15);" title="ล้างแคชและรีเซ็ตระบบทั้งหมด">
-                    <i class="fa-solid fa-broom"></i> <span style="font-size: 0.75rem;">Clear Cache</span>
-                </button>
                 <button class="btn btn-outline" onclick="showAuthScreen()" style="padding: 0.5rem 1rem; font-size: 0.88rem;">
                     <i class="fa-solid fa-arrow-right-to-bracket"></i> <span data-i18n="landing.nav.signin">เข้าสู่ระบบ</span>
                 </button>
@@ -389,35 +385,7 @@
                 </button>
             </form>
 
-            <!-- ONE-CLICK DEMO LOGIN SELECTOR -->
-            <div style="margin-top: 1.25rem; padding: 0.85rem; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-md); text-align: left; box-sizing: border-box; width: 100%;">
-                <div style="font-size: 0.75rem; font-weight: 700; color: var(--text-secondary); margin-bottom: 0.6rem; display: flex; align-items: center; justify-content: space-between;">
-                    <span><i class="fa-solid fa-bolt" style="color: #F59E0B;"></i> บัญชีทดสอบระบบ (Quick Login)</span>
-                    <span style="font-size: 0.7rem; color: var(--text-muted);">Pass: admin123</span>
-                </div>
-                <div style="display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.45rem; margin-bottom: 0.45rem; width: 100%; box-sizing: border-box;">
-                    <button type="button" class="btn btn-sm btn-secondary" onclick="quickLogin('owner', 'admin123')" style="font-size: 0.75rem; justify-content: flex-start; padding: 0.4rem 0.6rem; border-color: rgba(245, 158, 11, 0.3); width: 100%; min-width: 0; box-sizing: border-box;">
-                        <span>👑</span> <strong style="color: #F59E0B; margin-left: 0.25rem;">Owner</strong> <span style="font-size: 0.68rem; color: var(--text-muted); margin-left: auto;">Cockpit</span>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-secondary" onclick="quickLogin('superadmin', 'admin123')" style="font-size: 0.75rem; justify-content: flex-start; padding: 0.4rem 0.6rem; border-color: rgba(139, 92, 246, 0.3); width: 100%; min-width: 0; box-sizing: border-box;">
-                        <span>🛡️</span> <strong style="color: #A78BFA; margin-left: 0.25rem;">SuperAdmin</strong> <span style="font-size: 0.68rem; color: var(--text-muted); margin-left: auto;">Platform</span>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-secondary" onclick="quickLogin('admin', 'admin123')" style="font-size: 0.75rem; justify-content: flex-start; padding: 0.4rem 0.6rem; border-color: rgba(59, 130, 246, 0.3); width: 100%; min-width: 0; box-sizing: border-box;">
-                        <span>⚙️</span> <strong style="color: #60A5FA; margin-left: 0.25rem;">Admin</strong> <span style="font-size: 0.68rem; color: var(--text-muted); margin-left: auto;">Ops</span>
-                    </button>
-                    <button type="button" class="btn btn-sm btn-secondary" onclick="quickLogin('staff', 'admin123')" style="font-size: 0.75rem; justify-content: flex-start; padding: 0.4rem 0.6rem; border-color: rgba(16, 185, 129, 0.3); width: 100%; min-width: 0; box-sizing: border-box;">
-                        <span>💼</span> <strong style="color: #34D399; margin-left: 0.25rem;">Staff</strong> <span style="font-size: 0.68rem; color: var(--text-muted); margin-left: auto;">CRM</span>
-                    </button>
-                </div>
-                <button type="button" class="btn btn-sm btn-secondary" onclick="quickLogin('user_starter', 'admin123')" style="width: 100%; min-width: 0; box-sizing: border-box; font-size: 0.75rem; justify-content: center; padding: 0.45rem 0.6rem; border-color: rgba(56, 189, 248, 0.3); margin-bottom: 0.45rem;">
-                    <span>👤</span> <strong style="color: #38BDF8; margin-left: 0.25rem;">Customer / Garage</strong> <span style="font-size: 0.68rem; color: var(--text-muted); margin-left: 0.4rem;">(Starter Plan Simulation)</span>
-                </button>
-                <button type="button" class="btn btn-sm btn-outline" onclick="clearAllCacheAndReset()" style="width: 100%; min-width: 0; box-sizing: border-box; font-size: 0.72rem; justify-content: center; padding: 0.35rem 0.5rem; color: var(--text-muted); border-color: rgba(255,255,255,0.1);">
-                    <i class="fa-solid fa-broom"></i> <span style="margin-left: 0.35rem;">ล้างแคชและเริ่มใหม่ (Clear Cache & Reset)</span>
-                </button>
-            </div>
-
-            <div style="margin-top: 1.25rem; text-align: center; font-size: 0.85rem; color: var(--text-secondary);">
+            <div style="margin-top: 1.5rem; text-align: center; font-size: 0.85rem; color: var(--text-secondary);">
                 <span data-i18n="auth.noAccount">ยังไม่มีบัญชีใช้งาน?</span> <a href="javascript:void(0)" onclick="openTrialModal()" style="color: var(--primary); font-weight: 600; text-decoration: none;" data-i18n="auth.startTrial">สมัครทดลองใช้ฟรี 14 วัน</a>
             </div>
         </div>
@@ -601,48 +569,15 @@
                             <span class="badge" id="header-user-role-badge" style="background: rgba(139,92,246,0.25); color: #C084FC; font-size: 0.68rem; padding: 0.15rem 0.4rem; border-radius: 4px;">OWNER</span>
                             <i class="fa-solid fa-chevron-down" style="font-size: 0.6rem; color: var(--text-muted);"></i>
                         </button>
-                        <div id="role-switcher-menu" style="display: none; position: absolute; top: calc(100% + 6px); right: 0; background: #131c2e; border: 1px solid rgba(255,255,255,0.15); border-radius: var(--radius-md); box-shadow: 0 12px 30px rgba(0,0,0,0.65); min-width: 250px; z-index: 1000; padding: 0.5rem; text-align: left;">
-                            <div style="font-size: 0.7rem; font-weight: 700; color: var(--text-muted); padding: 0.3rem 0.5rem; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; justify-content: space-between;">
-                                <span>สลับบทบาท (Switch Role)</span>
-                                <span style="font-size: 0.65rem; color: #10B981;">● Online</span>
+                        <div id="role-switcher-menu" style="display: none; position: absolute; top: calc(100% + 6px); right: 0; background: #131c2e; border: 1px solid rgba(255,255,255,0.15); border-radius: var(--radius-md); box-shadow: 0 12px 30px rgba(0,0,0,0.65); min-width: 220px; z-index: 1000; padding: 0.75rem; text-align: left;">
+                            <div style="display: flex; align-items: center; gap: 0.6rem; padding-bottom: 0.6rem; border-bottom: 1px solid rgba(255,255,255,0.1); margin-bottom: 0.6rem;">
+                                <div class="user-avatar-circle" id="profile-menu-avatar" style="width: 32px; height: 32px; font-size: 0.85rem;">U</div>
+                                <div>
+                                    <div style="font-weight: 700; font-size: 0.88rem; color: #fff;" id="profile-menu-username">User</div>
+                                    <div style="font-size: 0.72rem; color: var(--text-muted);" id="profile-menu-role">Authenticated</div>
+                                </div>
                             </div>
-                            <button type="button" class="role-switch-item" onclick="quickLogin('owner', 'admin123'); closeRoleDropdown();" style="width: 100%; display: flex; align-items: center; gap: 0.5rem; padding: 0.45rem 0.6rem; border: none; background: transparent; color: #fff; border-radius: 4px; font-size: 0.78rem; cursor: pointer; text-align: left;" onmouseover="this.style.background='rgba(245,158,11,0.1)'" onmouseout="this.style.background='transparent'">
-                                <span style="font-size: 1.05rem;">👑</span>
-                                <div>
-                                    <div style="font-weight: 700; color: #F59E0B;">System Owner</div>
-                                    <div style="font-size: 0.68rem; color: var(--text-muted);">Command Center & Business BI</div>
-                                </div>
-                            </button>
-                            <button type="button" class="role-switch-item" onclick="quickLogin('superadmin', 'admin123'); closeRoleDropdown();" style="width: 100%; display: flex; align-items: center; gap: 0.5rem; padding: 0.45rem 0.6rem; border: none; background: transparent; color: #fff; border-radius: 4px; font-size: 0.78rem; cursor: pointer; text-align: left;" onmouseover="this.style.background='rgba(139,92,246,0.1)'" onmouseout="this.style.background='transparent'">
-                                <span style="font-size: 1.05rem;">🛡️</span>
-                                <div>
-                                    <div style="font-weight: 700; color: #A78BFA;">Super Admin</div>
-                                    <div style="font-size: 0.68rem; color: var(--text-muted);">Platform & Data Center</div>
-                                </div>
-                            </button>
-                            <button type="button" class="role-switch-item" onclick="quickLogin('admin', 'admin123'); closeRoleDropdown();" style="width: 100%; display: flex; align-items: center; gap: 0.5rem; padding: 0.45rem 0.6rem; border: none; background: transparent; color: #fff; border-radius: 4px; font-size: 0.78rem; cursor: pointer; text-align: left;" onmouseover="this.style.background='rgba(59,130,246,0.1)'" onmouseout="this.style.background='transparent'">
-                                <span style="font-size: 1.05rem;">⚙️</span>
-                                <div>
-                                    <div style="font-weight: 700; color: #60A5FA;">Operations Admin</div>
-                                    <div style="font-size: 0.68rem; color: var(--text-muted);">Review Queue & Master Catalog</div>
-                                </div>
-                            </button>
-                            <button type="button" class="role-switch-item" onclick="quickLogin('staff', 'admin123'); closeRoleDropdown();" style="width: 100%; display: flex; align-items: center; gap: 0.5rem; padding: 0.45rem 0.6rem; border: none; background: transparent; color: #fff; border-radius: 4px; font-size: 0.78rem; cursor: pointer; text-align: left;" onmouseover="this.style.background='rgba(16,185,129,0.1)'" onmouseout="this.style.background='transparent'">
-                                <span style="font-size: 1.05rem;">💼</span>
-                                <div>
-                                    <div style="font-weight: 700; color: #34D399;">Staff Workspace</div>
-                                    <div style="font-size: 0.68rem; color: var(--text-muted);">CRM Leads & Sales Queue</div>
-                                </div>
-                            </button>
-                            <button type="button" class="role-switch-item" onclick="quickLogin('user_starter', 'admin123'); closeRoleDropdown();" style="width: 100%; display: flex; align-items: center; gap: 0.5rem; padding: 0.45rem 0.6rem; border: none; background: transparent; color: #fff; border-radius: 4px; font-size: 0.78rem; cursor: pointer; text-align: left;" onmouseover="this.style.background='rgba(56,189,248,0.1)'" onmouseout="this.style.background='transparent'">
-                                <span style="font-size: 1.05rem;">👤</span>
-                                <div>
-                                    <div style="font-weight: 700; color: #38BDF8;">Customer (Starter)</div>
-                                    <div style="font-size: 0.68rem; color: var(--text-muted);">Parts Search & Cross Reference</div>
-                                </div>
-                            </button>
-                            <div style="border-top: 1px solid rgba(255,255,255,0.1); margin: 0.35rem 0;"></div>
-                            <button type="button" onclick="handleLogout(); closeRoleDropdown();" class="btn btn-danger btn-sm" style="width: 100%; font-size: 0.78rem; padding: 0.45rem 0.6rem; justify-content: center; background: rgba(239,68,68,0.15); color: #EF4444; border-color: rgba(239,68,68,0.3);">
+                            <button type="button" onclick="handleLogout(); closeRoleDropdown();" class="btn btn-danger btn-sm" style="width: 100%; font-size: 0.82rem; padding: 0.5rem 0.75rem; justify-content: center; background: rgba(239,68,68,0.15); color: #EF4444; border-color: rgba(239,68,68,0.3);">
                                 <i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ (Log Out)
                             </button>
                         </div>

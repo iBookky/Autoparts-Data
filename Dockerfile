@@ -16,6 +16,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     sqlite3 \
+    postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
 # Create dedicated non-root user and group
@@ -37,12 +38,15 @@ COPY index.html ./
 COPY main.py ./
 COPY scraper.py ./
 COPY sheets_helper.py ./
+COPY view_db.py ./
+COPY migrate_sqlite_to_pg.py ./
 COPY entrypoint.sh ./
 
-# Create data directory for SQLite persistence and grant read/write permissions
+# Create data directory for persistence and grant read/write permissions
 RUN mkdir -p /app/data && \
     chmod +x /app/entrypoint.sh && \
     chmod -R 777 /app/data
+
 
 # Expose HTTP port
 EXPOSE 8000
