@@ -165,30 +165,7 @@ INSERT OR IGNORE INTO role_permissions (role_id, permission_id) VALUES
 
 -- Link Users to Roles
 INSERT OR IGNORE INTO user_roles (user_id, role_id, scope_type)
-SELECT id, 'owner', 'GLOBAL' FROM users WHERE username = 'superadmin';
+SELECT id, 'owner', 'GLOBAL' FROM users WHERE username = 'owner';
 
 INSERT OR IGNORE INTO user_roles (user_id, role_id, scope_type)
 SELECT id, 'super_admin', 'GLOBAL' FROM users WHERE username = 'superadmin';
-
-INSERT OR IGNORE INTO user_roles (user_id, role_id, scope_type)
-SELECT id, 'admin', 'GLOBAL' FROM users WHERE username = 'admin';
-
-INSERT OR IGNORE INTO user_roles (user_id, role_id, scope_type)
-SELECT id, 'staff_sales', 'GLOBAL' FROM users WHERE username = 'staff';
-
--- Seed Sample CRM Pipeline Leads
-INSERT OR IGNORE INTO customer_leads (id, company_name, contact_person, email, phone, pipeline_stage, interested_plan_id, expected_mrr, notes) VALUES
-(1, 'Bangkok Auto Services Group', 'Khun Somchai Prasert', 'somchai@bkkgt.co.th', '081-998-1122', 'LEAD', 'professional', 2990, 'Interested in Toyota & Isuzu brake parts data'),
-(2, 'Siam Tuning & Workshop', 'Khun Wiroj R.', 'wiroj@siamtuning.com', '089-776-5544', 'CONTACTED', 'professional', 2990, 'Sent product brochure and schedule live demo'),
-(3, 'FastFit Garage Network (15 Branches)', 'Khun Natthapong C.', 'natthapong@fastfit.net', '02-888-9900', 'DEMO', 'business', 5990, 'Completed online demo; interested in API integration with internal ERP'),
-(4, 'Chonburi Automotive Parts Wholesale', 'Khun Anan S.', 'anan@chonburiparts.com', '038-444-555', 'TRIAL', 'business', 5990, 'Currently on 14-day trial (Expiring in 5 days)'),
-(5, 'Apex Auto Parts Distribution', 'Khun Kanchit T.', 'admin@apexparts.com', '02-123-4567', 'SUBSCRIBED', 'business', 5990, 'Subscribed to Business Plan + AI Power Pack');
-
--- Seed Typed Cross-References Sample
-INSERT OR IGNORE INTO cross_reference_relations (source_brand, source_part_number, target_brand, target_part_number, relation_type, confidence_score, verification_status, notes) VALUES
-('TRW', 'GDB3534UT', 'TOYOTA', '04465-0K360', 'EQUIVALENT', 1.0, 'VERIFIED', 'Direct OE replacement brake pads for Hilux Revo 2015-2025'),
-('BOSCH', '0 986 AB2 083', 'TOYOTA', '04465-0K360', 'EQUIVALENT', 1.0, 'VERIFIED', 'Direct OE replacement front brake pads'),
-('AISIN', 'A1N077', 'TOYOTA', '04465-0K360', 'EQUIVALENT', 1.0, 'VERIFIED', 'OE manufacturer direct fit replacement'),
-('BREMBO', 'P 83 066', 'TOYOTA', '04465-0K360', 'ALTERNATIVE', 0.95, 'VERIFIED', 'Premium ceramic brake pad upgrade'),
-('DENSO', '260300-1030', 'HONDA', '17220-5BA-A00', 'EQUIVALENT', 1.0, 'VERIFIED', 'Genuine OE air filter for Civic FC 2016-2021'),
-('MANN-FILTER', 'C 24 054', 'HONDA', '17220-5BA-A00', 'EQUIVALENT', 1.0, 'VERIFIED', 'OEM specification air filter');

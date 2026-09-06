@@ -3107,5 +3107,252 @@ select.form-control option {
     background: #DC2626;
 }
 
+/* ================= PARTS BATCH IMPORT MODAL ================= */
+.import-modal-card {
+    background: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 16px;
+    padding: 1.75rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+    color: #1E293B;
+}
+
+[data-theme="dark"] .import-modal-card {
+    background: #1E293B;
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+    color: #F8FAFC;
+}
+
+.import-header-icon {
+    width: 42px;
+    height: 42px;
+    border-radius: 10px;
+    background: #EFF6FF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #2563EB;
+}
+
+[data-theme="dark"] .import-header-icon {
+    background: rgba(96, 165, 250, 0.2);
+    color: #60A5FA;
+}
+
+.import-title {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #0F172A;
+    margin: 0;
+}
+
+[data-theme="dark"] .import-title {
+    color: #FFFFFF;
+}
+
+.import-subtitle {
+    font-size: 0.82rem;
+    color: #64748B;
+    margin: 0.2rem 0 0 0;
+}
+
+[data-theme="dark"] .import-subtitle {
+    color: #94A3B8;
+}
+
+.import-dropzone-box {
+    border: 2px dashed #93C5FD;
+    border-radius: 12px;
+    padding: 2.25rem 1.5rem;
+    text-align: center;
+    background: #F8FAFC;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+    margin-bottom: 1.25rem;
+}
+
+.import-dropzone-box:hover {
+    border-color: #3B82F6;
+    background: #EFF6FF;
+}
+
+[data-theme="dark"] .import-dropzone-box {
+    background: rgba(15, 23, 42, 0.5);
+    border-color: rgba(96, 165, 250, 0.4);
+}
+
+[data-theme="dark"] .import-dropzone-box:hover {
+    background: rgba(30, 41, 59, 0.8);
+    border-color: #60A5FA;
+}
+
+.import-dropzone-title {
+    font-size: 0.98rem;
+    font-weight: 600;
+    color: #1E293B;
+    margin-bottom: 0.25rem;
+}
+
+[data-theme="dark"] .import-dropzone-title {
+    color: #F8FAFC;
+}
+
+.import-dropzone-sub {
+    font-size: 0.8rem;
+    color: #64748B;
+    margin-bottom: 0.5rem;
+}
+
+[data-theme="dark"] .import-dropzone-sub {
+    color: #94A3B8;
+}
+
+.import-guide-box {
+    background: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+[data-theme="dark"] .import-guide-box {
+    background: #0B132B;
+    border-color: rgba(255, 255, 255, 0.08);
+}
+
+.import-guide-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: #334155;
+}
+
+[data-theme="dark"] .import-guide-title {
+    color: #E2E8F0;
+}
+
+.import-btn-excel {
+    background: #ECFDF5;
+    color: #059669;
+    border: 1px solid #A7F3D0;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.3rem 0.65rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.import-btn-excel:hover {
+    background: #D1FAE5;
+}
+
+.import-btn-csv {
+    background: #EFF6FF;
+    color: #2563EB;
+    border: 1px solid #BFDBFE;
+    font-size: 0.75rem;
+    font-weight: 600;
+    padding: 0.3rem 0.65rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.import-btn-csv:hover {
+    background: #DBEAFE;
+}
+
+.import-col-badge {
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+}
+
+/* ================= OWNER KPI CARDS UNIFORM STYLING ================= */
+.usage-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+@media (max-width: 1024px) {
+    .usage-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 640px) {
+    .usage-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+.usage-card {
+    background-color: #FFFFFF;
+    border: 1px solid #E2E8F0;
+    border-radius: 12px;
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    min-height: 110px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+    transition: transform 0.15s, box-shadow 0.15s;
+}
+
+.usage-card:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.08);
+}
+
+[data-theme="dark"] .usage-card {
+    background-color: #1E293B;
+    border-color: rgba(255, 255, 255, 0.08);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+}
+
+.usage-card-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #475569;
+}
+
+[data-theme="dark"] .usage-card-title {
+    color: #94A3B8;
+}
+
+.usage-card-val {
+    font-size: 1.65rem;
+    font-weight: 700;
+    line-height: 1.2;
+    margin: 0.35rem 0;
+    color: #0F172A;
+}
+
+[data-theme="dark"] .usage-card-val {
+    color: #F8FAFC;
+}
+
+.usage-card-sub {
+    font-size: 0.78rem;
+    color: #64748B;
+    font-weight: 500;
+}
+
+[data-theme="dark"] .usage-card-sub {
+    color: #94A3B8;
+}
+
+
 
 

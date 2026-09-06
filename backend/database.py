@@ -3520,7 +3520,11 @@ def clean_production_database() -> Dict[str, Any]:
         try: cursor.execute("DELETE FROM organization_audit_logs")
         except Exception: pass
         
-        # 5. Clean Temp / Pending Parts (Keep Master Parts Catalog intact)
+        # 5. Clean Master Parts, Cross-References, and Temp / Pending Parts
+        try: cursor.execute("DELETE FROM cross_reference_relations")
+        except Exception: pass
+        try: cursor.execute("DELETE FROM master_parts")
+        except Exception: pass
         try: cursor.execute("DELETE FROM temp_parts")
         except Exception: pass
         
@@ -3568,6 +3572,9 @@ def clean_production_database() -> Dict[str, Any]:
         # 7. Reset Sequences
         try:
             if is_postgres_mode():
+                cursor.execute("ALTER SEQUENCE IF EXISTS master_parts_id_seq RESTART WITH 1")
+                cursor.execute("ALTER SEQUENCE IF EXISTS cross_reference_relations_id_seq RESTART WITH 1")
+                cursor.execute("ALTER SEQUENCE IF EXISTS temp_parts_id_seq RESTART WITH 1")
                 cursor.execute("ALTER SEQUENCE IF EXISTS invoices_id_seq RESTART WITH 1")
                 cursor.execute("ALTER SEQUENCE IF EXISTS payment_transactions_id_seq RESTART WITH 1")
                 cursor.execute("ALTER SEQUENCE IF EXISTS customer_subscriptions_id_seq RESTART WITH 1")
@@ -3575,9 +3582,8 @@ def clean_production_database() -> Dict[str, Any]:
                 cursor.execute("ALTER SEQUENCE IF EXISTS organization_members_id_seq RESTART WITH 1")
                 cursor.execute("ALTER SEQUENCE IF EXISTS crm_leads_id_seq RESTART WITH 1")
                 cursor.execute("ALTER SEQUENCE IF EXISTS usage_logs_id_seq RESTART WITH 1")
-                cursor.execute("ALTER SEQUENCE IF EXISTS temp_parts_id_seq RESTART WITH 1")
             else:
-                cursor.execute("DELETE FROM sqlite_sequence WHERE name IN ('invoices', 'payment_transactions', 'customer_subscriptions', 'customer_organizations', 'organization_members', 'crm_leads', 'usage_logs', 'temp_parts')")
+                cursor.execute("DELETE FROM sqlite_sequence WHERE name IN ('master_parts', 'cross_reference_relations', 'temp_parts', 'invoices', 'payment_transactions', 'customer_subscriptions', 'customer_organizations', 'organization_members', 'crm_leads', 'usage_logs')")
         except Exception as sq_e:
             print(f"Note on sequence reset: {sq_e}")
             
