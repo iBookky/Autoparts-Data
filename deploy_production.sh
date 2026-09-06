@@ -26,8 +26,11 @@ if [ ! -f "$DATA_DIR/parts_cross_ref.db" ] && [ -f "./parts_cross_ref.db" ]; the
 fi
 
 echo "=================================================================="
-echo "🐘 [2/5] Launching PostgreSQL 16 & AutoParts Application Stack..."
+echo "🐘 [2/5] Cleaning up old containers & Launching PostgreSQL Stack..."
 echo "=================================================================="
+# Force remove any existing standalone containers with identical names
+docker rm -f autoparts-app autoparts-postgres autoparts-backend-app autoparts-backend-pg autoparts-caddy-proxy 2>/dev/null || true
+
 if command -v docker-compose &> /dev/null; then
     COMPOSE_CMD="docker-compose"
 else
@@ -36,6 +39,7 @@ fi
 
 $COMPOSE_CMD -f docker-compose.yml down --remove-orphans 2>/dev/null || true
 $COMPOSE_CMD -f docker-compose.yml up -d --build
+
 
 echo "=================================================================="
 echo "⏳ [3/5] Waiting for PostgreSQL and FastAPI services to be ready..."
