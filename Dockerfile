@@ -9,7 +9,7 @@ FROM python:3.11-slim as base
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     APP_HOME=/app \
-    DB_PATH=/app/data/autoparts.db \
+    DB_PATH=/app/data/parts_cross_ref.db \
     PORT=8000
 
 # Install system dependencies

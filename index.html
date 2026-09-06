@@ -48,6 +48,10 @@
                     <button type="button" class="lang-btn lang-btn-th active" onclick="setAppLanguage('th')">TH</button>
                     <button type="button" class="lang-btn lang-btn-en" onclick="setAppLanguage('en')">EN</button>
                 </div>
+                <!-- Clear Cache Button -->
+                <button type="button" class="btn btn-secondary btn-sm" onclick="clearAllCacheAndReset()" style="padding: 0.4rem 0.6rem; font-size: 0.8rem; border-color: rgba(255,255,255,0.15);" title="ล้างแคชและรีเซ็ตระบบทั้งหมด">
+                    <i class="fa-solid fa-broom"></i> <span style="font-size: 0.75rem;">Clear Cache</span>
+                </button>
                 <button class="btn btn-outline" onclick="showAuthScreen()" style="padding: 0.5rem 1rem; font-size: 0.88rem;">
                     <i class="fa-solid fa-arrow-right-to-bracket"></i> <span data-i18n="landing.nav.signin">เข้าสู่ระบบ</span>
                 </button>
@@ -405,8 +409,11 @@
                         <span>💼</span> <strong style="color: #34D399; margin-left: 0.25rem;">Staff</strong> <span style="font-size: 0.68rem; color: var(--text-muted); margin-left: auto;">CRM</span>
                     </button>
                 </div>
-                <button type="button" class="btn btn-sm btn-secondary" onclick="quickLogin('user_starter', 'admin123')" style="width: 100%; min-width: 0; box-sizing: border-box; font-size: 0.75rem; justify-content: center; padding: 0.45rem 0.6rem; border-color: rgba(56, 189, 248, 0.3);">
+                <button type="button" class="btn btn-sm btn-secondary" onclick="quickLogin('user_starter', 'admin123')" style="width: 100%; min-width: 0; box-sizing: border-box; font-size: 0.75rem; justify-content: center; padding: 0.45rem 0.6rem; border-color: rgba(56, 189, 248, 0.3); margin-bottom: 0.45rem;">
                     <span>👤</span> <strong style="color: #38BDF8; margin-left: 0.25rem;">Customer / Garage</strong> <span style="font-size: 0.68rem; color: var(--text-muted); margin-left: 0.4rem;">(Starter Plan Simulation)</span>
+                </button>
+                <button type="button" class="btn btn-sm btn-outline" onclick="clearAllCacheAndReset()" style="width: 100%; min-width: 0; box-sizing: border-box; font-size: 0.72rem; justify-content: center; padding: 0.35rem 0.5rem; color: var(--text-muted); border-color: rgba(255,255,255,0.1);">
+                    <i class="fa-solid fa-broom"></i> <span style="margin-left: 0.35rem;">ล้างแคชและเริ่มใหม่ (Clear Cache & Reset)</span>
                 </button>
             </div>
 
@@ -462,9 +469,13 @@
                     <div class="nav-group-title" style="color: #8B5CF6; display: flex; align-items: center; gap: 0.4rem;" data-i18n="nav.group.superadmin">
                         <i class="fa-solid fa-server"></i> Platform & Data Core
                     </div>
-                    <button class="nav-item" id="nav-superadmin" onclick="switchSaaSView('superadmin-view', this)">
+                    <button class="nav-item" id="nav-superadmin" onclick="switchSaaSView('superadmin-view', this); switchSuperAdminTab('health');">
                         <i class="fa-solid fa-server" style="color: #8B5CF6;"></i>
                         <span data-i18n="nav.superadmin">Platform & Data Center</span>
+                    </button>
+                    <button class="nav-item" id="nav-superadmin-audit" onclick="switchSaaSView('superadmin-view', this); switchSuperAdminTab('audit');">
+                        <i class="fa-solid fa-shield-halved" style="color: #A78BFA;"></i>
+                        <span>Permission & Function Audit</span>
                     </button>
                 </div>
 
@@ -3825,6 +3836,16 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             localStorage.removeItem('autoparts_saas_user');
             showToast("ออกจากระบบเรียบร้อยแล้ว", "info");
             showLandingPage();
+        }
+
+        function clearAllCacheAndReset() {
+            localStorage.clear();
+            sessionStorage.clear();
+            currentUser = null;
+            showToast("🧹 ล้างแคชและรีเซ็ตระบบทั้งหมดเรียบร้อยแล้ว", "success");
+            setTimeout(() => {
+                window.location.href = window.location.origin + window.location.pathname + '?nocache=' + Date.now();
+            }, 300);
         }
 
         function toggleOwnerCustomerView() {

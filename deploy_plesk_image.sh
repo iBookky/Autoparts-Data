@@ -39,7 +39,7 @@ docker run -d \
   -p 127.0.0.1:$PORT:8000 \
   -v "$DATA_DIR":/app/data \
   -e PORT=8000 \
-  -e DB_PATH=/app/data/autoparts.db \
+  -e DB_PATH=/app/data/parts_cross_ref.db \
   -e ENVIRONMENT=production \
   "$IMAGE_NAME"
 
@@ -50,7 +50,7 @@ if docker ps | grep "$CONTAINER_NAME"; then
     echo "=================================================="
     echo "✅ DEPLOYMENT SUCCESSFUL!"
     echo "Container: $CONTAINER_NAME is running on 127.0.0.1:$PORT"
-    echo "Persistent DB: $DATA_DIR/autoparts.db"
+    echo "Persistent DB: $DATA_DIR/parts_cross_ref.db"
     echo ""
     echo "Next steps in Plesk:"
     echo "1. Go to Websites & Domains > Your Domain > Docker Proxy Rules"

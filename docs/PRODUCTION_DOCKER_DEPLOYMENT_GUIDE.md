@@ -33,7 +33,7 @@
                                       ▼ (Volume Mapping)
                ┌───────────────────────────────────────────────┐
                │    Host Path: /var/www/vhosts/.../data        │
-               │  - SQLite Database: autoparts.db (WAL Mode)   │
+               │  - SQLite Database: parts_cross_ref.db (WAL)  │
                │  - ข้อมูลไม่สูญหายเมื่อ Rebuild Container    │
                └───────────────────────────────────────────────┘
 ```
