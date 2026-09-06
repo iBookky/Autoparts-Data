@@ -217,10 +217,18 @@ def init_db():
         if cursor.fetchone()[0] == 0:
             cursor.execute("UPDATE meta_ai_models SET is_default = 1 WHERE model_name = 'gemini-2.5-flash'")
 
-        cursor.execute("""
-            INSERT OR IGNORE INTO users (username, password, role) VALUES 
-            ('owner', '43a0d17178a9d26c9e0fe9a74b0b45e38d32f27aed887a008a54bf6e033bf7b9', 'SUPER_ADMIN')
-        """)
+        # Seed default platform & customer accounts
+        pwd_hash = "43a0d17178a9d26c9e0fe9a74b0b45e38d32f27aed887a008a54bf6e033bf7b9" # SHA-256 for admin123
+        default_seed_users = [
+            ("owner", pwd_hash, "OWNER"),
+            ("superadmin", pwd_hash, "SUPER_ADMIN"),
+            ("admin", pwd_hash, "ADMIN"),
+            ("staff", pwd_hash, "STAFF"),
+            ("customer", pwd_hash, "CUSTOMER"),
+            ("user_starter", pwd_hash, "CUSTOMER")
+        ]
+        for u, p, r in default_seed_users:
+            cursor.execute("INSERT OR IGNORE INTO users (username, password, role) VALUES (?, ?, ?)", (u, p, r))
 
         conn.commit()
         print("Database initialized successfully with all migrations.")
