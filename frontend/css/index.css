@@ -516,8 +516,25 @@
 }
 
 [data-theme="light"] .landing-header {
-    background: rgba(255, 255, 255, 0.92) !important;
+    background: rgba(255, 255, 255, 0.95) !important;
     border-bottom: 1px solid var(--border-color);
+}
+
+[data-theme="light"] .landing-nav-links a {
+    color: #475569 !important;
+}
+
+[data-theme="light"] .landing-nav-links a:hover,
+[data-theme="light"] .landing-nav-links a:focus,
+[data-theme="light"] .landing-nav-links a.active {
+    color: #1D4ED8 !important;
+    text-shadow: none !important;
+}
+
+[data-theme="light"] .nav-item:hover,
+[data-theme="light"] .nav-item a:hover {
+    color: #1D4ED8 !important;
+    background: #EFF6FF !important;
 }
 
 [data-theme="light"] .landing-hero h1 {
@@ -2344,7 +2361,7 @@ select.form-control option {
 }
 
 .landing-nav-links a:hover {
-    color: #fff;
+    color: #38BDF8;
 }
 
 .landing-header .btn {

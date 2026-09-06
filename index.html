@@ -20,11 +20,12 @@
         <!-- STICKY TOP NAVBAR -->
         <header class="landing-header">
             <div style="display: flex; align-items: center; gap: 0.85rem;">
-                <div class="logo-icon-box" style="width: 40px; height: 40px; font-size: 1.25rem;">
+                <div class="logo-icon-box" id="landing-logo-icon" style="width: 40px; height: 40px; font-size: 1.25rem;">
                     <i class="fa-solid fa-layer-group"></i>
                 </div>
+                <img id="landing-logo-img" src="" style="display: none; height: 38px; width: auto; object-fit: contain;">
                 <div>
-                    <div class="logo-name" style="font-weight: 800; font-size: 1.15rem; color: #fff; letter-spacing: -0.5px;">AutoParts <span style="color: var(--primary);">Cross-Ref</span></div>
+                    <div class="logo-name" id="landing-logo-name" style="font-weight: 800; font-size: 1.15rem; color: #fff; letter-spacing: -0.5px;">AutoParts <span style="color: var(--primary);">Cross-Ref</span></div>
                     <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;" data-i18n="landing.brand.tagline">B2B Automotive Intelligence</div>
                 </div>
             </div>
@@ -60,13 +61,13 @@
         <!-- HERO BANNER -->
         <section class="landing-hero" id="landing-hero">
             <div class="landing-pill">
-                <i class="fa-solid fa-sparkles"></i> <span data-i18n="landing.hero.pill">แพลตฟอร์มสืบค้นและเทียบรหัสอะไหล่รถยนต์อันดับ 1 ในไทย</span>
+                <i class="fa-solid fa-sparkles"></i> <span id="landing-hero-badge" data-i18n="landing.hero.pill">แพลตฟอร์มสืบค้นและเทียบรหัสอะไหล่รถยนต์อันดับ 1 ในไทย</span>
             </div>
-            <h1 style="font-size: 3rem; font-weight: 800; line-height: 1.2; margin-bottom: 1.25rem; letter-spacing: -1px;" data-i18n="landing.hero.title">
-                เทียบเบอร์อะไหล่แท้ & อะไหล่ทดแทน <br>
-                <span class="gradient-text-hero">แม่นยำ ทันที ไม่พลาดทุกโอกาสการขาย</span>
+            <h1 style="font-size: 3rem; font-weight: 800; line-height: 1.2; margin-bottom: 1.25rem; letter-spacing: -1px;">
+                <span id="landing-hero-title">เทียบเบอร์อะไหล่แท้ & อะไหล่ทดแทน</span> <br>
+                <span class="gradient-text-hero" id="landing-hero-title-accent">แม่นยำ ทันที ไม่พลาดทุกโอกาสการขาย</span>
             </h1>
-            <p style="font-size: 1.1rem; color: var(--text-secondary); max-width: 780px; margin: 0 auto 2rem; line-height: 1.6;" data-i18n="landing.hero.desc">
+            <p id="landing-hero-desc" style="font-size: 1.1rem; color: var(--text-secondary); max-width: 780px; margin: 0 auto 2rem; line-height: 1.6;" data-i18n="landing.hero.desc">
                 ค้นหารหัส OEM, เบอร์เทียบ Aftermarket 8 แบรนด์ชั้นนำ, ถอดรหัส VIN และตรวจสอบความเข้ากันได้ของชิ้นส่วนรถยนต์กว่า 5,000+ รายการ สำหรับอู่ซ่อมรถ ร้านอะไหล่ บริษัทประกัน และฟลีทรถยนต์
             </p>
             <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
@@ -591,56 +592,18 @@
                 <!-- ================= 1. SEARCH FIRST DASHBOARD ================= -->
                 <section id="search-view" class="view-section active">
                     
-                    <!-- Search Hero & Large Omnibar -->
-                    <div class="search-hero">
+                    <!-- Search Hero & Direct Structured Parameters Form -->
+                    <div class="search-hero" style="margin-bottom: 1.25rem;">
                         <h1 class="hero-title" data-i18n="search.heroTitle">Find the right part faster.</h1>
                         <p class="hero-subtitle" data-i18n="search.heroSubtitle">Search across verified OEM numbers, aftermarket SKUs, VIN or vehicle specifications.</p>
-                        
-                        <div class="omni-search-container">
-                            <div class="omni-input-row">
-                                <i class="fa-solid fa-magnifying-glass omni-icon"></i>
-                                <input type="text" id="omni-search-input" class="omni-input" 
-                                       data-i18n-placeholder="search.placeholder"
-                                       placeholder="Search OEM code, SKU, 17-digit VIN, part name or vehicle model..."
-                                       onkeypress="if(event.key==='Enter') executeOmniSearch()">
-                                <div class="omni-actions">
-                                    <button type="button" class="btn btn-secondary btn-sm" onclick="clearSearchInputs()" title="Clear">
-                                        <i class="fa-solid fa-xmark"></i>
-                                    </button>
-                                    <button type="button" class="btn btn-primary" onclick="executeOmniSearch()">
-                                        <i class="fa-solid fa-arrow-right"></i> <span data-i18n="search.searchBtn">Search</span>
-                                    </button>
-                                </div>
-                            </div>
-                            
-                            <div class="quick-tag-row">
-                                <span class="quick-tag-label" data-i18n="search.quickFilters">QUICK FILTERS:</span>
-                                <button type="button" class="quick-tag-btn" onclick="toggleAdvancedSearch(true); document.getElementById('s-vin').focus();">
-                                    <i class="fa-solid fa-fingerprint" style="color: #F43F5E;"></i> <span data-i18n="search.vinSearch">VIN Search</span>
-                                </button>
-                                <button type="button" class="quick-tag-btn" onclick="toggleAdvancedSearch(true); document.getElementById('s-car-brand').focus();">
-                                    <i class="fa-solid fa-car" style="color: #3B82F6;"></i> <span data-i18n="search.vehicleSearch">Vehicle Search</span>
-                                </button>
-                                <button type="button" class="quick-tag-btn" onclick="toggleAdvancedSearch(true); document.getElementById('s-oem-code').focus();">
-                                    <i class="fa-solid fa-barcode" style="color: #10B981;"></i> <span data-i18n="search.oemSku">OEM / SKU</span>
-                                </button>
-                                <button type="button" class="quick-tag-btn" onclick="switchSaaSView('crossref-view')">
-                                    <i class="fa-solid fa-shuffle" style="color: #8B5CF6;"></i> <span data-i18n="search.crossref">Cross Reference</span>
-                                </button>
-                                <button type="button" class="btn btn-secondary btn-sm" style="margin-left: auto; font-size: 0.75rem;" onclick="toggleAdvancedSearch()">
-                                    <i class="fa-solid fa-sliders"></i> <span id="adv-toggle-text" data-i18n="search.advFilters">Advanced Filters</span>
-                                </button>
-                            </div>
-                        </div>
                     </div>
 
-                    <!-- Collapsible Advanced Search Form -->
-                    <div class="advanced-search-card" id="advanced-search-panel" style="display: none;">
-                        <div class="advanced-header" onclick="toggleAdvancedSearch()">
+                    <!-- Primary Automotive Structured Search Form -->
+                    <div class="advanced-search-card" id="advanced-search-panel" style="display: block;">
+                        <div class="advanced-header" style="cursor: default;">
                             <span class="advanced-title">
                                 <i class="fa-solid fa-sliders" style="color: var(--primary);"></i> <span data-i18n="search.advTitle">Structured Automotive Search Parameters</span>
                             </span>
-                            <span style="font-size: 0.8rem; color: var(--text-muted);"><i class="fa-solid fa-chevron-up"></i></span>
                         </div>
                         <div class="advanced-body">
                             <!-- Row 1: Vehicle & VIN Group -->
@@ -1494,6 +1457,9 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             <button class="btn btn-primary btn-sm" onclick="openCreateLeadModal()">
                                 <i class="fa-solid fa-plus"></i> <span data-i18n="owner.btn.addLead">Add New Lead</span>
                             </button>
+                            <button class="btn btn-danger btn-sm" onclick="confirmCleanTestData()" title="ล้างข้อมูลจำลองเพื่อเตรียมเปิดตัวระบบจริง">
+                                <i class="fa-solid fa-broom"></i> <span>ล้างข้อมูลทดสอบ (Reset Data)</span>
+                            </button>
                         </div>
                     </div>
 
@@ -1544,6 +1510,15 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                         </button>
                         <button class="workspace-tab-btn" id="tab-owner-ai" onclick="switchOwnerTab('ai')">
                             <i class="fa-solid fa-brain" style="color: #C084FC;"></i> <span data-i18n="owner.tab.ai">Automotive AI Engine</span>
+                        </button>
+                        <button class="workspace-tab-btn" id="tab-owner-branding" onclick="switchOwnerTab('branding')">
+                            <i class="fa-solid fa-palette" style="color: #38BDF8;"></i> <span>หน้าแรก & SEO (CMS)</span>
+                        </button>
+                        <button class="workspace-tab-btn" id="tab-owner-company" onclick="switchOwnerTab('company')">
+                            <i class="fa-solid fa-building-flag" style="color: #34D399;"></i> <span>ข้อมูล Owner & ภาษี</span>
+                        </button>
+                        <button class="workspace-tab-btn" id="tab-owner-invconfig" onclick="switchOwnerTab('invconfig')">
+                            <i class="fa-solid fa-file-invoice" style="color: #FBBF24;"></i> <span>รูปแบบ Invoice</span>
                         </button>
                     </div>
 
@@ -2060,6 +2035,300 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             </div>
                         </div>
                     </div>
+
+                    <!-- 12. Homepage CMS & SEO Customizer -->
+                    <div id="owner-sub-branding" style="display: none;">
+                        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem; margin-bottom: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; flex-wrap: wrap; gap: 0.75rem;">
+                                <div>
+                                    <h3 style="font-size: 1.1rem; font-weight: 700; color: #38BDF8; display: flex; align-items: center; gap: 0.5rem; margin: 0;">
+                                        <i class="fa-solid fa-palette"></i> ปรับแต่งหน้าแรก & แบรนด์ดิ้ง (Homepage CMS & Branding)
+                                    </h3>
+                                    <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.2rem; margin-bottom: 0;">
+                                        กำหนดชื่อแพลตฟอร์ม โลโก้ ข้อความ Hero แบนเนอร์ สีพื้นหลัง และการตั้งค่า SEO เพื่อแสดงผลต่อผู้ใช้งานทั่วไป
+                                    </p>
+                                </div>
+                                <button type="button" class="btn btn-primary" onclick="saveOwnerBrandingSettings()">
+                                    <i class="fa-solid fa-floppy-disk"></i> บันทึกการตั้งค่าหน้าแรก
+                                </button>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem;">
+                                <!-- Column 1: Identity & Hero Text -->
+                                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                    <div class="form-group">
+                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">ชื่อเว็บไซต์ / ไตเติลหลัก (Site Title) *</label>
+                                        <input type="text" id="owner-cfg-site-title" class="form-control" placeholder="AutoParts Cross-Ref - B2B Automotive Intelligence">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">URL โลโก้ระบบ (Platform Logo Image URL)</label>
+                                        <input type="text" id="owner-cfg-logo-url" class="form-control" placeholder="https://example.com/logo.png">
+                                        <span style="font-size: 0.72rem; color: var(--text-muted);">เว้นว่างไว้หากต้องการใช้ไอคอนเริ่มต้นของระบบ</span>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">ข้อความแถบป้าย Hero Badge</label>
+                                        <input type="text" id="owner-cfg-hero-badge" class="form-control" placeholder="แพลตฟอร์มสืบค้นและเทียบรหัสอะไหล่รถยนต์อันดับ 1 ในไทย">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">หัวข้อใหญ่ Hero Title (บรรทัดแรก)</label>
+                                        <input type="text" id="owner-cfg-hero-title" class="form-control" placeholder="เทียบเบอร์อะไหล่แท้ & อะไหล่ทดแทน">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">หัวข้อรอง Hero Subtitle / คำบรรยายใต้หัวข้อ</label>
+                                        <textarea id="owner-cfg-hero-subtitle" class="form-control" rows="3" placeholder="ค้นหาข้ามแบรนด์ แม่นยำ รวดเร็ว พร้อมเชื่อมต่อระบบ AI และสต็อกสินค้าอัจฉริยะ"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Column 2: Background Style & SEO -->
+                                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                    <div class="form-group">
+                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">รูปแบบธีมพื้นหลัง Hero Banner</label>
+                                        <select id="owner-cfg-hero-bg-style" class="form-control" onchange="previewHeroBgStyle(this.value)">
+                                            <option value="gradient">Modern Blue Radial Gradient (มาตรฐาน)</option>
+                                            <option value="dark_carbon">Deep Midnight Carbon (#0B132B)</option>
+                                            <option value="cyber_tech">Cyber Automotive Slate (#0F172A)</option>
+                                            <option value="custom">กำหนดสี / Gradient แบบกำหนดเอง</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" id="owner-cfg-custom-bg-box" style="display: none;">
+                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">สีพื้นหลังกำหนดเอง (Custom Color / Gradient)</label>
+                                        <div style="display: flex; gap: 0.5rem;">
+                                            <input type="color" id="owner-cfg-hero-bg-color" value="#0B132B" style="width: 45px; height: 38px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 2px; cursor: pointer;">
+                                            <input type="text" id="owner-cfg-hero-bg-gradient" class="form-control" placeholder="linear-gradient(135deg, #0B132B, #1E3A8A)" style="flex: 1;">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem;"><i class="fa-solid fa-magnifying-glass" style="color: #10B981;"></i> SEO Meta Title (แสดงในผลการค้นหา Google)</label>
+                                        <input type="text" id="owner-cfg-seo-title" class="form-control" placeholder="AutoParts Cross-Ref | ระบบเทียบเบอร์อะไหล่และค้นหาด้วย VIN">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">SEO Meta Description (คำอธิบายใน Search Engine)</label>
+                                        <textarea id="owner-cfg-seo-desc" class="form-control" rows="2" placeholder="แพลตฟอร์มค้นหาและเทียบเคียงรหัสอะไหล่แท้และอะไหล่ทดแทน (OEM & Aftermarket) ที่ใหญ่ที่สุดในประเทศไทย"></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">SEO Keywords (คั่นด้วยจุลภาค)</label>
+                                        <input type="text" id="owner-cfg-seo-keywords" class="form-control" placeholder="อะไหล่รถยนต์, เทียบเบอร์อะไหล่, OEM parts, Aftermarket, VIN decoder">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Row 2: Contact & Footer Info -->
+                            <div style="border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
+                                <h4 style="font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 0.75rem;">ข้อมูลติดต่อและ Footer ท้ายเว็บ</h4>
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                                    <div class="form-group">
+                                        <label class="form-label" style="font-size: 0.8rem;">อีเมลติดต่อ (Contact Email)</label>
+                                        <input type="email" id="owner-cfg-contact-email" class="form-control" placeholder="contact@autoparts-crossref.com">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" style="font-size: 0.8rem;">เบอร์โทรติดต่อ (Phone)</label>
+                                        <input type="text" id="owner-cfg-contact-phone" class="form-control" placeholder="02-123-4567">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" style="font-size: 0.8rem;">LINE Official Account</label>
+                                        <input type="text" id="owner-cfg-contact-line" class="form-control" placeholder="@autoparts">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" style="font-size: 0.8rem;">ข้อความลิขสิทธิ์ Footer Copyright</label>
+                                        <input type="text" id="owner-cfg-footer-copyright" class="form-control" placeholder="© 2026 AutoParts Cross-Ref. All rights reserved.">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 13. Owner Company Profile & Tax Information -->
+                    <div id="owner-sub-company" style="display: none;">
+                        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem; margin-bottom: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; flex-wrap: wrap; gap: 0.75rem;">
+                                <div>
+                                    <h3 style="font-size: 1.1rem; font-weight: 700; color: #34D399; display: flex; align-items: center; gap: 0.5rem; margin: 0;">
+                                        <i class="fa-solid fa-building-flag"></i> ข้อมูลบริษัทผู้ให้บริการ & ข้อมูลภาษี (Owner Company & Tax Profile)
+                                    </h3>
+                                    <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.2rem; margin-bottom: 0;">
+                                        ข้อมูลนี้นำไปใช้เป็นหัวเอกสารทางการ ใบแจ้งหนี้ (Invoice) ใบกำกับภาษี และใบเสร็จรับเงินอย่างเป็นทางการของแพลตฟอร์ม
+                                    </p>
+                                </div>
+                                <button type="button" class="btn btn-primary" onclick="saveOwnerCompanySettings()">
+                                    <i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูลบริษัท & ภาษี
+                                </button>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem;">
+                                <!-- Left Column: Legal Company Info -->
+                                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                    <div class="form-group">
+                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">ชื่อนิติบุคคล / บริษัท (ภาษาไทย) *</label>
+                                        <input type="text" id="owner-cfg-company-th" class="form-control" placeholder="บริษัท ออโต้เซนทริค ดิจิทัล โซลูชันส์ จำกัด">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">ชื่อนิติบุคคล / บริษัท (English Name)</label>
+                                        <input type="text" id="owner-cfg-company-en" class="form-control" placeholder="AUTOCENTRIC DIGITAL SOLUTIONS CO., LTD.">
+                                    </div>
+                                    <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 0.75rem;">
+                                        <div class="form-group">
+                                            <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">เลขประจำตัวผู้เสียภาษี 13 หลัก *</label>
+                                            <input type="text" id="owner-cfg-taxid" class="form-control" placeholder="0105566099881" maxlength="13">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">สาขา (Branch)</label>
+                                            <input type="text" id="owner-cfg-branch" class="form-control" placeholder="สำนักงานใหญ่ (Head Office)">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">ที่อยู่จดทะเบียนตาม ภ.พ.20 (ภาษาไทย) *</label>
+                                        <textarea id="owner-cfg-address-th" class="form-control" rows="2" placeholder="888/99 อาคารสยามทาวเวอร์ ชั้น 18 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพมหานคร 10110"></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">ที่อยู่จดทะเบียน (English Address)</label>
+                                        <textarea id="owner-cfg-address-en" class="form-control" rows="2" placeholder="888/99 Siam Tower 18th Fl., Sukhumvit Rd., Khlong Toei, Bangkok 10110 Thailand"></textarea>
+                                    </div>
+                                </div>
+
+                                <!-- Right Column: Bank & Official Stamp/Signature -->
+                                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                                        <div class="form-group">
+                                            <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">เบอร์โทรศัพท์ออกบิล</label>
+                                            <input type="text" id="owner-cfg-billing-phone" class="form-control" placeholder="02-123-4567">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">อีเมลรับเรื่องการเงิน</label>
+                                            <input type="email" id="owner-cfg-billing-email" class="form-control" placeholder="billing@autoparts-crossref.com">
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">เว็บไซต์บริษัท (Website URL)</label>
+                                        <input type="text" id="owner-cfg-website" class="form-control" placeholder="https://parts.autocentric.net">
+                                    </div>
+
+                                    <!-- Bank Account Card -->
+                                    <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1rem;">
+                                        <h4 style="font-size: 0.88rem; font-weight: 700; color: #FBBF24; margin-bottom: 0.75rem;">
+                                            <i class="fa-solid fa-building-columns"></i> บัญชีธนาคารสำหรับรับชำระเงิน
+                                        </h4>
+                                        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 0.75rem; margin-bottom: 0.5rem;">
+                                            <div class="form-group">
+                                                <label class="form-label" style="font-size: 0.75rem;">ธนาคาร</label>
+                                                <input type="text" id="owner-cfg-bank-name" class="form-control" placeholder="ธนาคารกสิกรไทย (KBANK)">
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-label" style="font-size: 0.75rem;">เลขที่บัญชี</label>
+                                                <input type="text" id="owner-cfg-bank-acc-no" class="form-control" placeholder="098-7-65432-1">
+                                            </div>
+                                        </div>
+                                        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 0.75rem;">
+                                            <div class="form-group">
+                                                <label class="form-label" style="font-size: 0.75rem;">ชื่อบัญชี</label>
+                                                <input type="text" id="owner-cfg-bank-acc-name" class="form-control" placeholder="บจก. ออโต้เซนทริค ดิจิทัล โซลูชันส์">
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="form-label" style="font-size: 0.75rem;">PromptPay ID (พร้อมเพย์)</label>
+                                                <input type="text" id="owner-cfg-promptpay" class="form-control" placeholder="0105566099881">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Digital Stamp & Signature URLs -->
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                                        <div class="form-group">
+                                            <label class="form-label" style="font-size: 0.8rem;">URL ลายเซ็นดิจิทัล (Signature URL)</label>
+                                            <input type="text" id="owner-cfg-signature-url" class="form-control" placeholder="https://.../signature.png">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label" style="font-size: 0.8rem;">URL ตราประทับบริษัท (Stamp URL)</label>
+                                            <input type="text" id="owner-cfg-stamp-url" class="form-control" placeholder="https://.../stamp.png">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 14. Invoice Template Customizer -->
+                    <div id="owner-sub-invconfig" style="display: none;">
+                        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem; margin-bottom: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; flex-wrap: wrap; gap: 0.75rem;">
+                                <div>
+                                    <h3 style="font-size: 1.1rem; font-weight: 700; color: #FBBF24; display: flex; align-items: center; gap: 0.5rem; margin: 0;">
+                                        <i class="fa-solid fa-file-invoice"></i> ปรับแต่งรูปแบบเอกสารการเงิน & ภาษี (Invoice & Tax Config)
+                                    </h3>
+                                    <p style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 0.2rem; margin-bottom: 0;">
+                                        กำหนด Prefix เลขที่เอกสาร อัตราภาษีมูลค่าเพิ่ม (VAT) หัก ณ ที่จ่าย และเงื่อนไขข้อกำหนดในเอกสาร
+                                    </p>
+                                </div>
+                                <button type="button" class="btn btn-primary" onclick="saveOwnerInvoiceSettings()">
+                                    <i class="fa-solid fa-floppy-disk"></i> บันทึกการตั้งค่ารูปแบบ Invoice
+                                </button>
+                            </div>
+
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem;">
+                                <!-- Left Column: Document Numbering & VAT -->
+                                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
+                                        <div class="form-group">
+                                            <label class="form-label" style="font-weight: 600; font-size: 0.8rem;">Invoice Prefix</label>
+                                            <input type="text" id="owner-cfg-inv-prefix" class="form-control" placeholder="INV-">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label" style="font-weight: 600; font-size: 0.8rem;">Tax Invoice Prefix</label>
+                                            <input type="text" id="owner-cfg-tax-prefix" class="form-control" placeholder="TAX-">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label" style="font-weight: 600; font-size: 0.8rem;">Receipt Prefix</label>
+                                            <input type="text" id="owner-cfg-rec-prefix" class="form-control" placeholder="REC-">
+                                        </div>
+                                    </div>
+
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0.75rem;">
+                                        <div class="form-group">
+                                            <label class="form-label" style="font-weight: 600; font-size: 0.8rem;">กำหนดชำระ (วัน)</label>
+                                            <input type="number" id="owner-cfg-due-days" class="form-control" value="7" min="1" max="90">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label" style="font-weight: 600; font-size: 0.8rem;">อัตราภาษี VAT (%)</label>
+                                            <input type="number" id="owner-cfg-vat-pct" class="form-control" value="7.0" step="0.5" min="0" max="20">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label" style="font-weight: 600; font-size: 0.8rem;">หัก ณ ที่จ่าย (%)</label>
+                                            <input type="number" id="owner-cfg-wht-pct" class="form-control" value="3.0" step="0.5" min="0" max="10">
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">โครงสร้างภาษีมูลค่าเพิ่ม (VAT Calculation Mode)</label>
+                                        <select id="owner-cfg-vat-mode" class="form-control">
+                                            <option value="0">ราคายังไม่รวมภาษีมูลค่าเพิ่ม (Exclusive VAT - บวกเพิ่ม 7%)</option>
+                                            <option value="1">ราคารวมภาษีมูลค่าเพิ่มแล้ว (Inclusive VAT - ถอดใน 7%)</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">สีธีมเอกสาร (Theme Color Accent)</label>
+                                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                            <input type="color" id="owner-cfg-inv-theme-color" value="#2563EB" style="width: 45px; height: 38px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 2px; cursor: pointer;">
+                                            <input type="text" id="owner-cfg-inv-theme-hex" class="form-control" value="#2563EB" style="flex: 1;" onchange="document.getElementById('owner-cfg-inv-theme-color').value=this.value">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Right Column: Terms, Notes & Live Mini Preview -->
+                                <div style="display: flex; flex-direction: column; gap: 1rem;">
+                                    <div class="form-group">
+                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">หมายเหตุส่วนท้ายเอกสาร (Footer Notes)</label>
+                                        <textarea id="owner-cfg-inv-notes" class="form-control" rows="3" placeholder="เอกสารนี้ออกโดยระบบอิเล็กทรอนิกส์อัตโนมัติและถือเป็นหลักฐานการชำระเงินที่ถูกต้องสมบูรณ์ตามกฎหมาย"></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">เงื่อนไขและข้อตกลง (Terms & Conditions)</label>
+                                        <textarea id="owner-cfg-inv-terms" class="form-control" rows="3" placeholder="กรุณาชำระเงินภายในระยะเวลาที่กำหนด หากเกินกำหนดระบบจะระงับการใช้งาน API โดยอัตโนมัติ"></textarea>
+                                    </div>
+                                    <button type="button" class="btn btn-secondary" onclick="previewSampleInvoiceModal()">
+                                        <i class="fa-solid fa-eye"></i> ดูตัวอย่างใบกำกับภาษี / ใบเสร็จจริง (Live Preview)
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </section>
 
                 <!-- ================= 12. SUPER ADMIN PLATFORM & DATA CENTER ================= -->
@@ -2260,7 +2529,6 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                         <th data-i18n="staff.sales.colPlan">Interested Plan</th>
                                         <th data-i18n="staff.sales.colMrr">Expected MRR</th>
                                         <th data-i18n="staff.sales.colNotes">Notes</th>
-                                        <th style="text-align: right;" data-i18n="staff.sales.colAction">Action</th>
                                     </tr>
                                 </thead>
                                 <tbody id="staff-sales-table-body">
@@ -2386,6 +2654,40 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" onclick="closeEditModal()" data-i18n="common.cancel">Cancel</button>
                     <button type="submit" class="btn btn-primary" data-i18n="modal.editPart.save">Save Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= EDIT CATEGORY MODAL ================= -->
+    <div class="modal-overlay" id="modal-edit-category">
+        <div class="modal-card" style="max-width: 480px; background: var(--bg-card); border: 1px solid var(--border-color);">
+            <div class="modal-header" style="padding: 1rem 1.25rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-pen-to-square" style="color: var(--primary);"></i>
+                    <h3 style="margin: 0; font-size: 1.05rem;">แก้ไขหมวดหมู่อะไหล่ (Edit Category)</h3>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closeEditCategoryModal()">&times;</button>
+            </div>
+            <form onsubmit="submitEditCategory(event)">
+                <div class="modal-body" style="padding: 1.25rem; display: flex; flex-direction: column; gap: 0.85rem;">
+                    <input type="hidden" id="edit-cat-id">
+                    <div class="form-group">
+                        <label class="form-label" style="font-size: 0.8rem; font-weight: 600;">ชื่อหมวดหมู่ภาษาไทย (Thai Name) *</label>
+                        <input type="text" id="edit-cat-name-th" class="form-control" required placeholder="เช่น ระบบเบรก">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="font-size: 0.8rem; font-weight: 600;">ชื่อหมวดหมู่ภาษาอังกฤษ (English Name)</label>
+                        <input type="text" id="edit-cat-name-en" class="form-control" placeholder="เช่น Brake System">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="font-size: 0.8rem; font-weight: 600;">คำอธิบาย / รายละเอียด (Description)</label>
+                        <textarea id="edit-cat-desc" class="form-control" rows="2" placeholder="เช่น ชิ้นส่วนและอุปกรณ์ในระบบเบรกทั้งหมด..."></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer" style="padding: 0.85rem 1.25rem; display: flex; justify-content: flex-end; gap: 0.5rem; border-top: 1px solid var(--border-color);">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditCategoryModal()">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> บันทึกการแก้ไข</button>
                 </div>
             </form>
         </div>
@@ -2840,14 +3142,15 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid var(--border-color); padding-bottom: 1.25rem; margin-bottom: 1.25rem; gap: 1rem;">
                         <div>
                             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.35rem;">
-                                <div style="width: 32px; height: 32px; border-radius: var(--radius-sm); background: linear-gradient(135deg, #2563EB, #1D4ED8); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 0.95rem;">AP</div>
-                                <h2 style="font-size: 1.2rem; font-weight: 800; color: var(--text-primary); margin: 0;">บริษัท สยาม ออโต้พาร์ท เอไอ ซอฟต์แวร์ จำกัด</h2>
+                                <div id="receipt-owner-logo-icon" style="width: 32px; height: 32px; border-radius: var(--radius-sm); background: linear-gradient(135deg, #2563EB, #1D4ED8); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 0.95rem;">AP</div>
+                                <img id="receipt-owner-logo-img" src="" style="display: none; height: 32px; max-width: 120px; object-fit: contain;">
+                                <h2 id="receipt-owner-name-th" style="font-size: 1.15rem; font-weight: 800; color: var(--text-primary); margin: 0;">บริษัท ออโต้เซนทริค ดิจิทัล โซลูชันส์ จำกัด</h2>
                             </div>
                             <div style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.45;">
-                                SIAM AUTO PARTS AI SAAS CO., LTD.<br>
-                                888/99 อาคารสยามทาวเวอร์ ชั้น 18 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพมหานคร 10110<br>
-                                <strong>เลขประจำตัวผู้เสียภาษีอากร (Tax ID):</strong> 0105566099881 (สำนักงานใหญ่ / Head Office)<br>
-                                โทรศัพท์: 02-123-4567 &bull; อีเมล: billing@autoparts-ai.com
+                                <div id="receipt-owner-name-en">AUTOCENTRIC DIGITAL SOLUTIONS CO., LTD.</div>
+                                <div id="receipt-owner-address">888/99 อาคารสยามทาวเวอร์ ชั้น 18 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพมหานคร 10110</div>
+                                <div><strong>เลขประจำตัวผู้เสียภาษีอากร (Tax ID):</strong> <span id="receipt-owner-taxid">0105566099881</span> (<span id="receipt-owner-branch">สำนักงานใหญ่ / Head Office</span>)</div>
+                                <div>โทรศัพท์: <span id="receipt-owner-phone">02-123-4567</span> &bull; อีเมล: <span id="receipt-owner-email">billing@autoparts-crossref.com</span></div>
                             </div>
                         </div>
                         <div style="text-align: right; min-width: 220px;">
@@ -2904,7 +3207,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             <div style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-bottom: 0.25rem;">จำนวนเงินเป็นตัวอักษร / AMOUNT IN WORDS:</div>
                             <div id="receipt-amount-words" style="font-weight: 700; color: var(--primary); font-size: 0.88rem;">สามพันหนึ่งร้อยเก้าสิบเก้าบาทถ้วน</div>
                             <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.6rem; border-top: 1px solid var(--border-color); padding-top: 0.4rem; line-height: 1.4;">
-                                <strong>หมายเหตุ:</strong> เอกสารนี้ออกโดยระบบอัตโนมัติของ Siam Auto Parts AI SaaS และถือเป็นหลักฐานการชำระเงินที่ถูกต้องสมบูรณ์ตามประมวลรัษฎากร
+                                <strong>หมายเหตุ:</strong> <span id="receipt-owner-footer-notes">เอกสารนี้ออกโดยระบบอัตโนมัติและถือเป็นหลักฐานการชำระเงินที่ถูกต้องสมบูรณ์ตามกฎหมาย</span>
                             </div>
                         </div>
 
@@ -3465,6 +3768,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         });
 
         window.addEventListener('DOMContentLoaded', async () => {
+            loadPlatformSettingsPublic();
             const saved = localStorage.getItem('autoparts_saas_user');
             if (saved) {
                 try {
@@ -4224,21 +4528,23 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         }
 
         function clearSearchInputs() {
-            document.getElementById('omni-search-input').value = '';
-            document.getElementById('s-vin').value = '';
-            document.getElementById('s-car-brand').value = '';
-            document.getElementById('s-car-model').value = '';
-            document.getElementById('s-car-year').value = '';
-            document.getElementById('s-category').value = '';
-            document.getElementById('s-oem-code').value = '';
-            document.getElementById('s-oem-name').value = '';
-            document.getElementById('s-aftermarket-brand').value = '';
-            document.getElementById('s-aftermarket-part').value = '';
-            document.getElementById('vin-decoded-badge').style.display = 'none';
+            const omni = document.getElementById('omni-search-input');
+            if (omni) omni.value = '';
+            if (document.getElementById('s-vin')) document.getElementById('s-vin').value = '';
+            if (document.getElementById('s-car-brand')) document.getElementById('s-car-brand').value = '';
+            if (document.getElementById('s-car-model')) document.getElementById('s-car-model').value = '';
+            if (document.getElementById('s-car-year')) document.getElementById('s-car-year').value = '';
+            if (document.getElementById('s-category')) document.getElementById('s-category').value = '';
+            if (document.getElementById('s-oem-code')) document.getElementById('s-oem-code').value = '';
+            if (document.getElementById('s-oem-name')) document.getElementById('s-oem-name').value = '';
+            if (document.getElementById('s-aftermarket-brand')) document.getElementById('s-aftermarket-brand').value = '';
+            if (document.getElementById('s-aftermarket-part')) document.getElementById('s-aftermarket-part').value = '';
+            if (document.getElementById('vin-decoded-badge')) document.getElementById('vin-decoded-badge').style.display = 'none';
         }
 
         function executeOmniSearch() {
-            const query = document.getElementById('omni-search-input').value.trim();
+            const omni = document.getElementById('omni-search-input');
+            const query = omni ? omni.value.trim() : '';
             if (!query) {
                 performAdvancedSearch();
                 return;
@@ -6465,14 +6771,22 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     elCatList.innerHTML = `<span style="font-size: 0.8rem; color: var(--text-muted);">${(typeof t === 'function') ? t('common.noData', 'No data') : 'No data'}</span>`;
                 } else {
                     elCatList.innerHTML = cachedAdminMetaData.categories.map(c => `
-                        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.35rem 0.65rem; font-size: 0.8rem;">
-                            <div style="display: flex; align-items: center; gap: 0.5rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
-                                <strong style="color: #fff; font-size: 0.82rem;">${escH(c.name)}</strong>
-                                ${c.name_en ? `<span style="font-size: 0.72rem; color: var(--text-secondary); background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.25); padding: 0.05rem 0.4rem; border-radius: 4px;">${escH(c.name_en)}</span>` : ''}
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: rgba(255,255,255,0.03); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.45rem 0.65rem; font-size: 0.8rem;">
+                            <div style="display: flex; flex-direction: column; gap: 0.15rem; min-width: 0; flex: 1; margin-right: 0.5rem;">
+                                <div style="display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap;">
+                                    <strong style="color: #fff; font-size: 0.84rem;">${escH(c.name)}</strong>
+                                    ${c.name_en ? `<span style="font-size: 0.7rem; background: rgba(251,191,36,0.15); color: #FBBF24; border: 1px solid rgba(251,191,36,0.3); padding: 0.05rem 0.35rem; border-radius: 4px; font-weight: 500;">${escH(c.name_en)}</span>` : ''}
+                                </div>
+                                ${c.description ? `<span style="font-size: 0.72rem; color: var(--text-secondary); text-overflow: ellipsis; overflow: hidden; white-space: nowrap;">${escH(c.description)}</span>` : `<span style="font-size: 0.70rem; color: var(--text-muted);"><i class="fa-solid fa-folder"></i> ID #${c.id}</span>`}
                             </div>
-                            <button type="button" onclick="deleteMetaCategory(${c.id}, '${escQ(c.name)}')" class="btn btn-danger btn-sm" style="padding: 0.15rem 0.45rem; font-size: 0.7rem; border-radius: 4px; line-height: 1;" title="Delete">
-                                <i class="fa-solid fa-trash-can"></i>
-                            </button>
+                            <div style="display: flex; align-items: center; gap: 0.35rem;">
+                                <button type="button" onclick="openEditCategoryModal(${c.id}, '${escQ(c.name)}', '${escQ(c.name_en || '')}', '${escQ(c.description || '')}')" class="btn btn-secondary btn-sm" style="padding: 0.2rem 0.45rem; font-size: 0.72rem; border-radius: 4px; line-height: 1; color: #38BDF8;" title="Edit">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <button type="button" onclick="deleteMetaCategory(${c.id}, '${escQ(c.name)}')" class="btn btn-danger btn-sm" style="padding: 0.2rem 0.45rem; font-size: 0.72rem; border-radius: 4px; line-height: 1;" title="Delete">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
                         </div>
                     `).join('');
                 }
@@ -6716,6 +7030,48 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     loadMetadataDropdowns();
                 } else {
                     showToast('Failed to delete category', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                showToast('Network error', 'error');
+            }
+        }
+
+        function openEditCategoryModal(id, nameTh, nameEn, description) {
+            document.getElementById('edit-cat-id').value = id;
+            document.getElementById('edit-cat-name-th').value = nameTh || '';
+            document.getElementById('edit-cat-name-en').value = nameEn || '';
+            document.getElementById('edit-cat-desc').value = description || '';
+            const modal = document.getElementById('modal-edit-category');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeEditCategoryModal() {
+            const modal = document.getElementById('modal-edit-category');
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function submitEditCategory(e) {
+            e.preventDefault();
+            const id = document.getElementById('edit-cat-id').value;
+            const name = document.getElementById('edit-cat-name-th').value.trim();
+            const nameEn = document.getElementById('edit-cat-name-en').value.trim();
+            const description = document.getElementById('edit-cat-desc').value.trim();
+            if (!id || !name) return;
+            try {
+                const res = await fetch(`/api/admin/metadata/categories/${id}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json', ...getAuthHeaders()},
+                    body: JSON.stringify({ name, name_en: nameEn, description })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast('แก้ไขหมวดหมู่อะไหล่เรียบร้อยแล้ว', 'success');
+                    closeEditCategoryModal();
+                    await loadAdminMetaOptions();
+                    loadMetadataDropdowns();
+                } else {
+                    showToast(data.detail || data.error || 'Failed to update category', 'error');
                 }
             } catch (err) {
                 console.error(err);
@@ -7156,7 +7512,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         function switchOwnerTab(tab) {
             window.currentOwnerActiveTab = tab;
             document.querySelectorAll('#owner-view .workspace-tabs .workspace-tab-btn').forEach(btn => btn.classList.remove('active'));
-            ['overview', 'customers', 'subs', 'revenue', 'searchbi', 'opps', 'plans', 'pipe', 'roles', 'reports', 'audit', 'ai'].forEach(t => {
+            ['overview', 'customers', 'subs', 'revenue', 'searchbi', 'opps', 'plans', 'pipe', 'roles', 'reports', 'audit', 'ai', 'branding', 'company', 'invconfig'].forEach(t => {
                 const el = document.getElementById(`owner-sub-${t}`);
                 if (el) el.style.display = 'none';
             });
@@ -7171,7 +7527,10 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 'customers': 'nav-owner-customers',
                 'revenue': 'nav-owner-revenue',
                 'searchbi': 'nav-owner-searchbi',
-                'ai': 'nav-owner'
+                'ai': 'nav-owner',
+                'branding': 'nav-owner',
+                'company': 'nav-owner',
+                'invconfig': 'nav-owner'
             };
             const targetNavId = navMap[tab] || 'nav-owner';
             document.querySelectorAll('#owner-nav-group .nav-item').forEach(btn => btn.classList.remove('active'));
@@ -7189,6 +7548,9 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             else if (tab === 'roles') loadRolesAndPermissions();
             else if (tab === 'audit') loadAuditLogs();
             else if (tab === 'ai') loadOwnerAiEngine();
+            else if (tab === 'branding') loadOwnerBrandingTab();
+            else if (tab === 'company') loadOwnerCompanyTab();
+            else if (tab === 'invconfig') loadOwnerInvoiceConfigTab();
         }
 
         async function loadOwnerOverviewTab() {
@@ -8557,6 +8919,347 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             }
         }
 
+        // ================= OWNER BRANDING & CMS SETTINGS =================
+        async function loadOwnerBrandingTab() {
+            try {
+                const res = await fetch('/api/owner/settings/branding', { headers: getAuthHeaders() });
+                const data = await res.json();
+                if (data.success && data.branding) {
+                    const b = data.branding;
+                    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = (val !== undefined && val !== null) ? val : ''; };
+                    setVal('owner-cfg-site-title', b.site_title);
+                    setVal('owner-cfg-logo-url', b.logo_url);
+                    setVal('owner-cfg-hero-badge', b.hero_badge);
+                    setVal('owner-cfg-hero-title', b.hero_title);
+                    setVal('owner-cfg-hero-subtitle', b.hero_subtitle);
+                    setVal('owner-cfg-hero-bg-style', b.hero_bg_style || 'gradient');
+                    setVal('owner-cfg-hero-bg-color', b.hero_bg_color || '#0B132B');
+                    setVal('owner-cfg-hero-bg-gradient', b.hero_bg_gradient || '');
+                    setVal('owner-cfg-seo-title', b.seo_meta_title);
+                    setVal('owner-cfg-seo-desc', b.seo_meta_description);
+                    setVal('owner-cfg-seo-keywords', b.seo_meta_keywords);
+                    setVal('owner-cfg-contact-email', b.contact_email);
+                    setVal('owner-cfg-contact-phone', b.contact_phone);
+                    setVal('owner-cfg-contact-line', b.contact_line);
+                    setVal('owner-cfg-footer-copyright', b.footer_copyright);
+
+                    previewHeroBgStyle(b.hero_bg_style || 'gradient');
+                }
+            } catch (err) {
+                console.error("Error loading branding settings:", err);
+                showToast("Failed to load branding settings", "error");
+            }
+        }
+
+        function previewHeroBgStyle(style) {
+            const customBox = document.getElementById('owner-cfg-custom-bg-box');
+            if (customBox) {
+                customBox.style.display = (style === 'custom') ? 'block' : 'none';
+            }
+        }
+
+        async function saveOwnerBrandingSettings() {
+            const payload = {
+                site_title: document.getElementById('owner-cfg-site-title').value.trim(),
+                logo_url: document.getElementById('owner-cfg-logo-url').value.trim(),
+                hero_badge: document.getElementById('owner-cfg-hero-badge').value.trim(),
+                hero_title: document.getElementById('owner-cfg-hero-title').value.trim(),
+                hero_subtitle: document.getElementById('owner-cfg-hero-subtitle').value.trim(),
+                hero_bg_style: document.getElementById('owner-cfg-hero-bg-style').value,
+                hero_bg_color: document.getElementById('owner-cfg-hero-bg-color').value,
+                hero_bg_gradient: document.getElementById('owner-cfg-hero-bg-gradient').value.trim(),
+                seo_meta_title: document.getElementById('owner-cfg-seo-title').value.trim(),
+                seo_meta_description: document.getElementById('owner-cfg-seo-desc').value.trim(),
+                seo_meta_keywords: document.getElementById('owner-cfg-seo-keywords').value.trim(),
+                contact_email: document.getElementById('owner-cfg-contact-email').value.trim(),
+                contact_phone: document.getElementById('owner-cfg-contact-phone').value.trim(),
+                contact_line: document.getElementById('owner-cfg-contact-line').value.trim(),
+                footer_copyright: document.getElementById('owner-cfg-footer-copyright').value.trim()
+            };
+
+            try {
+                const res = await fetch('/api/owner/settings/branding', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("บันทึกการตั้งค่าหน้าแรก & CMS เรียบร้อยแล้ว", "success");
+                    loadPlatformSettingsPublic();
+                } else {
+                    showToast(data.detail || "Failed to save branding", "error");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Error saving branding settings", "error");
+            }
+        }
+
+        // ================= OWNER COMPANY PROFILE & TAX SETTINGS =================
+        async function loadOwnerCompanyTab() {
+            try {
+                const res = await fetch('/api/owner/settings/company', { headers: getAuthHeaders() });
+                const data = await res.json();
+                if (data.success && data.company) {
+                    const c = data.company;
+                    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = (val !== undefined && val !== null) ? val : ''; };
+                    setVal('owner-cfg-company-th', c.company_name_th);
+                    setVal('owner-cfg-company-en', c.company_name_en);
+                    setVal('owner-cfg-taxid', c.company_tax_id);
+                    setVal('owner-cfg-branch', c.company_branch);
+                    setVal('owner-cfg-address-th', c.company_address_th);
+                    setVal('owner-cfg-address-en', c.company_address_en);
+                    setVal('owner-cfg-billing-phone', c.company_phone);
+                    setVal('owner-cfg-billing-email', c.company_email);
+                    setVal('owner-cfg-website', c.company_website);
+                    setVal('owner-cfg-bank-name', c.bank_name);
+                    setVal('owner-cfg-bank-acc-no', c.bank_account_no);
+                    setVal('owner-cfg-bank-acc-name', c.bank_account_name);
+                    setVal('owner-cfg-promptpay', c.promptpay_id);
+                    setVal('owner-cfg-signature-url', c.digital_signature_url);
+                    setVal('owner-cfg-stamp-url', c.company_stamp_url);
+                }
+            } catch (err) {
+                console.error("Error loading company settings:", err);
+                showToast("Failed to load company profile", "error");
+            }
+        }
+
+        async function saveOwnerCompanySettings() {
+            const payload = {
+                company_name_th: document.getElementById('owner-cfg-company-th').value.trim(),
+                company_name_en: document.getElementById('owner-cfg-company-en').value.trim(),
+                company_tax_id: document.getElementById('owner-cfg-taxid').value.trim(),
+                company_branch: document.getElementById('owner-cfg-branch').value.trim(),
+                company_address_th: document.getElementById('owner-cfg-address-th').value.trim(),
+                company_address_en: document.getElementById('owner-cfg-address-en').value.trim(),
+                company_phone: document.getElementById('owner-cfg-billing-phone').value.trim(),
+                company_email: document.getElementById('owner-cfg-billing-email').value.trim(),
+                company_website: document.getElementById('owner-cfg-website').value.trim(),
+                bank_name: document.getElementById('owner-cfg-bank-name').value.trim(),
+                bank_account_no: document.getElementById('owner-cfg-bank-acc-no').value.trim(),
+                bank_account_name: document.getElementById('owner-cfg-bank-acc-name').value.trim(),
+                promptpay_id: document.getElementById('owner-cfg-promptpay').value.trim(),
+                digital_signature_url: document.getElementById('owner-cfg-signature-url').value.trim(),
+                company_stamp_url: document.getElementById('owner-cfg-stamp-url').value.trim()
+            };
+
+            try {
+                const res = await fetch('/api/owner/settings/company', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("บันทึกข้อมูลบริษัท & ภาษีเรียบร้อยแล้ว", "success");
+                    loadPlatformSettingsPublic();
+                } else {
+                    showToast(data.detail || "Failed to save company settings", "error");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Error saving company settings", "error");
+            }
+        }
+
+        // ================= OWNER INVOICE & TAX CONFIG =================
+        async function loadOwnerInvoiceConfigTab() {
+            try {
+                const res = await fetch('/api/owner/settings/invoice', { headers: getAuthHeaders() });
+                const data = await res.json();
+                if (data.success && data.invoice) {
+                    const inv = data.invoice;
+                    const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = (val !== undefined && val !== null) ? val : ''; };
+                    setVal('owner-cfg-inv-prefix', inv.invoice_prefix);
+                    setVal('owner-cfg-tax-prefix', inv.tax_invoice_prefix);
+                    setVal('owner-cfg-rec-prefix', inv.receipt_prefix);
+                    setVal('owner-cfg-due-days', inv.payment_due_days);
+                    setVal('owner-cfg-vat-pct', inv.default_vat_rate);
+                    setVal('owner-cfg-wht-pct', inv.default_wht_rate);
+                    setVal('owner-cfg-vat-mode', inv.vat_inclusive ? "1" : "0");
+                    setVal('owner-cfg-inv-theme-color', inv.invoice_theme_color || '#2563EB');
+                    setVal('owner-cfg-inv-theme-hex', inv.invoice_theme_color || '#2563EB');
+                    setVal('owner-cfg-inv-notes', inv.invoice_footer_notes);
+                    setVal('owner-cfg-inv-terms', inv.invoice_terms);
+                }
+            } catch (err) {
+                console.error("Error loading invoice settings:", err);
+                showToast("Failed to load invoice config", "error");
+            }
+        }
+
+        async function saveOwnerInvoiceSettings() {
+            const payload = {
+                invoice_prefix: document.getElementById('owner-cfg-inv-prefix').value.trim(),
+                tax_invoice_prefix: document.getElementById('owner-cfg-tax-prefix').value.trim(),
+                receipt_prefix: document.getElementById('owner-cfg-rec-prefix').value.trim(),
+                payment_due_days: parseInt(document.getElementById('owner-cfg-due-days').value) || 7,
+                default_vat_rate: parseFloat(document.getElementById('owner-cfg-vat-pct').value) || 7.0,
+                default_wht_rate: parseFloat(document.getElementById('owner-cfg-wht-pct').value) || 3.0,
+                vat_inclusive: document.getElementById('owner-cfg-vat-mode').value === "1",
+                invoice_theme_color: document.getElementById('owner-cfg-inv-theme-hex').value.trim() || '#2563EB',
+                invoice_footer_notes: document.getElementById('owner-cfg-inv-notes').value.trim(),
+                invoice_terms: document.getElementById('owner-cfg-inv-terms').value.trim()
+            };
+
+            try {
+                const res = await fetch('/api/owner/settings/invoice', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("บันทึกการตั้งค่ารูปแบบ Invoice เรียบร้อยแล้ว", "success");
+                    loadPlatformSettingsPublic();
+                } else {
+                    showToast(data.detail || "Failed to save invoice config", "error");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Error saving invoice settings", "error");
+            }
+        }
+
+        function previewSampleInvoiceModal() {
+            const sampleInv = {
+                id: 9999,
+                invoice_number: `${document.getElementById('owner-cfg-inv-prefix').value || 'INV-'}202609-0099`,
+                created_at: new Date().toISOString(),
+                period_start: '01/09/2026',
+                period_end: '30/09/2026',
+                payment_method: 'CREDIT_CARD',
+                amount: 2990.0,
+                vat_amount: 209.30,
+                total_amount: 3199.30
+            };
+            viewInvoiceReceipt(sampleInv);
+        }
+
+        // ================= RESET / CLEAN DATA CONFIRMATION =================
+        async function confirmCleanTestData() {
+            const answer = prompt("คำเตือน: คุณกำลังจะล้างข้อมูลจำลอง (Leads, Invoices, Usage Logs) เพื่อเตรียมความพร้อมของระบบจริง\\n\\nพิมพ์คำว่า CLEAN เพื่อยืนยันการล้างข้อมูล:");
+            if (answer !== 'CLEAN') {
+                if (answer !== null) showToast("ยกเลิกคำสั่งล้างข้อมูล (พิมพ์ข้อความไม่ตรง)", "warning");
+                return;
+            }
+
+            try {
+                showToast("กำลังล้างข้อมูลจำลอง...", "info");
+                const res = await fetch('/api/owner/data/clean-test-data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    body: JSON.stringify({ confirm: 'CLEAN', preserve_users: true, preserve_parts: true })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`ล้างข้อมูลเรียบร้อยแล้ว: ${data.detail}`, "success");
+                    loadOwnerCommandCenter();
+                } else {
+                    showToast(data.detail || "Failed to clean test data", "error");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Error cleaning data", "error");
+            }
+        }
+
+        // ================= PUBLIC SETTINGS & DYNAMIC THEME LOADER =================
+        window.cachedPlatformSettings = null;
+        async function loadPlatformSettingsPublic() {
+            try {
+                const res = await fetch('/api/platform/settings');
+                const data = await res.json();
+                if (data.success && data.settings) {
+                    const s = data.settings;
+                    window.cachedPlatformSettings = s;
+
+                    // 1. Site Title & Document Title
+                    if (s.site_title) {
+                        document.title = s.seo_meta_title || s.site_title;
+                        const logoNameEl = document.getElementById('landing-logo-name');
+                        if (logoNameEl) logoNameEl.innerHTML = escH(s.site_title);
+                    }
+
+                    // 2. SEO Meta Description & Keywords
+                    if (s.seo_meta_description) {
+                        let metaDesc = document.querySelector('meta[name="description"]');
+                        if (!metaDesc) {
+                            metaDesc = document.createElement('meta');
+                            metaDesc.setAttribute('name', 'description');
+                            document.head.appendChild(metaDesc);
+                        }
+                        metaDesc.setAttribute('content', s.seo_meta_description);
+                    }
+
+                    // 3. Logo
+                    const logoImgEl = document.getElementById('landing-logo-img');
+                    const logoIconEl = document.getElementById('landing-logo-icon');
+                    if (s.logo_url && logoImgEl && logoIconEl) {
+                        logoImgEl.src = s.logo_url;
+                        logoImgEl.style.display = 'block';
+                        logoIconEl.style.display = 'none';
+                    }
+
+                    // 4. Hero Banner Content
+                    if (s.hero_badge) {
+                        const heroBadgeEl = document.getElementById('landing-hero-badge');
+                        if (heroBadgeEl) heroBadgeEl.textContent = s.hero_badge;
+                    }
+                    if (s.hero_title) {
+                        const heroTitleEl = document.getElementById('landing-hero-title');
+                        if (heroTitleEl) heroTitleEl.textContent = s.hero_title;
+                    }
+                    if (s.hero_subtitle) {
+                        const heroDescEl = document.getElementById('landing-hero-desc');
+                        if (heroDescEl) heroDescEl.textContent = s.hero_subtitle;
+                    }
+
+                    // 5. Hero Background Theme
+                    const heroSection = document.getElementById('landing-hero');
+                    if (heroSection) {
+                        if (s.hero_bg_style === 'dark_carbon') {
+                            heroSection.style.background = '#0B132B';
+                        } else if (s.hero_bg_style === 'cyber_tech') {
+                            heroSection.style.background = '#0F172A';
+                        } else if (s.hero_bg_style === 'custom' && (s.hero_bg_gradient || s.hero_bg_color)) {
+                            heroSection.style.background = s.hero_bg_gradient || s.hero_bg_color;
+                        }
+                    }
+
+                    // 6. Sync Receipt / Invoice Header
+                    if (document.getElementById('receipt-owner-name-th')) {
+                        document.getElementById('receipt-owner-name-th').textContent = s.company_name_th || 'บริษัท ออโต้เซนทริค ดิจิทัล โซลูชันส์ จำกัด';
+                    }
+                    if (document.getElementById('receipt-owner-name-en')) {
+                        document.getElementById('receipt-owner-name-en').textContent = s.company_name_en || 'AUTOCENTRIC DIGITAL SOLUTIONS CO., LTD.';
+                    }
+                    if (document.getElementById('receipt-owner-address')) {
+                        document.getElementById('receipt-owner-address').textContent = s.company_address_th || '888/99 อาคารสยามทาวเวอร์ ชั้น 18 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพมหานคร 10110';
+                    }
+                    if (document.getElementById('receipt-owner-taxid')) {
+                        document.getElementById('receipt-owner-taxid').textContent = s.company_tax_id || '0105566099881';
+                    }
+                    if (document.getElementById('receipt-owner-branch')) {
+                        document.getElementById('receipt-owner-branch').textContent = s.company_branch || 'สำนักงานใหญ่ (Head Office)';
+                    }
+                    if (document.getElementById('receipt-owner-phone')) {
+                        document.getElementById('receipt-owner-phone').textContent = s.company_phone || '02-123-4567';
+                    }
+                    if (document.getElementById('receipt-owner-email')) {
+                        document.getElementById('receipt-owner-email').textContent = s.company_email || 'billing@autoparts-crossref.com';
+                    }
+                    if (document.getElementById('receipt-owner-footer-notes')) {
+                        document.getElementById('receipt-owner-footer-notes').textContent = s.invoice_footer_notes || 'เอกสารนี้ออกโดยระบบอัตโนมัติและถือเป็นหลักฐานการชำระเงินที่ถูกต้องสมบูรณ์ตามกฎหมาย';
+                    }
+                }
+            } catch (err) {
+                console.error("Error loading public platform settings:", err);
+            }
+        }
+
         // 2. SUPER ADMIN PLATFORM CONTROL
         async function loadSuperAdminHealth() {
             try {
@@ -8752,9 +9455,6 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             <td><span class="code-badge">${(l.interested_plan_id || 'PRO').toUpperCase()}</span></td>
                             <td>฿${(l.expected_mrr || 2990).toLocaleString()}</td>
                             <td style="font-size: 0.75rem; color: var(--text-muted);">${l.notes || '-'}</td>
-                            <td style="text-align: right;">
-                                <button class="btn btn-primary btn-sm" onclick="moveLeadStage(${l.id}, 'PROPOSAL')">Send Proposal</button>
-                            </td>
                         `;
                         salesTbody.appendChild(tr);
                     });

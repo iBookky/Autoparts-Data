@@ -95,7 +95,8 @@ def init_db():
         "003_rbac_and_crm_pipeline.sql",
         "004_customer_organization_rbac.sql",
         "005_subscription_billing_engine.sql",
-        "006_owner_command_center.sql"
+        "006_owner_command_center.sql",
+        "007_platform_settings.sql"
     ]
     conn = get_db_connection()
     try:
@@ -269,6 +270,11 @@ def init_db():
             cursor.execute("ALTER TABLE meta_ai_models ADD COLUMN is_default INTEGER DEFAULT 0")
         if 'cost_per_1k_tokens' not in ai_cols:
             cursor.execute("ALTER TABLE meta_ai_models ADD COLUMN cost_per_1k_tokens REAL DEFAULT 0.001")
+            
+        cursor.execute("PRAGMA table_info(meta_categories)")
+        cat_cols = [c[1] for c in cursor.fetchall()]
+        if 'description' not in cat_cols:
+            cursor.execute("ALTER TABLE meta_categories ADD COLUMN description TEXT DEFAULT ''")
             
         cursor.execute("SELECT COUNT(*) FROM meta_ai_models WHERE is_default = 1")
         if cursor.fetchone()[0] == 0:
@@ -1219,11 +1225,11 @@ def update_meta_car_year(year_id: int, new_year: str):
     finally:
         conn.close()
 
-def update_meta_category(category_id: int, new_name: str, new_name_en: str = ""):
+def update_meta_category(category_id: int, new_name: str, new_name_en: str = "", description: str = ""):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("UPDATE meta_categories SET name = ?, name_en = ? WHERE id = ?", (new_name.strip(), (new_name_en or "").strip(), category_id))
+        cursor.execute("UPDATE meta_categories SET name = ?, name_en = ?, description = ? WHERE id = ?", (new_name.strip(), (new_name_en or "").strip(), (description or "").strip(), category_id))
         conn.commit()
         return True
     except Exception as e:
@@ -3400,6 +3406,114 @@ def register_trial_tenant_db(data: Dict[str, Any]) -> Dict[str, Any]:
         return {"success": False, "error": f"เกิดข้อผิดพลาดในการลงทะเบียน: {str(e)}"}
     finally:
         conn.close()
+
+def get_platform_settings() -> Dict[str, Any]:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM platform_settings WHERE id = 1")
+        row = cursor.fetchone()
+        if not row:
+            cursor.execute("INSERT OR IGNORE INTO platform_settings (id) VALUES (1)")
+            conn.commit()
+            cursor.execute("SELECT * FROM platform_settings WHERE id = 1")
+            row = cursor.fetchone()
+        if row:
+            if hasattr(row, 'keys'):
+                return dict(row)
+            col_names = [d[0] for d in cursor.description]
+            return dict(zip(col_names, row))
+        return {}
+    except Exception as e:
+        print(f"Error in get_platform_settings: {e}")
+        return {}
+    finally:
+        conn.close()
+
+def update_platform_settings(data: Dict[str, Any]) -> bool:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        allowed_keys = [
+            "site_title", "logo_url", "favicon_url", "hero_badge", "hero_title",
+            "hero_subtitle", "hero_bg_style", "hero_bg_gradient", "hero_bg_color",
+            "seo_meta_title", "seo_meta_description", "seo_meta_keywords", "seo_og_image_url",
+            "contact_email", "contact_phone", "contact_line", "footer_copyright",
+            "owner_company_name_th", "owner_company_name_en", "owner_tax_id", "owner_branch_name",
+            "owner_address_th", "owner_address_en", "owner_phone", "owner_email", "owner_website",
+            "owner_logo_url", "owner_signature_url", "owner_stamp_url", "owner_bank_name",
+            "owner_bank_account_name", "owner_bank_account_number", "owner_promptpay_id",
+            "invoice_prefix", "tax_invoice_prefix", "receipt_prefix", "invoice_due_days",
+            "vat_percentage", "vat_included", "wht_percentage", "invoice_footer_notes",
+            "invoice_terms_conditions", "invoice_theme_color"
+        ]
+        updates = []
+        params = []
+        for k in allowed_keys:
+            if k in data and data[k] is not None:
+                updates.append(f"{k} = ?")
+                params.append(data[k])
+        
+        if not updates:
+            return True
+        
+        sql = f"UPDATE platform_settings SET {', '.join(updates)}, updated_at = CURRENT_TIMESTAMP WHERE id = 1"
+        cursor.execute(sql, tuple(params))
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"Error in update_platform_settings: {e}")
+        conn.rollback()
+        return False
+    finally:
+        conn.close()
+
+def clean_production_database() -> Dict[str, Any]:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        # Clean parts catalogs
+        cursor.execute("DELETE FROM master_parts")
+        cursor.execute("DELETE FROM temp_parts")
+        cursor.execute("DELETE FROM cross_reference_relations")
+        
+        # Clean search logs and usage records
+        cursor.execute("DELETE FROM search_logs")
+        cursor.execute("DELETE FROM user_favorites")
+        cursor.execute("DELETE FROM ai_usage_stats")
+        
+        # Clean demo customer leads
+        cursor.execute("DELETE FROM customer_leads WHERE email NOT LIKE '%@autocentric.net'")
+        
+        # Clean test owner alerts
+        cursor.execute("DELETE FROM owner_alerts")
+        
+        # Clean test audit logs
+        cursor.execute("DELETE FROM platform_audit_logs")
+        cursor.execute("DELETE FROM commercial_audit_logs")
+        cursor.execute("DELETE FROM organization_audit_logs")
+        
+        # Reset autoincrement sequences
+        try:
+            if is_postgres_mode():
+                cursor.execute("ALTER SEQUENCE IF EXISTS master_parts_id_seq RESTART WITH 1")
+                cursor.execute("ALTER SEQUENCE IF EXISTS temp_parts_id_seq RESTART WITH 1")
+                cursor.execute("ALTER SEQUENCE IF EXISTS cross_reference_relations_id_seq RESTART WITH 1")
+                cursor.execute("ALTER SEQUENCE IF EXISTS search_logs_id_seq RESTART WITH 1")
+            else:
+                cursor.execute("DELETE FROM sqlite_sequence WHERE name IN ('master_parts', 'temp_parts', 'cross_reference_relations', 'search_logs')")
+        except Exception as sq_e:
+            print(f"Note on sequence reset: {sq_e}")
+            
+        conn.commit()
+        return {"success": True, "message": "Production database cleaned and ready for inventory setup."}
+    except Exception as e:
+        conn.rollback()
+        print(f"Error in clean_production_database: {e}")
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
+
 
 
 

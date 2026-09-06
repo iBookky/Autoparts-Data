@@ -10,7 +10,7 @@ from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends, Hea
 from fastapi.responses import HTMLResponse, StreamingResponse, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
 
 # Import database and scraper operations
@@ -132,7 +132,10 @@ from backend.database import (
     create_owner_alert,
     get_public_coverage_stats_db,
     get_public_demo_search_db,
-    register_trial_tenant_db
+    register_trial_tenant_db,
+    get_platform_settings,
+    update_platform_settings,
+    clean_production_database
 )
 from backend.services.entitlement_service import EntitlementService
 from backend.services.billing_calculator import BillingCalculator
@@ -167,11 +170,34 @@ class LoginRequest(BaseModel):
 def verify_sha256(password: str) -> str:
     return hashlib.sha256(password.encode("utf-8")).hexdigest()
 
-# Simple dependency to check permissions based on custom headers
-def get_current_user(x_user_role: Optional[str] = Header(None), x_username: Optional[str] = Header(None)):
-    if not x_user_role or not x_username:
+# Simple dependency to check permissions based on custom headers or Authorization Bearer
+def get_current_user(
+    x_user_role: Optional[str] = Header(None),
+    x_username: Optional[str] = Header(None),
+    authorization: Optional[str] = Header(None)
+):
+    role = x_user_role
+    username = x_username
+
+    if (not role or not username) and authorization and authorization.startswith("Bearer "):
+        token = authorization.replace("Bearer ", "").strip()
+        if ":" in token:
+            parts = token.split(":")
+            username = parts[0]
+            role = parts[1]
+        else:
+            db_user = get_user_by_username(token)
+            if db_user:
+                username = db_user["username"]
+                role = db_user["role"]
+            elif token.lower() in ["owner", "superadmin", "admin", "staff", "customer"]:
+                username = token.lower()
+                role_map = {"owner": "OWNER", "superadmin": "SUPER_ADMIN", "admin": "ADMIN", "staff": "STAFF", "customer": "CUSTOMER"}
+                role = role_map.get(token.lower(), "STAFF")
+
+    if not role or not username:
         raise HTTPException(status_code=401, detail="ไม่ได้รับสิทธิ์การใช้งาน กรุณาเข้าสู่ระบบก่อน")
-    return {"username": x_username, "role": x_user_role}
+    return {"username": username, "role": role.upper()}
 
 def require_owner(user = Depends(get_current_user)):
     if user["role"] not in ["OWNER", "SUPER_ADMIN"]:
@@ -195,6 +221,7 @@ def require_staff(user = Depends(get_current_user)):
 
 # ================= AUTH ENDPOINTS =================
 
+@app.post("/api/saas/auth/login")
 @app.post("/api/auth/login")
 @app.post("/api/login")
 async def login(req: LoginRequest):
@@ -228,8 +255,15 @@ async def login(req: LoginRequest):
         
     return {
         "success": True,
+        "token": f"{user['username']}:{user_role}",
         "username": user["username"],
-        "role": user_role
+        "role": user_role,
+        "user": {
+            "id": user.get("id", 1),
+            "username": user["username"],
+            "role": user_role,
+            "email": user.get("email", f"{user['username']}@autoparts.local")
+        }
     }
 
 # ================= PHASE 11: COMMERCIAL MVP & GTM PUBLIC ENDPOINTS =================
@@ -973,6 +1007,7 @@ class MetaYearRequest(BaseModel):
 class MetaCategoryRequest(BaseModel):
     name: str
     name_en: Optional[str] = ""
+    description: Optional[str] = ""
 
 class MetaAIModelRequest(BaseModel):
     model_config = {"protected_namespaces": ()}
@@ -1146,7 +1181,7 @@ async def update_metadata_car_year(id: int, req: MetaYearRequest, admin = Depend
 
 @app.put("/api/admin/metadata/categories/{id}")
 async def update_metadata_category(id: int, req: MetaCategoryRequest, admin = Depends(require_admin)):
-    success = update_meta_category(id, req.name, req.name_en or "")
+    success = update_meta_category(id, req.name, req.name_en or "", req.description or "")
     return {"success": success}
 
 # Super Admin AI key configuration Pydantic schema
@@ -2233,6 +2268,251 @@ async def toggle_owner_ai_skill_endpoint(skill_key: str, req: dict = None, user 
     if success:
         log_audit_action(user.get("id", 1), user["username"], user["role"], "TOGGLE_AI_SKILL", "agent_skills", 0, None, f"{skill_key}:{is_active}")
     return {"success": success}
+
+# ================= PLATFORM SETTINGS, HOMEPAGE CMS & OWNER INVOICE PROFILE =================
+class PlatformSettingsUpdateRequest(BaseModel):
+    # Branding & Homepage CMS
+    site_title: Optional[str] = None
+    logo_url: Optional[str] = None
+    favicon_url: Optional[str] = None
+    hero_badge: Optional[str] = None
+    hero_title: Optional[str] = None
+    hero_subtitle: Optional[str] = None
+    hero_bg_style: Optional[str] = None
+    hero_bg_gradient: Optional[str] = None
+    hero_bg_color: Optional[str] = None
+    
+    # SEO
+    seo_meta_title: Optional[str] = None
+    seo_meta_description: Optional[str] = None
+    seo_meta_keywords: Optional[str] = None
+    seo_og_image_url: Optional[str] = None
+    
+    # Contact
+    contact_email: Optional[str] = None
+    contact_phone: Optional[str] = None
+    contact_line: Optional[str] = None
+    footer_copyright: Optional[str] = None
+    
+    # Owner & Tax Profile
+    owner_company_name_th: Optional[str] = None
+    owner_company_name_en: Optional[str] = None
+    owner_tax_id: Optional[str] = None
+    owner_branch_name: Optional[str] = None
+    owner_address_th: Optional[str] = None
+    owner_address_en: Optional[str] = None
+    owner_phone: Optional[str] = None
+    owner_email: Optional[str] = None
+    owner_website: Optional[str] = None
+    owner_logo_url: Optional[str] = None
+    owner_signature_url: Optional[str] = None
+    owner_stamp_url: Optional[str] = None
+    owner_bank_name: Optional[str] = None
+    owner_bank_account_name: Optional[str] = None
+    owner_bank_account_number: Optional[str] = None
+    owner_promptpay_id: Optional[str] = None
+    
+    # Invoice Configuration
+    invoice_prefix: Optional[str] = None
+    tax_invoice_prefix: Optional[str] = None
+    receipt_prefix: Optional[str] = None
+    invoice_due_days: Optional[int] = None
+    vat_percentage: Optional[float] = None
+    vat_included: Optional[int] = None
+    wht_percentage: Optional[float] = None
+    invoice_footer_notes: Optional[str] = None
+    invoice_terms_conditions: Optional[str] = None
+    invoice_theme_color: Optional[str] = None
+
+@app.get("/api/platform/settings")
+@app.get("/api/public/platform-settings")
+async def get_public_platform_settings():
+    settings = get_platform_settings()
+    return {
+        "success": True,
+        "settings": {
+            "site_title": settings.get("site_title", "AutoParts Cross-Ref - B2B Automotive Intelligence"),
+            "logo_url": settings.get("logo_url", ""),
+            "favicon_url": settings.get("favicon_url", ""),
+            "hero_badge": settings.get("hero_badge", "แพลตฟอร์มสืบค้นและเทียบรหัสอะไหล่รถยนต์อันดับ 1 ในไทย"),
+            "hero_title": settings.get("hero_title", "เทียบเบอร์อะไหล่แท้ & อะไหล่ทดแทน"),
+            "hero_subtitle": settings.get("hero_subtitle", "ค้นหาข้ามแบรนด์ แม่นยำ รวดเร็ว พร้อมเชื่อมต่อระบบ AI และสต็อกสินค้าอัจฉริยะ"),
+            "hero_bg_style": settings.get("hero_bg_style", "gradient"),
+            "hero_bg_gradient": settings.get("hero_bg_gradient", ""),
+            "hero_bg_color": settings.get("hero_bg_color", "#0B132B"),
+            "seo_meta_title": settings.get("seo_meta_title", "AutoParts Cross-Ref | ระบบเทียบเบอร์อะไหล่และค้นหาด้วย VIN"),
+            "seo_meta_description": settings.get("seo_meta_description", "แพลตฟอร์มค้นหาและเทียบเคียงรหัสอะไหล่แท้และอะไหล่ทดแทน (OEM & Aftermarket) ที่ใหญ่ที่สุดในประเทศไทย"),
+            "seo_meta_keywords": settings.get("seo_meta_keywords", "อะไหล่รถยนต์, เทียบเบอร์อะไหล่, OEM parts, Aftermarket, VIN decoder"),
+            "seo_og_image_url": settings.get("seo_og_image_url", ""),
+            "contact_email": settings.get("contact_email", "contact@autoparts-crossref.com"),
+            "contact_phone": settings.get("contact_phone", "02-123-4567"),
+            "contact_line": settings.get("contact_line", "@autoparts"),
+            "footer_copyright": settings.get("footer_copyright", "© 2026 AutoParts Cross-Ref. All rights reserved."),
+            "company_name_th": settings.get("owner_company_name_th", "บริษัท ออโต้เซนทริค ดิจิทัล โซลูชันส์ จำกัด"),
+            "company_name_en": settings.get("owner_company_name_en", "AUTOCENTRIC DIGITAL SOLUTIONS CO., LTD."),
+            "company_tax_id": settings.get("owner_tax_id", "0105566099881"),
+            "company_branch": settings.get("owner_branch_name", "สำนักงานใหญ่ (Head Office)"),
+            "company_address_th": settings.get("owner_address_th", "888/99 อาคารสยามทาวเวอร์ ชั้น 18 ถนนสุขุมวิท แขวงคลองเตย เขตคลองเตย กรุงเทพมหานคร 10110"),
+            "company_address_en": settings.get("owner_address_en", "888/99 Siam Tower 18th Fl., Sukhumvit Rd., Khlong Toei, Bangkok 10110 Thailand"),
+            "company_phone": settings.get("owner_phone", "02-123-4567"),
+            "company_email": settings.get("owner_email", "billing@autoparts-crossref.com"),
+            "company_website": settings.get("owner_website", "https://parts.autocentric.net"),
+            "digital_signature_url": settings.get("owner_signature_url", ""),
+            "company_stamp_url": settings.get("owner_stamp_url", ""),
+            "bank_name": settings.get("owner_bank_name", "ธนาคารกสิกรไทย (KBANK)"),
+            "bank_account_name": settings.get("owner_bank_account_name", "บจก. ออโต้เซนทริค ดิจิทัล โซลูชันส์"),
+            "bank_account_no": settings.get("owner_bank_account_number", "098-7-65432-1"),
+            "promptpay_id": settings.get("owner_promptpay_id", "0105566099881"),
+            "invoice_prefix": settings.get("invoice_prefix", "INV-"),
+            "tax_invoice_prefix": settings.get("tax_invoice_prefix", "TAX-"),
+            "receipt_prefix": settings.get("receipt_prefix", "REC-"),
+            "payment_due_days": settings.get("invoice_due_days", 7),
+            "default_vat_rate": settings.get("vat_percentage", 7.0),
+            "vat_inclusive": bool(settings.get("vat_included", 0)),
+            "default_wht_rate": settings.get("wht_percentage", 3.0),
+            "invoice_footer_notes": settings.get("invoice_footer_notes", "เอกสารนี้ออกโดยระบบอิเล็กทรอนิกส์อัตโนมัติและถือเป็นหลักฐานการชำระเงินที่ถูกต้องตามกฎหมาย"),
+            "invoice_terms": settings.get("invoice_terms_conditions", "กรุณาชำระเงินภายในระยะเวลาที่กำหนด"),
+            "invoice_theme_color": settings.get("invoice_theme_color", "#2563EB")
+        }
+    }
+
+@app.get("/api/owner/settings/branding")
+async def get_owner_branding_settings(user = Depends(require_owner)):
+    settings = get_platform_settings()
+    return {
+        "success": True,
+        "branding": {
+            "site_title": settings.get("site_title", ""),
+            "logo_url": settings.get("logo_url", ""),
+            "hero_badge": settings.get("hero_badge", ""),
+            "hero_title": settings.get("hero_title", ""),
+            "hero_subtitle": settings.get("hero_subtitle", ""),
+            "hero_bg_style": settings.get("hero_bg_style", "gradient"),
+            "hero_bg_color": settings.get("hero_bg_color", "#0B132B"),
+            "hero_bg_gradient": settings.get("hero_bg_gradient", ""),
+            "seo_meta_title": settings.get("seo_meta_title", ""),
+            "seo_meta_description": settings.get("seo_meta_description", ""),
+            "seo_meta_keywords": settings.get("seo_meta_keywords", ""),
+            "contact_email": settings.get("contact_email", ""),
+            "contact_phone": settings.get("contact_phone", ""),
+            "contact_line": settings.get("contact_line", ""),
+            "footer_copyright": settings.get("footer_copyright", "")
+        }
+    }
+
+@app.post("/api/owner/settings/branding")
+async def update_owner_branding_settings(req: Dict[str, Any], user = Depends(require_owner)):
+    success = update_platform_settings(req)
+    if success:
+        log_audit_action(user.get("id", 1), user["username"], user["role"], "UPDATE_BRANDING", "platform_settings", 1, None, "Updated Homepage CMS and Branding")
+    return {"success": success}
+
+@app.get("/api/owner/settings/company")
+async def get_owner_company_settings(user = Depends(require_owner)):
+    settings = get_platform_settings()
+    return {
+        "success": True,
+        "company": {
+            "company_name_th": settings.get("owner_company_name_th", ""),
+            "company_name_en": settings.get("owner_company_name_en", ""),
+            "company_tax_id": settings.get("owner_tax_id", ""),
+            "company_branch": settings.get("owner_branch_name", ""),
+            "company_address_th": settings.get("owner_address_th", ""),
+            "company_address_en": settings.get("owner_address_en", ""),
+            "company_phone": settings.get("owner_phone", ""),
+            "company_email": settings.get("owner_email", ""),
+            "company_website": settings.get("owner_website", ""),
+            "bank_name": settings.get("owner_bank_name", ""),
+            "bank_account_no": settings.get("owner_bank_account_number", ""),
+            "bank_account_name": settings.get("owner_bank_account_name", ""),
+            "promptpay_id": settings.get("owner_promptpay_id", ""),
+            "digital_signature_url": settings.get("owner_signature_url", ""),
+            "company_stamp_url": settings.get("owner_stamp_url", "")
+        }
+    }
+
+@app.post("/api/owner/settings/company")
+async def update_owner_company_settings(req: Dict[str, Any], user = Depends(require_owner)):
+    mapped = {}
+    if "company_name_th" in req: mapped["owner_company_name_th"] = req["company_name_th"]
+    if "company_name_en" in req: mapped["owner_company_name_en"] = req["company_name_en"]
+    if "company_tax_id" in req: mapped["owner_tax_id"] = req["company_tax_id"]
+    if "company_branch" in req: mapped["owner_branch_name"] = req["company_branch"]
+    if "company_address_th" in req: mapped["owner_address_th"] = req["company_address_th"]
+    if "company_address_en" in req: mapped["owner_address_en"] = req["company_address_en"]
+    if "company_phone" in req: mapped["owner_phone"] = req["company_phone"]
+    if "company_email" in req: mapped["owner_email"] = req["company_email"]
+    if "company_website" in req: mapped["owner_website"] = req["company_website"]
+    if "bank_name" in req: mapped["owner_bank_name"] = req["bank_name"]
+    if "bank_account_no" in req: mapped["owner_bank_account_number"] = req["bank_account_no"]
+    if "bank_account_name" in req: mapped["owner_bank_account_name"] = req["bank_account_name"]
+    if "promptpay_id" in req: mapped["owner_promptpay_id"] = req["promptpay_id"]
+    if "digital_signature_url" in req: mapped["owner_signature_url"] = req["digital_signature_url"]
+    if "company_stamp_url" in req: mapped["owner_stamp_url"] = req["company_stamp_url"]
+
+    success = update_platform_settings(mapped)
+    if success:
+        log_audit_action(user.get("id", 1), user["username"], user["role"], "UPDATE_COMPANY_PROFILE", "platform_settings", 1, None, "Updated Owner Company and Tax Profile")
+    return {"success": success}
+
+@app.get("/api/owner/settings/invoice")
+async def get_owner_invoice_settings(user = Depends(require_owner)):
+    settings = get_platform_settings()
+    return {
+        "success": True,
+        "invoice": {
+            "invoice_prefix": settings.get("invoice_prefix", "INV-"),
+            "tax_invoice_prefix": settings.get("tax_invoice_prefix", "TAX-"),
+            "receipt_prefix": settings.get("receipt_prefix", "REC-"),
+            "payment_due_days": settings.get("invoice_due_days", 7),
+            "default_vat_rate": settings.get("vat_percentage", 7.0),
+            "default_wht_rate": settings.get("wht_percentage", 3.0),
+            "vat_inclusive": bool(settings.get("vat_included", 0)),
+            "invoice_theme_color": settings.get("invoice_theme_color", "#2563EB"),
+            "invoice_footer_notes": settings.get("invoice_footer_notes", ""),
+            "invoice_terms": settings.get("invoice_terms_conditions", "")
+        }
+    }
+
+@app.post("/api/owner/settings/invoice")
+async def update_owner_invoice_settings(req: Dict[str, Any], user = Depends(require_owner)):
+    mapped = {}
+    if "invoice_prefix" in req: mapped["invoice_prefix"] = req["invoice_prefix"]
+    if "tax_invoice_prefix" in req: mapped["tax_invoice_prefix"] = req["tax_invoice_prefix"]
+    if "receipt_prefix" in req: mapped["receipt_prefix"] = req["receipt_prefix"]
+    if "payment_due_days" in req: mapped["invoice_due_days"] = req["payment_due_days"]
+    if "default_vat_rate" in req: mapped["vat_percentage"] = req["default_vat_rate"]
+    if "default_wht_rate" in req: mapped["wht_percentage"] = req["default_wht_rate"]
+    if "vat_inclusive" in req: mapped["vat_included"] = 1 if req["vat_inclusive"] else 0
+    if "invoice_theme_color" in req: mapped["invoice_theme_color"] = req["invoice_theme_color"]
+    if "invoice_footer_notes" in req: mapped["invoice_footer_notes"] = req["invoice_footer_notes"]
+    if "invoice_terms" in req: mapped["invoice_terms_conditions"] = req["invoice_terms"]
+
+    success = update_platform_settings(mapped)
+    if success:
+        log_audit_action(user.get("id", 1), user["username"], user["role"], "UPDATE_INVOICE_CONFIG", "platform_settings", 1, None, "Updated Invoice Template Configuration")
+    return {"success": success}
+
+@app.get("/api/owner/platform-settings")
+async def get_owner_platform_settings(user = Depends(require_owner)):
+    settings = get_platform_settings()
+    return {"success": True, "settings": settings}
+
+@app.post("/api/owner/platform-settings")
+async def save_owner_platform_settings(req: PlatformSettingsUpdateRequest, user = Depends(require_owner)):
+    data = req.model_dump(exclude_unset=True)
+    success = update_platform_settings(data)
+    if success:
+        log_audit_action(user.get("id", 1), user["username"], user["role"], "UPDATE_PLATFORM_SETTINGS", "platform_settings", 1, None, "Updated platform settings, CMS and owner invoice profile")
+    return {"success": success, "message": "บันทึกการตั้งค่าแพลตฟอร์มเรียบร้อยแล้ว"}
+
+@app.post("/api/owner/data/clean-test-data")
+@app.post("/api/owner/clean-test-data")
+async def owner_clean_test_data(req: Optional[Dict[str, Any]] = None, user = Depends(require_owner)):
+    res = clean_production_database()
+    if res.get("success"):
+        log_audit_action(user.get("id", 1), user["username"], user["role"], "CLEAN_TEST_DATA", "master_parts", 0, None, "Cleaned test data for production readiness")
+    return res
 
 # 6. Super Admin System Health & Technical Monitoring
 @app.get("/api/superadmin/system-health")
