@@ -2463,6 +2463,45 @@ def create_plan(plan_data: Dict[str, Any]) -> Tuple[bool, str]:
             1 if plan_data.get("ai_search_enabled") else 0,
             int(plan_data.get("trial_days", 0))
         ))
+        
+        # Sync plan_versions (MONTHLY & YEARLY)
+        try:
+            p_price = int(plan_data.get("price_monthly", 0))
+            p_brands = int(plan_data.get("max_brands", 5))
+            p_cats = int(plan_data.get("max_categories", 5))
+            p_users = int(plan_data.get("max_users", 1))
+            p_quota = int(plan_data.get("monthly_search_quota", 1000))
+            t_days = int(plan_data.get("trial_days", 0))
+            
+            cursor.execute("""
+                INSERT INTO plan_versions (
+                    plan_id, version_number, name, description, billing_interval, base_price,
+                    currency, max_brands, max_categories, max_users, monthly_search_quota,
+                    api_quota, export_quota, ai_quota, trial_period_days, status, is_current
+                ) VALUES (?, 1, ?, ?, 'MONTHLY', ?, 'THB', ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', 1)
+            """, (plan_id, plan_data.get("name", plan_id.upper()), f"Plan {plan_id.upper()} Monthly", p_price, p_brands, p_cats, p_users, p_quota, 5000 if plan_data.get("api_access_enabled") else 0, 500 if plan_data.get("export_enabled") else 0, 100 if plan_data.get("ai_search_enabled") else 0, t_days))
+            
+            cursor.execute("""
+                INSERT INTO plan_versions (
+                    plan_id, version_number, name, description, billing_interval, base_price,
+                    currency, max_brands, max_categories, max_users, monthly_search_quota,
+                    api_quota, export_quota, ai_quota, trial_period_days, status, is_current
+                ) VALUES (?, 1, ?, ?, 'YEARLY', ?, 'THB', ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', 1)
+            """, (plan_id, plan_data.get("name", plan_id.upper()), f"Plan {plan_id.upper()} Yearly", p_price * 10, p_brands, p_cats, p_users, p_quota, 5000 if plan_data.get("api_access_enabled") else 0, 500 if plan_data.get("export_enabled") else 0, 100 if plan_data.get("ai_search_enabled") else 0, t_days))
+
+            # Sync plan_features
+            cursor.execute("DELETE FROM plan_features WHERE plan_id = ?", (plan_id,))
+            cursor.execute("INSERT INTO plan_features (plan_id, feature_code, is_included, limit_value) VALUES (?, 'SEARCH', 1, ?)", (plan_id, p_quota))
+            cursor.execute("INSERT INTO plan_features (plan_id, feature_code, is_included, limit_value) VALUES (?, 'VEHICLE_SEARCH', 1, -1)", (plan_id,))
+            cursor.execute("INSERT INTO plan_features (plan_id, feature_code, is_included, limit_value) VALUES (?, 'CROSS_REFERENCE', 1, -1)", (plan_id,))
+            cursor.execute("INSERT INTO plan_features (plan_id, feature_code, is_included, limit_value) VALUES (?, 'SAVED_PARTS', 1, 200)", (plan_id,))
+            cursor.execute("INSERT INTO plan_features (plan_id, feature_code, is_included, limit_value) VALUES (?, 'VIN_SEARCH', ?, ?)", (plan_id, 1 if plan_data.get("vin_search_enabled") else 0, -1 if plan_data.get("vin_search_enabled") else 0))
+            cursor.execute("INSERT INTO plan_features (plan_id, feature_code, is_included, limit_value) VALUES (?, 'API', ?, ?)", (plan_id, 1 if plan_data.get("api_access_enabled") else 0, 5000 if plan_data.get("api_access_enabled") else 0))
+            cursor.execute("INSERT INTO plan_features (plan_id, feature_code, is_included, limit_value) VALUES (?, 'EXPORT', ?, ?)", (plan_id, 1 if plan_data.get("export_enabled") else 0, 500 if plan_data.get("export_enabled") else 0))
+            cursor.execute("INSERT INTO plan_features (plan_id, feature_code, is_included, limit_value) VALUES (?, 'AI', ?, ?)", (plan_id, 1 if plan_data.get("ai_search_enabled") else 0, 100 if plan_data.get("ai_search_enabled") else 0))
+        except Exception as ex_sync:
+            print(f"Warning syncing plan versions/features on create: {ex_sync}")
+
         conn.commit()
         return True, "Plan created successfully"
     except Exception as e:
@@ -2496,13 +2535,39 @@ def update_full_plan(plan_id: str, plan_data: Dict[str, Any]) -> Tuple[bool, str
         cursor.execute("""
             UPDATE plans 
             SET name = ?, price_monthly = ?, max_brands = ?, max_categories = ?, max_users = ?, 
-                monthly_search_quota = ?, vin_search_enabled = ?, api_access_enabled = ?, export_enabled = ?, ai_search_enabled = ?
+                monthly_search_quota = ?, vin_search_enabled = ?, api_access_enabled = ?, export_enabled = ?, ai_search_enabled = ?,
+                trial_days = ?
             WHERE id = ?
         """, (
             name, price_monthly, max_brands, max_categories, max_users,
             monthly_search_quota, vin_search_enabled, api_access_enabled, export_enabled, ai_search_enabled,
+            trial_days,
             plan_id
         ))
+        
+        # Sync plan_versions table
+        try:
+            cursor.execute("""
+                UPDATE plan_versions 
+                SET base_price = ?, max_brands = ?, max_categories = ?, max_users = ?, monthly_search_quota = ?, trial_period_days = ?
+                WHERE plan_id = ? AND billing_interval = 'MONTHLY'
+            """, (price_monthly, max_brands, max_categories, max_users, monthly_search_quota, trial_days, plan_id))
+            
+            cursor.execute("""
+                UPDATE plan_versions 
+                SET base_price = ?, max_brands = ?, max_categories = ?, max_users = ?, monthly_search_quota = ?, trial_period_days = ?
+                WHERE plan_id = ? AND billing_interval = 'YEARLY'
+            """, (price_monthly * 10, max_brands, max_categories, max_users, monthly_search_quota, trial_days, plan_id))
+
+            # Sync plan_features table
+            cursor.execute("UPDATE plan_features SET limit_value = ? WHERE plan_id = ? AND feature_code = 'SEARCH'", (monthly_search_quota, plan_id))
+            cursor.execute("UPDATE plan_features SET is_included = ? WHERE plan_id = ? AND feature_code = 'VIN_SEARCH'", (vin_search_enabled, plan_id))
+            cursor.execute("UPDATE plan_features SET is_included = ? WHERE plan_id = ? AND feature_code = 'API'", (api_access_enabled, plan_id))
+            cursor.execute("UPDATE plan_features SET is_included = ? WHERE plan_id = ? AND feature_code = 'EXPORT'", (export_enabled, plan_id))
+            cursor.execute("UPDATE plan_features SET is_included = ? WHERE plan_id = ? AND feature_code = 'AI'", (ai_search_enabled, plan_id))
+        except Exception as ex_sync:
+            print(f"Warning syncing plan versions/features on update: {ex_sync}")
+
         conn.commit()
         return True, "Plan updated successfully"
     except Exception as e:
@@ -2904,20 +2969,22 @@ def get_all_plans_with_versions(status: Optional[str] = 'ACTIVE') -> List[Dict[s
     cursor = conn.cursor()
     
     query = """
-        SELECT p.id as plan_id, p.name as plan_name, pv.id as version_id, pv.version_number,
+        SELECT p.id as plan_id, p.name as plan_name, p.price_monthly as plan_price_monthly, p.trial_days as plan_trial_days,
+               p.max_brands as p_max_brands, p.max_categories as p_max_categories, p.max_users as p_max_users,
+               p.monthly_search_quota as p_search_quota, p.vin_search_enabled, p.api_access_enabled, p.export_enabled, p.ai_search_enabled,
+               pv.id as version_id, pv.version_number,
                pv.name as version_name, pv.description, pv.billing_interval, pv.base_price,
                pv.currency, pv.max_brands, pv.max_categories, pv.max_users,
                pv.monthly_search_quota, pv.api_quota, pv.export_quota, pv.ai_quota,
                pv.trial_period_days, pv.status as version_status
         FROM plans p
-        JOIN plan_versions pv ON pv.plan_id = p.id
-        WHERE pv.is_current = 1
+        LEFT JOIN plan_versions pv ON pv.plan_id = p.id AND pv.is_current = 1
     """
     params = []
     if status:
-        query += " AND pv.status = ?"
+        query += " WHERE (pv.status = ? OR pv.status IS NULL)"
         params.append(status)
-    query += " ORDER BY CASE p.id WHEN 'starter' THEN 1 WHEN 'professional' THEN 2 WHEN 'business' THEN 3 ELSE 4 END, pv.billing_interval ASC"
+    query += " ORDER BY CASE p.id WHEN 'starter' THEN 1 WHEN 'professional' THEN 2 WHEN 'business' THEN 3 WHEN 'enterprise' THEN 4 ELSE 5 END, pv.billing_interval ASC"
     
     cursor.execute(query, tuple(params))
     rows = cursor.fetchall()
@@ -2932,7 +2999,17 @@ def get_all_plans_with_versions(status: Optional[str] = 'ACTIVE') -> List[Dict[s
             plans_map[pid] = {
                 "id": pid,
                 "name": r["plan_name"],
-                "description": r["description"],
+                "description": r["description"] or f"Plan {r['plan_name']}",
+                "price_monthly": r["plan_price_monthly"] or (r["base_price"] if r["billing_interval"] == "MONTHLY" else 0),
+                "max_brands": r["p_max_brands"] if r["p_max_brands"] is not None else r["max_brands"],
+                "max_categories": r["p_max_categories"] if r["p_max_categories"] is not None else r["max_categories"],
+                "max_users": r["p_max_users"] if r["p_max_users"] is not None else r["max_users"],
+                "monthly_search_quota": r["p_search_quota"] if r["p_search_quota"] is not None else r["monthly_search_quota"],
+                "vin_search_enabled": bool(r["vin_search_enabled"]),
+                "api_access_enabled": bool(r["api_access_enabled"]),
+                "export_enabled": bool(r["export_enabled"]),
+                "ai_search_enabled": bool(r["ai_search_enabled"]),
+                "trial_days": r["plan_trial_days"] if r["plan_trial_days"] is not None else (r["trial_period_days"] or 0),
                 "features": feats,
                 "intervals": {}
             }
@@ -3526,23 +3603,37 @@ def register_trial_tenant_db(data: Dict[str, Any]) -> Dict[str, Any]:
             "api_access_enabled": 0,
             "export_enabled": 0,
             "ai_search_enabled": 1,
-            "trial_days": 14
+            "trial_days": 0
         }
         
-        trial_days = int(plan_dict.get("trial_days") or 14)
+        signup_type = str(data.get("signup_type", "TRIAL")).upper()
         
-        # 5. Provision TRIAL subscription ('TRIALING')
+        raw_trial_days = plan_dict.get("trial_days")
+        if raw_trial_days is None:
+            plan_trial_days = 0
+        else:
+            try:
+                plan_trial_days = int(raw_trial_days)
+            except (ValueError, TypeError):
+                plan_trial_days = 0
+                
+        is_trial = (signup_type == "TRIAL" and plan_trial_days > 0)
+        sub_status = "TRIALING" if is_trial else "ACTIVE"
+        trial_days_applied = plan_trial_days if is_trial else 0
+        period_end_sql = f"+{plan_trial_days} days" if is_trial else "+30 days"
+        
+        # 5. Provision subscription ('TRIALING' if trial, 'ACTIVE' if direct/paid)
         cursor.execute(f"""
             INSERT INTO subscriptions (
                 org_id, plan_id, status, billing_cycle,
                 current_period_start, current_period_end,
                 ai_power_pack, extra_searches, extra_users, extra_brands, extra_categories
             ) VALUES (
-                ?, ?, 'TRIALING', 'MONTHLY',
-                CURRENT_TIMESTAMP, datetime('now', '+{trial_days} days'),
+                ?, ?, ?, 'MONTHLY',
+                CURRENT_TIMESTAMP, datetime('now', '{period_end_sql}'),
                 1, 0, 0, 0, 0
             )
-        """, (org_id, plan_id))
+        """, (org_id, plan_id, sub_status))
         sub_id = cursor.lastrowid
         
         # 6. Seed Entitlements Whitelist
@@ -3565,15 +3656,17 @@ def register_trial_tenant_db(data: Dict[str, Any]) -> Dict[str, Any]:
         """, (org_id, cur_month))
         
         # 8. Capture CRM Lead
+        lead_stage = "TRIAL" if is_trial else "SUBSCRIBED"
         cursor.execute("""
             INSERT INTO customer_leads (
                 company_name, contact_person, email, phone, pipeline_stage,
                 interested_plan_id, expected_mrr, notes
-            ) VALUES (?, ?, ?, ?, 'TRIAL', ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             company_name, contact_name or email, email, phone,
+            lead_stage,
             plan_id, plan_dict.get("price_monthly", 0),
-            f"Self-service trial signup ({segment}) - {trial_days} days"
+            f"Self-service {'trial' if is_trial else 'direct'} signup ({segment}) - {trial_days_applied} days"
         ))
         
         # 9. Log Commercial Audit
@@ -3581,13 +3674,16 @@ def register_trial_tenant_db(data: Dict[str, Any]) -> Dict[str, Any]:
         cursor.execute("""
             INSERT INTO commercial_audit_logs (
                 org_id, actor_user_id, actor_username, action, target_type, target_id, after_state
-            ) VALUES (?, ?, ?, 'TRIAL_SIGNUP', 'SUBSCRIPTION', ?, ?)
+            ) VALUES (?, ?, ?, ?, 'SUBSCRIPTION', ?, ?)
         """, (
-            org_id, user_id, email, str(sub_id),
-            json.dumps({"plan_id": plan_id, "trial_days": trial_days, "org_id": org_id})
+            org_id, user_id, email,
+            "TRIAL_SIGNUP" if is_trial else "DIRECT_SIGNUP",
+            str(sub_id),
+            json.dumps({"plan_id": plan_id, "trial_days": trial_days_applied, "signup_type": signup_type, "org_id": org_id})
         ))
         
         conn.commit()
+        success_msg = f"🎉 สมัครสมาชิกทดลองใช้งานฟรี {trial_days_applied} วันสำเร็จ" if is_trial else f"🎉 สมัครสมาชิกแพ็กเกจ {plan_dict.get('name', plan_id.upper())} เรียบร้อยแล้ว พร้อมเริ่มใช้งานทันที"
         return {
             "success": True,
             "org_id": org_id,
@@ -3597,8 +3693,10 @@ def register_trial_tenant_db(data: Dict[str, Any]) -> Dict[str, Any]:
             "org_role": "OWNER",
             "org_name": company_name,
             "plan_id": plan_id,
-            "trial_days": trial_days,
-            "message": f"สมัครสมาชิกทดลองใช้งานฟรี {trial_days} วันสำเร็จ" if trial_days > 0 else "สมัครสมาชิกสำเร็จ"
+            "is_trial": is_trial,
+            "trial_days": trial_days_applied,
+            "status": sub_status,
+            "message": success_msg
         }
     except Exception as e:
         conn.rollback()

@@ -243,83 +243,83 @@
                 <div class="pricing-grid" style="text-align: left; margin-bottom: 3rem;">
                     
                     <!-- Starter -->
-                    <div class="plan-card">
+                    <div class="plan-card" id="landing-card-starter">
                         <div>
-                            <div class="plan-badge" data-i18n="plan.starter.badge">STARTER</div>
-                            <div class="plan-title" data-i18n="plan.starter.title">สำหรับอู่ขนาดเล็ก</div>
+                            <div class="plan-badge" id="badge-starter" data-i18n="plan.starter.badge">STARTER</div>
+                            <div class="plan-title" id="title-starter" data-i18n="plan.starter.title">สำหรับอู่ขนาดเล็ก</div>
                             <div class="plan-price" id="price-starter">฿1,490<span class="plan-period">/เดือน</span></div>
-                            <p class="plan-subtitle" data-i18n="plan.starter.desc">เริ่มต้นเทียบเบอร์อะไหล่แท้-เทียบ</p>
-                            <button class="btn btn-outline" onclick="openTrialModal('starter')" style="width: 100%; margin-bottom: 1.5rem; font-weight: 600;" data-i18n="plan.btn.trial">
+                            <p class="plan-subtitle" id="desc-starter" data-i18n="plan.starter.desc">เริ่มต้นเทียบเบอร์อะไหล่แท้-เทียบ</p>
+                            <button class="btn btn-outline" id="btn-plan-starter" onclick="openTrialModal('starter')" style="width: 100%; margin-bottom: 1.5rem; font-weight: 600;" data-i18n="plan.btn.trial">
                                 ทดลองใช้ฟรี 14 วัน
                             </button>
                         </div>
                         <ul class="plan-features">
-                            <li><i class="fa-solid fa-check feature-check"></i> <span data-i18n="plan.starter.f1">ค้นหา <strong>1,000 ครั้ง</strong> / เดือน</span></li>
-                            <li><i class="fa-solid fa-check feature-check"></i> <span data-i18n="plan.starter.f2">เลือกได้ <strong>2 ยี่ห้อรถ</strong></span></li>
-                            <li><i class="fa-solid fa-check feature-check"></i> <span data-i18n="plan.starter.f3">เลือกได้ <strong>2 หมวดหมู่</strong></span></li>
-                            <li><i class="fa-solid fa-check feature-check"></i> <span data-i18n="plan.starter.f4"><strong>1 บัญชีผู้ใช้</strong></span></li>
+                            <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="starter-f1" data-i18n="plan.starter.f1">ค้นหา <strong>1,000 ครั้ง</strong> / เดือน</span></li>
+                            <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="starter-f2" data-i18n="plan.starter.f2">เลือกได้ <strong>2 ยี่ห้อรถ</strong></span></li>
+                            <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="starter-f3" data-i18n="plan.starter.f3">เลือกได้ <strong>2 หมวดหมู่</strong></span></li>
+                            <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="starter-f4" data-i18n="plan.starter.f4"><strong>1 บัญชีผู้ใช้</strong></span></li>
                             <li><i class="fa-solid fa-check feature-check"></i> <span data-i18n="plan.starter.f5">ระบบบันทึกอะไหล่ (Saved Parts)</span></li>
                             <li><i class="fa-solid fa-check feature-check"></i> <span data-i18n="plan.starter.f6">ค้นหาและเทียบเบอร์อะไหล่แท้-เทียบ</span></li>
                         </ul>
                     </div>
 
                     <!-- Professional (POPULAR) -->
-                    <div class="plan-card plan-card-popular">
+                    <div class="plan-card plan-card-popular" id="landing-card-professional">
                         <div class="popular-badge-ribbon" data-i18n="plan.popularRibbon">⭐ แนะนำสำหรับธุรกิจ (POPULAR)</div>
                         <div>
-                            <div class="plan-badge" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa;" data-i18n="plan.pro.badge">PROFESSIONAL</div>
-                            <div class="plan-title" data-i18n="plan.pro.title">สำหรับอู่มาตรฐาน & ร้านอะไหล่</div>
+                            <div class="plan-badge" id="badge-professional" style="background: rgba(59, 130, 246, 0.2); color: #60a5fa;" data-i18n="plan.pro.badge">PROFESSIONAL</div>
+                            <div class="plan-title" id="title-professional" data-i18n="plan.pro.title">สำหรับอู่มาตรฐาน & ร้านอะไหล่</div>
                             <div class="plan-price" id="price-professional">฿3,990<span class="plan-period">/เดือน</span></div>
-                            <p class="plan-subtitle" data-i18n="plan.pro.desc">ครบครันสำหรับงานซ่อมและการขายทุกวัน</p>
-                            <button class="btn btn-primary" onclick="openTrialModal('professional')" style="width: 100%; margin-bottom: 1.5rem; font-weight: 700; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);" data-i18n="plan.btn.trialPro">
+                            <p class="plan-subtitle" id="desc-professional" data-i18n="plan.pro.desc">ครบครันสำหรับงานซ่อมและการขายทุกวัน</p>
+                            <button class="btn btn-primary" id="btn-plan-professional" onclick="openTrialModal('professional')" style="width: 100%; margin-bottom: 1.5rem; font-weight: 700; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);" data-i18n="plan.btn.trialPro">
                                 ทดลองใช้ฟรี 14 วัน (แนะนำ)
                             </button>
                         </div>
                         <ul class="plan-features">
-                            <li><i class="fa-solid fa-check feature-check"></i> <span data-i18n="plan.pro.f1">ค้นหา <strong>5,000 ครั้ง</strong> / เดือน</span></li>
-                            <li><i class="fa-solid fa-check feature-check"></i> <span data-i18n="plan.pro.f2">เลือกได้ <strong>5 ยี่ห้อรถหลัก</strong></span></li>
-                            <li><i class="fa-solid fa-check feature-check"></i> <span data-i18n="plan.pro.f3">ครบทั้ง <strong>5 หมวดหมู่อะไหล่</strong></span></li>
-                            <li><i class="fa-solid fa-check feature-check"></i> <span data-i18n="plan.pro.f4"><strong>3 บัญชีผู้ใช้</strong> (ทีมงาน)</span></li>
+                            <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="professional-f1" data-i18n="plan.pro.f1">ค้นหา <strong>5,000 ครั้ง</strong> / เดือน</span></li>
+                            <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="professional-f2" data-i18n="plan.pro.f2">เลือกได้ <strong>5 ยี่ห้อรถหลัก</strong></span></li>
+                            <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="professional-f3" data-i18n="plan.pro.f3">ครบทั้ง <strong>5 หมวดหมู่อะไหล่</strong></span></li>
+                            <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="professional-f4" data-i18n="plan.pro.f4"><strong>3 บัญชีผู้ใช้</strong> (ทีมงาน)</span></li>
                             <li><i class="fa-solid fa-check feature-check"></i> <span data-i18n="plan.pro.f5">ถอดรหัส VIN <strong>100 คัน/ด.</strong></span></li>
                             <li><i class="fa-solid fa-check feature-check"></i> <span data-i18n="plan.pro.f6"><strong>AI Parts Search</strong> รวมในแพ็กเกจ</span></li>
                         </ul>
                     </div>
 
                     <!-- Business -->
-                    <div class="plan-card">
+                    <div class="plan-card" id="landing-card-business">
                         <div>
-                            <div class="plan-badge" style="background: rgba(139, 92, 246, 0.2); color: #c084fc;" data-i18n="plan.biz.badge">BUSINESS</div>
-                            <div class="plan-title" data-i18n="plan.biz.title">สำหรับตัวแทนจำหน่าย & ฟลีท</div>
+                            <div class="plan-badge" id="badge-business" style="background: rgba(139, 92, 246, 0.2); color: #c084fc;" data-i18n="plan.biz.badge">BUSINESS</div>
+                            <div class="plan-title" id="title-business" data-i18n="plan.biz.title">สำหรับตัวแทนจำหน่าย & ฟลีท</div>
                             <div class="plan-price" id="price-business">฿8,990<span class="plan-period">/เดือน</span></div>
-                            <p class="plan-subtitle" data-i18n="plan.biz.desc">ครอบคลุมทุกแบรนด์ พร้อมเชื่อมต่อระบบ</p>
-                            <button class="btn btn-outline" onclick="openTrialModal('business')" style="width: 100%; margin-bottom: 1.5rem; font-weight: 600;" data-i18n="plan.btn.trial">
+                            <p class="plan-subtitle" id="desc-business" data-i18n="plan.biz.desc">ครอบคลุมทุกแบรนด์ พร้อมเชื่อมต่อระบบ</p>
+                            <button class="btn btn-outline" id="btn-plan-business" onclick="openTrialModal('business')" style="width: 100%; margin-bottom: 1.5rem; font-weight: 600;" data-i18n="plan.btn.trial">
                                 ทดลองใช้ฟรี 14 วัน
                             </button>
                         </div>
                         <ul class="plan-features">
-                            <li><i class="fa-solid fa-check feature-check"></i> <span data-i18n="plan.biz.f1">ค้นหา <strong>20,000 ครั้ง</strong> / เดือน</span></li>
-                            <li><i class="fa-solid fa-check feature-check"></i> <span data-i18n="plan.biz.f2"><strong>ทุกยี่ห้อรถยนต์</strong> (ไม่จำกัด)</span></li>
-                            <li><i class="fa-solid fa-check feature-check"></i> <span data-i18n="plan.biz.f3"><strong>ทุกหมวดหมู่สินค้า</strong></span></li>
-                            <li><i class="fa-solid fa-check feature-check"></i> <span data-i18n="plan.biz.f4"><strong>10 บัญชีผู้ใช้</strong></span></li>
+                            <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="business-f1" data-i18n="plan.biz.f1">ค้นหา <strong>20,000 ครั้ง</strong> / เดือน</span></li>
+                            <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="business-f2" data-i18n="plan.biz.f2"><strong>ทุกยี่ห้อรถยนต์</strong> (ไม่จำกัด)</span></li>
+                            <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="business-f3" data-i18n="plan.biz.f3"><strong>ทุกหมวดหมู่สินค้า</strong></span></li>
+                            <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="business-f4" data-i18n="plan.biz.f4"><strong>10 บัญชีผู้ใช้</strong></span></li>
                             <li><i class="fa-solid fa-check feature-check"></i> <span data-i18n="plan.biz.f5">REST API <strong>10,000 calls</strong></span></li>
                             <li><i class="fa-solid fa-check feature-check"></i> <span data-i18n="plan.biz.f6">ระบบค้นหาแบบกลุ่ม & บุ๊กมาร์ก</span></li>
                         </ul>
                     </div>
 
                     <!-- Enterprise -->
-                    <div class="plan-card">
+                    <div class="plan-card" id="landing-card-enterprise">
                         <div>
-                            <div class="plan-badge" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24;" data-i18n="plan.ent.badge">ENTERPRISE</div>
-                            <div class="plan-title" data-i18n="plan.ent.title">สำหรับบริษัทประกัน & คอร์ปอเรท</div>
-                            <div class="plan-price" style="font-size: 1.7rem;" data-i18n="plan.contactSalesPrice">ติดต่อฝ่ายขาย</div>
-                            <p class="plan-subtitle" data-i18n="plan.ent.desc">ปรับแต่งตามขนาดองค์กร พร้อม SLA 99.9%</p>
-                            <button class="btn btn-outline" onclick="openEnterpriseModal()" style="width: 100%; margin-bottom: 1.5rem; font-weight: 600;">
+                            <div class="plan-badge" id="badge-enterprise" style="background: rgba(245, 158, 11, 0.2); color: #fbbf24;" data-i18n="plan.ent.badge">ENTERPRISE</div>
+                            <div class="plan-title" id="title-enterprise" data-i18n="plan.ent.title">สำหรับบริษัทประกัน & คอร์ปอเรท</div>
+                            <div class="plan-price" id="price-enterprise" style="font-size: 1.7rem;" data-i18n="plan.contactSalesPrice">ติดต่อฝ่ายขาย</div>
+                            <p class="plan-subtitle" id="desc-enterprise" data-i18n="plan.ent.desc">ปรับแต่งตามขนาดองค์กร พร้อม SLA 99.9%</p>
+                            <button class="btn btn-outline" id="btn-plan-enterprise" onclick="openEnterpriseModal()" style="width: 100%; margin-bottom: 1.5rem; font-weight: 600;">
                                 <i class="fa-solid fa-envelope"></i> <span data-i18n="plan.btn.contactSales">ติดต่อเจ้าหน้าที่</span>
                             </button>
                         </div>
                         <ul class="plan-features">
-                            <li><i class="fa-solid fa-check feature-check"></i> <span data-i18n="plan.ent.f1">ค้นหา <strong>ไม่จำกัด (Unlimited)</strong></span></li>
-                            <li><i class="fa-solid fa-check feature-check"></i> <span data-i18n="plan.ent.f2">ผู้ใช้งาน <strong>ไม่จำกัด (Unlimited)</strong></span></li>
+                            <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="enterprise-f1" data-i18n="plan.ent.f1">ค้นหา <strong>ไม่จำกัด (Unlimited)</strong></span></li>
+                            <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="enterprise-f2" data-i18n="plan.ent.f2">ผู้ใช้งาน <strong>ไม่จำกัด (Unlimited)</strong></span></li>
                             <li><i class="fa-solid fa-check feature-check"></i> <span data-i18n="plan.ent.f3">Dedicated High-speed API</span></li>
                             <li><i class="fa-solid fa-check feature-check"></i> <span data-i18n="plan.ent.f4">Custom ERP / DMS Integration</span></li>
                             <li><i class="fa-solid fa-check feature-check"></i> <span data-i18n="plan.ent.f5">ออกใบกำกับภาษีเต็มรูปแบบ</span></li>
@@ -2985,6 +2985,19 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             <input type="number" id="cp-users" class="form-control" value="5" required>
                         </div>
                     </div>
+                    <!-- Trial Configuration -->
+                    <div style="background: var(--bg-card); padding: 0.85rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 0.6rem;">
+                        <label style="display: flex; align-items: center; gap: 0.6rem; font-size: 0.88rem; font-weight: 600; cursor: pointer; color: var(--text-primary); margin: 0;">
+                            <input type="checkbox" id="cp-trial-enabled" onchange="toggleCreatePlanTrialInput(this.checked)" style="width: 17px; height: 17px; accent-color: var(--primary);"> 
+                            <span><i class="fa-solid fa-gift" style="color: #10B981;"></i> เปิดให้ทดลองใช้ฟรี (Enable Free Trial)</span>
+                        </label>
+                        <div id="cp-trial-days-wrapper" style="display: none; padding-top: 0.4rem; border-top: 1px dashed var(--border-color); margin-top: 0.2rem;">
+                            <label class="form-label" style="font-size: 0.8rem; font-weight: 600;">ระยะเวลาทดลองใช้ฟรี (วัน) <span style="color: var(--danger);">*</span></label>
+                            <input type="number" id="cp-trial-days" class="form-control" min="1" max="90" value="14" placeholder="เช่น 3, 7, 14, 30 วัน">
+                            <span style="font-size: 0.72rem; color: var(--text-muted);">กำหนดจำนวนวันทดลองใช้ที่ลูกค้าจะได้รับเมื่อสมัครแพ็กเกจนี้</span>
+                        </div>
+                    </div>
+
                     <div>
                         <label class="form-label" style="margin-bottom: 0.5rem; display: block;" data-i18n="modal.createPlan.features">Feature Modules & Access Privileges:</label>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.6rem; background: var(--bg-card); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
@@ -3055,6 +3068,19 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             <input type="number" id="ep-users" class="form-control" required>
                         </div>
                     </div>
+                    <!-- Trial Configuration -->
+                    <div style="background: var(--bg-card); padding: 0.85rem 1rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 0.6rem;">
+                        <label style="display: flex; align-items: center; gap: 0.6rem; font-size: 0.88rem; font-weight: 600; cursor: pointer; color: var(--text-primary); margin: 0;">
+                            <input type="checkbox" id="ep-trial-enabled" onchange="toggleEditPlanTrialInput(this.checked)" style="width: 17px; height: 17px; accent-color: var(--primary);"> 
+                            <span><i class="fa-solid fa-gift" style="color: #10B981;"></i> เปิดให้ทดลองใช้ฟรี (Enable Free Trial)</span>
+                        </label>
+                        <div id="ep-trial-days-wrapper" style="display: none; padding-top: 0.4rem; border-top: 1px dashed var(--border-color); margin-top: 0.2rem;">
+                            <label class="form-label" style="font-size: 0.8rem; font-weight: 600;">ระยะเวลาทดลองใช้ฟรี (วัน) <span style="color: var(--danger);">*</span></label>
+                            <input type="number" id="ep-trial-days" class="form-control" min="1" max="90" value="14" placeholder="เช่น 3, 7, 14, 30 วัน">
+                            <span style="font-size: 0.72rem; color: var(--text-muted);">กำหนดจำนวนวันทดลองใช้ที่ลูกค้าจะได้รับเมื่อสมัครแพ็กเกจนี้ (หากปิด = ต้องสมัครใช้งานจริงทันที)</span>
+                        </div>
+                    </div>
+
                     <div>
                         <label class="form-label" style="margin-bottom: 0.5rem; display: block;" data-i18n="modal.createPlan.features">Feature Modules & Access Privileges:</label>
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 0.6rem; background: var(--bg-card); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
@@ -3425,7 +3451,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             <div class="modal-header">
                 <div>
                     <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-                        <h3 id="c360-company-name" style="color: #fff; font-size: 1.25rem;">Customer Company 360</h3>
+                        <h3 id="c360-company-name" style="color: var(--text-primary); font-size: 1.25rem;">Customer Company 360</h3>
                         <span id="c360-plan-badge" class="nav-badge" style="background: rgba(96,165,250,0.2); color: #60A5FA; font-weight: 700;">PROFESSIONAL</span>
                         <span id="c360-status-badge" class="status-badge verified">ACTIVE</span>
                     </div>
@@ -3449,7 +3475,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     </div>
                     <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.85rem; text-align: center;">
                         <span class="spec-label">Active Team Seats</span>
-                        <div id="c360-seats" style="font-size: 1.2rem; font-weight: 700; color: #fff; margin-top: 0.25rem;">0</div>
+                        <div id="c360-seats" style="font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin-top: 0.25rem;">0</div>
                     </div>
                     <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.85rem; text-align: center;">
                         <span class="spec-label">Next Renewal</span>
@@ -3459,7 +3485,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
                 <!-- Commercial Subscription & Add-ons -->
                 <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1rem;">
-                    <h4 style="font-size: 0.95rem; color: #fff; margin-bottom: 0.5rem;"><i class="fa-solid fa-tags" style="color: #60A5FA;"></i> Active Plan & Commercial Add-ons</h4>
+                    <h4 style="font-size: 0.95rem; color: var(--text-primary); margin-bottom: 0.5rem;"><i class="fa-solid fa-tags" style="color: #60A5FA;"></i> Active Plan & Commercial Add-ons</h4>
                     <div id="c360-addons-list" style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
                         <!-- Populated dynamically -->
                     </div>
@@ -3468,14 +3494,14 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 <!-- Team Members & Recent Invoices -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1rem;">
-                        <h4 style="font-size: 0.9rem; color: #fff; margin-bottom: 0.5rem;"><i class="fa-solid fa-users" style="color: #10B981;"></i> Team Roster</h4>
+                        <h4 style="font-size: 0.9rem; color: var(--text-primary); margin-bottom: 0.5rem;"><i class="fa-solid fa-users" style="color: #10B981;"></i> Team Roster</h4>
                         <div id="c360-team-list" style="max-height: 140px; overflow-y: auto; font-size: 0.82rem; display: flex; flex-direction: column; gap: 0.35rem;">
                             <!-- Populated dynamically -->
                         </div>
                     </div>
 
                     <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1rem;">
-                        <h4 style="font-size: 0.9rem; color: #fff; margin-bottom: 0.5rem;"><i class="fa-solid fa-receipt" style="color: #F59E0B;"></i> Recent Invoices</h4>
+                        <h4 style="font-size: 0.9rem; color: var(--text-primary); margin-bottom: 0.5rem;"><i class="fa-solid fa-receipt" style="color: #F59E0B;"></i> Recent Invoices</h4>
                         <div id="c360-invoices-list" style="max-height: 140px; overflow-y: auto; font-size: 0.82rem; display: flex; flex-direction: column; gap: 0.35rem;">
                             <!-- Populated dynamically -->
                         </div>
@@ -3484,7 +3510,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
                 <!-- Recent Automotive Search Queries -->
                 <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1rem;">
-                    <h4 style="font-size: 0.9rem; color: #fff; margin-bottom: 0.5rem;"><i class="fa-solid fa-magnifying-glass" style="color: #60A5FA;"></i> Recent Search Queries</h4>
+                    <h4 style="font-size: 0.9rem; color: var(--text-primary); margin-bottom: 0.5rem;"><i class="fa-solid fa-magnifying-glass" style="color: #60A5FA;"></i> Recent Search Queries</h4>
                     <div id="c360-searches-list" style="max-height: 160px; overflow-y: auto; font-size: 0.82rem; display: flex; flex-direction: column; gap: 0.35rem;">
                         <!-- Populated dynamically -->
                     </div>
@@ -3497,16 +3523,16 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         </div>
     </div>
 
-    <!-- ================= PHASE 11: 14-DAY FREE TRIAL REGISTRATION MODAL ================= -->
+    <!-- ================= PHASE 11: SAAS REGISTRATION & PLAN ONBOARDING MODAL ================= -->
     <div class="modal-overlay" id="modal-trial-register" style="display: none;">
-        <div class="modal-card" style="max-width: 540px;">
+        <div class="modal-card" style="max-width: 560px;">
             <div class="modal-header">
                 <div>
-                    <h3 style="color: #fff; font-size: 1.2rem; font-weight: 700;">
-                        <i class="fa-solid fa-rocket" style="color: var(--primary); margin-right: 6px;"></i> เริ่มต้นทดลองใช้ฟรี 14 วัน
+                    <h3 id="trial-modal-title" style="color: #fff; font-size: 1.2rem; font-weight: 700;">
+                        <i class="fa-solid fa-rocket" style="color: var(--primary); margin-right: 6px;"></i> สมัครสมาชิกและเปิดใช้งานบัญชี
                     </h3>
-                    <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
-                        ไม่มีข้อผูกมัด • ไม่ต้องกรอกบัตรเครดิต • ใช้งานได้ทันทีใน 1 นาที
+                    <div id="trial-modal-subtitle" style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                        เริ่มต้นใช้งานแพลตฟอร์มเทียบเบอร์อะไหล่แท้-เทียบระดับองค์กร
                     </div>
                 </div>
                 <button class="btn btn-secondary btn-sm" onclick="closeTrialModal()">&times;</button>
@@ -3552,23 +3578,38 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     </div>
 
                     <div class="form-group">
-                        <label class="form-label" style="font-weight: 600;">แพ็กเกจที่ต้องการทดลองใช้</label>
-                        <select id="trial-plan-id" class="form-control" style="border-color: var(--primary);">
+                        <label class="form-label" style="font-weight: 600;">แพ็กเกจที่ต้องการสมัคร</label>
+                        <select id="trial-plan-id" class="form-control" style="border-color: var(--primary);" onchange="onTrialPlanSelected(this.value)">
                             <option value="starter">Starter (1,000 ค้นหา/ด. • 2 ยี่ห้อ • 1 ผู้ใช้)</option>
-                            <option value="professional" selected>⭐ Professional (5,000 ค้นหา/ด. • 5 ยี่ห้อ • 3 ผู้ใช้ • AI Search) — แนะนำ</option>
+                            <option value="professional" selected>⭐ Professional (5,000 ค้นหา/ด. • 5 ยี่ห้อ • 3 ผู้ใช้ • AI Search)</option>
                             <option value="business">Business (20,000 ค้นหา/ด. • ทุกยี่ห้อ • 10 ผู้ใช้ • API & Export)</option>
                         </select>
                     </div>
 
-                    <div style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: var(--radius-sm); padding: 0.75rem; font-size: 0.8rem; color: #93c5fd; display: flex; gap: 0.5rem;">
+                    <!-- Dynamic Signup Mode Selector -->
+                    <div id="trial-mode-switch-container" style="background: var(--bg-card); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 0.5rem;">
+                        <span style="font-size: 0.8rem; font-weight: 700; color: var(--text-primary); text-transform: uppercase; letter-spacing: 0.04em;">รูปแบบการสมัคร:</span>
+                        <div style="display: flex; gap: 1.25rem; flex-wrap: wrap;">
+                            <label style="display: flex; align-items: center; gap: 0.45rem; font-size: 0.85rem; cursor: pointer; color: var(--text-primary);">
+                                <input type="radio" name="signup-mode" id="signup-mode-trial" value="TRIAL" checked onchange="updateSignupFormTexts()" style="accent-color: var(--primary);"> 
+                                <span id="signup-mode-trial-label"><i class="fa-solid fa-gift" style="color: #10B981;"></i> ทดลองใช้ฟรี</span>
+                            </label>
+                            <label style="display: flex; align-items: center; gap: 0.45rem; font-size: 0.85rem; cursor: pointer; color: var(--text-primary);">
+                                <input type="radio" name="signup-mode" id="signup-mode-direct" value="DIRECT" onchange="updateSignupFormTexts()" style="accent-color: var(--primary);"> 
+                                <span><i class="fa-solid fa-bolt" style="color: #F59E0B;"></i> สมัครใช้งานจริงทันที</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div id="trial-banner-info" style="background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: var(--radius-sm); padding: 0.75rem; font-size: 0.8rem; color: #93c5fd; display: flex; gap: 0.5rem;">
                         <i class="fa-solid fa-shield-check" style="font-size: 1.1rem; margin-top: 2px;"></i>
-                        <span>ทดลองใช้ฟังก์ชันเต็มรูปแบบฟรี 14 วัน ไม่มีค่าใช้จ่ายแอบแฝง สามารถยกเลิกหรือเปลี่ยนแพ็กเกจได้ตลอดเวลา</span>
+                        <span id="trial-banner-info-text">ทดลองใช้งานฟรีตามเงื่อนไขของแพ็กเกจ ไม่มีค่าใช้จ่ายแอบแฝง</span>
                     </div>
                 </div>
                 <div class="modal-footer" style="padding: 1rem 1.5rem; background: rgba(0,0,0,0.2);">
                     <button type="button" class="btn btn-secondary" onclick="closeTrialModal()">ยกเลิก</button>
                     <button type="submit" class="btn btn-primary" id="btn-submit-trial" style="padding: 0.65rem 1.5rem; font-weight: 700;">
-                        <i class="fa-solid fa-arrow-right"></i> สร้างบัญชีและเริ่มทดลองใช้ทันที
+                        <i class="fa-solid fa-arrow-right"></i> <span id="btn-submit-trial-text">สร้างบัญชีและเริ่มใช้งานทันที</span>
                     </button>
                 </div>
             </form>
@@ -3639,71 +3680,71 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
     <!-- ================= MODAL: PARTS BATCH IMPORT ================= -->
     <div class="modal-overlay" id="modal-import-parts" style="display: none;">
-        <div class="modal-card" style="max-width: 680px; width: 92%; background: #0F172A; border: 1px solid rgba(255,255,255,0.18); border-radius: var(--radius-md); padding: 1.5rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85); color: #FFFFFF;">
-            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 0.85rem;">
+        <div class="modal-card" style="max-width: 680px; width: 92%; padding: 1.5rem;">
+            <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; padding-bottom: 0.85rem;">
                 <div style="display: flex; align-items: center; gap: 0.6rem;">
-                    <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(96,165,250,0.2); display: flex; align-items: center; justify-content: center; color: #60A5FA;">
+                    <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(96,165,250,0.18); display: flex; align-items: center; justify-content: center; color: var(--primary);">
                         <i class="fa-solid fa-file-import" style="font-size: 1.1rem;"></i>
                     </div>
                     <div>
-                        <h3 style="font-size: 1.05rem; font-weight: 700; color: #FFFFFF; margin: 0;" data-i18n="admin.import.title">นำเข้าข้อมูลอะไหล่เข้าระบบ (Parts Batch Import)</h3>
-                        <p style="font-size: 0.78rem; color: #94A3B8; margin: 0.15rem 0 0 0;" data-i18n="admin.import.subtitle">อัปโหลดไฟล์ Excel (.xlsx, .xls) หรือ CSV เพื่อนำเข้าข้อมูลไปรอตรวจสอบในคิวตรวจสอบอะไหล่</p>
+                        <h3 style="font-size: 1.05rem; font-weight: 700; margin: 0;" data-i18n="admin.import.title">นำเข้าข้อมูลอะไหล่เข้าระบบ (Parts Batch Import)</h3>
+                        <p style="font-size: 0.78rem; color: var(--text-muted); margin: 0.15rem 0 0 0;" data-i18n="admin.import.subtitle">อัปโหลดไฟล์ Excel (.xlsx, .xls) หรือ CSV เพื่อนำเข้าข้อมูลไปรอตรวจสอบในคิวตรวจสอบอะไหล่</p>
                     </div>
                 </div>
-                <button type="button" onclick="closeImportPartsModal()" class="btn-close" style="background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1); border-radius: 6px; width: 30px; height: 30px; color: #CBD5E1; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                <button type="button" onclick="closeImportPartsModal()" class="btn-close" style="width: 30px; height: 30px; font-size: 1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 6px;">
                     <i class="fa-solid fa-xmark"></i>
                 </button>
             </div>
 
             <form onsubmit="submitImportParts(event)">
                 <!-- Dropzone Area -->
-                <div id="import-dropzone" style="border: 2px dashed rgba(96,165,250,0.5); border-radius: var(--radius-md); padding: 2rem 1.25rem; text-align: center; background: rgba(30, 41, 59, 0.75); cursor: pointer; transition: all 0.2s; margin-bottom: 1.25rem;" onclick="document.getElementById('import-file-input').click()">
-                    <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2.4rem; color: #60A5FA; margin-bottom: 0.5rem;"></i>
-                    <h4 style="font-size: 0.95rem; font-weight: 600; color: #FFFFFF; margin-bottom: 0.25rem;" data-i18n="admin.import.dropzoneTitle">ลากไฟล์มาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์</h4>
-                    <p style="font-size: 0.78rem; color: #94A3B8; margin-bottom: 0.5rem;" data-i18n="admin.import.dropzoneSub">รองรับไฟล์ .xlsx, .xls, .csv ขนาดไม่เกิน 20MB</p>
-                    <div id="import-file-name-display" style="display: none; font-size: 0.85rem; color: #34D399; font-weight: 600; margin-top: 0.5rem;">
+                <div id="import-dropzone" class="import-dropzone" style="border-radius: var(--radius-md); padding: 2rem 1.25rem; text-align: center; cursor: pointer; transition: all 0.2s; margin-bottom: 1.25rem;" onclick="document.getElementById('import-file-input').click()">
+                    <i class="fa-solid fa-cloud-arrow-up" style="font-size: 2.4rem; color: var(--primary); margin-bottom: 0.5rem;"></i>
+                    <h4 style="font-size: 0.95rem; font-weight: 600; margin-bottom: 0.25rem;" data-i18n="admin.import.dropzoneTitle">ลากไฟล์มาวางที่นี่ หรือคลิกเพื่อเลือกไฟล์</h4>
+                    <p style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 0.5rem;" data-i18n="admin.import.dropzoneSub">รองรับไฟล์ .xlsx, .xls, .csv ขนาดไม่เกิน 20MB</p>
+                    <div id="import-file-name-display" style="display: none; font-size: 0.85rem; color: var(--success); font-weight: 600; margin-top: 0.5rem;">
                         <i class="fa-solid fa-file-circle-check"></i> <span id="import-file-name-text"></span>
                     </div>
                     <input type="file" id="import-file-input" accept=".xlsx,.xls,.csv" style="display: none;" onchange="onImportFileSelected(event)">
                 </div>
 
                 <!-- Template Download & Column Guide Box -->
-                <div style="background: #1E293B; border: 1px solid rgba(255,255,255,0.12); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1.25rem;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; flex-wrap: wrap; gap: 0.5rem;">
-                        <strong style="font-size: 0.82rem; color: #FFFFFF;" data-i18n="admin.import.formatGuideTitle">รูปแบบคอลัมน์มาตรฐาน (16 คอลัมน์):</strong>
+                <div class="import-guide-box" style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1.25rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.6rem; flex-wrap: wrap; gap: 0.5rem;">
+                        <strong style="font-size: 0.82rem; color: var(--text-primary);" data-i18n="admin.import.formatGuideTitle">รูปแบบคอลัมน์มาตรฐาน (16 คอลัมน์):</strong>
                         <div style="display: flex; gap: 0.35rem;">
-                            <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.72rem; padding: 0.25rem 0.6rem; background: #334155; color: #FFFFFF; border-color: rgba(255,255,255,0.15);" onclick="downloadImportTemplate('xlsx')">
-                                <i class="fa-solid fa-file-excel" style="color: #34D399;"></i> Excel Template
+                            <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 0.25rem 0.65rem;" onclick="downloadImportTemplate('xlsx')">
+                                <i class="fa-solid fa-file-excel" style="color: #10B981;"></i> Excel Template
                             </button>
-                            <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.72rem; padding: 0.25rem 0.6rem; background: #334155; color: #FFFFFF; border-color: rgba(255,255,255,0.15);" onclick="downloadImportTemplate('csv')">
-                                <i class="fa-solid fa-file-csv" style="color: #60A5FA;"></i> CSV Template
+                            <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 0.25rem 0.65rem;" onclick="downloadImportTemplate('csv')">
+                                <i class="fa-solid fa-file-csv" style="color: var(--primary);"></i> CSV Template
                             </button>
                         </div>
                     </div>
-                    <div style="display: flex; flex-wrap: wrap; gap: 0.35rem; font-size: 0.72rem;">
-                        <span style="background: rgba(96,165,250,0.18); border: 1px solid rgba(96,165,250,0.3); padding: 0.15rem 0.45rem; border-radius: 4px; color: #93C5FD;">1. แบรนด์ของสินค้า</span>
-                        <span style="background: rgba(251,191,36,0.18); border: 1px solid rgba(251,191,36,0.3); padding: 0.15rem 0.45rem; border-radius: 4px; color: #FCD34D;">2. หมวดหมู่สินค้า</span>
-                        <span style="background: rgba(52,211,153,0.18); border: 1px solid rgba(52,211,153,0.3); padding: 0.15rem 0.45rem; border-radius: 4px; color: #6EE7B7;">3. รหัสสินค้า</span>
-                        <span style="background: rgba(52,211,153,0.18); border: 1px solid rgba(52,211,153,0.3); padding: 0.15rem 0.45rem; border-radius: 4px; color: #6EE7B7;">4. เบอร์ OEM</span>
-                        <span style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.12); padding: 0.15rem 0.45rem; border-radius: 4px; color: #F1F5F9;">5. ชื่อสินค้า (ไทย)</span>
-                        <span style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.12); padding: 0.15rem 0.45rem; border-radius: 4px; color: #F1F5F9;">6. ชื่อสินค้า (อังกฤษ)</span>
-                        <span style="background: rgba(167,139,250,0.18); border: 1px solid rgba(167,139,250,0.3); padding: 0.15rem 0.45rem; border-radius: 4px; color: #DDD6FE;">7. ยี่ห้อรถ</span>
-                        <span style="background: rgba(167,139,250,0.18); border: 1px solid rgba(167,139,250,0.3); padding: 0.15rem 0.45rem; border-radius: 4px; color: #DDD6FE;">8. รุ่นรถ</span>
-                        <span style="background: rgba(236,72,153,0.18); border: 1px solid rgba(236,72,153,0.3); padding: 0.15rem 0.45rem; border-radius: 4px; color: #F472B6;">9. ปีเริ่มต้น</span>
-                        <span style="background: rgba(236,72,153,0.18); border: 1px solid rgba(236,72,153,0.3); padding: 0.15rem 0.45rem; border-radius: 4px; color: #F472B6;">10. ปีสิ้นสุด</span>
-                        <span style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.12); padding: 0.15rem 0.45rem; border-radius: 4px; color: #F1F5F9;">11. เครื่องยนต์</span>
-                        <span style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.12); padding: 0.15rem 0.45rem; border-radius: 4px; color: #F1F5F9;">12. น้ำมัน</span>
-                        <span style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.12); padding: 0.15rem 0.45rem; border-radius: 4px; color: #F1F5F9;">13. เกียร์</span>
-                        <span style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.12); padding: 0.15rem 0.45rem; border-radius: 4px; color: #F1F5F9;">14. รายละเอียดสินค้า</span>
-                        <span style="background: rgba(52,211,153,0.18); border: 1px solid rgba(52,211,153,0.3); padding: 0.15rem 0.45rem; border-radius: 4px; color: #34D399;">15. หน่วยราคาทุน</span>
-                        <span style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.12); padding: 0.15rem 0.45rem; border-radius: 4px; color: #F1F5F9;">16. หมายเหตุ</span>
+                    <div style="display: flex; flex-wrap: wrap; gap: 0.4rem; font-size: 0.72rem;">
+                        <span class="import-col-chip col-blue">1. แบรนด์ของสินค้า</span>
+                        <span class="import-col-chip col-yellow">2. หมวดหมู่สินค้า</span>
+                        <span class="import-col-chip col-green">3. รหัสสินค้า</span>
+                        <span class="import-col-chip col-green">4. เบอร์ OEM</span>
+                        <span class="import-col-chip col-gray">5. ชื่อสินค้า (ไทย)</span>
+                        <span class="import-col-chip col-gray">6. ชื่อสินค้า (อังกฤษ)</span>
+                        <span class="import-col-chip col-purple">7. ยี่ห้อรถ</span>
+                        <span class="import-col-chip col-purple">8. รุ่นรถ</span>
+                        <span class="import-col-chip col-pink">9. ปีเริ่มต้น</span>
+                        <span class="import-col-chip col-pink">10. ปีสิ้นสุด</span>
+                        <span class="import-col-chip col-gray">11. เครื่องยนต์</span>
+                        <span class="import-col-chip col-gray">12. น้ำมัน</span>
+                        <span class="import-col-chip col-gray">13. เกียร์</span>
+                        <span class="import-col-chip col-gray">14. รายละเอียดสินค้า</span>
+                        <span class="import-col-chip col-green">15. หน่วยราคาทุน</span>
+                        <span class="import-col-chip col-gray">16. หมายเหตุ</span>
                     </div>
                 </div>
 
                 <div id="import-result-alert" style="display: none; margin-bottom: 1rem; padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.82rem;"></div>
 
-                <div style="display: flex; justify-content: flex-end; gap: 0.5rem; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 1rem;">
-                    <button type="button" class="btn btn-secondary" onclick="closeImportPartsModal()" data-i18n="admin.import.btnCancel" style="background: #334155; color: #FFFFFF; border-color: rgba(255,255,255,0.15);">ยกเลิก</button>
+                <div style="display: flex; justify-content: flex-end; gap: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeImportPartsModal()" data-i18n="admin.import.btnCancel">ยกเลิก</button>
                     <button type="submit" id="btn-submit-import" class="btn btn-primary" style="display: flex; align-items: center; gap: 0.4rem;">
                         <i class="fa-solid fa-file-import"></i> <span data-i18n="admin.import.btnSubmit">เริ่มการนำเข้าข้อมูล</span>
                     </button>
@@ -3717,10 +3758,10 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         <div class="modal-card" style="max-width: 620px; border: 2px solid var(--primary);">
             <div class="modal-header" style="background: linear-gradient(90deg, rgba(59, 130, 246, 0.15), rgba(139, 92, 246, 0.15));">
                 <div>
-                    <h3 style="color: #fff; font-size: 1.3rem; font-weight: 800;">
+                    <h3 style="color: var(--text-primary); font-size: 1.3rem; font-weight: 800;">
                         🎉 ยินดีต้อนรับสู่ AutoParts Cross-Ref!
                     </h3>
-                    <div style="font-size: 0.85rem; color: #93c5fd; margin-top: 2px;">
+                    <div style="font-size: 0.85rem; color: var(--primary); margin-top: 2px;">
                         เริ่มต้นตั้งค่าบัญชีและทดลองใช้งานใน 3 ขั้นตอนง่ายๆ
                     </div>
                 </div>
@@ -3731,7 +3772,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; display: flex; gap: 1rem;">
                     <div style="width: 36px; height: 36px; border-radius: var(--radius-full); background: var(--primary); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0;">1</div>
                     <div>
-                        <div style="font-weight: 700; color: #fff; font-size: 0.95rem;">เลือกค่ายรถยนต์หลักที่คุณให้บริการบ่อยที่สุด</div>
+                        <div style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">เลือกค่ายรถยนต์หลักที่คุณให้บริการบ่อยที่สุด</div>
                         <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0.25rem 0 0.75rem;">ระบบจะจัดลำดับข้อมูลและแคตตาล็อกแนะนำให้ตรงกับความต้องการของคุณ</p>
                         <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
                             <span class="badge badge-success"><i class="fa-solid fa-check"></i> TOYOTA</span>
@@ -3747,10 +3788,10 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; display: flex; gap: 1rem;">
                     <div style="width: 36px; height: 36px; border-radius: var(--radius-full); background: var(--success); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0;">2</div>
                     <div>
-                        <div style="font-weight: 700; color: #fff; font-size: 0.95rem;">ทดลองค้นหาและเทียบเบอร์อะไหล่แท้-เทียบ</div>
+                        <div style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">ทดลองค้นหาและเทียบเบอร์อะไหล่แท้-เทียบ</div>
                         <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0.25rem 0 0.75rem;">พิมพ์รหัส OEM หรือเบอร์สินค้า เพื่อดูผลการจับคู่อะไหล่ข้ามแบรนด์แบบสดๆ</p>
                         <div style="display: flex; gap: 0.5rem; align-items: center;">
-                            <code style="background: rgba(255,255,255,0.08); padding: 0.25rem 0.5rem; border-radius: 4px; color: #60a5fa;">04465-0K360</code>
+                            <code style="background: rgba(59,130,246,0.12); padding: 0.25rem 0.5rem; border-radius: 4px; color: var(--primary);">04465-0K360</code>
                             <span style="color: var(--text-muted);">↔</span>
                             <span class="badge badge-primary">TRW GDB3534UT (Score: 100)</span>
                         </div>
@@ -3761,12 +3802,12 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; display: flex; gap: 1rem;">
                     <div style="width: 36px; height: 36px; border-radius: var(--radius-full); background: var(--purple); color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 800; flex-shrink: 0;">3</div>
                     <div>
-                        <div style="font-weight: 700; color: #fff; font-size: 0.95rem;">เชิญทีมงานและสร้าง API Key เชื่อมต่อระบบ</div>
+                        <div style="font-weight: 700; color: var(--text-primary); font-size: 0.95rem;">เชิญทีมงานและสร้าง API Key เชื่อมต่อระบบ</div>
                         <p style="font-size: 0.82rem; color: var(--text-muted); margin: 0.25rem 0;">คุณสามารถเพิ่มทีมช่าง พนักงานขาย หรือเชื่อมต่อโปรแกรมบริหารอู่/ERP ได้ที่เมนู Organization และ API</p>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer" style="padding: 1.25rem 1.75rem; background: rgba(0,0,0,0.2);">
+            <div class="modal-footer" style="padding: 1.25rem 1.75rem;">
                 <button type="button" class="btn btn-primary" onclick="closeFTUXModal()" style="width: 100%; padding: 0.75rem; font-size: 1rem; font-weight: 700;">
                     <i class="fa-solid fa-sparkles"></i> เริ่มต้นใช้งานค้นหาอะไหล่ได้ทันที
                 </button>
@@ -3779,7 +3820,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         <div class="modal-card" style="max-width: 500px; width: 100%;">
             <div class="modal-header">
                 <div>
-                    <h3 style="color: #fff; font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                    <h3 style="color: var(--text-primary); font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
                         <i class="fa-solid fa-brain" style="color: #C084FC;"></i> <span data-i18n="owner.ai.modalAddModelTitle">เพิ่ม / แก้ไข โมเดล AI ในระบบ</span>
                     </h3>
                     <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;">กำหนดค่าโมเดลสำหรับประมวลผลอะไหล่ยานยนต์</p>
@@ -3832,7 +3873,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         <div class="modal-card" style="max-width: 480px; width: 100%;">
             <div class="modal-header">
                 <div>
-                    <h3 style="color: #fff; font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                    <h3 style="color: var(--text-primary); font-size: 1.1rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
                         <i class="fa-solid fa-key" style="color: #F59E0B;"></i> <span data-i18n="owner.ai.modalSaveKeyTitle">บันทึก API Key ผู้ให้บริการ AI</span>
                     </h3>
                     <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;" id="ai-key-modal-subtitle">ตั้งค่ากุญแจเชื่อมต่อ API</p>
@@ -3946,6 +3987,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             document.getElementById('main-app').style.display = 'none';
             loadLandingCoverageStats();
             executeLandingDemoSearch();
+            loadPublicPlans();
         }
 
         function showAuthScreen() {
@@ -3954,11 +3996,181 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             document.getElementById('main-app').style.display = 'none';
         }
 
+        window._publicPlans = [];
+
+        async function loadPublicPlans() {
+            try {
+                const res = await fetch('/api/saas/plans');
+                const data = await res.json();
+                if (data.success && data.plans) {
+                    window._publicPlans = data.plans;
+                    updateLandingPricingCards();
+                    populateTrialPlanDropdown();
+                }
+            } catch (e) {
+                console.warn("Could not load public plans:", e);
+            }
+        }
+
+        function updateLandingPricingCards() {
+            if (!window._publicPlans || window._publicPlans.length === 0) return;
+            const isEn = typeof currentLanguage !== 'undefined' && currentLanguage === 'en';
+            const isYearly = typeof landingBillingCycle !== 'undefined' && landingBillingCycle === 'YEARLY';
+
+            window._publicPlans.forEach(p => {
+                const pid = p.id.toLowerCase();
+                const intMonthly = (p.intervals && p.intervals.MONTHLY) ? p.intervals.MONTHLY.base_price : (p.price_monthly || 0);
+                const intYearly = (p.intervals && p.intervals.YEARLY) ? p.intervals.YEARLY.base_price : (intMonthly * 10);
+                const currentPrice = isYearly ? intYearly : intMonthly;
+                const avgMo = isYearly ? Math.round(intYearly / 12) : intMonthly;
+                
+                let periodStr = '';
+                if (isYearly) {
+                    periodStr = isEn ? `/year (avg ฿${avgMo.toLocaleString()}/mo)` : `/ปี (เฉลี่ย ฿${avgMo.toLocaleString()}/ด.)`;
+                } else {
+                    periodStr = isEn ? '/month' : '/เดือน';
+                }
+
+                // Update Plan Title / Name
+                const elTitle = document.getElementById(`title-${pid}`);
+                if (elTitle && p.name) {
+                    // keep localized or use backend name
+                }
+
+                // Update Plan Price
+                const elPrice = document.getElementById(`price-${pid}`);
+                if (elPrice) {
+                    if (pid === 'enterprise' && (!currentPrice || currentPrice === 0)) {
+                        elPrice.innerHTML = `<span data-i18n="plan.contactSalesPrice">${isEn ? 'Contact Sales' : 'ติดต่อฝ่ายขาย'}</span>`;
+                    } else {
+                        elPrice.innerHTML = `฿${currentPrice.toLocaleString()}<span class="plan-period">${periodStr}</span>`;
+                    }
+                }
+
+                // Update Quotas and Features dynamically
+                const quotaVal = (p.intervals && p.intervals[isYearly ? 'YEARLY' : 'MONTHLY']) ? p.intervals[isYearly ? 'YEARLY' : 'MONTHLY'].monthly_search_quota : (p.monthly_search_quota || 1000);
+                const brandsVal = (p.intervals && p.intervals[isYearly ? 'YEARLY' : 'MONTHLY']) ? p.intervals[isYearly ? 'YEARLY' : 'MONTHLY'].max_brands : (p.max_brands || 5);
+                const catsVal = (p.intervals && p.intervals[isYearly ? 'YEARLY' : 'MONTHLY']) ? p.intervals[isYearly ? 'YEARLY' : 'MONTHLY'].max_categories : (p.max_categories || 5);
+                const usersVal = (p.intervals && p.intervals[isYearly ? 'YEARLY' : 'MONTHLY']) ? p.intervals[isYearly ? 'YEARLY' : 'MONTHLY'].max_users : (p.max_users || 1);
+
+                const quotaText = quotaVal === -1 ? (isEn ? 'Unlimited Searches' : 'ค้นหา <strong>ไม่จำกัด</strong>') : (isEn ? `<strong>${Number(quotaVal).toLocaleString()}</strong> searches/mo` : `ค้นหา <strong>${Number(quotaVal).toLocaleString()} ครั้ง</strong> / เดือน`);
+                const brandText = brandsVal === -1 ? (isEn ? 'All Car Brands (Unlimited)' : '<strong>ทุกยี่ห้อรถยนต์</strong> (ไม่จำกัด)') : (isEn ? `Select <strong>${brandsVal}</strong> Car Brands` : `เลือกได้ <strong>${brandsVal} ยี่ห้อรถ</strong>`);
+                const catText = catsVal === -1 ? (isEn ? 'All Parts Categories' : '<strong>ทุกหมวดหมู่สินค้า</strong>') : (isEn ? `Select <strong>${catsVal}</strong> Categories` : `เลือกได้ <strong>${catsVal} หมวดหมู่</strong>`);
+                const userText = usersVal === -1 ? (isEn ? 'Unlimited Team Seats' : 'ผู้ใช้งาน <strong>ไม่จำกัด</strong>') : (isEn ? `<strong>${usersVal}</strong> Team Member(s)` : `<strong>${usersVal} บัญชีผู้ใช้</strong>`);
+
+                const elF1 = document.querySelector(`[data-plan-feature="${pid}-f1"]`);
+                if (elF1) elF1.innerHTML = quotaText;
+                const elF2 = document.querySelector(`[data-plan-feature="${pid}-f2"]`);
+                if (elF2) elF2.innerHTML = brandText;
+                const elF3 = document.querySelector(`[data-plan-feature="${pid}-f3"]`);
+                if (elF3) elF3.innerHTML = catText;
+                const elF4 = document.querySelector(`[data-plan-feature="${pid}-f4"]`);
+                if (elF4) elF4.innerHTML = userText;
+            });
+
+            updateLandingPlanButtons();
+        }
+
+        function updateLandingPlanButtons() {
+            if (!window._publicPlans || window._publicPlans.length === 0) return;
+            
+            window._publicPlans.forEach(p => {
+                const tDays = parseInt(p.trial_days || 0);
+                const pid = p.id;
+                const btns = document.querySelectorAll(`button[onclick*="openTrialModal('${pid}')"], button[onclick*="openTrialModal(\\"${pid}\\")"]`);
+                btns.forEach(btn => {
+                    if (tDays > 0) {
+                        btn.innerHTML = `ทดลองใช้ฟรี ${tDays} วัน` + (pid === 'professional' ? ' (แนะนำ)' : '');
+                        btn.setAttribute('title', `ทดลองใช้งานฟังก์ชันเต็มรูปแบบฟรี ${tDays} วัน`);
+                    } else {
+                        btn.innerHTML = `สมัครใช้งานทันที`;
+                        btn.setAttribute('title', `สมัครใช้งานและเปิดบัญชีทันที`);
+                    }
+                });
+            });
+        }
+
+        function populateTrialPlanDropdown() {
+            const select = document.getElementById('trial-plan-id');
+            if (!select || !window._publicPlans || window._publicPlans.length === 0) return;
+            
+            const currentVal = select.value || 'professional';
+            select.innerHTML = '';
+            window._publicPlans.filter(p => p.id !== 'free_trial').forEach(p => {
+                const tDays = parseInt(p.trial_days || 0);
+                const trialText = tDays > 0 ? ` • ทดลองฟรี ${tDays} วัน` : ` • สมัครใช้เลย`;
+                const opt = document.createElement('option');
+                opt.value = p.id;
+                const price = p.intervals?.MONTHLY?.base_price || p.price_monthly || 0;
+                opt.textContent = `${p.name} (฿${price.toLocaleString()}/ด.${trialText})`;
+                if (p.id === currentVal) {
+                    opt.selected = true;
+                }
+                select.appendChild(opt);
+            });
+            
+            if (select.value) {
+                onTrialPlanSelected(select.value);
+            }
+        }
+
+        function onTrialPlanSelected(planId) {
+            const plan = (window._publicPlans || []).find(p => p.id === planId) || (window._allPlansDetailed || []).find(p => p.id === planId);
+            const tDays = plan ? parseInt(plan.trial_days || 0) : 0;
+            
+            const modeContainer = document.getElementById('trial-mode-switch-container');
+            const trialRadio = document.getElementById('signup-mode-trial');
+            const directRadio = document.getElementById('signup-mode-direct');
+            const trialLabel = document.getElementById('signup-mode-trial-label');
+            
+            if (tDays > 0) {
+                if (modeContainer) modeContainer.style.display = 'flex';
+                if (trialLabel) trialLabel.innerHTML = `<i class="fa-solid fa-gift" style="color: #10B981;"></i> ทดลองใช้ฟรี ${tDays} วัน`;
+                if (trialRadio) {
+                    trialRadio.disabled = false;
+                    trialRadio.checked = true;
+                }
+            } else {
+                // No trial available for this plan -> direct signup only
+                if (modeContainer) modeContainer.style.display = 'none';
+                if (directRadio) directRadio.checked = true;
+            }
+            
+            updateSignupFormTexts();
+        }
+
+        function updateSignupFormTexts() {
+            const planSelect = document.getElementById('trial-plan-id');
+            const planId = planSelect ? planSelect.value : 'professional';
+            const plan = (window._publicPlans || []).find(p => p.id === planId) || (window._allPlansDetailed || []).find(p => p.id === planId);
+            const tDays = plan ? parseInt(plan.trial_days || 0) : 0;
+            const isTrialChecked = document.getElementById('signup-mode-trial') && document.getElementById('signup-mode-trial').checked && (tDays > 0);
+            
+            const modalTitle = document.getElementById('trial-modal-title');
+            const modalSub = document.getElementById('trial-modal-subtitle');
+            const bannerText = document.getElementById('trial-banner-info-text');
+            const submitBtnText = document.getElementById('btn-submit-trial-text');
+            const planName = plan ? plan.name : planId.toUpperCase();
+            
+            if (isTrialChecked) {
+                if (modalTitle) modalTitle.innerHTML = `<i class="fa-solid fa-gift" style="color: #10B981; margin-right: 6px;"></i> สมัครทดลองใช้งานฟรี ${tDays} วัน`;
+                if (modalSub) modalSub.textContent = `ทดลองใช้งานแพ็กเกจ ${planName} ฟรี ${tDays} วัน • ไม่มีข้อผูกมัด • ไม่ต้องใช้บัตรเครดิต`;
+                if (bannerText) bannerText.textContent = `✨ คุณจะได้รับสิทธิ์ทดลองใช้งานฟรี ${tDays} วัน เมื่อสิ้นสุดระยะเวลาสามารถเลือกต่ออายุหรือปรับแพ็กเกจได้ตามต้องการ`;
+                if (submitBtnText) submitBtnText.textContent = `สร้างบัญชีและเริ่มทดลองใช้ ${tDays} วัน`;
+            } else {
+                if (modalTitle) modalTitle.innerHTML = `<i class="fa-solid fa-bolt" style="color: #F59E0B; margin-right: 6px;"></i> สมัครใช้งานแพ็กเกจ ${planName}`;
+                if (modalSub) modalSub.textContent = `เปิดใช้งานบัญชีองค์กรทันที • เริ่มต้นจัดการและเทียบรหัสอะไหล่ได้ทันใจ`;
+                if (bannerText) bannerText.textContent = `💼 แพ็กเกจนี้เปิดใช้งานบัญชีจริงทันที คุณสามารถเริ่มเทียบเบอร์และจัดการอะไหล่ได้ทันที`;
+                if (submitBtnText) submitBtnText.textContent = `สร้างบัญชีและเริ่มใช้งานทันที`;
+            }
+        }
+
         function openTrialModal(planId = 'professional') {
             document.getElementById('modal-trial-register').style.display = 'flex';
-            if (planId) {
+            if (planId && document.getElementById('trial-plan-id')) {
                 document.getElementById('trial-plan-id').value = planId;
             }
+            onTrialPlanSelected(planId || 'professional');
         }
 
         function closeTrialModal() {
@@ -3971,6 +4183,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             btn.disabled = true;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังสร้างบัญชี...';
 
+            const signupMode = (document.getElementById('signup-mode-direct') && document.getElementById('signup-mode-direct').checked) ? "DIRECT" : "TRIAL";
+
             const payload = {
                 company_name: document.getElementById('trial-company-name').value.trim(),
                 contact_name: document.getElementById('trial-contact-name').value.trim(),
@@ -3978,7 +4192,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 email: document.getElementById('trial-email').value.trim(),
                 phone: document.getElementById('trial-phone').value.trim(),
                 password: document.getElementById('trial-password').value.trim(),
-                plan_id: document.getElementById('trial-plan-id').value
+                plan_id: document.getElementById('trial-plan-id').value,
+                signup_type: signupMode
             };
 
             try {
@@ -3993,7 +4208,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     currentUser = { username: res.username, role: res.role };
                     localStorage.setItem('autoparts_saas_user', JSON.stringify(currentUser));
                     await initSaaSSession();
-                    showToast("🎉 สมัครสมาชิกทดลองใช้งานฟรี 14 วันสำเร็จ!", "success");
+                    showToast(res.message || "🎉 สมัครสมาชิกและเปิดใช้งานบัญชีสำเร็จ!", "success");
                     // Open FTUX Onboarding Tour
                     document.getElementById('modal-ftux-onboarding').style.display = 'flex';
                 } else {
@@ -4004,7 +4219,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 showToast("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์", "danger");
             } finally {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fa-solid fa-arrow-right"></i> สร้างบัญชีและเริ่มทดลองใช้ทันที';
+                updateSignupFormTexts();
             }
         }
 
@@ -4061,7 +4276,6 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             landingBillingCycle = cycle;
             const btnMonthly = document.getElementById('toggle-cycle-monthly');
             const btnYearly = document.getElementById('toggle-cycle-yearly');
-            const isEn = typeof currentLanguage !== 'undefined' && currentLanguage === 'en';
             
             if (btnMonthly && btnYearly) {
                 if (cycle === 'YEARLY') {
@@ -4069,32 +4283,15 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     btnYearly.style.border = 'none';
                     btnMonthly.className = 'btn btn-sm btn-outline';
                     btnMonthly.style.border = 'none';
-
-                    const periodStarter = isEn ? '/year (avg ฿1,241/mo)' : '/ปี (เฉลี่ย ฿1,241/ด.)';
-                    const periodPro = isEn ? '/year (avg ฿3,325/mo)' : '/ปี (เฉลี่ย ฿3,325/ด.)';
-                    const periodBiz = isEn ? '/year (avg ฿7,491/mo)' : '/ปี (เฉลี่ย ฿7,491/ด.)';
-
-                    const elStarter = document.getElementById('price-starter');
-                    if (elStarter) elStarter.innerHTML = `฿14,900<span class="plan-period">${periodStarter}</span>`;
-                    const elPro = document.getElementById('price-professional');
-                    if (elPro) elPro.innerHTML = `฿39,900<span class="plan-period">${periodPro}</span>`;
-                    const elBiz = document.getElementById('price-business');
-                    if (elBiz) elBiz.innerHTML = `฿89,900<span class="plan-period">${periodBiz}</span>`;
                 } else {
                     btnMonthly.className = 'btn btn-sm btn-primary';
                     btnMonthly.style.border = 'none';
                     btnYearly.className = 'btn btn-sm btn-outline';
                     btnYearly.style.border = 'none';
-
-                    const period = isEn ? '/month' : '/เดือน';
-
-                    const elStarter = document.getElementById('price-starter');
-                    if (elStarter) elStarter.innerHTML = `฿1,490<span class="plan-period">${period}</span>`;
-                    const elPro = document.getElementById('price-professional');
-                    if (elPro) elPro.innerHTML = `฿3,990<span class="plan-period">${period}</span>`;
-                    const elBiz = document.getElementById('price-business');
-                    if (elBiz) elBiz.innerHTML = `฿8,990<span class="plan-period">${period}</span>`;
                 }
+            }
+            if (typeof updateLandingPricingCards === 'function') {
+                updateLandingPricingCards();
             }
         }
 
@@ -8441,6 +8638,14 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             if (p.is_best_selling) badge += ' <span class="status-badge reviewed" style="background: #3B82F6; color: #fff;">Best Seller</span>';
                             if (!badge) badge = '<span class="status-badge" style="background: rgba(148,163,184,0.15); color: var(--text-secondary);">Active Plan</span>';
 
+                            const tDays = parseInt(p.trial_days || 0);
+                            let trialBadge = '';
+                            if (tDays > 0) {
+                                trialBadge = `<div style="margin-top: 4px;"><span class="badge" style="background: rgba(16,185,129,0.15); color: #10B981; font-size: 0.72rem; padding: 2px 7px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-gift"></i> ทดลองฟรี ${tDays} วัน</span></div>`;
+                            } else {
+                                trialBadge = `<div style="margin-top: 4px;"><span class="badge" style="background: rgba(148,163,184,0.12); color: var(--text-muted); font-size: 0.72rem; padding: 2px 7px; border-radius: 4px; display: inline-flex; align-items: center; gap: 4px;"><i class="fa-solid fa-bolt"></i> สมัครใช้เลย</span></div>`;
+                            }
+
                             const features = [];
                             if (p.vin_search_enabled) features.push('<span style="font-size: 0.7rem; background: rgba(59,130,246,0.15); color: #3B82F6; padding: 2px 5px; border-radius: 4px;">VIN</span>');
                             if (p.api_access_enabled) features.push('<span style="font-size: 0.7rem; background: rgba(99,102,241,0.15); color: #6366F1; padding: 2px 5px; border-radius: 4px;">API</span>');
@@ -8459,7 +8664,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                 <td style="color: #10B981; font-weight: 700;">฿${(p.total_mrr || 0).toLocaleString()}</td>
                                 <td style="font-size: 0.78rem; color: var(--text-secondary); max-width: 220px;">${quotaText}</td>
                                 <td><div style="display: flex; gap: 3px; flex-wrap: wrap;">${features.join('') || '<span style="color: var(--text-muted); font-size: 0.72rem;">Base</span>'}</div></td>
-                                <td>${badge}</td>
+                                <td>${badge} ${trialBadge}</td>
                                 <td style="text-align: center; white-space: nowrap;">
                                     <button class="btn btn-secondary btn-sm" onclick="openEditPlanModal('${p.id}')" title="แก้ไขแพ็กเกจ" style="padding: 0.25rem 0.55rem; font-size: 0.75rem; margin-right: 4px;">
                                         <i class="fa-solid fa-pen-to-square"></i> แก้ไข
@@ -8492,6 +8697,16 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             }
         }
 
+        function toggleCreatePlanTrialInput(enabled) {
+            const el = document.getElementById('cp-trial-days-wrapper');
+            if (el) el.style.display = enabled ? 'block' : 'none';
+        }
+
+        function toggleEditPlanTrialInput(enabled) {
+            const el = document.getElementById('ep-trial-days-wrapper');
+            if (el) el.style.display = enabled ? 'block' : 'none';
+        }
+
         function openCreatePlanModal() {
             const form = document.getElementById('form-create-plan');
             if (form) form.reset();
@@ -8500,6 +8715,9 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             document.getElementById('cp-brands').value = '15';
             document.getElementById('cp-cats').value = '30';
             document.getElementById('cp-users').value = '5';
+            document.getElementById('cp-trial-enabled').checked = false;
+            toggleCreatePlanTrialInput(false);
+            document.getElementById('cp-trial-days').value = '14';
             document.getElementById('cp-feat-export').checked = true;
             document.getElementById('cp-feat-ai').checked = true;
             document.getElementById('modal-create-plan').style.display = 'flex';
@@ -8512,6 +8730,9 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         async function submitCreatePlan(e) {
             e.preventDefault();
             const planId = document.getElementById('cp-id').value.trim().toLowerCase();
+            const trialEnabled = document.getElementById('cp-trial-enabled').checked;
+            const trialDays = trialEnabled ? parseInt(document.getElementById('cp-trial-days').value || 0) : 0;
+
             const payload = {
                 id: planId,
                 name: document.getElementById('cp-name').value.trim(),
@@ -8520,6 +8741,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 max_brands: parseInt(document.getElementById('cp-brands').value),
                 max_categories: parseInt(document.getElementById('cp-cats').value),
                 max_users: parseInt(document.getElementById('cp-users').value),
+                trial_days: trialDays,
                 vin_search_enabled: document.getElementById('cp-feat-vin').checked,
                 api_access_enabled: document.getElementById('cp-feat-api').checked,
                 export_enabled: document.getElementById('cp-feat-export').checked,
@@ -8537,6 +8759,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     showToast(`🎉 เพิ่มแพ็กเกจ '${payload.name}' เรียบร้อยแล้ว!`, "success");
                     closeCreatePlanModal();
                     loadOwnerPlanPerformanceTab();
+                    loadPublicPlans();
                 } else {
                     showToast(`⚠️ ${data.error || 'ไม่สามารถสร้างแพ็กเกจได้'}`, "danger");
                 }
@@ -8561,6 +8784,13 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             document.getElementById('ep-brands').value = plan.max_brands !== undefined ? plan.max_brands : 5;
             document.getElementById('ep-cats').value = plan.max_categories !== undefined ? plan.max_categories : 5;
             document.getElementById('ep-users').value = plan.max_users !== undefined ? plan.max_users : 1;
+            
+            const tDays = parseInt(plan.trial_days || 0);
+            const trialEnabled = tDays > 0;
+            document.getElementById('ep-trial-enabled').checked = trialEnabled;
+            toggleEditPlanTrialInput(trialEnabled);
+            document.getElementById('ep-trial-days').value = trialEnabled ? tDays : 14;
+
             document.getElementById('ep-feat-vin').checked = !!plan.vin_search_enabled;
             document.getElementById('ep-feat-api').checked = !!plan.api_access_enabled;
             document.getElementById('ep-feat-export').checked = !!plan.export_enabled;
@@ -8576,6 +8806,9 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         async function submitEditPlan(e) {
             e.preventDefault();
             const planId = document.getElementById('ep-id').value;
+            const trialEnabled = document.getElementById('ep-trial-enabled').checked;
+            const trialDays = trialEnabled ? parseInt(document.getElementById('ep-trial-days').value || 0) : 0;
+
             const payload = {
                 name: document.getElementById('ep-name').value.trim(),
                 price_monthly: parseInt(document.getElementById('ep-price').value),
@@ -8583,6 +8816,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 max_brands: parseInt(document.getElementById('ep-brands').value),
                 max_categories: parseInt(document.getElementById('ep-cats').value),
                 max_users: parseInt(document.getElementById('ep-users').value),
+                trial_days: trialDays,
                 vin_search_enabled: document.getElementById('ep-feat-vin').checked,
                 api_access_enabled: document.getElementById('ep-feat-api').checked,
                 export_enabled: document.getElementById('ep-feat-export').checked,
@@ -8600,6 +8834,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     showToast(`✅ บันทึกการแก้ไขแพ็กเกจ '${payload.name}' เรียบร้อยแล้ว!`, "success");
                     closeEditPlanModal();
                     loadOwnerPlanPerformanceTab();
+                    loadPublicPlans();
                 } else {
                     showToast(`⚠️ ${data.error || 'ไม่สามารถแก้ไขแพ็กเกจได้'}`, "danger");
                 }

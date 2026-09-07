@@ -305,6 +305,7 @@ class TrialRegisterRequest(BaseModel):
     phone: Optional[str] = ""
     segment: Optional[str] = "GARAGE"
     plan_id: Optional[str] = "free_trial"
+    signup_type: Optional[str] = "TRIAL" # TRIAL or DIRECT
     verification_code: Optional[str] = "999999"
 
 class PublicContactLeadRequest(BaseModel):

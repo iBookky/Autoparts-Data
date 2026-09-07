@@ -12,13 +12,13 @@ const I18N_DICTIONARY = {
         "landing.nav.pricing": "ราคาและแพ็กเกจ",
         "landing.nav.demo": "ทดลองค้นหาจริง",
         "landing.nav.signin": "เข้าสู่ระบบ",
-        "landing.nav.trial": "ทดลองใช้ฟรี 14 วัน",
+        "landing.nav.trial": "สมัครใช้งาน / ทดลองใช้",
 
         // Landing Hero Section
         "landing.hero.pill": "แพลตฟอร์มสืบค้นและเทียบรหัสอะไหล่รถยนต์อันดับ 1 ในไทย",
         "landing.hero.title": "เทียบเบอร์อะไหล่แท้ & อะไหล่ทดแทน <br><span class=\"gradient-text-hero\">แม่นยำ ทันที ไม่พลาดทุกโอกาสการขาย</span>",
         "landing.hero.desc": "ค้นหารหัส OEM, เบอร์เทียบ Aftermarket 8 แบรนด์ชั้นนำ, ถอดรหัส VIN และตรวจสอบความเข้ากันได้ของชิ้นส่วนรถยนต์กว่า 5,000+ รายการ สำหรับอู่ซ่อมรถ ร้านอะไหล่ บริษัทประกัน และฟลีทรถยนต์",
-        "landing.hero.btnTrial": "เริ่มต้นทดลองใช้ฟรี 14 วัน",
+        "landing.hero.btnTrial": "เริ่มต้นสมัครใช้งาน",
         "landing.hero.btnDemo": "ทดลองค้นหาจริง (Live Demo)",
 
         // Landing Demo Search
@@ -72,15 +72,16 @@ const I18N_DICTIONARY = {
         // Landing Pricing Section
         "landing.pricing.badge": "Pricing & Plans",
         "landing.pricing.title": "แพ็กเกจราคาที่คุ้มค่า คืนทุนตั้งแต่เดือนแรก",
-        "landing.pricing.subtitle": "เลือกแพ็กเกจที่เหมาะกับขนาดธุรกิจของคุณ หรือทดลองใช้งานฟรี 14 วันก่อนตัดสินใจ",
+        "landing.pricing.subtitle": "เลือกแพ็กเกจที่เหมาะกับขนาดธุรกิจของคุณ หรือเริ่มต้นทดลองใช้งานก่อนตัดสินใจ",
         "landing.cycle.monthly": "ชำระรายเดือน",
         "landing.cycle.yearly": "ชำระรายปี",
         "landing.cycle.save20": "ประหยัด 20% (ฟรี 2 เดือน)",
 
         // Plan Cards
         "plan.popularRibbon": "⭐ แนะนำสำหรับธุรกิจ (POPULAR)",
-        "plan.btn.trial": "ทดลองใช้ฟรี 14 วัน",
-        "plan.btn.trialPro": "ทดลองใช้ฟรี 14 วัน (แนะนำ)",
+        "plan.btn.trial": "ทดลองใช้ฟรี",
+        "plan.btn.trialPro": "ทดลองใช้ฟรี (แนะนำ)",
+        "plan.btn.buyNow": "สมัครใช้งานทันที",
         "plan.btn.contactSales": "ติดต่อเจ้าหน้าที่",
         "plan.btn.current": "แพ็กเกจปัจจุบัน",
         "plan.btn.upgrade": "อัปเกรดแพ็กเกจนี้",
@@ -145,7 +146,7 @@ const I18N_DICTIONARY = {
         "auth.submit": "ลงชื่อเข้าใช้งานแพลตฟอร์ม",
         "auth.backLanding": "กลับสู่หน้าหลัก (Landing Page)",
         "auth.noAccount": "ยังไม่มีบัญชีใช้งาน?",
-        "auth.startTrial": "สมัครทดลองใช้ฟรี 14 วัน",
+        "auth.startTrial": "สมัครสมาชิกใหม่",
 
         // App Shell & Navigation
         "app.name": "AutoParts",
@@ -836,7 +837,7 @@ const I18N_DICTIONARY = {
         "landing.hero.pill": "#1 Automotive Parts Data & Cross-Reference Platform",
         "landing.hero.title": "Match OEM & Aftermarket Parts Instantly <br><span class=\"gradient-text-hero\">Accurate. Instant. Never Miss a Sale.</span>",
         "landing.hero.desc": "Search verified OEM codes, 8 leading aftermarket brands, 17-digit VIN decoding, and vehicle fitment across 5,000+ parts for repair shops, parts retailers, insurance, and fleet operations.",
-        "landing.hero.btnTrial": "Start 14-Day Free Trial",
+        "landing.hero.btnTrial": "Get Started Now",
         "landing.hero.btnDemo": "Explore Live Demo",
 
         // Landing Demo Search
@@ -890,15 +891,16 @@ const I18N_DICTIONARY = {
         // Landing Pricing Section
         "landing.pricing.badge": "Pricing & Plans",
         "landing.pricing.title": "Transparent Plans that Pay for Themselves",
-        "landing.pricing.subtitle": "Choose the right tier for your workshop size, or start with our 14-day free trial.",
+        "landing.pricing.subtitle": "Choose the right tier for your workshop, or start with our free trial period.",
         "landing.cycle.monthly": "Monthly Billing",
         "landing.cycle.yearly": "Yearly Billing",
         "landing.cycle.save20": "Save 20% (2 Months Free)",
 
         // Plan Cards
         "plan.popularRibbon": "⭐ MOST POPULAR FOR BUSINESS",
-        "plan.btn.trial": "Start 14-Day Free Trial",
+        "plan.btn.trial": "Start Free Trial",
         "plan.btn.trialPro": "Start Free Trial (Recommended)",
+        "plan.btn.buyNow": "Subscribe Now",
         "plan.btn.contactSales": "Contact Sales",
         "plan.btn.current": "Current Active Plan",
         "plan.btn.upgrade": "Upgrade to this Plan",
@@ -963,7 +965,7 @@ const I18N_DICTIONARY = {
         "auth.submit": "Sign In to Platform",
         "auth.backLanding": "Back to Landing Page",
         "auth.noAccount": "Don't have an account?",
-        "auth.startTrial": "Start 14-Day Free Trial",
+        "auth.startTrial": "Register Account",
 
         // App Shell & Navigation
         "app.name": "AutoParts",
