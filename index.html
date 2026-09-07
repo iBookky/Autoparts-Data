@@ -2912,10 +2912,10 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                         <div class="form-group">
                             <label class="form-label" data-i18n="modal.createLead.plan">Interested Plan</label>
                             <select id="lead-plan" class="form-control">
-                                <option value="starter">STARTER (฿1,290/mo)</option>
-                                <option value="professional" selected>PROFESSIONAL (฿2,990/mo)</option>
-                                <option value="business">BUSINESS (฿5,990/mo)</option>
-                                <option value="enterprise">ENTERPRISE (Custom)</option>
+                                <option value="starter">STARTER (฿1,490/mo)</option>
+                                <option value="professional" selected>PROFESSIONAL (฿3,990/mo)</option>
+                                <option value="business">BUSINESS (฿8,990/mo)</option>
+                                <option value="enterprise">ENTERPRISE (฿19,900/mo)</option>
                             </select>
                         </div>
                         <div class="form-group">
@@ -2961,13 +2961,17 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             <input type="text" id="cp-name" class="form-control" placeholder="Enterprise Plus" required>
                         </div>
                     </div>
-                    <div class="form-grid-2">
+                    <div class="form-grid-3">
                         <div class="form-group">
                             <label class="form-label"><span data-i18n="modal.createPlan.priceMonthly">Price Monthly (บาท/เดือน)</span> <span style="color: var(--danger);">*</span></label>
-                            <input type="number" id="cp-price" class="form-control" min="0" value="3990" required>
+                            <input type="number" id="cp-price" class="form-control" min="0" value="3990" oninput="autoSuggestYearlyPrice('cp')" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label"><span data-i18n="modal.createPlan.quota">Monthly Search Quota (ครั้ง/เดือน)</span> <span style="color: var(--danger);">*</span></label>
+                            <label class="form-label"><span>Price Yearly (บาท/ปี)</span> <small style="color: var(--primary); font-size: 0.72rem; cursor: pointer;" onclick="calcSuggestYearly('cp')" title="คลิกเพื่อคำนวณอัตโนมัติ"><i class="fa-solid fa-wand-magic-sparkles"></i> แนะนำ</small></label>
+                            <input type="number" id="cp-price-yearly" class="form-control" min="0" value="39900" placeholder="กำหนดราคาชำระรายปีเองได้">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label"><span data-i18n="modal.createPlan.quota">Monthly Search Quota</span> <span style="color: var(--danger);">*</span></label>
                             <input type="number" id="cp-quota" class="form-control" min="10" value="5000" required>
                         </div>
                     </div>
@@ -3044,13 +3048,17 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             <input type="text" id="ep-name" class="form-control" required>
                         </div>
                     </div>
-                    <div class="form-grid-2">
+                    <div class="form-grid-3">
                         <div class="form-group">
                             <label class="form-label"><span data-i18n="modal.createPlan.priceMonthly">Price Monthly (บาท/เดือน)</span> <span style="color: var(--danger);">*</span></label>
-                            <input type="number" id="ep-price" class="form-control" min="0" required>
+                            <input type="number" id="ep-price" class="form-control" min="0" oninput="autoSuggestYearlyPrice('ep')" required>
                         </div>
                         <div class="form-group">
-                            <label class="form-label"><span data-i18n="modal.createPlan.quota">Monthly Search Quota (ครั้ง/เดือน)</span> <span style="color: var(--danger);">*</span></label>
+                            <label class="form-label"><span>Price Yearly (บาท/ปี)</span> <small style="color: var(--primary); font-size: 0.72rem; cursor: pointer;" onclick="calcSuggestYearly('ep')" title="คลิกเพื่อคำนวณอัตโนมัติ"><i class="fa-solid fa-wand-magic-sparkles"></i> แนะนำ</small></label>
+                            <input type="number" id="ep-price-yearly" class="form-control" min="0" placeholder="กำหนดราคาชำระรายปีเองได้">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label"><span data-i18n="modal.createPlan.quota">Monthly Search Quota</span> <span style="color: var(--danger);">*</span></label>
                             <input type="number" id="ep-quota" class="form-control" min="10" required>
                         </div>
                     </div>
@@ -8652,6 +8660,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             if (p.export_enabled) features.push('<span style="font-size: 0.7rem; background: rgba(16,185,129,0.15); color: #10B981; padding: 2px 5px; border-radius: 4px;">EXP</span>');
                             if (p.ai_search_enabled) features.push('<span style="font-size: 0.7rem; background: rgba(168,85,247,0.15); color: #A855F7; padding: 2px 5px; border-radius: 4px;">AI</span>');
 
+                            const pMonthly = p.price_monthly || 0;
+                            const pYearly = p.price_yearly || (pMonthly * 10);
                             const quotaText = `🔍 ${(p.monthly_search_quota || 0).toLocaleString()}/mo • 🏢 ${p.max_brands == -1 ? '∞' : p.max_brands} brands • 📦 ${p.max_categories == -1 ? '∞' : p.max_categories} cats • 👥 ${p.max_users == -1 ? '∞' : p.max_users} seats`;
 
                             tr.innerHTML = `
@@ -8660,7 +8670,10 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                     <div style="font-size: 0.72rem; color: var(--text-muted); font-family: var(--font-mono);">${p.id}</div>
                                 </td>
                                 <td><span style="font-weight: 600; color: var(--text-primary);">${p.subscriber_count || 0}</span> <span style="font-size: 0.75rem; color: var(--text-muted);">orgs</span></td>
-                                <td style="font-weight: 700; color: var(--text-primary);">฿${(p.price_monthly || 0).toLocaleString()}</td>
+                                <td>
+                                    <div style="font-weight: 700; color: var(--text-primary);">฿${pMonthly.toLocaleString()}<span style="font-weight: 400; font-size: 0.72rem; color: var(--text-muted);">/ด.</span></div>
+                                    <div style="font-size: 0.72rem; color: #60A5FA; font-weight: 600;">฿${pYearly.toLocaleString()}/ปี</div>
+                                </td>
                                 <td style="color: #10B981; font-weight: 700;">฿${(p.total_mrr || 0).toLocaleString()}</td>
                                 <td style="font-size: 0.78rem; color: var(--text-secondary); max-width: 220px;">${quotaText}</td>
                                 <td><div style="display: flex; gap: 3px; flex-wrap: wrap;">${features.join('') || '<span style="color: var(--text-muted); font-size: 0.72rem;">Base</span>'}</div></td>
@@ -8697,6 +8710,25 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             }
         }
 
+        function autoSuggestYearlyPrice(prefix) {
+            const pMo = parseInt(document.getElementById(`${prefix}-price`).value || 0);
+            const yrEl = document.getElementById(`${prefix}-price-yearly`);
+            if (yrEl && (!yrEl.value || yrEl.dataset.autoFilled === "true")) {
+                yrEl.value = pMo > 0 ? (pMo * 10) : 0;
+                yrEl.dataset.autoFilled = "true";
+            }
+        }
+
+        function calcSuggestYearly(prefix) {
+            const pMo = parseInt(document.getElementById(`${prefix}-price`).value || 0);
+            const yrEl = document.getElementById(`${prefix}-price-yearly`);
+            if (yrEl) {
+                yrEl.value = pMo > 0 ? (pMo * 10) : 0;
+                yrEl.dataset.autoFilled = "true";
+                showToast(`💡 ปรับเป็นราคาแนะนำ (ประหยัด 2 เดือน): ฿${(pMo * 10).toLocaleString()}/ปี (สามารถแก้ไขตัวเลขได้ตามต้องการ)`, "info");
+            }
+        }
+
         function toggleCreatePlanTrialInput(enabled) {
             const el = document.getElementById('cp-trial-days-wrapper');
             if (el) el.style.display = enabled ? 'block' : 'none';
@@ -8711,6 +8743,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             const form = document.getElementById('form-create-plan');
             if (form) form.reset();
             document.getElementById('cp-price').value = '3990';
+            const yrEl = document.getElementById('cp-price-yearly');
+            if (yrEl) {
+                yrEl.value = '39900';
+                yrEl.dataset.autoFilled = "false";
+            }
             document.getElementById('cp-quota').value = '5000';
             document.getElementById('cp-brands').value = '15';
             document.getElementById('cp-cats').value = '30';
@@ -8732,11 +8769,15 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             const planId = document.getElementById('cp-id').value.trim().toLowerCase();
             const trialEnabled = document.getElementById('cp-trial-enabled').checked;
             const trialDays = trialEnabled ? parseInt(document.getElementById('cp-trial-days').value || 0) : 0;
+            const priceMonthly = parseInt(document.getElementById('cp-price').value || 0);
+            const yrVal = document.getElementById('cp-price-yearly').value;
+            const priceYearly = (yrVal !== "" && yrVal !== null) ? parseInt(yrVal) : (priceMonthly * 10);
 
             const payload = {
                 id: planId,
                 name: document.getElementById('cp-name').value.trim(),
-                price_monthly: parseInt(document.getElementById('cp-price').value),
+                price_monthly: priceMonthly,
+                price_yearly: priceYearly,
                 monthly_search_quota: parseInt(document.getElementById('cp-quota').value),
                 max_brands: parseInt(document.getElementById('cp-brands').value),
                 max_categories: parseInt(document.getElementById('cp-cats').value),
@@ -8779,7 +8820,16 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             document.getElementById('ep-id').value = plan.id;
             document.getElementById('ep-id-display').value = plan.id;
             document.getElementById('ep-name').value = plan.name || '';
-            document.getElementById('ep-price').value = plan.price_monthly || 0;
+            const pMo = plan.price_monthly || 0;
+            document.getElementById('ep-price').value = pMo;
+            
+            const pYr = plan.price_yearly !== undefined ? plan.price_yearly : (plan.intervals && plan.intervals.YEARLY ? plan.intervals.YEARLY.base_price : (pMo * 10));
+            const yrEl = document.getElementById('ep-price-yearly');
+            if (yrEl) {
+                yrEl.value = pYr !== undefined && pYr !== null ? pYr : (pMo * 10);
+                yrEl.dataset.autoFilled = "false";
+            }
+
             document.getElementById('ep-quota').value = plan.monthly_search_quota || 1000;
             document.getElementById('ep-brands').value = plan.max_brands !== undefined ? plan.max_brands : 5;
             document.getElementById('ep-cats').value = plan.max_categories !== undefined ? plan.max_categories : 5;
@@ -8808,10 +8858,14 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             const planId = document.getElementById('ep-id').value;
             const trialEnabled = document.getElementById('ep-trial-enabled').checked;
             const trialDays = trialEnabled ? parseInt(document.getElementById('ep-trial-days').value || 0) : 0;
+            const priceMonthly = parseInt(document.getElementById('ep-price').value || 0);
+            const yrVal = document.getElementById('ep-price-yearly').value;
+            const priceYearly = (yrVal !== "" && yrVal !== null) ? parseInt(yrVal) : (priceMonthly * 10);
 
             const payload = {
                 name: document.getElementById('ep-name').value.trim(),
-                price_monthly: parseInt(document.getElementById('ep-price').value),
+                price_monthly: priceMonthly,
+                price_yearly: priceYearly,
                 monthly_search_quota: parseInt(document.getElementById('ep-quota').value),
                 max_brands: parseInt(document.getElementById('ep-brands').value),
                 max_categories: parseInt(document.getElementById('ep-cats').value),
@@ -8959,7 +9013,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 phone: document.getElementById('lead-phone').value.trim(),
                 interested_plan_id: document.getElementById('lead-plan').value,
                 pipeline_stage: document.getElementById('lead-stage').value,
-                expected_mrr: document.getElementById('lead-plan').value === 'starter' ? 1290 : document.getElementById('lead-plan').value === 'professional' ? 2990 : 5990,
+                expected_mrr: document.getElementById('lead-plan').value === 'starter' ? 1490 : document.getElementById('lead-plan').value === 'professional' ? 3990 : document.getElementById('lead-plan').value === 'business' ? 8990 : 19900,
                 notes: document.getElementById('lead-notes').value.trim()
             };
 

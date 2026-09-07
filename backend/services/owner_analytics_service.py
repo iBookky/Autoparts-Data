@@ -770,7 +770,8 @@ class OwnerAnalyticsService:
         cursor = conn.cursor()
 
         cursor.execute("""
-            SELECT p.id, p.name, p.price_monthly, (p.price_monthly * 10) as price_yearly,
+            SELECT p.id, p.name, p.price_monthly, 
+                   COALESCE(NULLIF(p.price_yearly, 0), p.price_monthly * 10) as price_yearly,
                    COUNT(s.id) as subscriber_count,
                    COALESCE(SUM(s.base_price), 0) as total_mrr
             FROM plans p

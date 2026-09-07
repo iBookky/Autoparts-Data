@@ -137,7 +137,8 @@ from backend.database import (
     validate_verification_code,
     get_platform_settings,
     update_platform_settings,
-    clean_production_database
+    clean_production_database,
+    init_db
 )
 from backend.services.entitlement_service import EntitlementService
 from backend.services.billing_calculator import BillingCalculator
@@ -160,6 +161,14 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.on_event("startup")
+async def app_startup_event():
+    try:
+        init_db()
+        print("✅ [Startup] Database initialized and schema verified.")
+    except Exception as e:
+        print(f"⚠️ [Startup] Database schema check note: {e}")
 
 app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
 
@@ -1982,6 +1991,7 @@ class RolePermissionUpdateRequest(BaseModel):
 class PlanPricingUpdateRequest(BaseModel):
     name: Optional[str] = None
     price_monthly: int
+    price_yearly: Optional[int] = None
     monthly_search_quota: int
     max_brands: int
     max_categories: int
@@ -1996,6 +2006,7 @@ class PlanCreateRequest(BaseModel):
     id: str
     name: str
     price_monthly: int
+    price_yearly: Optional[int] = None
     max_brands: int = 5
     max_categories: int = 5
     max_users: int = 1

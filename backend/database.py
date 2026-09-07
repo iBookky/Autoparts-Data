@@ -297,6 +297,47 @@ def init_db():
     finally:
         conn.close()
 
+def ensure_plan_schema(cursor):
+    """Guarantees trial_days, price_yearly and all required columns exist in plans table on both SQLite and PostgreSQL."""
+    # SQLite check
+    try:
+        cursor.execute("PRAGMA table_info(plans)")
+        rows = cursor.fetchall()
+        if rows:
+            plan_cols = [r[1] if isinstance(r, (tuple, list)) else (r["name"] if "name" in r.keys() else str(r[1])) for r in rows]
+            if 'trial_days' not in plan_cols:
+                cursor.execute("ALTER TABLE plans ADD COLUMN trial_days INTEGER DEFAULT 0")
+            if 'price_yearly' not in plan_cols:
+                cursor.execute("ALTER TABLE plans ADD COLUMN price_yearly INTEGER DEFAULT 0")
+    except Exception:
+        pass
+    
+    # PostgreSQL check
+    try:
+        cursor.execute("""
+            DO $$
+            BEGIN
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_name='plans' AND column_name='trial_days'
+                ) THEN
+                    ALTER TABLE plans ADD COLUMN trial_days INTEGER DEFAULT 0;
+                END IF;
+                IF NOT EXISTS (
+                    SELECT 1 FROM information_schema.columns 
+                    WHERE table_name='plans' AND column_name='price_yearly'
+                ) THEN
+                    ALTER TABLE plans ADD COLUMN price_yearly INTEGER DEFAULT 0;
+                END IF;
+            END $$;
+        """)
+    except Exception:
+        try:
+            cursor.execute("ALTER TABLE plans ADD COLUMN IF NOT EXISTS trial_days INTEGER DEFAULT 0")
+            cursor.execute("ALTER TABLE plans ADD COLUMN IF NOT EXISTS price_yearly INTEGER DEFAULT 0")
+        except Exception:
+            pass
+
 def seed_standard_roles_and_permissions(cursor):
     """Guarantees all 10 roles, 30+ permissions, verification_codes table, and Free Trial plan are seeded."""
     # 1. Verification codes table
@@ -311,28 +352,51 @@ def seed_standard_roles_and_permissions(cursor):
         )
     """)
 
-    # 2. Plans trial_days column
-    cursor.execute("PRAGMA table_info(plans)")
-    plan_cols = [c[1] for c in cursor.fetchall()]
-    if 'trial_days' not in plan_cols:
-        try:
-            cursor.execute("ALTER TABLE plans ADD COLUMN trial_days INTEGER DEFAULT 0")
-        except Exception:
-            pass
+    # 2. Plans trial_days and price_yearly column
+    ensure_plan_schema(cursor)
 
-    # 3. Seed Free Trial Plan & standard trial days
-    cursor.execute("""
-        INSERT OR IGNORE INTO plans (
-            id, name, price_monthly, max_brands, max_categories, max_users, 
-            monthly_search_quota, vin_search_enabled, api_access_enabled, export_enabled, ai_search_enabled, trial_days
-        ) VALUES (
-            'free_trial', 'FREE TRIAL (ทดลองใช้ฟรี)', 0, 3, 3, 1, 1000, 1, 0, 0, 1, 14
-        )
-    """)
-    cursor.execute("UPDATE plans SET trial_days = 14 WHERE id = 'free_trial' AND (trial_days IS NULL OR trial_days = 0)")
-    cursor.execute("UPDATE plans SET trial_days = 14 WHERE id = 'professional' AND trial_days IS NULL")
-    cursor.execute("UPDATE plans SET trial_days = 0 WHERE id = 'starter' AND trial_days IS NULL")
-    cursor.execute("UPDATE plans SET trial_days = 0 WHERE id = 'enterprise' AND trial_days IS NULL")
+    # 3. Seed & Synchronize Standard Plans & plan_versions
+    standard_plans = [
+        ('starter', 'STARTER', 1490, 14900, 2, 2, 1, 1000, 0, 0, 0, 0, 14),
+        ('professional', 'PROFESSIONAL', 3990, 39900, 5, 5, 3, 5000, 1, 0, 1, 1, 14),
+        ('business', 'BUSINESS', 8990, 89900, -1, -1, 10, 20000, 1, 1, 1, 1, 14),
+        ('enterprise', 'ENTERPRISE', 19900, 199000, -1, -1, -1, -1, 1, 1, 1, 1, 0),
+        ('free_trial', 'FREE TRIAL (ทดลองใช้ฟรี)', 0, 0, 3, 3, 1, 1000, 1, 0, 0, 1, 14)
+    ]
+    for sp in standard_plans:
+        cursor.execute("""
+            INSERT OR IGNORE INTO plans (
+                id, name, price_monthly, price_yearly, max_brands, max_categories, max_users, 
+                monthly_search_quota, vin_search_enabled, api_access_enabled, export_enabled, ai_search_enabled, trial_days
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, sp)
+        # Synchronize outdated seed prices to official unified pricing
+        cursor.execute("""
+            UPDATE plans 
+            SET price_monthly = ?, price_yearly = ?, max_brands = ?, max_categories = ?, max_users = ?, monthly_search_quota = ?, trial_days = ?
+            WHERE id = ? AND price_monthly IN (1290, 2990, 5990, 14900)
+        """, (sp[2], sp[3], sp[4], sp[5], sp[6], sp[7], sp[12], sp[0]))
+        
+        # Populate price_yearly if missing/0
+        cursor.execute("""
+            UPDATE plans 
+            SET price_yearly = ?
+            WHERE id = ? AND (price_yearly IS NULL OR price_yearly = 0)
+        """, (sp[3], sp[0]))
+
+        cursor.execute("""
+            UPDATE plan_versions 
+            SET base_price = ?, max_brands = ?, max_categories = ?, max_users = ?, monthly_search_quota = ?, trial_period_days = ?
+            WHERE plan_id = ? AND billing_interval = 'MONTHLY' AND base_price IN (1290, 2990, 5990, 14900)
+        """, (sp[2], sp[4], sp[5], sp[6], sp[7], sp[12], sp[0]))
+        
+        cursor.execute("""
+            UPDATE plan_versions 
+            SET base_price = ?, max_brands = ?, max_categories = ?, max_users = ?, monthly_search_quota = ?, trial_period_days = ?
+            WHERE plan_id = ? AND billing_interval = 'YEARLY' AND base_price IN (12900, 29900, 59900, 149000)
+        """, (sp[3], sp[4], sp[5], sp[6], sp[7], sp[12], sp[0]))
+
+    cursor.execute("UPDATE plans SET trial_days = 14 WHERE id IN ('free_trial', 'professional', 'starter', 'business') AND (trial_days IS NULL OR trial_days = 0)")
 
     # 4. Roles table & Permissions table
     cursor.execute("""
@@ -2419,6 +2483,7 @@ def update_plan_pricing(plan_id: str, price_monthly: int, monthly_search_quota: 
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
+        ensure_plan_schema(cursor)
         cursor.execute("""
             UPDATE plans 
             SET price_monthly = ?, monthly_search_quota = ?, max_brands = ?, max_categories = ?, max_users = ?, trial_days = ?
@@ -2436,6 +2501,7 @@ def create_plan(plan_data: Dict[str, Any]) -> Tuple[bool, str]:
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
+        ensure_plan_schema(cursor)
         plan_id = str(plan_data.get("id", "")).strip().lower()
         if not plan_id:
             return False, "Plan ID is required"
@@ -2444,42 +2510,49 @@ def create_plan(plan_data: Dict[str, Any]) -> Tuple[bool, str]:
         if cursor.fetchone():
             return False, f"Plan with ID '{plan_id}' already exists"
             
+        p_price_monthly = int(plan_data.get("price_monthly", 0))
+        raw_yearly = plan_data.get("price_yearly")
+        p_price_yearly = int(raw_yearly) if raw_yearly is not None and str(raw_yearly).strip() != "" else (p_price_monthly * 10)
+        p_brands = int(plan_data.get("max_brands", 5))
+        p_cats = int(plan_data.get("max_categories", 5))
+        p_users = int(plan_data.get("max_users", 1))
+        p_quota = int(plan_data.get("monthly_search_quota", 1000))
+        t_days = int(plan_data.get("trial_days", 0))
+        feat_vin = 1 if plan_data.get("vin_search_enabled") else 0
+        feat_api = 1 if plan_data.get("api_access_enabled") else 0
+        feat_exp = 1 if plan_data.get("export_enabled") else 0
+        feat_ai = 1 if plan_data.get("ai_search_enabled") else 0
+
         cursor.execute("""
             INSERT INTO plans (
-                id, name, price_monthly, max_brands, max_categories, max_users, 
+                id, name, price_monthly, price_yearly, max_brands, max_categories, max_users, 
                 monthly_search_quota, vin_search_enabled, api_access_enabled, export_enabled, ai_search_enabled, trial_days
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             plan_id,
             plan_data.get("name", plan_id.upper()),
-            int(plan_data.get("price_monthly", 0)),
-            int(plan_data.get("max_brands", 5)),
-            int(plan_data.get("max_categories", 5)),
-            int(plan_data.get("max_users", 1)),
-            int(plan_data.get("monthly_search_quota", 1000)),
-            1 if plan_data.get("vin_search_enabled") else 0,
-            1 if plan_data.get("api_access_enabled") else 0,
-            1 if plan_data.get("export_enabled") else 0,
-            1 if plan_data.get("ai_search_enabled") else 0,
-            int(plan_data.get("trial_days", 0))
+            p_price_monthly,
+            p_price_yearly,
+            p_brands,
+            p_cats,
+            p_users,
+            p_quota,
+            feat_vin,
+            feat_api,
+            feat_exp,
+            feat_ai,
+            t_days
         ))
         
         # Sync plan_versions (MONTHLY & YEARLY)
         try:
-            p_price = int(plan_data.get("price_monthly", 0))
-            p_brands = int(plan_data.get("max_brands", 5))
-            p_cats = int(plan_data.get("max_categories", 5))
-            p_users = int(plan_data.get("max_users", 1))
-            p_quota = int(plan_data.get("monthly_search_quota", 1000))
-            t_days = int(plan_data.get("trial_days", 0))
-            
             cursor.execute("""
                 INSERT INTO plan_versions (
                     plan_id, version_number, name, description, billing_interval, base_price,
                     currency, max_brands, max_categories, max_users, monthly_search_quota,
                     api_quota, export_quota, ai_quota, trial_period_days, status, is_current
                 ) VALUES (?, 1, ?, ?, 'MONTHLY', ?, 'THB', ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', 1)
-            """, (plan_id, plan_data.get("name", plan_id.upper()), f"Plan {plan_id.upper()} Monthly", p_price, p_brands, p_cats, p_users, p_quota, 5000 if plan_data.get("api_access_enabled") else 0, 500 if plan_data.get("export_enabled") else 0, 100 if plan_data.get("ai_search_enabled") else 0, t_days))
+            """, (plan_id, plan_data.get("name", plan_id.upper()), f"Plan {plan_id.upper()} Monthly", p_price_monthly, p_brands, p_cats, p_users, p_quota, 5000 if feat_api else 0, 500 if feat_exp else 0, 100 if feat_ai else 0, t_days))
             
             cursor.execute("""
                 INSERT INTO plan_versions (
@@ -2487,7 +2560,7 @@ def create_plan(plan_data: Dict[str, Any]) -> Tuple[bool, str]:
                     currency, max_brands, max_categories, max_users, monthly_search_quota,
                     api_quota, export_quota, ai_quota, trial_period_days, status, is_current
                 ) VALUES (?, 1, ?, ?, 'YEARLY', ?, 'THB', ?, ?, ?, ?, ?, ?, ?, ?, 'ACTIVE', 1)
-            """, (plan_id, plan_data.get("name", plan_id.upper()), f"Plan {plan_id.upper()} Yearly", p_price * 10, p_brands, p_cats, p_users, p_quota, 5000 if plan_data.get("api_access_enabled") else 0, 500 if plan_data.get("export_enabled") else 0, 100 if plan_data.get("ai_search_enabled") else 0, t_days))
+            """, (plan_id, plan_data.get("name", plan_id.upper()), f"Plan {plan_id.upper()} Yearly", p_price_yearly, p_brands, p_cats, p_users, p_quota, 5000 if feat_api else 0, 500 if feat_exp else 0, 100 if feat_ai else 0, t_days))
 
             # Sync plan_features
             cursor.execute("DELETE FROM plan_features WHERE plan_id = ?", (plan_id,))
@@ -2495,10 +2568,10 @@ def create_plan(plan_data: Dict[str, Any]) -> Tuple[bool, str]:
             cursor.execute("INSERT INTO plan_features (plan_id, feature_code, is_included, limit_value) VALUES (?, 'VEHICLE_SEARCH', 1, -1)", (plan_id,))
             cursor.execute("INSERT INTO plan_features (plan_id, feature_code, is_included, limit_value) VALUES (?, 'CROSS_REFERENCE', 1, -1)", (plan_id,))
             cursor.execute("INSERT INTO plan_features (plan_id, feature_code, is_included, limit_value) VALUES (?, 'SAVED_PARTS', 1, 200)", (plan_id,))
-            cursor.execute("INSERT INTO plan_features (plan_id, feature_code, is_included, limit_value) VALUES (?, 'VIN_SEARCH', ?, ?)", (plan_id, 1 if plan_data.get("vin_search_enabled") else 0, -1 if plan_data.get("vin_search_enabled") else 0))
-            cursor.execute("INSERT INTO plan_features (plan_id, feature_code, is_included, limit_value) VALUES (?, 'API', ?, ?)", (plan_id, 1 if plan_data.get("api_access_enabled") else 0, 5000 if plan_data.get("api_access_enabled") else 0))
-            cursor.execute("INSERT INTO plan_features (plan_id, feature_code, is_included, limit_value) VALUES (?, 'EXPORT', ?, ?)", (plan_id, 1 if plan_data.get("export_enabled") else 0, 500 if plan_data.get("export_enabled") else 0))
-            cursor.execute("INSERT INTO plan_features (plan_id, feature_code, is_included, limit_value) VALUES (?, 'AI', ?, ?)", (plan_id, 1 if plan_data.get("ai_search_enabled") else 0, 100 if plan_data.get("ai_search_enabled") else 0))
+            cursor.execute("INSERT INTO plan_features (plan_id, feature_code, is_included, limit_value) VALUES (?, 'VIN_SEARCH', ?, ?)", (plan_id, feat_vin, -1 if feat_vin else 0))
+            cursor.execute("INSERT INTO plan_features (plan_id, feature_code, is_included, limit_value) VALUES (?, 'API', ?, ?)", (plan_id, feat_api, 5000 if feat_api else 0))
+            cursor.execute("INSERT INTO plan_features (plan_id, feature_code, is_included, limit_value) VALUES (?, 'EXPORT', ?, ?)", (plan_id, feat_exp, 500 if feat_exp else 0))
+            cursor.execute("INSERT INTO plan_features (plan_id, feature_code, is_included, limit_value) VALUES (?, 'AI', ?, ?)", (plan_id, feat_ai, 100 if feat_ai else 0))
         except Exception as ex_sync:
             print(f"Warning syncing plan versions/features on create: {ex_sync}")
 
@@ -2514,6 +2587,7 @@ def update_full_plan(plan_id: str, plan_data: Dict[str, Any]) -> Tuple[bool, str
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
+        ensure_plan_schema(cursor)
         cursor.execute("SELECT * FROM plans WHERE id = ?", (plan_id,))
         existing = cursor.fetchone()
         if not existing:
@@ -2522,6 +2596,8 @@ def update_full_plan(plan_id: str, plan_data: Dict[str, Any]) -> Tuple[bool, str
         ex = dict(existing)
         name = plan_data.get("name", ex["name"])
         price_monthly = int(plan_data.get("price_monthly", ex["price_monthly"]))
+        raw_yearly = plan_data.get("price_yearly")
+        price_yearly = int(raw_yearly) if raw_yearly is not None and str(raw_yearly).strip() != "" else int(ex.get("price_yearly") or (price_monthly * 10))
         max_brands = int(plan_data.get("max_brands", ex["max_brands"]))
         max_categories = int(plan_data.get("max_categories", ex["max_categories"]))
         max_users = int(plan_data.get("max_users", ex["max_users"]))
@@ -2534,12 +2610,12 @@ def update_full_plan(plan_id: str, plan_data: Dict[str, Any]) -> Tuple[bool, str
             
         cursor.execute("""
             UPDATE plans 
-            SET name = ?, price_monthly = ?, max_brands = ?, max_categories = ?, max_users = ?, 
+            SET name = ?, price_monthly = ?, price_yearly = ?, max_brands = ?, max_categories = ?, max_users = ?, 
                 monthly_search_quota = ?, vin_search_enabled = ?, api_access_enabled = ?, export_enabled = ?, ai_search_enabled = ?,
                 trial_days = ?
             WHERE id = ?
         """, (
-            name, price_monthly, max_brands, max_categories, max_users,
+            name, price_monthly, price_yearly, max_brands, max_categories, max_users,
             monthly_search_quota, vin_search_enabled, api_access_enabled, export_enabled, ai_search_enabled,
             trial_days,
             plan_id
@@ -2557,7 +2633,7 @@ def update_full_plan(plan_id: str, plan_data: Dict[str, Any]) -> Tuple[bool, str
                 UPDATE plan_versions 
                 SET base_price = ?, max_brands = ?, max_categories = ?, max_users = ?, monthly_search_quota = ?, trial_period_days = ?
                 WHERE plan_id = ? AND billing_interval = 'YEARLY'
-            """, (price_monthly * 10, max_brands, max_categories, max_users, monthly_search_quota, trial_days, plan_id))
+            """, (price_yearly, max_brands, max_categories, max_users, monthly_search_quota, trial_days, plan_id))
 
             # Sync plan_features table
             cursor.execute("UPDATE plan_features SET limit_value = ? WHERE plan_id = ? AND feature_code = 'SEARCH'", (monthly_search_quota, plan_id))
@@ -2601,8 +2677,12 @@ def delete_plan(plan_id: str) -> Tuple[bool, str]:
 def get_all_plans_detailed() -> List[Dict[str, Any]]:
     conn = get_db_connection()
     cursor = conn.cursor()
+    ensure_plan_schema(cursor)
     cursor.execute("""
-        SELECT p.*, COUNT(s.id) as subscriber_count, COALESCE(SUM(s.base_price), 0) as total_mrr
+        SELECT p.*, 
+               COALESCE(NULLIF(p.price_yearly, 0), p.price_monthly * 10) as price_yearly,
+               COUNT(s.id) as subscriber_count, 
+               COALESCE(SUM(s.base_price), 0) as total_mrr
         FROM plans p
         LEFT JOIN subscriptions s ON s.plan_id = p.id AND s.status IN ('ACTIVE', 'GRACE_PERIOD')
         GROUP BY p.id
@@ -2967,9 +3047,11 @@ def get_all_plans_with_versions(status: Optional[str] = 'ACTIVE') -> List[Dict[s
     """
     conn = get_db_connection()
     cursor = conn.cursor()
+    ensure_plan_schema(cursor)
     
     query = """
-        SELECT p.id as plan_id, p.name as plan_name, p.price_monthly as plan_price_monthly, p.trial_days as plan_trial_days,
+        SELECT p.id as plan_id, p.name as plan_name, p.price_monthly as plan_price_monthly, 
+               p.price_yearly as plan_price_yearly, p.trial_days as plan_trial_days,
                p.max_brands as p_max_brands, p.max_categories as p_max_categories, p.max_users as p_max_users,
                p.monthly_search_quota as p_search_quota, p.vin_search_enabled, p.api_access_enabled, p.export_enabled, p.ai_search_enabled,
                pv.id as version_id, pv.version_number,
@@ -2996,11 +3078,14 @@ def get_all_plans_with_versions(status: Optional[str] = 'ACTIVE') -> List[Dict[s
         if pid not in plans_map:
             cursor.execute("SELECT feature_code, is_included, limit_value FROM plan_features WHERE plan_id = ?", (pid,))
             feats = [dict(f) for f in cursor.fetchall()]
+            p_mo = r["plan_price_monthly"] or (r["base_price"] if r["billing_interval"] == "MONTHLY" else 0)
+            p_yr = r["plan_price_yearly"] or (r["base_price"] if r["billing_interval"] == "YEARLY" else (p_mo * 10 if p_mo else 0))
             plans_map[pid] = {
                 "id": pid,
                 "name": r["plan_name"],
                 "description": r["description"] or f"Plan {r['plan_name']}",
-                "price_monthly": r["plan_price_monthly"] or (r["base_price"] if r["billing_interval"] == "MONTHLY" else 0),
+                "price_monthly": p_mo,
+                "price_yearly": p_yr,
                 "max_brands": r["p_max_brands"] if r["p_max_brands"] is not None else r["max_brands"],
                 "max_categories": r["p_max_categories"] if r["p_max_categories"] is not None else r["max_categories"],
                 "max_users": r["p_max_users"] if r["p_max_users"] is not None else r["max_users"],

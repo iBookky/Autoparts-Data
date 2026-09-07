@@ -174,17 +174,17 @@ CREATE TABLE IF NOT EXISTS commercial_audit_logs (
 
 -- Seed Plan Versions
 INSERT OR IGNORE INTO plan_versions (plan_id, version_number, name, description, billing_interval, base_price, currency, max_brands, max_categories, max_users, monthly_search_quota, api_quota, export_quota, ai_quota, trial_period_days, is_current, status) VALUES
-('starter', 1, 'STARTER (Monthly)', 'For individual technicians & independent repair shops', 'MONTHLY', 1290, 'THB', 1, 3, 1, 1000, 0, 0, 0, 14, 1, 'ACTIVE'),
-('starter', 1, 'STARTER (Yearly)', 'For individual technicians & independent repair shops (Save 2 months)', 'YEARLY', 12900, 'THB', 1, 3, 1, 1000, 0, 0, 0, 14, 1, 'ACTIVE'),
+('starter', 1, 'STARTER (Monthly)', 'For individual technicians & independent repair shops', 'MONTHLY', 1490, 'THB', 2, 2, 1, 1000, 0, 0, 0, 14, 1, 'ACTIVE'),
+('starter', 1, 'STARTER (Yearly)', 'For individual technicians & independent repair shops (Save 2 months)', 'YEARLY', 14900, 'THB', 2, 2, 1, 1000, 0, 0, 0, 14, 1, 'ACTIVE'),
 
-('professional', 1, 'PROFESSIONAL (Monthly)', 'For auto parts retailers & medium service centers', 'MONTHLY', 2990, 'THB', 5, 10, 5, 5000, 0, 0, 100, 14, 1, 'ACTIVE'),
-('professional', 1, 'PROFESSIONAL (Yearly)', 'For auto parts retailers & medium service centers (Save 2 months)', 'YEARLY', 29900, 'THB', 5, 10, 5, 5000, 0, 0, 100, 14, 1, 'ACTIVE'),
+('professional', 1, 'PROFESSIONAL (Monthly)', 'For auto parts retailers & medium service centers', 'MONTHLY', 3990, 'THB', 5, 5, 3, 5000, 0, 0, 100, 14, 1, 'ACTIVE'),
+('professional', 1, 'PROFESSIONAL (Yearly)', 'For auto parts retailers & medium service centers (Save 2 months)', 'YEARLY', 39900, 'THB', 5, 5, 3, 5000, 0, 0, 100, 14, 1, 'ACTIVE'),
 
-('business', 1, 'BUSINESS (Monthly)', 'For wholesale distributors & multi-branch garage networks', 'MONTHLY', 5990, 'THB', -1, -1, 20, 20000, 5000, 500, 500, 0, 1, 'ACTIVE'),
-('business', 1, 'BUSINESS (Yearly)', 'For wholesale distributors & multi-branch garage networks (Save 2 months)', 'YEARLY', 59900, 'THB', -1, -1, 20, 20000, 5000, 500, 500, 0, 1, 'ACTIVE'),
+('business', 1, 'BUSINESS (Monthly)', 'For wholesale distributors & multi-branch garage networks', 'MONTHLY', 8990, 'THB', -1, -1, 10, 20000, 5000, 500, 500, 14, 1, 'ACTIVE'),
+('business', 1, 'BUSINESS (Yearly)', 'For wholesale distributors & multi-branch garage networks (Save 2 months)', 'YEARLY', 89900, 'THB', -1, -1, 10, 20000, 5000, 500, 500, 14, 1, 'ACTIVE'),
 
-('enterprise', 1, 'ENTERPRISE (Monthly)', 'For insurance groups, major distributors & enterprise fleets', 'MONTHLY', 14900, 'THB', -1, -1, 999, 100000, 50000, 5000, 2500, 0, 1, 'ACTIVE'),
-('enterprise', 1, 'ENTERPRISE (Yearly)', 'For insurance groups, major distributors & enterprise fleets', 'YEARLY', 149000, 'THB', -1, -1, 999, 100000, 50000, 5000, 2500, 0, 1, 'ACTIVE');
+('enterprise', 1, 'ENTERPRISE (Monthly)', 'For insurance groups, major distributors & enterprise fleets', 'MONTHLY', 19900, 'THB', -1, -1, -1, -1, 50000, 5000, 2500, 0, 1, 'ACTIVE'),
+('enterprise', 1, 'ENTERPRISE (Yearly)', 'For insurance groups, major distributors & enterprise fleets', 'YEARLY', 199000, 'THB', -1, -1, -1, -1, 50000, 5000, 2500, 0, 1, 'ACTIVE');
 
 -- Seed Plan Features
 INSERT OR IGNORE INTO plan_features (plan_id, feature_code, is_included, limit_value) VALUES

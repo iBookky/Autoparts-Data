@@ -37,7 +37,8 @@ CREATE TABLE IF NOT EXISTS plans (
     vin_search_enabled INTEGER DEFAULT 0,
     api_access_enabled INTEGER DEFAULT 0,
     export_enabled INTEGER DEFAULT 0,
-    ai_search_enabled INTEGER DEFAULT 0
+    ai_search_enabled INTEGER DEFAULT 0,
+    trial_days INTEGER DEFAULT 0
 );
 
 -- 4. Organization Subscriptions & Add-ons
@@ -155,11 +156,11 @@ CREATE INDEX IF NOT EXISTS idx_user_fav ON user_favorites(user_id, org_id);
 -- ================= SEED INITIAL SAAS DATA =================
 
 -- Seed Standard Plans
-INSERT OR IGNORE INTO plans (id, name, price_monthly, max_brands, max_categories, max_users, monthly_search_quota, vin_search_enabled, api_access_enabled, export_enabled, ai_search_enabled) VALUES
-('starter', 'STARTER', 1290, 1, 3, 1, 1000, 0, 0, 0, 0),
-('professional', 'PROFESSIONAL', 2990, 5, 10, 5, 5000, 1, 0, 0, 1),
-('business', 'BUSINESS', 5990, -1, -1, 20, 20000, 1, 1, 1, 1),
-('enterprise', 'ENTERPRISE', 14900, -1, -1, 999, 100000, 1, 1, 1, 1);
+INSERT OR IGNORE INTO plans (id, name, price_monthly, max_brands, max_categories, max_users, monthly_search_quota, vin_search_enabled, api_access_enabled, export_enabled, ai_search_enabled, trial_days) VALUES
+('starter', 'STARTER', 1490, 2, 2, 1, 1000, 0, 0, 0, 0, 14),
+('professional', 'PROFESSIONAL', 3990, 5, 5, 3, 5000, 1, 0, 1, 1, 14),
+('business', 'BUSINESS', 8990, -1, -1, 10, 20000, 1, 1, 1, 1, 14),
+('enterprise', 'ENTERPRISE', 19900, -1, -1, -1, -1, 1, 1, 1, 1, 0);
 
 -- Seed Default Organization
 INSERT OR IGNORE INTO organizations (id, name, slug, plan_tier, billing_email, tax_id, address) VALUES

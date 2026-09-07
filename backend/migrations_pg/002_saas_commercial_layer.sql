@@ -42,7 +42,8 @@ CREATE TABLE IF NOT EXISTS plans (
     vin_search_enabled INTEGER DEFAULT 0,
     api_access_enabled INTEGER DEFAULT 0,
     export_enabled INTEGER DEFAULT 0,
-    ai_search_enabled INTEGER DEFAULT 0
+    ai_search_enabled INTEGER DEFAULT 0,
+    trial_days INTEGER DEFAULT 0
 );
 
 CREATE TABLE IF NOT EXISTS subscriptions (
