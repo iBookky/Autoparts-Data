@@ -1,6 +1,8 @@
 import os
 import io
 import csv
+import uuid
+import shutil
 import hashlib
 from datetime import datetime
 from dotenv import load_dotenv
@@ -170,7 +172,12 @@ async def app_startup_event():
     except Exception as e:
         print(f"⚠️ [Startup] Database schema check note: {e}")
 
+UPLOAD_DIR = os.path.join(os.path.dirname(__file__), "uploads")
+LOGO_UPLOAD_DIR = os.path.join(UPLOAD_DIR, "logos")
+os.makedirs(LOGO_UPLOAD_DIR, exist_ok=True)
+
 app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
+app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 # ================= AUTHENTICATION HELPERS =================
 
@@ -2461,6 +2468,32 @@ async def update_owner_branding_settings(req: Dict[str, Any], user = Depends(req
     if success:
         log_audit_action(user.get("id", 1), user["username"], user["role"], "UPDATE_BRANDING", "platform_settings", 1, None, "Updated Homepage CMS and Branding")
     return {"success": success}
+
+@app.post("/api/owner/upload-logo")
+async def upload_owner_platform_logo(file: UploadFile = File(...), user = Depends(require_owner)):
+    try:
+        allowed_extensions = {".png", ".jpg", ".jpeg", ".svg", ".webp", ".gif", ".ico"}
+        ext = os.path.splitext(file.filename or "")[1].lower()
+        if ext not in allowed_extensions:
+            raise HTTPException(status_code=400, detail=f"ไฟล์นามสกุล '{ext}' ไม่รองรับ กรุณาใช้ไฟล์รูปภาพ (PNG, JPG, SVG, WebP, GIF, ICO)")
+        
+        # Unique timestamped filename
+        timestamp = int(datetime.utcnow().timestamp())
+        random_suffix = uuid.uuid4().hex[:6]
+        safe_name = f"logo_{timestamp}_{random_suffix}{ext}"
+        target_path = os.path.join(LOGO_UPLOAD_DIR, safe_name)
+        
+        with open(target_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        logo_url = f"/uploads/logos/{safe_name}"
+        log_audit_action(user.get("id", 1), user["username"], user["role"], "UPLOAD_LOGO", "platform_settings", 1, None, f"Uploaded new platform logo: {safe_name}")
+        return {"success": True, "logo_url": logo_url, "filename": safe_name}
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error uploading logo: {e}")
+        raise HTTPException(status_code=500, detail=f"เกิดข้อผิดพลาดในการอัปโหลดไฟล์: {str(e)}")
 
 @app.get("/api/owner/settings/company")
 async def get_owner_company_settings(user = Depends(require_owner)):

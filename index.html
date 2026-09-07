@@ -2109,9 +2109,31 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                         <input type="text" id="owner-cfg-site-title" class="form-control" placeholder="AutoParts Cross-Ref - B2B Automotive Intelligence">
                                     </div>
                                     <div class="form-group">
-                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">URL โลโก้ระบบ (Platform Logo Image URL)</label>
-                                        <input type="text" id="owner-cfg-logo-url" class="form-control" placeholder="https://example.com/logo.png">
-                                        <span style="font-size: 0.72rem; color: var(--text-muted);">เว้นว่างไว้หากต้องการใช้ไอคอนเริ่มต้นของระบบ</span>
+                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center;">
+                                            <span><i class="fa-solid fa-image" style="color: #38BDF8;"></i> โลโก้ระบบ (Platform Logo)</span>
+                                            <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: normal;">(อัปโหลดไฟล์ หรือใส่ URL)</span>
+                                        </label>
+                                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                            <input type="text" id="owner-cfg-logo-url" class="form-control" placeholder="https://example.com/logo.png หรือกดปุ่มอัปโหลดไฟล์" oninput="updateLogoPreview(this.value.trim())" style="flex: 1;">
+                                            <label class="btn btn-secondary" style="margin: 0; white-space: nowrap; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 0.9rem; font-size: 0.82rem;" title="เลือกไฟล์ภาพโลโก้จากเครื่อง">
+                                                <i class="fa-solid fa-cloud-arrow-up" style="color: #60A5FA;"></i> <span id="owner-logo-upload-btn-text">อัปโหลดโลโก้</span>
+                                                <input type="file" id="owner-logo-file-input" accept="image/png, image/jpeg, image/svg+xml, image/webp, image/gif, image/x-icon" style="display: none;" onchange="uploadPlatformLogo(this)">
+                                            </label>
+                                        </div>
+                                        <!-- Logo Preview & Remove Action -->
+                                        <div id="owner-logo-preview-box" style="display: none; align-items: center; gap: 0.85rem; margin-top: 0.6rem; background: var(--bg-card); padding: 0.55rem 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                                            <div style="background: rgba(255,255,255,0.06); padding: 4px; border-radius: 6px; border: 1px dashed rgba(255,255,255,0.15); display: flex; align-items: center; justify-content: center; min-width: 48px; min-height: 40px;">
+                                                <img id="owner-logo-preview-img" src="" alt="Logo Preview" style="max-height: 36px; max-width: 120px; object-fit: contain;">
+                                            </div>
+                                            <div style="flex: 1; min-width: 0;">
+                                                <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="owner-logo-preview-title">ตัวอย่างโลโก้ที่เลือก</div>
+                                                <div style="font-size: 0.72rem; color: var(--text-muted);" id="owner-logo-preview-sub">จะแสดงบนแถบ Navigation Bar ด้านบน</div>
+                                            </div>
+                                            <button type="button" class="btn btn-secondary btn-sm" onclick="removePlatformLogo()" style="color: var(--danger); font-size: 0.75rem; padding: 0.3rem 0.6rem; display: inline-flex; align-items: center; gap: 4px;">
+                                                <i class="fa-solid fa-trash-can"></i> ลบโลโก้
+                                            </button>
+                                        </div>
+                                        <span style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 4px;">รองรับไฟล์ภาพ PNG, JPG, SVG, WebP (เว้นว่างไว้หากต้องการใช้ไอคอนเริ่มต้นของระบบ)</span>
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">ข้อความแถบป้าย Hero Badge</label>
@@ -9757,6 +9779,77 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         }
 
         // ================= OWNER BRANDING & CMS SETTINGS =================
+        function updateLogoPreview(url) {
+            const box = document.getElementById('owner-logo-preview-box');
+            const img = document.getElementById('owner-logo-preview-img');
+            const title = document.getElementById('owner-logo-preview-title');
+            if (!box || !img) return;
+            
+            if (url) {
+                img.src = url;
+                img.onerror = () => {
+                    box.style.display = 'none';
+                };
+                img.onload = () => {
+                    box.style.display = 'flex';
+                    if (title) title.textContent = url.startsWith('/uploads/') ? 'โลโก้ที่อัปโหลดไว้' : 'โลโก้จาก URL';
+                };
+                box.style.display = 'flex';
+            } else {
+                box.style.display = 'none';
+                img.src = '';
+            }
+        }
+
+        function removePlatformLogo() {
+            const input = document.getElementById('owner-cfg-logo-url');
+            if (input) input.value = '';
+            updateLogoPreview('');
+            showToast("ลบข้อมูลโลโก้แล้ว (ระบบจะกลับไปใช้ไอคอนเริ่มต้นเมื่อกดบันทึก)", "info");
+        }
+
+        async function uploadPlatformLogo(inputEl) {
+            const file = inputEl.files && inputEl.files[0];
+            if (!file) return;
+            
+            if (file.size > 10 * 1024 * 1024) {
+                showToast("⚠️ ไฟล์รูปภาพมีขนาดใหญ่เกินไป (จำกัดไม่เกิน 10MB)", "danger");
+                inputEl.value = '';
+                return;
+            }
+
+            const btnText = document.getElementById('owner-logo-upload-btn-text');
+            const origText = btnText ? btnText.textContent : 'อัปโหลดโลโก้';
+            if (btnText) btnText.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังอัปโหลด...';
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const res = await fetch('/api/owner/upload-logo', {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: formData
+                });
+
+                const data = await res.json();
+                if (res.ok && data.success && data.logo_url) {
+                    const urlInput = document.getElementById('owner-cfg-logo-url');
+                    if (urlInput) urlInput.value = data.logo_url;
+                    updateLogoPreview(data.logo_url);
+                    showToast("🎉 อัปโหลดโลโก้สำเร็จ! กรุณากด 'บันทึกการตั้งค่าหน้าแรก' เพื่อเปิดใช้งาน", "success");
+                } else {
+                    showToast(data.detail || data.error || "ไม่สามารถอัปโหลดโลโก้ได้", "danger");
+                }
+            } catch (err) {
+                console.error("Error uploading logo:", err);
+                showToast("เกิดข้อผิดพลาดในการเชื่อมต่อเพื่ออัปโหลดไฟล์", "danger");
+            } finally {
+                if (btnText) btnText.textContent = origText;
+                inputEl.value = '';
+            }
+        }
+
         async function loadOwnerBrandingTab() {
             try {
                 const res = await fetch('/api/owner/settings/branding', { headers: getAuthHeaders() });
@@ -9780,6 +9873,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     setVal('owner-cfg-contact-line', b.contact_line);
                     setVal('owner-cfg-footer-copyright', b.footer_copyright);
 
+                    updateLogoPreview(b.logo_url);
                     previewHeroBgStyle(b.hero_bg_style || 'gradient');
                 }
             } catch (err) {
