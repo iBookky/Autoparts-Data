@@ -214,10 +214,10 @@ class OwnerAnalyticsService:
         disc_where = []
         disc_params = []
         if start_date:
-            disc_where.append("date(created_at) >= date(?)")
+            disc_where.append("date(redeemed_at) >= date(?)")
             disc_params.append(start_date)
         if end_date:
-            disc_where.append("date(created_at) <= date(?)")
+            disc_where.append("date(redeemed_at) <= date(?)")
             disc_params.append(end_date)
         disc_sql = f"WHERE {' AND '.join(disc_where)}" if disc_where else ""
         cursor.execute(f"SELECT COALESCE(SUM(discount_amount), 0) as total_discounts FROM coupon_redemptions {disc_sql}", tuple(disc_params))
@@ -808,15 +808,16 @@ class OwnerAnalyticsService:
         }
 
     @classmethod
-    def export_report(cls, report_type: str, format_type: str = "csv") -> Tuple[str, str]:
+    def export_report(cls, report_type: str, format_type: str = "csv", start_date: Optional[str] = None, end_date: Optional[str] = None) -> Tuple[str, str]:
         """
-        Generates secure CSV or JSON export string for Owner business reports.
+        Generates secure CSV or JSON export string for Owner business reports with date filtering.
         """
         report_type = report_type.upper()
-        filename = f"Owner_Report_{report_type}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        date_suffix = f"_{start_date}_to_{end_date}" if (start_date or end_date) else ""
+        filename = f"Owner_Report_{report_type}{date_suffix}_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}"
 
         if report_type == "REVENUE":
-            rev = cls.get_revenue_analytics()
+            rev = cls.get_revenue_analytics(start_date=start_date, end_date=end_date)
             if format_type == "json":
                 return json.dumps(rev, indent=2), f"{filename}.json"
             
@@ -852,7 +853,7 @@ class OwnerAnalyticsService:
             return output.getvalue(), f"{filename}.csv"
 
         elif report_type == "USAGE":
-            usage_data = cls.get_automotive_usage_analytics()
+            usage_data = cls.get_automotive_usage_analytics(start_date=start_date, end_date=end_date)
             if format_type == "json":
                 return json.dumps(usage_data, indent=2), f"{filename}.json"
             

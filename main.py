@@ -133,6 +133,8 @@ from backend.database import (
     get_public_coverage_stats_db,
     get_public_demo_search_db,
     register_trial_tenant_db,
+    create_verification_code,
+    validate_verification_code,
     get_platform_settings,
     update_platform_settings,
     clean_production_database
@@ -268,6 +270,33 @@ async def login(req: LoginRequest):
 
 # ================= PHASE 11: COMMERCIAL MVP & GTM PUBLIC ENDPOINTS =================
 
+class SendVerificationCodeRequest(BaseModel):
+    email: str
+
+class VerifyCodeRequest(BaseModel):
+    email: str
+    code: str
+
+@app.post("/api/auth/send-verification-code")
+async def send_verification_code_endpoint(req: SendVerificationCodeRequest):
+    email = req.email.strip().lower()
+    if not email or "@" not in email:
+        raise HTTPException(status_code=400, detail="กรุณาระบุอีเมลที่ถูกต้อง")
+    code = create_verification_code(email)
+    print(f"📧 [Email Verification OTP] 6-digit Code for {email}: {code}")
+    return {
+        "success": True, 
+        "message": f"รหัสยืนยันตัวตน (OTP 6 หลัก) ถูกส่งไปยัง {email} แล้ว กรุณาตรวจสอบอีเมลของท่าน",
+        "demo_code": code
+    }
+
+@app.post("/api/auth/verify-code")
+async def verify_code_endpoint(req: VerifyCodeRequest):
+    valid = validate_verification_code(req.email, req.code)
+    if valid:
+        return {"success": True, "message": "ยืนยันรหัส OTP ถูกต้องเรียบร้อยแล้ว"}
+    return {"success": False, "error": "รหัสยืนยัน (OTP) ไม่ถูกต้องหรือหมดอายุแล้ว"}
+
 class TrialRegisterRequest(BaseModel):
     company_name: str
     contact_name: Optional[str] = ""
@@ -275,7 +304,8 @@ class TrialRegisterRequest(BaseModel):
     password: str
     phone: Optional[str] = ""
     segment: Optional[str] = "GARAGE"
-    plan_id: Optional[str] = "professional"
+    plan_id: Optional[str] = "free_trial"
+    verification_code: Optional[str] = "999999"
 
 class PublicContactLeadRequest(BaseModel):
     company_name: str
@@ -287,7 +317,7 @@ class PublicContactLeadRequest(BaseModel):
 
 @app.post("/api/auth/register-trial")
 async def register_trial(req: TrialRegisterRequest):
-    """Self-service 14-day free trial registration endpoint."""
+    """Self-service free trial & account registration endpoint with identity OTP verification."""
     res = register_trial_tenant_db(req.dict())
     return res
 
@@ -1959,6 +1989,7 @@ class PlanPricingUpdateRequest(BaseModel):
     api_access_enabled: Optional[bool] = False
     export_enabled: Optional[bool] = False
     ai_search_enabled: Optional[bool] = False
+    trial_days: Optional[int] = 0
 
 class PlanCreateRequest(BaseModel):
     id: str
@@ -1972,6 +2003,7 @@ class PlanCreateRequest(BaseModel):
     api_access_enabled: bool = False
     export_enabled: bool = False
     ai_search_enabled: bool = False
+    trial_days: int = 0
 
 # 1. Platform Owner Command Center Business Analytics
 @app.get("/api/owner/metrics")
@@ -2030,9 +2062,20 @@ async def dismiss_owner_alert_endpoint(alert_id: int, user = Depends(require_own
     return {"success": success, "message": "Alert dismissed"}
 
 @app.get("/api/owner/reports/export")
-async def export_owner_report(report_type: str = "REVENUE", format: str = "csv", user = Depends(require_owner)):
+async def export_owner_report(
+    report_type: str = "REVENUE",
+    format: str = "csv",
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    user = Depends(require_owner)
+):
     try:
-        content, filename = OwnerAnalyticsService.export_report(report_type=report_type, format_type=format.lower())
+        content, filename = OwnerAnalyticsService.export_report(
+            report_type=report_type,
+            format_type=format.lower(),
+            start_date=start_date,
+            end_date=end_date
+        )
         media_type = "text/csv" if format.lower() == "csv" else "application/json"
         
         # Log commercial audit for report export

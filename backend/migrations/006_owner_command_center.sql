@@ -32,15 +32,3 @@ INSERT OR IGNORE INTO owner_alerts (id, alert_type, severity, title, message, or
 (2, 'SUBSCRIPTION_EXPIRING', 'CRITICAL', 'Subscription renewing in 3 days', 'Bangkok Fleet Logistics subscription renews on 2026-09-06. Ensure payment method is active.', 1, '#owner-sub-subs'),
 (3, 'CHURN_RISK', 'WARNING', 'Low activity detected for high-value account', 'Thonburi Parts Pro has 0 searches in the past 14 days.', 1, '#owner-sub-health');
 
--- 4. Initial Seed Search Logs with Real-world Automotive & Zero-result queries
-INSERT INTO search_logs (org_id, user_id, search_query, search_type, results_count, created_at) VALUES
-(1, 1, '04465-0K360 Toyota Hilux Brake Pad', 'OEM', 4, datetime('now', '-1 hours')),
-(2, 1, 'GDB3534UT TRW Brake Pad', 'SKU', 2, datetime('now', '-2 hours')),
-(3, 1, '1FMCU05G15KD20101 Ford Escape', 'VIN', 1, datetime('now', '-3 hours')),
-(1, 1, 'Honda Civic 2020 Oil Filter', 'VEHICLE', 3, datetime('now', '-4 hours')),
-(2, 1, '04465-MISSING-PROTOTYPE', 'OEM', 0, datetime('now', '-5 hours')),
-(3, 1, 'Mazda CX-5 2.2D Spark Plug 2026', 'VEHICLE', 0, datetime('now', '-6 hours')),
-(1, 1, 'ISUZU-DMAX-CLUTCH-999', 'SKU', 0, datetime('now', '-7 hours')),
-(1, 1, 'Toyota Vios Air Filter 17801-0M020', 'OEM', 5, datetime('now', '-8 hours')),
-(2, 1, 'Mitsubishi Triton 2.5 Shock Absorber', 'VEHICLE', 6, datetime('now', '-9 hours')),
-(1, 1, 'Nissan Navara NP300 Brake Disc', 'VEHICLE', 3, datetime('now', '-10 hours'));

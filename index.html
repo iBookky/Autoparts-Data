@@ -935,13 +935,14 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
                     <!-- Billing Interval Selector -->
                     <div style="display: flex; justify-content: center; align-items: center; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;">
-                        <span style="font-size: 0.95rem; font-weight: 600; color: #fff;" data-i18n="subscription.billingInterval">Billing Interval:</span>
-                        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: 30px; padding: 0.25rem; display: flex; gap: 0.25rem; flex-wrap: wrap; justify-content: center;">
-                            <button class="btn btn-sm btn-primary" id="interval-monthly-btn" onclick="toggleBillingInterval('MONTHLY')" data-i18n="subscription.monthlyBtn">
-                                Monthly Billing
+                        <span style="font-size: 0.95rem; font-weight: 600; color: var(--text-primary);" data-i18n="subscription.billingInterval">รอบการชำระเงิน:</span>
+                        <div class="billing-segmented-control" id="billing-interval-segmented-control">
+                            <button type="button" class="billing-segmented-btn active" id="interval-monthly-btn" onclick="toggleBillingInterval('MONTHLY')">
+                                <span data-i18n="subscription.monthlyBtn">ชำระรายเดือน</span>
                             </button>
-                            <button class="btn btn-sm btn-secondary" id="interval-yearly-btn" onclick="toggleBillingInterval('YEARLY')">
-                                <span data-i18n="subscription.yearlyBtn">Yearly Billing</span> <span style="background: #10B981; color: #fff; font-size: 0.7rem; padding: 0.15rem 0.4rem; border-radius: 10px; margin-left: 0.35rem;" data-i18n="subscription.save2Mos">Save 2 Mos!</span>
+                            <button type="button" class="billing-segmented-btn" id="interval-yearly-btn" onclick="toggleBillingInterval('YEARLY')">
+                                <span data-i18n="subscription.yearlyBtn">ชำระรายปี</span>
+                                <span class="billing-save-badge" data-i18n="subscription.save2Mos">ประหยัด 2 เดือน!</span>
                             </button>
                         </div>
                     </div>
@@ -1468,6 +1469,36 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                         <!-- Populated dynamically -->
                     </div>
 
+                    <!-- Owner Date Range Filter Toolbar (Numerical & Analytics Data) -->
+                    <div class="owner-date-filter-bar">
+                        <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                            <span style="font-weight: 700; font-size: 0.88rem; color: var(--text-primary); display: flex; align-items: center; gap: 0.4rem;">
+                                <i class="fa-solid fa-calendar-days" style="color: #3B82F6;"></i> <span data-i18n="owner.filter.dateRange">ช่วงเวลาข้อมูล (Date Range):</span>
+                            </span>
+                            <div class="date-presets-group" id="owner-date-presets">
+                                <button type="button" class="date-preset-btn" onclick="setOwnerDatePreset('7D')">7 วันล่าสุด</button>
+                                <button type="button" class="date-preset-btn active" onclick="setOwnerDatePreset('30D')">30 วันล่าสุด</button>
+                                <button type="button" class="date-preset-btn" onclick="setOwnerDatePreset('MTD')">เดือนนี้ (MTD)</button>
+                                <button type="button" class="date-preset-btn" onclick="setOwnerDatePreset('QTD')">ไตรมาสนี้ (QTD)</button>
+                                <button type="button" class="date-preset-btn" onclick="setOwnerDatePreset('YTD')">ปีนี้ (YTD)</button>
+                                <button type="button" class="date-preset-btn" onclick="setOwnerDatePreset('ALL')">ทั้งหมด (All Time)</button>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                            <div style="display: flex; align-items: center; gap: 0.35rem;">
+                                <input type="date" id="owner-filter-start-date" class="form-control" style="font-size: 0.8rem; padding: 0.35rem 0.6rem; width: 135px;" onchange="clearOwnerPresetActive()">
+                                <span style="color: var(--text-muted); font-size: 0.8rem;">ถึง</span>
+                                <input type="date" id="owner-filter-end-date" class="form-control" style="font-size: 0.8rem; padding: 0.35rem 0.6rem; width: 135px;" onchange="clearOwnerPresetActive()">
+                            </div>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="applyOwnerDateFilter()" style="padding: 0.35rem 0.85rem; font-size: 0.8rem;">
+                                <i class="fa-solid fa-filter"></i> <span>กรองข้อมูล</span>
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="resetOwnerDateFilter()" style="padding: 0.35rem 0.75rem; font-size: 0.8rem;" title="รีเซ็ตช่วงวันที่">
+                                <i class="fa-solid fa-rotate-left"></i>
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- Top KPI Metrics Grid (8 Executive Cards) -->
                     <div class="usage-grid" style="grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.75rem;" id="owner-metrics-grid">
                         <!-- Populated dynamically -->
@@ -1778,8 +1809,25 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
                     <!-- Roles & Permissions Matrix -->
                     <div id="owner-sub-roles" style="display: none;">
-                        <div class="perm-matrix-card">
-                            <table class="perm-table" id="perm-matrix-table">
+                        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                            <div>
+                                <h3 style="font-size: 1.1rem; color: var(--text-primary); font-weight: 700; margin-bottom: 0.25rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fa-solid fa-id-card-clip" style="color: #3B82F6;"></i> <span data-i18n="owner.roles.title">ตารางสิทธิ์การใช้งาน (Roles & RBAC Permission Matrix)</span>
+                                </h3>
+                                <p style="font-size: 0.82rem; color: var(--text-secondary); margin: 0;">กำหนดและเปิด/ปิดสิทธิ์การเข้าถึงแยกตามโมดูลสำหรับแต่ละบทบาท (5-Tier Role Architecture)</p>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                <div style="position: relative;">
+                                    <i class="fa-solid fa-magnifying-glass" style="position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.8rem;"></i>
+                                    <input type="text" id="perm-search-input" class="form-control" placeholder="ค้นหาสิทธิ์ / โมดูล..." style="padding-left: 30px; width: 220px; font-size: 0.82rem;" oninput="filterPermissionsTable()">
+                                </div>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="loadRolesAndPermissions()">
+                                    <i class="fa-solid fa-rotate"></i> <span>โหลดใหม่</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="perm-matrix-card" style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow-x: auto; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                            <table class="perm-table" id="perm-matrix-table" style="width: 100%; border-collapse: collapse;">
                                 <!-- Populated dynamically -->
                             </table>
                         </div>
@@ -5257,8 +5305,10 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
         function toggleBillingInterval(interval) {
             currentSelectedInterval = interval;
-            document.getElementById('interval-monthly-btn').className = interval === 'MONTHLY' ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-secondary';
-            document.getElementById('interval-yearly-btn').className = interval === 'YEARLY' ? 'btn btn-sm btn-primary' : 'btn btn-sm btn-secondary';
+            const mBtn = document.getElementById('interval-monthly-btn');
+            const yBtn = document.getElementById('interval-yearly-btn');
+            if (mBtn) mBtn.className = interval === 'MONTHLY' ? 'billing-segmented-btn active' : 'billing-segmented-btn';
+            if (yBtn) yBtn.className = interval === 'YEARLY' ? 'billing-segmented-btn active' : 'billing-segmented-btn';
             renderPricingCards();
         }
 
@@ -7705,6 +7755,91 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         // ================= 1. OWNER BUSINESS COMMAND CENTER =================
         let cachedOwnerCustomers = [];
         window.currentOwnerActiveTab = 'overview';
+        window.ownerFilterStartDate = '';
+        window.ownerFilterEndDate = '';
+
+        function getOwnerDateQuery(defaultRangeDays) {
+            let params = [];
+            if (window.ownerFilterStartDate) params.push(`start_date=${encodeURIComponent(window.ownerFilterStartDate)}`);
+            if (window.ownerFilterEndDate) params.push(`end_date=${encodeURIComponent(window.ownerFilterEndDate)}`);
+            if (defaultRangeDays && !window.ownerFilterStartDate && !window.ownerFilterEndDate) {
+                params.push(`range_days=${defaultRangeDays}`);
+            }
+            return params.length > 0 ? `?${params.join('&')}` : '';
+        }
+
+        function setOwnerDatePreset(preset) {
+            const today = new Date();
+            const endStr = today.toISOString().split('T')[0];
+            let startStr = '';
+
+            if (preset === '7D') {
+                const d = new Date();
+                d.setDate(d.getDate() - 7);
+                startStr = d.toISOString().split('T')[0];
+            } else if (preset === '30D') {
+                const d = new Date();
+                d.setDate(d.getDate() - 30);
+                startStr = d.toISOString().split('T')[0];
+            } else if (preset === 'MTD') {
+                startStr = new Date(today.getFullYear(), today.getMonth(), 1).toISOString().split('T')[0];
+            } else if (preset === 'QTD') {
+                const qMonth = Math.floor(today.getMonth() / 3) * 3;
+                startStr = new Date(today.getFullYear(), qMonth, 1).toISOString().split('T')[0];
+            } else if (preset === 'YTD') {
+                startStr = new Date(today.getFullYear(), 0, 1).toISOString().split('T')[0];
+            } else if (preset === 'ALL') {
+                startStr = '';
+            }
+
+            window.ownerFilterStartDate = startStr;
+            window.ownerFilterEndDate = startStr ? endStr : '';
+
+            const startInput = document.getElementById('owner-filter-start-date');
+            const endInput = document.getElementById('owner-filter-end-date');
+            if (startInput) startInput.value = startStr;
+            if (endInput) endInput.value = startStr ? endStr : '';
+
+            document.querySelectorAll('#owner-date-presets .date-preset-btn').forEach(btn => btn.classList.remove('active'));
+            if (window.event && window.event.target && window.event.target.classList) {
+                window.event.target.classList.add('active');
+            }
+
+            loadOwnerFilteredData();
+        }
+
+        function clearOwnerPresetActive() {
+            document.querySelectorAll('#owner-date-presets .date-preset-btn').forEach(btn => btn.classList.remove('active'));
+        }
+
+        function applyOwnerDateFilter() {
+            const startInput = document.getElementById('owner-filter-start-date');
+            const endInput = document.getElementById('owner-filter-end-date');
+            window.ownerFilterStartDate = startInput ? startInput.value : '';
+            window.ownerFilterEndDate = endInput ? endInput.value : '';
+            loadOwnerFilteredData();
+        }
+
+        function resetOwnerDateFilter() {
+            window.ownerFilterStartDate = '';
+            window.ownerFilterEndDate = '';
+            const startInput = document.getElementById('owner-filter-start-date');
+            const endInput = document.getElementById('owner-filter-end-date');
+            if (startInput) startInput.value = '';
+            if (endInput) endInput.value = '';
+            document.querySelectorAll('#owner-date-presets .date-preset-btn').forEach(btn => btn.classList.remove('active'));
+            const default30d = document.querySelector('#owner-date-presets .date-preset-btn:nth-child(2)');
+            if (default30d) default30d.classList.add('active');
+            loadOwnerFilteredData();
+        }
+
+        function loadOwnerFilteredData() {
+            loadOwnerCommandCenter();
+            const activeTab = window.currentOwnerActiveTab || 'overview';
+            if (activeTab === 'overview') loadOwnerOverviewTab();
+            else if (activeTab === 'revenue') loadOwnerRevenueTab();
+            else if (activeTab === 'searchbi') loadOwnerSearchBITab();
+        }
 
         function navigateToOwnerSection(tabName, element) {
             window.currentOwnerActiveTab = tabName || 'overview';
@@ -7715,7 +7850,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         async function loadOwnerCommandCenter(targetTab) {
             try {
                 const [kpiRes, alertsRes] = await Promise.all([
-                    fetch('/api/owner/overview', { headers: getAuthHeaders() }),
+                    fetch('/api/owner/overview' + getOwnerDateQuery(), { headers: getAuthHeaders() }),
                     fetch('/api/owner/alerts?is_dismissed=false', { headers: getAuthHeaders() })
                 ]);
                 const kpiData = await kpiRes.json();
@@ -7870,7 +8005,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         async function loadOwnerOverviewTab() {
             try {
                 const [revRes, custRes, oppsRes] = await Promise.all([
-                    fetch('/api/owner/revenue?range_days=14', { headers: getAuthHeaders() }),
+                    fetch('/api/owner/revenue' + getOwnerDateQuery(14), { headers: getAuthHeaders() }),
                     fetch('/api/owner/customers', { headers: getAuthHeaders() }),
                     fetch('/api/owner/opportunities', { headers: getAuthHeaders() })
                 ]);
@@ -8130,7 +8265,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
         async function loadOwnerRevenueTab() {
             try {
-                const res = await fetch('/api/owner/revenue?range_days=30', { headers: getAuthHeaders() });
+                const res = await fetch('/api/owner/revenue' + getOwnerDateQuery(30), { headers: getAuthHeaders() });
                 const data = await res.json();
                 if (data.success && data.revenue) {
                     const r = data.revenue;
@@ -8173,7 +8308,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
         async function loadOwnerSearchBITab() {
             try {
-                const res = await fetch('/api/owner/usage', { headers: getAuthHeaders() });
+                const res = await fetch('/api/owner/usage' + getOwnerDateQuery(), { headers: getAuthHeaders() });
                 const data = await res.json();
                 if (data.success && data.usage) {
                     const u = data.usage;
@@ -8611,34 +8746,116 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             }
         }
 
+        let cachedRolesData = null;
+
         async function loadRolesAndPermissions() {
             try {
                 const res = await fetch('/api/owner/roles', { headers: getAuthHeaders() });
                 const data = await res.json();
                 if (data.success) {
-                    const roles = data.data.roles;
-                    const perms = data.data.all_permissions;
-                    const table = document.getElementById('perm-matrix-table');
-
-                    let html = `<thead><tr><th>Permission / Module</th>`;
-                    roles.forEach(r => {
-                        html += `<th style="text-align: center;">${r.name}<br><span style="font-size: 0.7rem; color: var(--text-muted); font-weight: normal;">${r.portal_access}</span></th>`;
-                    });
-                    html += `</tr></thead><tbody>`;
-
-                    perms.forEach(p => {
-                        html += `<tr><td><strong>${p.name}</strong><br><span style="font-size: 0.72rem; color: var(--text-muted);">${p.id} (${p.module})</span></td>`;
-                        roles.forEach(r => {
-                            const isGranted = r.permissions && r.permissions.some(rp => rp.id === p.id);
-                            html += `<td style="text-align: center;"><input type="checkbox" class="perm-toggle-input" ${isGranted ? 'checked' : ''} onchange="toggleRolePermission('${r.id}', '${p.id}', this.checked)"></td>`;
-                        });
-                        html += `</tr>`;
-                    });
-                    html += `</tbody>`;
-                    table.innerHTML = html;
+                    cachedRolesData = data.data;
+                    renderRolesAndPermissionsMatrix(cachedRolesData);
                 }
             } catch (err) {
                 console.error("Error loading roles & permissions:", err);
+            }
+        }
+
+        function renderRolesAndPermissionsMatrix(data, searchQuery = '') {
+            const roles = data.roles || [];
+            const perms = data.all_permissions || [];
+            const table = document.getElementById('perm-matrix-table');
+            if (!table) return;
+
+            const moduleMeta = {
+                'CATALOG': { label: 'แคตตาล็อกและอะไหล่ (Catalog & Parts)', icon: 'fa-boxes-stacked', color: '#60A5FA', bg: 'rgba(59,130,246,0.1)' },
+                'SEARCH': { label: 'ระบบค้นหาและเลขตัวถัง (Search & VIN Fitment)', icon: 'fa-magnifying-glass', color: '#34D399', bg: 'rgba(16,185,129,0.1)' },
+                'BILLING': { label: 'การเงินและแพ็กเกจ (Billing & Revenue)', icon: 'fa-file-invoice-dollar', color: '#FBBF24', bg: 'rgba(245,158,11,0.1)' },
+                'CRM': { label: 'ไปป์ไลน์ลูกค้า (CRM & Leads)', icon: 'fa-people-arrows', color: '#EC4899', bg: 'rgba(236,72,153,0.1)' },
+                'ORGANIZATION': { label: 'ข้อมูลองค์กร (Organizations)', icon: 'fa-building', color: '#A78BFA', bg: 'rgba(167,139,250,0.1)' },
+                'USERS': { label: 'ผู้ใช้งานและสมาชิก (Team & Users)', icon: 'fa-users', color: '#38BDF8', bg: 'rgba(56,189,248,0.1)' },
+                'AI': { label: 'โมเดลและทักษะ AI (AI Engine)', icon: 'fa-brain', color: '#C084FC', bg: 'rgba(192,132,252,0.1)' },
+                'API': { label: 'API และการเชื่อมต่อ (API & Webhooks)', icon: 'fa-code', color: '#FB923C', bg: 'rgba(251,146,60,0.1)' },
+                'SYSTEM': { label: 'ตั้งค่าระบบและสแครปเปอร์ (System & Scrapers)', icon: 'fa-gears', color: '#94A3B8', bg: 'rgba(148,163,184,0.1)' },
+                'AUDIT': { label: 'ความปลอดภัยและประวัติ (Audit & Security)', icon: 'fa-clipboard-list', color: '#10B981', bg: 'rgba(16,185,129,0.1)' }
+            };
+
+            const q = searchQuery.toLowerCase().trim();
+            const filteredPerms = q ? perms.filter(p => 
+                (p.name && p.name.toLowerCase().includes(q)) || 
+                (p.id && p.id.toLowerCase().includes(q)) || 
+                (p.module && p.module.toLowerCase().includes(q)) ||
+                (p.description && p.description.toLowerCase().includes(q))
+            ) : perms;
+
+            let html = `<thead><tr style="background: var(--bg-card);"><th style="min-width: 260px; padding: 0.85rem 1rem; color: var(--text-primary); font-weight: 700;">โมดูล / สิทธิ์การใช้งาน (Permission & Module)</th>`;
+            roles.forEach(r => {
+                const tierColor = r.tier_level === 1 ? '#F59E0B' : r.tier_level === 2 ? '#EF4444' : r.tier_level === 3 ? '#3B82F6' : r.tier_level === 4 ? '#10B981' : '#8B5CF6';
+                html += `<th style="text-align: center; min-width: 110px; padding: 0.75rem 0.5rem;">
+                    <div style="font-weight: 700; font-size: 0.82rem; color: ${tierColor};">${r.name}</div>
+                    <span style="font-size: 0.68rem; color: var(--text-muted); font-weight: normal;">Tier ${r.tier_level} &bull; ${r.portal_access}</span>
+                </th>`;
+            });
+            html += `</tr></thead><tbody>`;
+
+            // Group permissions by module
+            const grouped = {};
+            filteredPerms.forEach(p => {
+                const m = p.module || 'OTHER';
+                if (!grouped[m]) grouped[m] = [];
+                grouped[m].push(p);
+            });
+
+            if (Object.keys(grouped).length === 0) {
+                html += `<tr><td colspan="${roles.length + 1}" style="text-align: center; padding: 2rem; color: var(--text-muted);">ไม่พบสิทธิ์ที่ตรงกับคำค้นหา "${searchQuery}"</td></tr>`;
+            } else {
+                for (const [moduleKey, pList] of Object.entries(grouped)) {
+                    const mInfo = moduleMeta[moduleKey] || { label: moduleKey, icon: 'fa-cube', color: '#94A3B8', bg: 'rgba(148,163,184,0.1)' };
+                    html += `
+                        <tr style="background: ${mInfo.bg}; border-top: 2px solid var(--border-color); border-bottom: 1px solid var(--border-color);">
+                            <td colspan="${roles.length + 1}" style="padding: 0.65rem 1rem;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.85rem; color: ${mInfo.color};">
+                                    <i class="fa-solid ${mInfo.icon}"></i>
+                                    <span>${mInfo.label}</span>
+                                    <span style="font-size: 0.7rem; background: rgba(0,0,0,0.15); padding: 0.1rem 0.4rem; border-radius: 9999px; color: var(--text-primary); font-weight: normal;">${pList.length} สิทธิ์</span>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+
+                    pList.forEach(p => {
+                        html += `
+                            <tr style="border-bottom: 1px solid var(--border-color); transition: background 0.15s;">
+                                <td style="padding: 0.65rem 1rem;">
+                                    <div style="font-weight: 600; font-size: 0.84rem; color: var(--text-primary);">${p.name}</div>
+                                    <div style="font-size: 0.72rem; color: var(--text-secondary); margin-top: 0.1rem;">${p.description || ''}</div>
+                                    <div style="font-size: 0.68rem; font-family: var(--font-mono); color: var(--text-muted); margin-top: 0.15rem;">ID: ${p.id}</div>
+                                </td>
+                        `;
+                        roles.forEach(r => {
+                            const isGranted = r.permissions && r.permissions.some(rp => rp.id === p.id);
+                            html += `
+                                <td style="text-align: center; vertical-align: middle; padding: 0.5rem;">
+                                    <input type="checkbox" class="perm-toggle-input" ${isGranted ? 'checked' : ''} 
+                                           onchange="toggleRolePermission('${r.id}', '${p.id}', this.checked)"
+                                           title="${r.name} - ${p.name}">
+                                </td>
+                            `;
+                        });
+                        html += `</tr>`;
+                    });
+                }
+            }
+
+            html += `</tbody>`;
+            table.innerHTML = html;
+        }
+
+        function filterPermissionsTable() {
+            const input = document.getElementById('perm-search-input');
+            const q = input ? input.value : '';
+            if (cachedRolesData) {
+                renderRolesAndPermissionsMatrix(cachedRolesData, q);
             }
         }
 
@@ -8651,10 +8868,27 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 });
                 const data = await res.json();
                 if (data.success) {
-                    showToast("Permission rule updated", "success");
+                    showToast("อัปเดตกฎสิทธิ์การใช้งานสำเร็จ", "success");
+                    // update local cache
+                    if (cachedRolesData && cachedRolesData.roles) {
+                        const targetRole = cachedRolesData.roles.find(r => r.id === roleId);
+                        if (targetRole) {
+                            if (!targetRole.permissions) targetRole.permissions = [];
+                            if (isChecked) {
+                                if (!targetRole.permissions.some(p => p.id === permId)) {
+                                    targetRole.permissions.push({ id: permId });
+                                }
+                            } else {
+                                targetRole.permissions = targetRole.permissions.filter(p => p.id !== permId);
+                            }
+                        }
+                    }
+                } else {
+                    showToast("ไม่สามารถอัปเดตสิทธิ์ได้", "danger");
                 }
             } catch (err) {
                 console.error("Error toggling permission:", err);
+                showToast("เกิดข้อผิดพลาดในการเชื่อมต่อ", "danger");
             }
         }
 
