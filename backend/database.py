@@ -3122,6 +3122,12 @@ def get_plan_details(plan_id: str, interval: str = 'MONTHLY') -> Optional[Dict[s
     """
     Fetches exact plan version and feature parameters for a given plan and billing interval.
     """
+    norm_interval = interval.upper()
+    if norm_interval in ('ANNUAL', 'YEARLY', 'YEAR'):
+        norm_interval = 'YEARLY'
+    elif norm_interval in ('MONTHLY', 'MONTH'):
+        norm_interval = 'MONTHLY'
+
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
@@ -3130,7 +3136,7 @@ def get_plan_details(plan_id: str, interval: str = 'MONTHLY') -> Optional[Dict[s
         JOIN plans p ON p.id = pv.plan_id
         WHERE pv.plan_id = ? AND pv.billing_interval = ? AND pv.is_current = 1
         LIMIT 1
-    """, (plan_id.lower(), interval.upper()))
+    """, (plan_id.lower(), norm_interval))
     row = cursor.fetchone()
     if not row:
         conn.close()

@@ -2302,12 +2302,30 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                     <!-- Digital Stamp & Signature URLs -->
                                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
                                         <div class="form-group">
-                                            <label class="form-label" style="font-size: 0.8rem;">URL ลายเซ็นดิจิทัล (Signature URL)</label>
-                                            <input type="text" id="owner-cfg-signature-url" class="form-control" placeholder="https://.../signature.png">
+                                            <label class="form-label" style="font-size: 0.8rem; display: flex; justify-content: space-between;">
+                                                <span><i class="fa-solid fa-signature" style="color: #60A5FA;"></i> URL ลายเซ็นดิจิทัล</span>
+                                                <span style="font-size: 0.7rem; color: var(--text-muted);">(Signature)</span>
+                                            </label>
+                                            <div style="display: flex; gap: 0.4rem;">
+                                                <input type="text" id="owner-cfg-signature-url" class="form-control" placeholder="https://.../sig.png หรืออัปโหลด">
+                                                <label class="btn btn-secondary btn-sm" style="margin: 0; white-space: nowrap; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; padding: 0.45rem 0.65rem;" title="อัปโหลดรูปลายเซ็น">
+                                                    <i class="fa-solid fa-cloud-arrow-up" style="color: #60A5FA;"></i>
+                                                    <input type="file" accept="image/png, image/jpeg, image/svg+xml, image/webp" style="display: none;" onchange="uploadSignatureStamp(this, 'signature')">
+                                                </label>
+                                            </div>
                                         </div>
                                         <div class="form-group">
-                                            <label class="form-label" style="font-size: 0.8rem;">URL ตราประทับบริษัท (Stamp URL)</label>
-                                            <input type="text" id="owner-cfg-stamp-url" class="form-control" placeholder="https://.../stamp.png">
+                                            <label class="form-label" style="font-size: 0.8rem; display: flex; justify-content: space-between;">
+                                                <span><i class="fa-solid fa-stamp" style="color: #F87171;"></i> URL ตราประทับบริษัท</span>
+                                                <span style="font-size: 0.7rem; color: var(--text-muted);">(Company Stamp)</span>
+                                            </label>
+                                            <div style="display: flex; gap: 0.4rem;">
+                                                <input type="text" id="owner-cfg-stamp-url" class="form-control" placeholder="https://.../stamp.png หรืออัปโหลด">
+                                                <label class="btn btn-secondary btn-sm" style="margin: 0; white-space: nowrap; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; padding: 0.45rem 0.65rem;" title="อัปโหลดรูปตราประทับ">
+                                                    <i class="fa-solid fa-cloud-arrow-up" style="color: #F87171;"></i>
+                                                    <input type="file" accept="image/png, image/jpeg, image/svg+xml, image/webp" style="display: none;" onchange="uploadSignatureStamp(this, 'stamp')">
+                                                </label>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -4642,11 +4660,16 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             }
         }
 
-        function getAuthHeaders() {
-            return {
+        function getAuthHeaders(extraHeaders = {}) {
+            const headers = {
                 'x-user-role': currentUser ? currentUser.role : 'ADMIN',
-                'x-username': currentUser ? currentUser.username : 'admin'
+                'x-username': currentUser ? currentUser.username : 'admin',
+                ...extraHeaders
             };
+            if (currentUser && currentUser.token) {
+                headers['Authorization'] = `Bearer ${currentUser.token}`;
+            }
+            return headers;
         }
 
         async function loadSaaSContext() {
@@ -5704,7 +5727,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             try {
                 const res = await fetch('/api/saas/billing/calculate', {
                     method: 'POST',
-                    headers: getAuthHeaders(),
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                     body: JSON.stringify({
                         plan_id: planId,
                         interval: interval,
@@ -5744,7 +5767,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             try {
                 const res = await fetch('/api/saas/coupons/validate', {
                     method: 'POST',
-                    headers: getAuthHeaders(),
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                     body: JSON.stringify({
                         coupon_code: couponCode,
                         plan_id: planId,
@@ -5777,7 +5800,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             try {
                 const res = await fetch('/api/saas/subscription/upgrade', {
                     method: 'POST',
-                    headers: getAuthHeaders(),
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                     body: JSON.stringify({
                         plan_id: planId,
                         interval: interval,
@@ -5823,7 +5846,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             try {
                 const res = await fetch('/api/saas/subscription/cancel', {
                     method: 'POST',
-                    headers: getAuthHeaders(),
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                     body: JSON.stringify({ reason: reason })
                 });
                 const data = await res.json();
@@ -6009,20 +6032,26 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             }
         }
 
-        async function viewInvoiceReceipt(invoiceNumber) {
-            let inv = currentInvoicesList.find(i => i.invoice_number === invoiceNumber);
-            
-            // If not found in current list, try fetching fresh
-            if (!inv) {
-                try {
-                    const res = await fetch('/api/saas/invoices', { headers: getAuthHeaders() });
-                    const data = await res.json();
-                    if (data.success && data.invoices) {
-                        currentInvoicesList = data.invoices;
-                        inv = currentInvoicesList.find(i => i.invoice_number === invoiceNumber) || currentInvoicesList[0];
+        async function viewInvoiceReceipt(invoiceParam) {
+            let inv = null;
+            if (typeof invoiceParam === 'object' && invoiceParam !== null) {
+                inv = invoiceParam;
+            } else {
+                const invoiceNumber = invoiceParam;
+                inv = (currentInvoicesList || []).find(i => i.invoice_number === invoiceNumber || i.id === invoiceNumber);
+                
+                // If not found in current list, try fetching fresh
+                if (!inv) {
+                    try {
+                        const res = await fetch('/api/saas/invoices', { headers: getAuthHeaders() });
+                        const data = await res.json();
+                        if (data.success && data.invoices) {
+                            currentInvoicesList = data.invoices;
+                            inv = currentInvoicesList.find(i => i.invoice_number === invoiceNumber || i.id === invoiceNumber) || currentInvoicesList[0];
+                        }
+                    } catch (e) {
+                        console.error("Error fetching invoice:", e);
                     }
-                } catch (e) {
-                    console.error("Error fetching invoice:", e);
                 }
             }
 
@@ -6157,7 +6186,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             try {
                 const res = await fetch('/api/saas/organization', {
                     method: 'PUT',
-                    headers: getAuthHeaders(),
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                     body: JSON.stringify(payload)
                 });
                 const data = await res.json();
@@ -6278,7 +6307,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             try {
                 const res = await fetch('/api/saas/organization/invite', {
                     method: 'POST',
-                    headers: getAuthHeaders(),
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                     body: JSON.stringify({ email, role })
                 });
                 const data = await res.json();
@@ -6314,7 +6343,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             try {
                 const res = await fetch(`/api/saas/organization/members/${userId}/role`, {
                     method: 'PUT',
-                    headers: getAuthHeaders(),
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                     body: JSON.stringify({ role: newRole })
                 });
                 const data = await res.json();
@@ -9846,6 +9875,43 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 showToast("เกิดข้อผิดพลาดในการเชื่อมต่อเพื่ออัปโหลดไฟล์", "danger");
             } finally {
                 if (btnText) btnText.textContent = origText;
+                inputEl.value = '';
+            }
+        }
+
+        async function uploadSignatureStamp(inputEl, type) {
+            const file = inputEl.files && inputEl.files[0];
+            if (!file) return;
+            
+            if (file.size > 10 * 1024 * 1024) {
+                showToast("⚠️ ขนาดไฟล์รูปภาพใหญ่เกินไป (จำกัดไม่เกิน 10MB)", "danger");
+                inputEl.value = '';
+                return;
+            }
+
+            try {
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const res = await fetch('/api/owner/upload-logo', {
+                    method: 'POST',
+                    headers: getAuthHeaders(),
+                    body: formData
+                });
+
+                const data = await res.json();
+                if (res.ok && data.success && data.logo_url) {
+                    const targetId = (type === 'signature') ? 'owner-cfg-signature-url' : 'owner-cfg-stamp-url';
+                    const targetInput = document.getElementById(targetId);
+                    if (targetInput) targetInput.value = data.logo_url;
+                    showToast(`🎉 อัปโหลด${type === 'signature' ? 'ลายเซ็นดิจิทัล' : 'ตราประทับบริษัท'}สำเร็จ! กรุณากดปุ่มบันทึกข้อมูลบริษัทด้านบน`, "success");
+                } else {
+                    showToast(data.detail || data.error || "ไม่สามารถอัปโหลดไฟล์ได้", "danger");
+                }
+            } catch (err) {
+                console.error("Error uploading signature/stamp:", err);
+                showToast("เกิดข้อผิดพลาดในการเชื่อมต่อเพื่ออัปโหลดไฟล์", "danger");
+            } finally {
                 inputEl.value = '';
             }
         }

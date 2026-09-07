@@ -2387,6 +2387,7 @@ class PlatformSettingsUpdateRequest(BaseModel):
     invoice_theme_color: Optional[str] = None
 
 @app.get("/api/platform/settings")
+@app.get("/api/platform/settings/public")
 @app.get("/api/public/platform-settings")
 async def get_public_platform_settings():
     settings = get_platform_settings()
