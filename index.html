@@ -336,12 +336,13 @@
         <footer class="landing-footer">
             <div style="max-width: 1100px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;">
                 <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <div class="logo-icon-box" style="width: 36px; height: 36px; font-size: 1.1rem;">
+                    <div class="logo-icon-box" id="landing-footer-logo-icon" style="width: 36px; height: 36px; font-size: 1.1rem;">
                         <i class="fa-solid fa-layer-group"></i>
                     </div>
+                    <img id="landing-footer-logo-img" src="" alt="Logo" style="display: none; height: 34px; width: auto; max-width: 140px; object-fit: contain;">
                     <div>
-                        <div style="font-weight: 700; color: #fff; font-size: 1rem;">AutoParts Cross-Ref SaaS Platform</div>
-                        <div style="font-size: 0.75rem; color: var(--text-muted);" data-i18n="footer.rights">© 2026 AutoParts Intelligence Co., Ltd. สงวนลิขสิทธิ์ทุกประการ</div>
+                        <div id="landing-footer-logo-name" style="font-weight: 700; color: #fff; font-size: 1rem;">AutoParts Cross-Ref SaaS Platform</div>
+                        <div id="landing-footer-copyright" style="font-size: 0.75rem; color: var(--text-muted);" data-i18n="footer.rights">© 2026 AutoParts Intelligence Co., Ltd. สงวนลิขสิทธิ์ทุกประการ</div>
                     </div>
                 </div>
                 <div style="display: flex; gap: 1.5rem; font-size: 0.85rem;">
@@ -6159,6 +6160,17 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             document.getElementById('receipt-calc-total').textContent = `฿${total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
             document.getElementById('receipt-amount-words').textContent = thaiBahtText(total);
 
+            // Ensure logo and icon are strictly mutually exclusive (never duplicate)
+            const receiptImg = document.getElementById('receipt-owner-logo-img');
+            const receiptIcon = document.getElementById('receipt-owner-logo-icon');
+            if (receiptImg && receiptIcon) {
+                if (receiptImg.src && receiptImg.getAttribute('src') && receiptImg.style.display !== 'none') {
+                    receiptIcon.style.display = 'none';
+                } else {
+                    receiptIcon.style.display = 'flex';
+                }
+            }
+
             // Show Modal
             const modal = document.getElementById('modal-invoice-receipt');
             modal.classList.add('open');
@@ -10085,22 +10097,12 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 }
             };
 
+            // Synchronize all logo and icon elements across ALL sections ensuring NO DUPLICATION
             updateLogoElement('landing-logo-img', 'landing-logo-icon');
+            updateLogoElement('landing-footer-logo-img', 'landing-footer-logo-icon');
             updateLogoElement('sidebar-logo-img', 'sidebar-logo-icon');
             updateLogoElement('auth-logo-img', 'auth-logo-icon');
-
-            // Receipt & Invoicing Logo
-            const receiptLogo = document.getElementById('receipt-owner-logo-img');
-            if (receiptLogo) {
-                if (logoUrl) {
-                    receiptLogo.onload = () => { receiptLogo.style.display = 'block'; };
-                    receiptLogo.onerror = () => { receiptLogo.style.display = 'none'; };
-                    receiptLogo.src = logoUrl;
-                } else {
-                    receiptLogo.style.display = 'none';
-                    receiptLogo.src = '';
-                }
-            }
+            updateLogoElement('receipt-owner-logo-img', 'receipt-owner-logo-icon');
 
             // Favicon update
             const faviconEl = document.getElementById('dynamic-favicon');
@@ -10112,6 +10114,9 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             const siteTitle = settings.site_title || 'AutoParts Cross-Ref';
             if (document.getElementById('landing-logo-name')) {
                 document.getElementById('landing-logo-name').textContent = siteTitle;
+            }
+            if (document.getElementById('landing-footer-logo-name')) {
+                document.getElementById('landing-footer-logo-name').textContent = `${siteTitle} SaaS Platform`;
             }
             if (document.getElementById('sidebar-app-name')) {
                 document.getElementById('sidebar-app-name').textContent = siteTitle;
