@@ -9862,16 +9862,21 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             const title = document.getElementById('owner-logo-preview-title');
             if (!box || !img) return;
             
-            if (url) {
-                img.src = url;
-                img.onerror = () => {
-                    box.style.display = 'none';
-                };
+            const cleanUrl = (url || '').trim();
+            if (cleanUrl) {
                 img.onload = () => {
                     box.style.display = 'flex';
-                    if (title) title.textContent = url.startsWith('/uploads/') ? 'โลโก้ที่อัปโหลดไว้' : 'โลโก้จาก URL';
+                    if (title) title.textContent = cleanUrl.startsWith('/uploads/') ? 'โลโก้ที่อัปโหลดไว้' : 'โลโก้จาก URL';
                 };
-                box.style.display = 'flex';
+                img.onerror = () => {
+                    box.style.display = 'none';
+                    img.src = '';
+                };
+                img.src = cleanUrl;
+                if (img.complete && img.naturalWidth > 0) {
+                    box.style.display = 'flex';
+                    if (title) title.textContent = cleanUrl.startsWith('/uploads/') ? 'โลโก้ที่อัปโหลดไว้' : 'โลโก้จาก URL';
+                }
             } else {
                 box.style.display = 'none';
                 img.src = '';
@@ -10052,16 +10057,26 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 sidebarHeader.style.borderColor = '';
             }
 
-            // 3. Platform Logo Synchronization across all platform sections
-            const logoUrl = settings.logo_url || '';
+            // 3. Platform Logo Synchronization across all platform sections with Automatic Fallback
+            const logoUrl = (settings.logo_url || '').trim();
             const updateLogoElement = (imgId, iconId) => {
                 const imgEl = document.getElementById(imgId);
                 const iconEl = document.getElementById(iconId);
                 if (imgEl && iconEl) {
                     if (logoUrl) {
+                        imgEl.onload = () => {
+                            imgEl.style.display = 'block';
+                            iconEl.style.display = 'none';
+                        };
+                        imgEl.onerror = () => {
+                            imgEl.style.display = 'none';
+                            iconEl.style.display = 'flex';
+                        };
                         imgEl.src = logoUrl;
-                        imgEl.style.display = 'block';
-                        iconEl.style.display = 'none';
+                        if (imgEl.complete && imgEl.naturalWidth > 0) {
+                            imgEl.style.display = 'block';
+                            iconEl.style.display = 'none';
+                        }
                     } else {
                         imgEl.src = '';
                         imgEl.style.display = 'none';
@@ -10073,6 +10088,19 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             updateLogoElement('landing-logo-img', 'landing-logo-icon');
             updateLogoElement('sidebar-logo-img', 'sidebar-logo-icon');
             updateLogoElement('auth-logo-img', 'auth-logo-icon');
+
+            // Receipt & Invoicing Logo
+            const receiptLogo = document.getElementById('receipt-owner-logo-img');
+            if (receiptLogo) {
+                if (logoUrl) {
+                    receiptLogo.onload = () => { receiptLogo.style.display = 'block'; };
+                    receiptLogo.onerror = () => { receiptLogo.style.display = 'none'; };
+                    receiptLogo.src = logoUrl;
+                } else {
+                    receiptLogo.style.display = 'none';
+                    receiptLogo.src = '';
+                }
+            }
 
             // Favicon update
             const faviconEl = document.getElementById('dynamic-favicon');

@@ -16,9 +16,10 @@ echo "🚀 Starting AutoParts Docker Deployment for Plesk"
 echo "=================================================="
 
 # 1. Create persistent storage folders
-echo "[1/5] Setting up persistent data directories..."
-mkdir -p "$DATA_DIR" "$BACKUP_DIR"
-chmod 777 "$DATA_DIR"
+echo "[1/5] Setting up persistent data and uploads directories..."
+UPLOADS_DIR="$(pwd)/uploads"
+mkdir -p "$DATA_DIR" "$BACKUP_DIR" "$UPLOADS_DIR/logos"
+chmod -R 777 "$DATA_DIR" "$UPLOADS_DIR" 2>/dev/null || true
 
 # 2. Build Docker image
 echo "[2/5] Building Docker Image ($IMAGE_NAME)..."
@@ -38,6 +39,7 @@ docker run -d \
   --restart unless-stopped \
   -p 127.0.0.1:$PORT:8000 \
   -v "$DATA_DIR":/app/data \
+  -v "$UPLOADS_DIR":/app/uploads \
   -e PORT=8000 \
   -e DB_PATH=/app/data/parts_cross_ref.db \
   -e ENVIRONMENT=production \

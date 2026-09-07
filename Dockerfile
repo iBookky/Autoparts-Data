@@ -34,6 +34,7 @@ RUN pip install --no-cache-dir --upgrade pip && \
 COPY backend/ ./backend/
 COPY frontend/ ./frontend/
 COPY docs/ ./docs/
+COPY uploads/ ./uploads/
 COPY index.html ./
 COPY main.py ./
 COPY scraper.py ./
@@ -44,11 +45,11 @@ COPY init_database.py ./
 COPY entrypoint.sh ./
 COPY parts_cross_ref.db ./parts_cross_ref.db
 
-# Create data directory for persistence and grant read/write permissions
-RUN mkdir -p /app/data && \
+# Create data and uploads directories for persistence and grant read/write permissions
+RUN mkdir -p /app/data /app/uploads/logos && \
     cp /app/parts_cross_ref.db /app/data/parts_cross_ref.db 2>/dev/null || true && \
     chmod +x /app/entrypoint.sh && \
-    chmod -R 777 /app/data /app/parts_cross_ref.db* 2>/dev/null || true
+    chmod -R 777 /app/data /app/uploads /app/parts_cross_ref.db* 2>/dev/null || true
 
 
 

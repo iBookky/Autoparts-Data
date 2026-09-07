@@ -37,8 +37,9 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      # Persistent App Data Directory
+      # Persistent App Data & Uploads Directory
       - ./data:/app/data
+      - ./uploads:/app/uploads
     environment:
       - PORT=8000
       - DATABASE_URL=postgresql://autoparts_user:autoparts_secure_pass123@postgres:5432/autoparts_db

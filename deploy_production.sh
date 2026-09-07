@@ -15,8 +15,9 @@ BACKUP_DIR="$(pwd)/backups"
 echo "=================================================================="
 echo "🚀 [1/5] Setting up persistent storage & directory permissions..."
 echo "=================================================================="
-mkdir -p "$DATA_DIR" "$PG_DATA_DIR" "$BACKUP_DIR"
-chmod -R 777 "$DATA_DIR" "$PG_DATA_DIR" "$BACKUP_DIR" 2>/dev/null || true
+UPLOADS_DIR="$(pwd)/uploads"
+mkdir -p "$DATA_DIR" "$PG_DATA_DIR" "$BACKUP_DIR" "$UPLOADS_DIR/logos"
+chmod -R 777 "$DATA_DIR" "$PG_DATA_DIR" "$BACKUP_DIR" "$UPLOADS_DIR" 2>/dev/null || true
 
 # Copy SQLite seed if present
 if [ ! -f "$DATA_DIR/parts_cross_ref.db" ] && [ -f "./parts_cross_ref.db" ]; then
