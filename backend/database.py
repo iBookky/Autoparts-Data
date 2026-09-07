@@ -271,6 +271,16 @@ def init_db():
         cat_cols = [c[1] for c in cursor.fetchall()]
         if 'description' not in cat_cols:
             cursor.execute("ALTER TABLE meta_categories ADD COLUMN description TEXT DEFAULT ''")
+
+        # Ensure platform_settings has primary_color, navbar_bg_color, navbar_style columns
+        cursor.execute("PRAGMA table_info(platform_settings)")
+        ps_cols = [c[1] for c in cursor.fetchall()]
+        if 'primary_color' not in ps_cols:
+            cursor.execute("ALTER TABLE platform_settings ADD COLUMN primary_color TEXT DEFAULT '#3B82F6'")
+        if 'navbar_bg_color' not in ps_cols:
+            cursor.execute("ALTER TABLE platform_settings ADD COLUMN navbar_bg_color TEXT DEFAULT ''")
+        if 'navbar_style' not in ps_cols:
+            cursor.execute("ALTER TABLE platform_settings ADD COLUMN navbar_style TEXT DEFAULT 'default'")
             
         cursor.execute("SELECT COUNT(*) FROM meta_ai_models WHERE is_default = 1")
         if cursor.fetchone()[0] == 0:
@@ -3825,6 +3835,7 @@ def update_platform_settings(data: Dict[str, Any]) -> bool:
         allowed_keys = [
             "site_title", "logo_url", "favicon_url", "hero_badge", "hero_title",
             "hero_subtitle", "hero_bg_style", "hero_bg_gradient", "hero_bg_color",
+            "primary_color", "navbar_bg_color", "navbar_style",
             "seo_meta_title", "seo_meta_description", "seo_meta_keywords", "seo_og_image_url",
             "contact_email", "contact_phone", "contact_line", "footer_copyright",
             "owner_company_name_th", "owner_company_name_en", "owner_tax_id", "owner_branch_name",

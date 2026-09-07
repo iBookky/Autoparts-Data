@@ -13,6 +13,9 @@ CREATE TABLE IF NOT EXISTS platform_settings (
     hero_bg_style TEXT DEFAULT 'gradient', -- gradient, solid, dark, custom
     hero_bg_gradient TEXT DEFAULT 'radial-gradient(circle at 50% 0%, rgba(37, 99, 235, 0.15) 0%, rgba(15, 23, 42, 0.95) 75%)',
     hero_bg_color TEXT DEFAULT '#0B132B',
+    primary_color TEXT DEFAULT '#3B82F6',
+    navbar_bg_color TEXT DEFAULT '',
+    navbar_style TEXT DEFAULT 'default',
     
     -- SEO Metadata
     seo_meta_title TEXT DEFAULT 'AutoParts Cross-Ref | ระบบเทียบเบอร์อะไหล่และค้นหาด้วย VIN',

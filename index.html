@@ -8,6 +8,7 @@
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
     <script>(function(){const t=localStorage.getItem('autoparts_theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
+    <link rel="icon" id="dynamic-favicon" type="image/png" href="/favicon.ico">
     <link rel="stylesheet" href="/frontend/css/index.css?v=20260904_v8_clean_prod">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="/frontend/js/i18n.js?v=20260904_v8_clean_prod"></script>
@@ -358,12 +359,13 @@
     <div id="auth-screen" class="auth-overlay" style="display: none;">
         <div class="auth-card">
             <div style="display: flex; align-items: center; justify-content: center; gap: 0.75rem; margin-bottom: 1.25rem;">
-                <div class="logo-icon-box" style="width: 42px; height: 42px; font-size: 1.3rem;">
+                <div class="logo-icon-box" id="auth-logo-icon" style="width: 42px; height: 42px; font-size: 1.3rem;">
                     <i class="fa-solid fa-layer-group"></i>
                 </div>
-                <div style="text-align: left;">
-                    <div class="logo-name" style="font-size: 1.2rem;">AutoParts Cross-Ref</div>
-                    <div class="logo-tag" data-i18n="landing.brand.tagline">B2B Data Platform</div>
+                <img id="auth-logo-img" src="" alt="Logo" style="display: none; height: 40px; width: auto; max-width: 160px; object-fit: contain;">
+                <div style="text-align: left;" id="auth-logo-title-group">
+                    <div class="logo-name" id="auth-logo-name" style="font-size: 1.2rem;">AutoParts Cross-Ref</div>
+                    <div class="logo-tag" id="auth-logo-tag" data-i18n="landing.brand.tagline">B2B Data Platform</div>
                 </div>
             </div>
             <h2 style="font-size: 1.25rem; margin-bottom: 0.4rem; color: #fff;" data-i18n="auth.title">เข้าสู่ระบบแพลตฟอร์ม</h2>
@@ -402,7 +404,8 @@
                     <div class="logo-icon-box" id="sidebar-logo-icon">
                         <i class="fa-solid fa-layer-group"></i>
                     </div>
-                    <div class="logo-title-group">
+                    <img id="sidebar-logo-img" src="" alt="Logo" style="display: none; height: 32px; width: auto; max-width: 140px; object-fit: contain;">
+                    <div class="logo-title-group" id="sidebar-logo-title-group">
                         <span class="logo-name" id="sidebar-app-name">AutoParts</span>
                         <span class="logo-tag" id="sidebar-app-tag">Cross-Ref SaaS</span>
                     </div>
@@ -2102,11 +2105,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             </div>
 
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem;">
-                                <!-- Column 1: Identity & Hero Text -->
+                                <!-- Column 1: Identity & Brand Theme -->
                                 <div style="display: flex; flex-direction: column; gap: 1rem;">
                                     <div class="form-group">
                                         <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">ชื่อเว็บไซต์ / ไตเติลหลัก (Site Title) *</label>
-                                        <input type="text" id="owner-cfg-site-title" class="form-control" placeholder="AutoParts Cross-Ref - B2B Automotive Intelligence">
+                                        <input type="text" id="owner-cfg-site-title" class="form-control" placeholder="AutoParts Cross-Ref - B2B Automotive Intelligence" oninput="onSiteTitleLiveInput(this.value)">
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label" style="font-weight: 600; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center;">
@@ -2114,7 +2117,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                             <span style="font-size: 0.72rem; color: var(--text-muted); font-weight: normal;">(อัปโหลดไฟล์ หรือใส่ URL)</span>
                                         </label>
                                         <div style="display: flex; gap: 0.5rem; align-items: center;">
-                                            <input type="text" id="owner-cfg-logo-url" class="form-control" placeholder="https://example.com/logo.png หรือกดปุ่มอัปโหลดไฟล์" oninput="updateLogoPreview(this.value.trim())" style="flex: 1;">
+                                            <input type="text" id="owner-cfg-logo-url" class="form-control" placeholder="https://example.com/logo.png หรือกดปุ่มอัปโหลดไฟล์" oninput="updateLogoPreview(this.value.trim()); onLogoLivePreview(this.value.trim());" style="flex: 1;">
                                             <label class="btn btn-secondary" style="margin: 0; white-space: nowrap; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; padding: 0.55rem 0.9rem; font-size: 0.82rem;" title="เลือกไฟล์ภาพโลโก้จากเครื่อง">
                                                 <i class="fa-solid fa-cloud-arrow-up" style="color: #60A5FA;"></i> <span id="owner-logo-upload-btn-text">อัปโหลดโลโก้</span>
                                                 <input type="file" id="owner-logo-file-input" accept="image/png, image/jpeg, image/svg+xml, image/webp, image/gif, image/x-icon" style="display: none;" onchange="uploadPlatformLogo(this)">
@@ -2127,14 +2130,59 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                             </div>
                                             <div style="flex: 1; min-width: 0;">
                                                 <div style="font-size: 0.8rem; font-weight: 600; color: var(--text-primary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="owner-logo-preview-title">ตัวอย่างโลโก้ที่เลือก</div>
-                                                <div style="font-size: 0.72rem; color: var(--text-muted);" id="owner-logo-preview-sub">จะแสดงบนแถบ Navigation Bar ด้านบน</div>
+                                                <div style="font-size: 0.72rem; color: var(--text-muted);" id="owner-logo-preview-sub">จะแสดงบนแถบ Navigation Bar, Sidebar และหน้าเข้าสู่ระบบ</div>
                                             </div>
                                             <button type="button" class="btn btn-secondary btn-sm" onclick="removePlatformLogo()" style="color: var(--danger); font-size: 0.75rem; padding: 0.3rem 0.6rem; display: inline-flex; align-items: center; gap: 4px;">
                                                 <i class="fa-solid fa-trash-can"></i> ลบโลโก้
                                             </button>
                                         </div>
-                                        <span style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 4px;">รองรับไฟล์ภาพ PNG, JPG, SVG, WebP (เว้นว่างไว้หากต้องการใช้ไอคอนเริ่มต้นของระบบ)</span>
+                                        <span style="font-size: 0.72rem; color: var(--text-muted); display: block; margin-top: 4px;">รองรับไฟล์ภาพ PNG, JPG, SVG, WebP (จะแสดงแทนไอคอนบนหัวเมนู Landing Page, Sidebar และหน้าระบบทั้งหมด)</span>
                                     </div>
+
+                                    <!-- 1.1 SYSTEM PRIMARY THEME COLOR -->
+                                    <div class="form-group" style="background: var(--bg-card); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                                        <label class="form-label" style="font-weight: 700; font-size: 0.85rem; color: #fff; display: flex; align-items: center; gap: 0.4rem;">
+                                            <i class="fa-solid fa-droplet" style="color: var(--primary);"></i> สีธีมหลักของระบบ (System Primary Brand Color)
+                                        </label>
+                                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.6rem;">
+                                            กำหนดสีหลักของปุ่ม, แถบเมนูที่เลือก, ไอคอน, และเส้นไฮไลต์ทั่วทั้งระบบ
+                                        </div>
+                                        <!-- Quick Color Preset Palette -->
+                                        <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; margin-bottom: 0.6rem;">
+                                            <button type="button" class="btn btn-sm" style="background: #3B82F6; color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 0.25rem 0.55rem; font-size: 0.75rem;" onclick="setPrimaryColorPreset('#3B82F6')" title="Modern Blue">🔵 Blue</button>
+                                            <button type="button" class="btn btn-sm" style="background: #10B981; color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 0.25rem 0.55rem; font-size: 0.75rem;" onclick="setPrimaryColorPreset('#10B981')" title="Emerald Green">🟢 Emerald</button>
+                                            <button type="button" class="btn btn-sm" style="background: #6366F1; color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 0.25rem 0.55rem; font-size: 0.75rem;" onclick="setPrimaryColorPreset('#6366F1')" title="Indigo Purple">🟣 Indigo</button>
+                                            <button type="button" class="btn btn-sm" style="background: #EF4444; color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 0.25rem 0.55rem; font-size: 0.75rem;" onclick="setPrimaryColorPreset('#EF4444')" title="Crimson Red">🔴 Crimson</button>
+                                            <button type="button" class="btn btn-sm" style="background: #F59E0B; color: #000; border: 1px solid rgba(255,255,255,0.2); padding: 0.25rem 0.55rem; font-size: 0.75rem; font-weight: 700;" onclick="setPrimaryColorPreset('#F59E0B')" title="Amber Gold">🟡 Amber</button>
+                                            <button type="button" class="btn btn-sm" style="background: #06B6D4; color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 0.25rem 0.55rem; font-size: 0.75rem;" onclick="setPrimaryColorPreset('#06B6D4')" title="Cyan Tech">💠 Cyan</button>
+                                            <button type="button" class="btn btn-sm" style="background: #8B5CF6; color: #fff; border: 1px solid rgba(255,255,255,0.2); padding: 0.25rem 0.55rem; font-size: 0.75rem;" onclick="setPrimaryColorPreset('#8B5CF6')" title="Violet Purple">🔮 Violet</button>
+                                        </div>
+                                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                            <input type="color" id="owner-cfg-primary-color" value="#3B82F6" oninput="onPrimaryColorInput(this.value)" style="width: 44px; height: 38px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 2px; cursor: pointer;">
+                                            <input type="text" id="owner-cfg-primary-color-text" class="form-control" value="#3B82F6" placeholder="#3B82F6" oninput="onPrimaryColorHexInput(this.value)" style="flex: 1; font-family: var(--font-mono); font-size: 0.85rem;">
+                                        </div>
+                                    </div>
+
+                                    <!-- 1.2 NAVBAR / HEADER STYLE -->
+                                    <div class="form-group" style="background: var(--bg-card); padding: 0.85rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                                        <label class="form-label" style="font-weight: 700; font-size: 0.85rem; color: #fff; display: flex; align-items: center; gap: 0.4rem;">
+                                            <i class="fa-solid fa-window-maximize" style="color: #60A5FA;"></i> สไตล์และสีแถบหัวเมนู (Navbar / Header Menu Style)
+                                        </label>
+                                        <select id="owner-cfg-navbar-style" class="form-control" onchange="previewNavbarStyle(this.value)">
+                                            <option value="default">Frosted Glass Standard (กระจกใสเบลอมาตรฐาน)</option>
+                                            <option value="dark_slate">Dark Midnight Carbon (สีเข้มมิดไนท์ #0B132B)</option>
+                                            <option value="brand_tint">Brand Tinted Accent (สะท้อนเฉดสีธีมหลัก)</option>
+                                            <option value="custom">กำหนดสีแถบหัวเมนูเอง (Custom Background Color)</option>
+                                        </select>
+                                        <div id="owner-cfg-navbar-custom-box" style="display: none; margin-top: 0.6rem;">
+                                            <label class="form-label" style="font-size: 0.78rem;">สีพื้นหลังหัวเมนูกำหนดเอง</label>
+                                            <div style="display: flex; gap: 0.5rem;">
+                                                <input type="color" id="owner-cfg-navbar-bg-color" value="#0F172A" oninput="onNavbarBgColorInput(this.value)" style="width: 44px; height: 38px; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 2px; cursor: pointer;">
+                                                <input type="text" id="owner-cfg-navbar-bg-color-text" class="form-control" placeholder="#0F172A" oninput="onNavbarBgHexInput(this.value)" style="flex: 1; font-family: var(--font-mono); font-size: 0.85rem;">
+                                            </div>
+                                        </div>
+                                    </div>
+
                                     <div class="form-group">
                                         <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">ข้อความแถบป้าย Hero Badge</label>
                                         <input type="text" id="owner-cfg-hero-badge" class="form-control" placeholder="แพลตฟอร์มสืบค้นและเทียบรหัสอะไหล่รถยนต์อันดับ 1 ในไทย">
@@ -9834,6 +9882,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             const input = document.getElementById('owner-cfg-logo-url');
             if (input) input.value = '';
             updateLogoPreview('');
+            onLogoLivePreview('');
             showToast("ลบข้อมูลโลโก้แล้ว (ระบบจะกลับไปใช้ไอคอนเริ่มต้นเมื่อกดบันทึก)", "info");
         }
 
@@ -9866,6 +9915,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     const urlInput = document.getElementById('owner-cfg-logo-url');
                     if (urlInput) urlInput.value = data.logo_url;
                     updateLogoPreview(data.logo_url);
+                    onLogoLivePreview(data.logo_url);
                     showToast("🎉 อัปโหลดโลโก้สำเร็จ! กรุณากด 'บันทึกการตั้งค่าหน้าแรก' เพื่อเปิดใช้งาน", "success");
                 } else {
                     showToast(data.detail || data.error || "ไม่สามารถอัปโหลดโลโก้ได้", "danger");
@@ -9916,6 +9966,224 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             }
         }
 
+        // ================= DYNAMIC COLOR & THEME UTILITIES =================
+        function hexToRgb(hex) {
+            let clean = hex.replace('#', '');
+            if (clean.length === 3) clean = clean.split('').map(c => c + c).join('');
+            const num = parseInt(clean, 16);
+            return {
+                r: (num >> 16) & 255,
+                g: (num >> 8) & 255,
+                b: num & 255
+            };
+        }
+
+        function adjustColorShade(hex, percent) {
+            let clean = hex.replace('#', '');
+            if (clean.length === 3) clean = clean.split('').map(c => c + c).join('');
+            const num = parseInt(clean, 16);
+            let r = Math.min(255, Math.max(0, (num >> 16) + Math.round(255 * (percent / 100))));
+            let g = Math.min(255, Math.max(0, ((num >> 8) & 0x00FF) + Math.round(255 * (percent / 100))));
+            let b = Math.min(255, Math.max(0, (num & 0x0000FF) + Math.round(255 * (percent / 100))));
+            return `#${((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1)}`;
+        }
+
+        function applyDynamicPlatformTheme(settings) {
+            if (!settings) return;
+            const root = document.documentElement;
+
+            // 1. Primary Brand & Accent Color
+            const primaryColor = settings.primary_color || '#3B82F6';
+            try {
+                const rgb = hexToRgb(primaryColor);
+                const primaryDark = adjustColorShade(primaryColor, -18);
+                const primaryLight = adjustColorShade(primaryColor, 15);
+                root.style.setProperty('--primary', primaryColor);
+                root.style.setProperty('--primary-hover', primaryDark);
+                root.style.setProperty('--primary-light', `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15)`);
+                root.style.setProperty('--border-focus', primaryColor);
+
+                // Update icon box gradients dynamically
+                const iconBoxes = document.querySelectorAll('.logo-icon-box');
+                iconBoxes.forEach(box => {
+                    box.style.background = `linear-gradient(135deg, ${primaryDark} 0%, ${primaryColor} 100%)`;
+                    box.style.boxShadow = `0 4px 14px rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.35)`;
+                });
+            } catch (e) {
+                console.warn("Could not parse primary color:", primaryColor, e);
+            }
+
+            // 2. Navbar / Header Menu Custom Styling
+            const navStyle = settings.navbar_style || 'default';
+            const navCustomBg = settings.navbar_bg_color || '';
+            const landingHeader = document.querySelector('.landing-header');
+            const topHeader = document.querySelector('.top-header');
+            const sidebarHeader = document.querySelector('.sidebar-header');
+
+            const applyNavStyles = (el) => {
+                if (!el) return;
+                if (navStyle === 'dark_slate') {
+                    el.style.background = '#0B132B';
+                    el.style.borderColor = 'rgba(255, 255, 255, 0.1)';
+                    el.style.backdropFilter = 'none';
+                } else if (navStyle === 'brand_tint') {
+                    const rgb = hexToRgb(primaryColor);
+                    el.style.background = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.12)`;
+                    el.style.borderColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.3)`;
+                    el.style.backdropFilter = 'blur(16px)';
+                } else if (navStyle === 'custom' && navCustomBg) {
+                    el.style.background = navCustomBg;
+                    el.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+                    el.style.backdropFilter = 'none';
+                } else {
+                    // Reset to default css styles
+                    el.style.background = '';
+                    el.style.borderColor = '';
+                    el.style.backdropFilter = '';
+                }
+            };
+
+            applyNavStyles(landingHeader);
+            applyNavStyles(topHeader);
+            if (navStyle === 'brand_tint' || navStyle === 'custom') {
+                applyNavStyles(sidebarHeader);
+            } else if (sidebarHeader) {
+                sidebarHeader.style.background = '';
+                sidebarHeader.style.borderColor = '';
+            }
+
+            // 3. Platform Logo Synchronization across all platform sections
+            const logoUrl = settings.logo_url || '';
+            const updateLogoElement = (imgId, iconId) => {
+                const imgEl = document.getElementById(imgId);
+                const iconEl = document.getElementById(iconId);
+                if (imgEl && iconEl) {
+                    if (logoUrl) {
+                        imgEl.src = logoUrl;
+                        imgEl.style.display = 'block';
+                        iconEl.style.display = 'none';
+                    } else {
+                        imgEl.src = '';
+                        imgEl.style.display = 'none';
+                        iconEl.style.display = 'flex';
+                    }
+                }
+            };
+
+            updateLogoElement('landing-logo-img', 'landing-logo-icon');
+            updateLogoElement('sidebar-logo-img', 'sidebar-logo-icon');
+            updateLogoElement('auth-logo-img', 'auth-logo-icon');
+
+            // Favicon update
+            const faviconEl = document.getElementById('dynamic-favicon');
+            if (faviconEl) {
+                faviconEl.href = settings.favicon_url || logoUrl || '/favicon.ico';
+            }
+
+            // 4. Site Title & Brand Text Synchronization
+            const siteTitle = settings.site_title || 'AutoParts Cross-Ref';
+            if (document.getElementById('landing-logo-name')) {
+                document.getElementById('landing-logo-name').textContent = siteTitle;
+            }
+            if (document.getElementById('sidebar-app-name')) {
+                document.getElementById('sidebar-app-name').textContent = siteTitle;
+            }
+            if (document.getElementById('auth-logo-name')) {
+                document.getElementById('auth-logo-name').textContent = siteTitle;
+            }
+            if (settings.seo_meta_title || siteTitle) {
+                document.title = settings.seo_meta_title || `${siteTitle} - Automotive Intelligence Platform`;
+            }
+        }
+
+        // ================= OWNER BRANDING SETTINGS HANDLERS =================
+        function setPrimaryColorPreset(colorHex) {
+            const colorInput = document.getElementById('owner-cfg-primary-color');
+            const textInput = document.getElementById('owner-cfg-primary-color-text');
+            if (colorInput) colorInput.value = colorHex;
+            if (textInput) textInput.value = colorHex;
+            applyDynamicPlatformTheme({
+                primary_color: colorHex,
+                navbar_style: document.getElementById('owner-cfg-navbar-style')?.value || 'default',
+                navbar_bg_color: document.getElementById('owner-cfg-navbar-bg-color')?.value || '',
+                logo_url: document.getElementById('owner-cfg-logo-url')?.value || '',
+                site_title: document.getElementById('owner-cfg-site-title')?.value || ''
+            });
+        }
+
+        function onPrimaryColorInput(colorHex) {
+            const textInput = document.getElementById('owner-cfg-primary-color-text');
+            if (textInput) textInput.value = colorHex;
+            applyDynamicPlatformTheme({
+                primary_color: colorHex,
+                navbar_style: document.getElementById('owner-cfg-navbar-style')?.value || 'default',
+                navbar_bg_color: document.getElementById('owner-cfg-navbar-bg-color')?.value || '',
+                logo_url: document.getElementById('owner-cfg-logo-url')?.value || '',
+                site_title: document.getElementById('owner-cfg-site-title')?.value || ''
+            });
+        }
+
+        function onPrimaryColorHexInput(colorHex) {
+            const clean = colorHex.trim();
+            if (/^#([0-9A-F]{3}){1,2}$/i.test(clean)) {
+                const colorInput = document.getElementById('owner-cfg-primary-color');
+                if (colorInput) colorInput.value = clean;
+                onPrimaryColorInput(clean);
+            }
+        }
+
+        function previewNavbarStyle(style) {
+            const customBox = document.getElementById('owner-cfg-navbar-custom-box');
+            if (customBox) {
+                customBox.style.display = (style === 'custom') ? 'block' : 'none';
+            }
+            applyDynamicPlatformTheme({
+                primary_color: document.getElementById('owner-cfg-primary-color')?.value || '#3B82F6',
+                navbar_style: style,
+                navbar_bg_color: document.getElementById('owner-cfg-navbar-bg-color')?.value || '',
+                logo_url: document.getElementById('owner-cfg-logo-url')?.value || '',
+                site_title: document.getElementById('owner-cfg-site-title')?.value || ''
+            });
+        }
+
+        function onNavbarBgColorInput(colorHex) {
+            const textInput = document.getElementById('owner-cfg-navbar-bg-color-text');
+            if (textInput) textInput.value = colorHex;
+            applyDynamicPlatformTheme({
+                primary_color: document.getElementById('owner-cfg-primary-color')?.value || '#3B82F6',
+                navbar_style: 'custom',
+                navbar_bg_color: colorHex,
+                logo_url: document.getElementById('owner-cfg-logo-url')?.value || '',
+                site_title: document.getElementById('owner-cfg-site-title')?.value || ''
+            });
+        }
+
+        function onNavbarBgHexInput(colorHex) {
+            const clean = colorHex.trim();
+            if (/^#([0-9A-F]{3}){1,2}$/i.test(clean)) {
+                const colorInput = document.getElementById('owner-cfg-navbar-bg-color');
+                if (colorInput) colorInput.value = clean;
+                onNavbarBgColorInput(clean);
+            }
+        }
+
+        function onSiteTitleLiveInput(val) {
+            const clean = val.trim() || 'AutoParts Cross-Ref';
+            if (document.getElementById('landing-logo-name')) document.getElementById('landing-logo-name').textContent = clean;
+            if (document.getElementById('sidebar-app-name')) document.getElementById('sidebar-app-name').textContent = clean;
+            if (document.getElementById('auth-logo-name')) document.getElementById('auth-logo-name').textContent = clean;
+        }
+
+        function onLogoLivePreview(url) {
+            applyDynamicPlatformTheme({
+                primary_color: document.getElementById('owner-cfg-primary-color')?.value || '#3B82F6',
+                navbar_style: document.getElementById('owner-cfg-navbar-style')?.value || 'default',
+                navbar_bg_color: document.getElementById('owner-cfg-navbar-bg-color')?.value || '',
+                logo_url: url,
+                site_title: document.getElementById('owner-cfg-site-title')?.value || ''
+            });
+        }
+
         async function loadOwnerBrandingTab() {
             try {
                 const res = await fetch('/api/owner/settings/branding', { headers: getAuthHeaders() });
@@ -9925,6 +10193,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = (val !== undefined && val !== null) ? val : ''; };
                     setVal('owner-cfg-site-title', b.site_title);
                     setVal('owner-cfg-logo-url', b.logo_url);
+                    setVal('owner-cfg-primary-color', b.primary_color || '#3B82F6');
+                    setVal('owner-cfg-primary-color-text', b.primary_color || '#3B82F6');
+                    setVal('owner-cfg-navbar-style', b.navbar_style || 'default');
+                    setVal('owner-cfg-navbar-bg-color', b.navbar_bg_color || '#0F172A');
+                    setVal('owner-cfg-navbar-bg-color-text', b.navbar_bg_color || '');
                     setVal('owner-cfg-hero-badge', b.hero_badge);
                     setVal('owner-cfg-hero-title', b.hero_title);
                     setVal('owner-cfg-hero-subtitle', b.hero_subtitle);
@@ -9941,6 +10214,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
                     updateLogoPreview(b.logo_url);
                     previewHeroBgStyle(b.hero_bg_style || 'gradient');
+                    previewNavbarStyle(b.navbar_style || 'default');
+                    applyDynamicPlatformTheme(b);
                 }
             } catch (err) {
                 console.error("Error loading branding settings:", err);
@@ -9959,6 +10234,9 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             const payload = {
                 site_title: document.getElementById('owner-cfg-site-title').value.trim(),
                 logo_url: document.getElementById('owner-cfg-logo-url').value.trim(),
+                primary_color: document.getElementById('owner-cfg-primary-color').value.trim() || '#3B82F6',
+                navbar_style: document.getElementById('owner-cfg-navbar-style').value,
+                navbar_bg_color: document.getElementById('owner-cfg-navbar-bg-color').value.trim(),
                 hero_badge: document.getElementById('owner-cfg-hero-badge').value.trim(),
                 hero_title: document.getElementById('owner-cfg-hero-title').value.trim(),
                 hero_subtitle: document.getElementById('owner-cfg-hero-subtitle').value.trim(),
@@ -9982,7 +10260,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 });
                 const data = await res.json();
                 if (data.success) {
-                    showToast("บันทึกการตั้งค่าหน้าแรก & CMS เรียบร้อยแล้ว", "success");
+                    showToast("บันทึกการตั้งค่าหน้าแรก แบรนด์ดิ้ง และสีธีมเรียบร้อยแล้ว", "success");
                     loadPlatformSettingsPublic();
                 } else {
                     showToast(data.detail || "Failed to save branding", "error");
@@ -10173,14 +10451,10 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     const s = data.settings;
                     window.cachedPlatformSettings = s;
 
-                    // 1. Site Title & Document Title
-                    if (s.site_title) {
-                        document.title = s.seo_meta_title || s.site_title;
-                        const logoNameEl = document.getElementById('landing-logo-name');
-                        if (logoNameEl) logoNameEl.innerHTML = escH(s.site_title);
-                    }
+                    // Apply Dynamic Colors, Header Styles, Logo, and Site Title
+                    applyDynamicPlatformTheme(s);
 
-                    // 2. SEO Meta Description & Keywords
+                    // 1. SEO Meta Description & Keywords
                     if (s.seo_meta_description) {
                         let metaDesc = document.querySelector('meta[name="description"]');
                         if (!metaDesc) {
@@ -10190,17 +10464,17 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                         }
                         metaDesc.setAttribute('content', s.seo_meta_description);
                     }
-
-                    // 3. Logo
-                    const logoImgEl = document.getElementById('landing-logo-img');
-                    const logoIconEl = document.getElementById('landing-logo-icon');
-                    if (s.logo_url && logoImgEl && logoIconEl) {
-                        logoImgEl.src = s.logo_url;
-                        logoImgEl.style.display = 'block';
-                        logoIconEl.style.display = 'none';
+                    if (s.seo_meta_keywords) {
+                        let metaKey = document.querySelector('meta[name="keywords"]');
+                        if (!metaKey) {
+                            metaKey = document.createElement('meta');
+                            metaKey.setAttribute('name', 'keywords');
+                            document.head.appendChild(metaKey);
+                        }
+                        metaKey.setAttribute('content', s.seo_meta_keywords);
                     }
 
-                    // 4. Hero Banner Content
+                    // 2. Hero Banner Content
                     if (s.hero_badge) {
                         const heroBadgeEl = document.getElementById('landing-hero-badge');
                         if (heroBadgeEl) heroBadgeEl.textContent = s.hero_badge;
@@ -10214,7 +10488,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                         if (heroDescEl) heroDescEl.textContent = s.hero_subtitle;
                     }
 
-                    // 5. Hero Background Theme
+                    // 3. Hero Background Theme
                     const heroSection = document.getElementById('landing-hero');
                     if (heroSection) {
                         if (s.hero_bg_style === 'dark_carbon') {
@@ -10223,10 +10497,28 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             heroSection.style.background = '#0F172A';
                         } else if (s.hero_bg_style === 'custom' && (s.hero_bg_gradient || s.hero_bg_color)) {
                             heroSection.style.background = s.hero_bg_gradient || s.hero_bg_color;
+                        } else {
+                            heroSection.style.background = '';
                         }
                     }
 
-                    // 6. Sync Receipt / Invoice Header
+                    // 4. Footer & Contact Information
+                    if (document.getElementById('footer-copyright-text') && s.footer_copyright) {
+                        document.getElementById('footer-copyright-text').textContent = s.footer_copyright;
+                    }
+                    if (document.getElementById('landing-contact-email') && s.contact_email) {
+                        document.getElementById('landing-contact-email').textContent = s.contact_email;
+                        document.getElementById('landing-contact-email').href = `mailto:${s.contact_email}`;
+                    }
+                    if (document.getElementById('landing-contact-phone') && s.contact_phone) {
+                        document.getElementById('landing-contact-phone').textContent = s.contact_phone;
+                        document.getElementById('landing-contact-phone').href = `tel:${s.contact_phone}`;
+                    }
+                    if (document.getElementById('landing-contact-line') && s.contact_line) {
+                        document.getElementById('landing-contact-line').textContent = s.contact_line;
+                    }
+
+                    // 5. Sync Receipt / Invoice Header
                     if (document.getElementById('receipt-owner-name-th')) {
                         document.getElementById('receipt-owner-name-th').textContent = s.company_name_th || 'บริษัท ออโต้เซนทริค ดิจิทัล โซลูชันส์ จำกัด';
                     }
