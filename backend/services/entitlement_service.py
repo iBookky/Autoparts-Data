@@ -101,23 +101,21 @@ class EntitlementService:
         custom_brands = [r["entitlement_value"] for r in ent_rows if r["entitlement_type"] == "BRAND"]
         custom_cats = [r["entitlement_value"] for r in ent_rows if r["entitlement_type"] == "CATEGORY"]
 
-        # If custom entitlements are defined, use them directly
-        if custom_brands or custom_cats:
-            allowed_brands = custom_brands if custom_brands else ['*'] if max_b == -1 else []
-            allowed_cats = custom_cats if custom_cats else ['*'] if max_c == -1 else []
+        # Derive allowed brands
+        if custom_brands:
+            allowed_brands = custom_brands
+        elif max_b == -1 or plan_id in ['business', 'enterprise']:
+            allowed_brands = ['*']  # All brands allowed for unlimited plans
         else:
-            # Derive standard catalog slice based on plan limits
-            if max_b == -1 or plan_id in ['business', 'enterprise']:
-                allowed_brands = ['*'] # All brands allowed
-            else:
-                cursor.execute("SELECT name FROM meta_car_brands ORDER BY id ASC LIMIT ?", (max_b,))
-                allowed_brands = [r["name"] for r in cursor.fetchall()]
+            allowed_brands = []
 
-            if max_c == -1 or plan_id in ['business', 'enterprise']:
-                allowed_cats = ['*'] # All categories allowed
-            else:
-                cursor.execute("SELECT name FROM meta_categories ORDER BY id ASC LIMIT ?", (max_c,))
-                allowed_cats = [r["name"] for r in cursor.fetchall()]
+        # Derive allowed categories (Customer must have explicit purchased categories or unlimited plan)
+        if custom_cats:
+            allowed_categories = custom_cats
+        elif max_c == -1 or plan_id in ['business', 'enterprise']:
+            allowed_categories = ['*']  # All categories allowed for unlimited plans
+        else:
+            allowed_categories = []
 
         conn.close()
 
@@ -125,7 +123,7 @@ class EntitlementService:
             "status": sub["status"],
             "plan_id": plan_id,
             "allowed_brands": allowed_brands,
-            "allowed_categories": allowed_cats,
+            "allowed_categories": allowed_categories,
             "max_brands": max_b,
             "max_categories": max_c,
             "vin_search_enabled": vin_enabled,
@@ -146,7 +144,8 @@ class EntitlementService:
         Returns: (is_allowed, locked_payload_or_none, tenant_context)
         """
         # Privileged system operator accounts have unrestricted search access
-        if user_role in ["OWNER", "SUPER_ADMIN"] or (user_role in ["ADMIN", "STAFF"] and username in ["superadmin", "admin", "staff"]):
+        is_platform_admin = (username in ["superadmin", "admin"] and user_role in ["ADMIN", "SUPER_ADMIN"])
+        if is_platform_admin:
             ctx = get_user_tenant_context(username) or {
                 "organization": {"id": 1, "name": "System Operator"},
                 "subscription": {"status": "ACTIVE", "plan_name": "ENTERPRISE"},
@@ -219,6 +218,18 @@ class EntitlementService:
                 return False, locked, ctx
 
         # 4. Category Whitelist Check
+        if '*' not in whitelist["allowed_categories"] and len(whitelist["allowed_categories"]) == 0:
+            locked = {
+                "locked": True,
+                "reason": "CATEGORY_LOCKED",
+                "locked_entity_type": "CATEGORY",
+                "message": "No product categories have been assigned to your subscription. Please select or purchase product categories to access automotive parts data.",
+                "action": "ADD_CATEGORY",
+                "plan_id": whitelist["plan_id"],
+                "allowed_categories": []
+            }
+            return False, locked, ctx
+
         if category and '*' not in whitelist["allowed_categories"]:
             matched_cat = any(c.lower() in category.strip().lower() or category.strip().lower() in c.lower() for c in whitelist["allowed_categories"])
             if not matched_cat:
@@ -227,7 +238,7 @@ class EntitlementService:
                     "reason": "CATEGORY_LOCKED",
                     "locked_entity_type": "CATEGORY",
                     "locked_entity_name": category,
-                    "message": f"Data for category '{category}' is not included in your {whitelist['plan_id'].upper()} plan.",
+                    "message": f"Data for category '{category}' is not included in your purchased product categories.",
                     "action": "ADD_CATEGORY",
                     "plan_id": whitelist["plan_id"],
                     "upgrade_price_thb": 500,
@@ -243,7 +254,8 @@ class EntitlementService:
         Validates whether the customer is entitled to view a specific product's full technical specs.
         Prevents direct URL manipulation (e.g. /products/123).
         """
-        if user_role in ["OWNER", "SUPER_ADMIN", "ADMIN", "STAFF"]:
+        is_platform_admin = (username in ["superadmin", "admin"] and user_role in ["ADMIN", "SUPER_ADMIN"])
+        if is_platform_admin:
             return True, None
 
         conn = get_db_connection()

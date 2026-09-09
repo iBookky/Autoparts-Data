@@ -2085,7 +2085,7 @@ def update_org_subscription(org_id: int, plan_id: str, ai_power_pack: int = 0, e
 def get_org_data_coverage(org_id: int):
     """
     Returns coverage matrix comparing all system automotive brands & categories
-    with tenant plan entitlement limits.
+    with tenant plan entitlement limits and specific category grants.
     """
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -2095,18 +2095,27 @@ def get_org_data_coverage(org_id: int):
     all_car_brands = [r["name"] for r in cursor.fetchall()]
     
     # Get all categories
-    cursor.execute("SELECT name, name_en FROM meta_categories ORDER BY name ASC")
+    cursor.execute("SELECT name, name_en FROM meta_categories ORDER BY id ASC")
     all_categories = [dict(r) for r in cursor.fetchall()]
     
     # Get subscription
     sub = get_org_subscription(org_id)
     plan_tier = sub["plan_id"].lower() if sub else "professional"
     
+    # Fetch explicit granted brands & categories
+    cursor.execute("SELECT entitlement_type, entitlement_value FROM entitlements WHERE org_id = ? AND is_granted = 1", (org_id,))
+    ent_rows = cursor.fetchall()
+    granted_brands = set(r["entitlement_value"] for r in ent_rows if r["entitlement_type"] == "BRAND")
+    granted_cats = set(r["entitlement_value"] for r in ent_rows if r["entitlement_type"] == "CATEGORY")
+    
     # Determine granted vs locked
     brand_coverage = []
     max_b = sub.get("max_brands", -1) if sub else -1
     for idx, b in enumerate(all_car_brands):
-        unlocked = True if (max_b == -1 or idx < max_b) else False
+        if granted_brands:
+            unlocked = b in granted_brands
+        else:
+            unlocked = True if (max_b == -1 or plan_tier in ['business', 'enterprise']) else (idx < max_b)
         brand_coverage.append({
             "name": b,
             "unlocked": unlocked,
@@ -2116,7 +2125,10 @@ def get_org_data_coverage(org_id: int):
     category_coverage = []
     max_c = sub.get("max_categories", -1) if sub else -1
     for idx, c in enumerate(all_categories):
-        unlocked = True if (max_c == -1 or idx < max_c) else False
+        if granted_cats:
+            unlocked = c["name"] in granted_cats
+        else:
+            unlocked = True if (max_c == -1 or plan_tier in ['business', 'enterprise']) else False
         category_coverage.append({
             "name": c["name"],
             "name_en": c.get("name_en", ""),
@@ -2130,6 +2142,79 @@ def get_org_data_coverage(org_id: int):
         "car_brands": brand_coverage,
         "categories": category_coverage
     }
+
+def get_org_category_entitlements(org_id: int) -> Dict[str, Any]:
+    """
+    Retrieves all product categories and their specific granted status for an organization.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT name, name_en FROM meta_categories ORDER BY id ASC")
+    all_cats = [dict(r) for r in cursor.fetchall()]
+    
+    sub = get_org_subscription(org_id)
+    max_c = sub.get("max_categories", 3) if sub else 3
+    plan_id = sub.get("plan_id", "professional") if sub else "professional"
+    
+    cursor.execute("SELECT entitlement_value FROM entitlements WHERE org_id = ? AND entitlement_type = 'CATEGORY' AND is_granted = 1", (org_id,))
+    granted = set(r["entitlement_value"] for r in cursor.fetchall())
+    
+    conn.close()
+    
+    is_unlimited = (max_c == -1 or plan_id.lower() in ['business', 'enterprise'])
+    
+    return {
+        "org_id": org_id,
+        "plan_id": plan_id,
+        "max_categories": max_c,
+        "is_unlimited": is_unlimited,
+        "granted_categories": list(granted),
+        "categories": [
+            {
+                "name": c["name"],
+                "name_en": c.get("name_en", ""),
+                "is_granted": (c["name"] in granted) or (is_unlimited and len(granted) == 0)
+            }
+            for c in all_cats
+        ]
+    }
+
+def update_org_category_entitlements(org_id: int, selected_categories: List[str]) -> Tuple[bool, str, List[str]]:
+    """
+    Activates specific product category entitlements for an organization, respecting plan capacity.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    sub = get_org_subscription(org_id)
+    max_c = sub.get("max_categories", 3) if sub else 3
+    plan_id = sub.get("plan_id", "professional") if sub else "professional"
+    is_unlimited = (max_c == -1 or plan_id.lower() in ['business', 'enterprise'])
+    
+    clean_cats = [str(c).strip() for c in selected_categories if str(c).strip()]
+    
+    if not is_unlimited and len(clean_cats) > max_c:
+        conn.close()
+        return False, f"Selected categories count ({len(clean_cats)}) exceeds plan limit ({max_c}).", []
+        
+    try:
+        # Delete previous category entitlements for org
+        cursor.execute("DELETE FROM entitlements WHERE org_id = ? AND entitlement_type = 'CATEGORY'", (org_id,))
+        
+        # Insert newly selected categories
+        for cat in clean_cats:
+            cursor.execute("""
+                INSERT INTO entitlements (org_id, entitlement_type, entitlement_value, is_granted)
+                VALUES (?, 'CATEGORY', ?, 1)
+            """, (org_id, cat))
+            
+        conn.commit()
+        return True, "Category entitlements activated successfully.", clean_cats
+    except Exception as e:
+        conn.rollback()
+        return False, str(e), []
+    finally:
+        conn.close()
 
 def record_search_usage(org_id: int, user_id: int, query: str, search_type: str = "SEARCH", results_count: int = 0):
     """
@@ -3738,16 +3823,34 @@ def register_trial_tenant_db(data: Dict[str, Any]) -> Dict[str, Any]:
         sub_id = cursor.lastrowid
         
         # 6. Seed Entitlements Whitelist
-        for brand in ["HONDA", "TOYOTA", "ISUZU", "NISSAN", "MAZDA"]:
+        user_brands = data.get("selected_brands") or data.get("brands") or ["HONDA", "TOYOTA", "ISUZU", "NISSAN", "MAZDA"]
+        for brand in user_brands:
             cursor.execute("""
                 INSERT OR IGNORE INTO entitlements (org_id, entitlement_type, entitlement_value, is_granted)
                 VALUES (?, 'BRAND', ?, 1)
-            """, (org_id, brand))
-        for cat in ["ระบบเบรก", "ระบบช่วงล่าง", "ไส้กรอง", "ระบบส่งกำลัง"]:
-            cursor.execute("""
-                INSERT OR IGNORE INTO entitlements (org_id, entitlement_type, entitlement_value, is_granted)
-                VALUES (?, 'CATEGORY', ?, 1)
-            """, (org_id, cat))
+            """, (org_id, brand.strip()))
+
+        user_cats = data.get("selected_categories") or data.get("categories")
+        if user_cats and isinstance(user_cats, list) and len(user_cats) > 0:
+            for cat in user_cats:
+                cat_clean = str(cat).strip()
+                if cat_clean:
+                    cursor.execute("""
+                        INSERT OR IGNORE INTO entitlements (org_id, entitlement_type, entitlement_value, is_granted)
+                        VALUES (?, 'CATEGORY', ?, 1)
+                    """, (org_id, cat_clean))
+        else:
+            # Default to plan max categories from meta_categories
+            max_c_seed = plan_dict.get("max_categories", 2)
+            if max_c_seed == -1:
+                max_c_seed = 5
+            cursor.execute("SELECT name FROM meta_categories ORDER BY id ASC LIMIT ?", (max_c_seed,))
+            default_cats = [r["name"] for r in cursor.fetchall()]
+            for cat in default_cats:
+                cursor.execute("""
+                    INSERT OR IGNORE INTO entitlements (org_id, entitlement_type, entitlement_value, is_granted)
+                    VALUES (?, 'CATEGORY', ?, 1)
+                """, (org_id, cat))
         
         # 7. Seed Initial usage_records for current month
         cur_month = datetime.now().strftime("%Y-%m")

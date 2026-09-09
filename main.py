@@ -79,6 +79,8 @@ from backend.database import (
     get_org_subscription,
     update_org_subscription,
     get_org_data_coverage,
+    get_org_category_entitlements,
+    update_org_category_entitlements,
     record_search_usage,
     get_org_search_history,
     get_user_favorites,
@@ -323,6 +325,8 @@ class TrialRegisterRequest(BaseModel):
     plan_id: Optional[str] = "free_trial"
     signup_type: Optional[str] = "TRIAL" # TRIAL or DIRECT
     verification_code: Optional[str] = "999999"
+    selected_categories: Optional[List[str]] = None
+    selected_brands: Optional[List[str]] = None
 
 class PublicContactLeadRequest(BaseModel):
     company_name: str
@@ -420,12 +424,15 @@ async def search_parts(
     page: Optional[int] = 1,
     limit: Optional[int] = 50,
     offset: Optional[int] = 0,
-    x_username: Optional[str] = Header("admin"),
-    x_user_role: Optional[str] = Header("ADMIN")
+    x_username: Optional[str] = Header(None),
+    x_user_role: Optional[str] = Header(None)
 ):
     try:
         user_name = x_username or "admin"
-        role = x_user_role or "ADMIN"
+        ctx = get_user_tenant_context(user_name)
+        user_rec = ctx.get("user") if ctx else None
+        role = user_rec.get("role") if user_rec else (x_user_role or ("ADMIN" if user_name in ["admin", "superadmin"] else "STAFF"))
+        is_platform_admin = (user_name in ["superadmin", "admin"] and role in ["ADMIN", "SUPER_ADMIN"])
 
         # 1. Server-Side Entitlement & Quota Whitelist Validation
         is_allowed, locked_payload, ctx = EntitlementService.validate_search_access(
@@ -448,8 +455,8 @@ async def search_parts(
         # 2. Extract Organization Whitelist Filters
         org_id = ctx["organization"]["id"] if ctx and "organization" in ctx else 1
         whitelist = EntitlementService.get_organization_whitelist(org_id)
-        allowed_b = whitelist.get("allowed_brands") if role not in ["OWNER", "SUPER_ADMIN", "ADMIN"] else None
-        allowed_c = whitelist.get("allowed_categories") if role not in ["OWNER", "SUPER_ADMIN", "ADMIN"] else None
+        allowed_b = whitelist.get("allowed_brands") if not is_platform_admin else None
+        allowed_c = whitelist.get("allowed_categories") if not is_platform_admin else None
 
         # 3. Server-Side Pagination Clamping & Enumeration Protection
         safe_limit = min(max(1, limit or 50), 50)
@@ -493,7 +500,7 @@ async def search_parts(
             else:
                 item["verification_status"] = "VERIFIED"
 
-        # 5. Record Search Usage & Audit Log
+        # 5. Record Usage for Customer Accounts
         query_terms = [v for v in [vin, car_brand, car_model, car_year, category, oem_code, oem_name, aftermarket_brand, aftermarket_part] if v]
         query_str = " ".join(query_terms) if query_terms else "All Parts"
         user_id = ctx.get("user", {}).get("id", 1) if ctx else 1
@@ -501,12 +508,14 @@ async def search_parts(
             record_search_usage(org_id=org_id, user_id=user_id, query=query_str, search_type="ADVANCED", results_count=len(results))
         except Exception as e:
             print(f"Error logging search usage: {e}")
-                
+
         return {
             "success": True,
-            "locked": False,
+            "results": results,
             "total": len(results),
-            "results": results
+            "page": safe_page,
+            "limit": safe_limit,
+            "usage": ctx.get("usage", {})
         }
     except HTTPException as he:
         raise he
@@ -517,27 +526,38 @@ async def search_parts(
 async def get_product_detail(
     part_id: int,
     source: Optional[str] = "MASTER",
-    x_username: Optional[str] = Header("admin"),
-    x_user_role: Optional[str] = Header("ADMIN")
+    x_username: Optional[str] = Header(None),
+    x_user_role: Optional[str] = Header(None)
 ):
     """
-    Direct product access endpoint protected against URL manipulation.
+    Direct product access endpoint protected against URL manipulation and category entitlement bypass.
     """
+    user_name = x_username or "admin"
+    ctx = get_user_tenant_context(user_name)
+    user_rec = ctx.get("user") if ctx else None
+    role = user_rec.get("role") if user_rec else (x_user_role or ("ADMIN" if user_name in ["admin", "superadmin"] else "STAFF"))
+    is_platform_admin = (user_name in ["superadmin", "admin"] and role in ["ADMIN", "SUPER_ADMIN"])
+
     allowed, locked_payload = EntitlementService.validate_product_access(
-        username=x_username or "admin",
-        user_role=x_user_role or "ADMIN",
+        username=user_name,
+        user_role=role,
         part_id=part_id,
         source=source or "MASTER"
     )
     if not allowed:
         raise HTTPException(
             status_code=403,
-            detail=locked_payload.get("message", "You do not have entitlement access to view this product.")
+            detail=locked_payload.get("message", "Access to this product is denied. Data for this category is not included in your subscription.")
         )
 
     product = get_part_by_id(part_id, source=source or "MASTER")
     if not product:
         raise HTTPException(status_code=404, detail="Product not found.")
+
+    ctx = get_user_tenant_context(user_name)
+    org_id = ctx["organization"]["id"] if ctx and "organization" in ctx else 1
+    whitelist = EntitlementService.get_organization_whitelist(org_id)
+    allowed_c = whitelist.get("allowed_categories") if not is_platform_admin else None
 
     # Fetch related typed cross-reference relations with normalized matching
     import re
@@ -551,17 +571,34 @@ async def get_product_detail(
         if (norm_oem and (norm_oem == src or norm_oem == tgt)) or (norm_sku and (norm_sku == src or norm_sku == tgt)):
             related_cross_refs.append(cr)
 
-    # Fetch OE interchange parts sharing identical OEM or vehicle fitment
+    # Fetch OE interchange parts sharing identical OEM or vehicle fitment strictly filtered by allowed_categories
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("""
-        SELECT id, brand, part_number, oem_number, product_name_th, category, car_brand, car_model, year_start, year_end, 'MASTER' as source
-        FROM master_parts 
-        WHERE (oem_number = ? OR (car_brand = ? AND car_model = ? AND category = ?))
-          AND id != ?
-        LIMIT 10
-    """, (product.get("oem_number"), product.get("car_brand"), product.get("car_model"), product.get("category"), part_id))
-    interchanges = [dict(r) for r in cursor.fetchall()]
+    int_where = ["(oem_number = ? OR (car_brand = ? AND car_model = ? AND category = ?))", "id != ?"]
+    int_params = [product.get("oem_number"), product.get("car_brand"), product.get("car_model"), product.get("category"), part_id]
+    
+    if allowed_c is not None and '*' not in allowed_c:
+        if len(allowed_c) == 0:
+            interchanges = []
+        else:
+            cat_filters = ["LOWER(category) LIKE ?" for _ in allowed_c]
+            int_where.append(f"({' OR '.join(cat_filters)})")
+            int_params.extend([f"%{c.strip().lower()}%" for c in allowed_c])
+            cursor.execute(f"""
+                SELECT id, brand, part_number, oem_number, product_name_th, category, car_brand, car_model, year_start, year_end, 'MASTER' as source
+                FROM master_parts 
+                WHERE {' AND '.join(int_where)}
+                LIMIT 10
+            """, tuple(int_params))
+            interchanges = [dict(r) for r in cursor.fetchall()]
+    else:
+        cursor.execute(f"""
+            SELECT id, brand, part_number, oem_number, product_name_th, category, car_brand, car_model, year_start, year_end, 'MASTER' as source
+            FROM master_parts 
+            WHERE {' AND '.join(int_where)}
+            LIMIT 10
+        """, tuple(int_params))
+        interchanges = [dict(r) for r in cursor.fetchall()]
     conn.close()
 
     return {
@@ -580,8 +617,26 @@ async def ai_search(
     car_brand: str = Form(...),
     car_model: str = Form(...),
     category: str = Form(""),
-    product_name: str = Form(...)
+    product_name: str = Form(...),
+    x_username: Optional[str] = Header("admin"),
+    x_user_role: Optional[str] = Header("ADMIN")
 ):
+    user_name = x_username or "admin"
+    role = x_user_role or "ADMIN"
+    
+    # Enforce category & search entitlement
+    is_allowed, locked_payload, ctx = EntitlementService.validate_search_access(
+        username=user_name,
+        user_role=role,
+        car_brand=car_brand,
+        category=category
+    )
+    if not is_allowed:
+        raise HTTPException(
+            status_code=403,
+            detail=locked_payload.get("message", "Access denied. Category or brand not included in your subscription.")
+        )
+        
     try:
         ai_alternatives = await run_ai_parts_search(
             brand=brand,
@@ -592,6 +647,16 @@ async def ai_search(
             category=category,
             product_name=product_name
         )
+        # Filter alternatives by allowed categories if customer
+        if role not in ["OWNER", "SUPER_ADMIN", "ADMIN"] and user_name not in ["superadmin", "owner", "admin", "staff"]:
+            org_id = ctx["organization"]["id"] if ctx and "organization" in ctx else 1
+            whitelist = EntitlementService.get_organization_whitelist(org_id)
+            allowed_c = whitelist.get("allowed_categories", [])
+            if '*' not in allowed_c:
+                ai_alternatives = [
+                    a for a in ai_alternatives
+                    if not a.get("category") or any(c.lower() in (a.get("category") or "").lower() for c in allowed_c)
+                ]
         # Cap AI alternatives at max 5 items to protect catalog data
         ai_alternatives = ai_alternatives[:5]
         return {
@@ -1276,9 +1341,13 @@ class UpgradePlanRequest(BaseModel):
     add_on_ids: Optional[List[str]] = []
     coupon_code: Optional[str] = None
     payment_method: Optional[str] = "CREDIT_CARD"
+    selected_categories: Optional[List[str]] = []
     ai_power_pack: Optional[int] = 0
     extra_searches: Optional[int] = 0
     extra_users: Optional[int] = 0
+
+class UpdateCategoriesRequest(BaseModel):
+    selected_categories: List[str]
 
 class CalculateBillingRequest(BaseModel):
     plan_id: str
@@ -1468,6 +1537,10 @@ async def upgrade_saas_subscription(req: UpgradePlanRequest, x_username: Optiona
     if not ok:
         raise HTTPException(status_code=400, detail=msg)
 
+    # 6. If customer selected specific product categories, activate them in entitlements table
+    if req.selected_categories and len(req.selected_categories) > 0:
+        update_org_category_entitlements(org_id, req.selected_categories)
+
     return {
         "success": True,
         "message": msg,
@@ -1476,6 +1549,36 @@ async def upgrade_saas_subscription(req: UpgradePlanRequest, x_username: Optiona
         "calculation": calc,
         "entitlements": snap
     }
+
+@app.get("/api/saas/subscription/categories")
+async def get_saas_subscription_categories(x_username: Optional[str] = Header("admin")):
+    """
+    Returns full category entitlements matrix with granted vs locked status for the customer tenant.
+    """
+    ctx = get_user_tenant_context(x_username or "admin")
+    if not ctx:
+        raise HTTPException(status_code=401, detail="Unauthorized customer session")
+    org_id = ctx["organization"]["id"]
+    data = get_org_category_entitlements(org_id)
+    return {"success": True, **data}
+
+@app.post("/api/saas/subscription/categories")
+async def update_saas_subscription_categories(req: UpdateCategoriesRequest, x_username: Optional[str] = Header("admin")):
+    """
+    Activates purchased category entitlements for the customer tenant within plan capacity limits.
+    """
+    ctx = get_user_tenant_context(x_username or "admin")
+    if not ctx:
+        raise HTTPException(status_code=401, detail="Unauthorized customer session")
+    org_id = ctx["organization"]["id"]
+    actor_role = ctx["organization"].get("org_role", "MEMBER")
+    if actor_role not in ["OWNER", "ADMIN"] and ctx["user"]["role"] not in ["ADMIN", "SUPER_ADMIN", "OWNER"]:
+        raise HTTPException(status_code=403, detail="Only Organization Owner or Admin can manage category entitlements.")
+    
+    ok, msg, cats = update_org_category_entitlements(org_id, req.selected_categories)
+    if not ok:
+        raise HTTPException(status_code=400, detail=msg)
+    return {"success": True, "message": msg, "categories": cats}
 
 @app.post("/api/saas/subscription/downgrade")
 async def downgrade_saas_subscription(req: UpgradePlanRequest, x_username: Optional[str] = Header("admin")):
@@ -1654,10 +1757,32 @@ async def get_saas_favorites(x_username: Optional[str] = Header("admin")):
     return {"success": True, "total": len(favs), "favorites": favs}
 
 @app.post("/api/saas/favorites/toggle")
-async def toggle_saas_favorite(req: ToggleFavoriteRequest, x_username: Optional[str] = Header("admin")):
+async def toggle_saas_favorite(
+    req: ToggleFavoriteRequest,
+    x_username: Optional[str] = Header("admin"),
+    x_user_role: Optional[str] = Header(None)
+):
     ctx = get_user_tenant_context(x_username or "admin")
-    user_id = ctx["user"]["id"] if ctx else 1
-    org_id = ctx["organization"]["id"] if ctx else 1
+    if not ctx:
+        raise HTTPException(status_code=401, detail="Unauthorized")
+    user_id = ctx["user"]["id"]
+    org_id = ctx["organization"]["id"]
+    role = x_user_role or ctx["user"].get("role", "STAFF")
+    
+    # Check category entitlement for saving favorite
+    is_platform_admin = (x_username in ["superadmin", "admin"] and role in ["ADMIN", "SUPER_ADMIN"])
+    if not is_platform_admin:
+        whitelist = EntitlementService.get_organization_whitelist(org_id)
+        allowed_c = whitelist.get("allowed_categories", [])
+        part_cat = (req.part_data or {}).get("category", "")
+        if not part_cat:
+            part = get_part_by_id(req.part_id, source=req.part_source or "MASTER")
+            if part:
+                part_cat = part.get("category", "")
+        if part_cat and '*' not in allowed_c:
+            if not any(c.lower() in part_cat.lower() or part_cat.lower() in c.lower() for c in allowed_c):
+                raise HTTPException(status_code=403, detail="Cannot bookmark parts from unauthorized categories.")
+                
     res = toggle_user_favorite(user_id, org_id, req.part_id, req.part_source, req.part_data)
     return res
 
@@ -2684,8 +2809,45 @@ async def get_permission_audit_dataset(user = Depends(require_super_admin)):
 
 # 6. Typed Cross Reference Matrix
 @app.get("/api/parts/cross-reference-matrix")
-async def get_cross_ref_matrix(part_number: Optional[str] = None):
+async def get_cross_ref_matrix(
+    part_number: Optional[str] = None,
+    x_username: Optional[str] = Header("admin"),
+    x_user_role: Optional[str] = Header("ADMIN")
+):
+    role = x_user_role or "ADMIN"
+    user_name = x_username or "admin"
     matrix = get_cross_reference_matrix(part_number)
+    
+    if role not in ["OWNER", "SUPER_ADMIN", "ADMIN"] and user_name not in ["superadmin", "owner", "admin", "staff"]:
+        ctx = get_user_tenant_context(user_name)
+        org_id = ctx["organization"]["id"] if ctx and "organization" in ctx else 1
+        whitelist = EntitlementService.get_organization_whitelist(org_id)
+        allowed_c = whitelist.get("allowed_categories", [])
+        if '*' not in allowed_c:
+            if len(allowed_c) == 0:
+                return {"success": True, "matrix": []}
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            filtered_matrix = []
+            for item in matrix:
+                src_p = item.get("source_part_number") or item.get("source_part") or ""
+                tgt_p = item.get("target_part_number") or item.get("target_part") or ""
+                cursor.execute("""
+                    SELECT category FROM master_parts WHERE part_number IN (?, ?) OR oem_number IN (?, ?)
+                    UNION
+                    SELECT category FROM temp_parts WHERE part_number IN (?, ?) OR oem_number IN (?, ?)
+                    LIMIT 1
+                """, (src_p, tgt_p, src_p, tgt_p, src_p, tgt_p, src_p, tgt_p))
+                row = cursor.fetchone()
+                if row and row["category"]:
+                    cat = row["category"]
+                    if any(c.lower() in cat.lower() or cat.lower() in c.lower() for c in allowed_c):
+                        filtered_matrix.append(item)
+                else:
+                    filtered_matrix.append(item)
+            conn.close()
+            return {"success": True, "matrix": filtered_matrix}
+
     return {"success": True, "matrix": matrix}
 
 # 7. Staff Operations Task Queue
