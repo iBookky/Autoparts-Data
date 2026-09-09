@@ -869,8 +869,13 @@ def insert_temp_part(part_data: dict):
         'transmission', 'description', 'cost_unit', 'notes', 'source_type', 'status', 'staff_note'
     ]
     for k in keys:
-        if k not in part_data:
-            part_data[k] = ""
+        if k not in part_data or part_data[k] is None or part_data[k] == "":
+            if k == 'status':
+                part_data[k] = "PENDING"
+            elif k == 'source_type':
+                part_data[k] = "ON_DEMAND"
+            else:
+                part_data[k] = ""
             
     cursor.execute(sql, part_data)
     temp_id = cursor.lastrowid
@@ -961,15 +966,13 @@ def approve_temp_part(temp_id: int, updated_data: dict = None):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        if not updated_data:
-            cursor.execute("SELECT * FROM temp_parts WHERE id = ?", (temp_id,))
-            row = cursor.fetchone()
-            if not row:
-                raise ValueError("Temporary part not found.")
-            data = dict(row)
-        else:
-            data = updated_data
-            data['id'] = temp_id
+        cursor.execute("SELECT * FROM temp_parts WHERE id = ?", (temp_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise ValueError("Temporary part not found.")
+        data = dict(row)
+        if updated_data:
+            data.update(updated_data)
 
         master_keys = [
             'brand', 'part_number', 'oem_number', 'product_name_th', 'product_name_en', 'category',
@@ -4108,6 +4111,355 @@ def clean_production_database() -> Dict[str, Any]:
     except Exception as e:
         conn.rollback()
         print(f"Error in clean_production_database: {e}")
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
+
+# ================= CROSS-REFERENCE RELATIONS CRUD =================
+def add_cross_reference_relation(source_brand: str, source_part_number: str, target_brand: str, target_part_number: str, relation_type: str = "EQUIVALENT", confidence_score: float = 1.0, notes: str = "", verification_status: str = "VERIFIED") -> int:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO cross_reference_relations (
+            source_brand, source_part_number, target_brand, target_part_number,
+            relation_type, confidence_score, verification_status, notes
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    """, (source_brand, source_part_number, target_brand, target_part_number, relation_type, confidence_score, verification_status, notes))
+    rel_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    return rel_id
+
+def update_cross_reference_relation(relation_id: int, updated_data: dict) -> bool:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    allowed_cols = ["source_brand", "source_part_number", "target_brand", "target_part_number", "relation_type", "confidence_score", "verification_status", "notes", "verified_by", "verified_at"]
+    sets = []
+    vals = []
+    for k, v in updated_data.items():
+        if k in allowed_cols:
+            sets.append(f"{k} = ?")
+            vals.append(v)
+    if not sets:
+        conn.close()
+        return False
+    vals.append(relation_id)
+    cursor.execute(f"UPDATE cross_reference_relations SET {', '.join(sets)} WHERE id = ?", tuple(vals))
+    success = cursor.rowcount > 0
+    conn.commit()
+    conn.close()
+    return success
+
+def delete_cross_reference_relation(relation_id: int) -> bool:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM cross_reference_relations WHERE id = ?", (relation_id,))
+    success = cursor.rowcount > 0
+    conn.commit()
+    conn.close()
+    return success
+
+# ================= ORGANIZATIONS & TENANT CRUD =================
+def create_organization_db(name: str, slug: str, plan_tier: str = "PROFESSIONAL", billing_email: str = "", phone: str = "", tax_id: str = "") -> int:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO organizations (name, slug, plan_tier, billing_email, phone, tax_id)
+        VALUES (?, ?, ?, ?, ?, ?)
+    """, (name, slug, plan_tier.upper(), billing_email, phone, tax_id))
+    org_id = cursor.lastrowid
+    conn.commit()
+    conn.close()
+    return org_id
+
+def get_organization_by_id(org_id: int) -> Optional[Dict[str, Any]]:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM organizations WHERE id = ?", (org_id,))
+    row = cursor.fetchone()
+    conn.close()
+    return dict(row) if row else None
+
+def get_all_organizations_db() -> List[Dict[str, Any]]:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM organizations ORDER BY id ASC")
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def update_organization_db(org_id: int, data: Dict[str, Any]) -> bool:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    allowed_cols = ["name", "slug", "plan_tier", "billing_email", "phone", "tax_id", "address", "website", "contact_person", "industry", "country", "timezone"]
+    sets = []
+    vals = []
+    for k, v in data.items():
+        if k in allowed_cols:
+            sets.append(f"{k} = ?")
+            vals.append(v)
+    if not sets:
+        conn.close()
+        return False
+    vals.append(org_id)
+    cursor.execute(f"UPDATE organizations SET {', '.join(sets)} WHERE id = ?", tuple(vals))
+    success = cursor.rowcount > 0
+    conn.commit()
+    conn.close()
+    return success
+
+# ================= TEAM MEMBERS CRUD WRAPPERS =================
+def invite_org_member(org_id: int, user_id: int, role: str = "STAFF", status: str = "ACTIVE") -> Dict[str, Any]:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            INSERT OR REPLACE INTO organization_members (org_id, user_id, org_role, status)
+            VALUES (?, ?, ?, ?)
+        """, (org_id, user_id, role.upper(), status.upper()))
+        conn.commit()
+        return {"success": True, "org_id": org_id, "user_id": user_id, "role": role}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
+
+# ================= PLANS & ADD-ONS CRUD WRAPPERS =================
+def create_plan_db(plan_data: Dict[str, Any]) -> Dict[str, Any]:
+    success, msg = create_plan(plan_data)
+    return {"success": success, "message": msg, "plan_id": plan_data.get("id")}
+
+def get_all_plans_db(status: Optional[str] = 'ACTIVE') -> List[Dict[str, Any]]:
+    return get_all_plans_with_versions(status=status)
+
+def update_plan_db(plan_id: str, plan_data: Dict[str, Any]) -> Dict[str, Any]:
+    success, msg = update_full_plan(plan_id, plan_data)
+    return {"success": success, "message": msg}
+
+def delete_plan_db(plan_id: str) -> Dict[str, Any]:
+    success, msg = delete_plan(plan_id)
+    return {"success": success, "message": msg}
+
+def create_add_on_db(data: Dict[str, Any]) -> Dict[str, Any]:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        aid = str(data.get("id") or data.get("code") or "").strip().lower()
+        cursor.execute("""
+            INSERT OR REPLACE INTO add_ons (id, code, name, description, price_monthly, price_yearly, currency, status, entitlement_type, quota_increase, user_increase)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            aid,
+            data.get("code", aid),
+            data.get("name", aid.upper()),
+            data.get("description", ""),
+            int(data.get("price_monthly", 0)),
+            int(data.get("price_yearly", 0) or (int(data.get("price_monthly", 0)) * 10)),
+            data.get("currency", "THB"),
+            data.get("status", "ACTIVE"),
+            data.get("entitlement_type", "SEARCH_QUOTA"),
+            int(data.get("quota_increase") or data.get("quota_value") or 0),
+            int(data.get("user_increase", 0))
+        ))
+        conn.commit()
+        return {"success": True, "id": aid}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
+
+def get_all_addons_db() -> List[Dict[str, Any]]:
+    return get_all_add_ons()
+
+def update_add_on_db(addon_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        allowed = ["name", "code", "description", "price_monthly", "price_yearly", "currency", "status", "entitlement_type", "quota_increase", "user_increase"]
+        sets = []
+        vals = []
+        for k, v in data.items():
+            if k in allowed:
+                sets.append(f"{k} = ?")
+                vals.append(v)
+        if not sets:
+            return {"success": False, "error": "No valid fields to update"}
+        vals.append(addon_id)
+        cursor.execute(f"UPDATE add_ons SET {', '.join(sets)} WHERE id = ?", tuple(vals))
+        conn.commit()
+        return {"success": cursor.rowcount > 0}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
+
+def delete_add_on_db(addon_id: str) -> Dict[str, Any]:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM add_ons WHERE id = ?", (addon_id,))
+        conn.commit()
+        return {"success": cursor.rowcount > 0}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
+
+# ================= COUPONS CRUD WRAPPERS =================
+def create_coupon_db(data: Dict[str, Any]) -> Dict[str, Any]:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        code = str(data.get("code", "")).strip().upper()
+        disc_type = str(data.get("discount_type", "PERCENT")).upper()
+        if disc_type == "PERCENTAGE":
+            disc_type = "PERCENT"
+        cursor.execute("""
+            INSERT INTO coupons (code, description, discount_type, discount_value, min_purchase, usage_limit, per_org_limit, applicable_plans, is_active)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
+        """, (
+            code,
+            data.get("description", f"Coupon {code}"),
+            disc_type,
+            float(data.get("discount_value", 10)),
+            int(data.get("min_purchase", 0)),
+            int(data.get("max_uses") or data.get("usage_limit") or 100),
+            int(data.get("per_org_limit", 1)),
+            data.get("applicable_plans", "*")
+        ))
+        conn.commit()
+        return {"success": True, "coupon_id": cursor.lastrowid, "code": code}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
+
+def get_all_coupons_admin() -> List[Dict[str, Any]]:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM coupons ORDER BY created_at DESC")
+    rows = cursor.fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+def validate_coupon_db(code: str, plan_id: str = "professional", subtotal: int = 0) -> Dict[str, Any]:
+    coupon = get_coupon(code)
+    if not coupon:
+        return {"valid": False, "error": "Coupon code is invalid or expired."}
+    if subtotal < (coupon.get("min_purchase") or 0):
+        return {"valid": False, "error": f"Minimum purchase amount of ฿{coupon['min_purchase']} required."}
+    if coupon.get("usage_limit") is not None and coupon["usage_limit"] != -1 and coupon.get("used_count", 0) >= coupon["usage_limit"]:
+        return {"valid": False, "error": "Coupon usage limit has been reached."}
+    
+    disc_type = coupon.get("discount_type", "PERCENT")
+    disc_val = coupon.get("discount_value", 0)
+    discount_amount = int(subtotal * (disc_val / 100)) if disc_type in ("PERCENT", "PERCENTAGE") else disc_val
+    return {"valid": True, "coupon": coupon, "discount_amount": discount_amount}
+
+def delete_coupon_db(code: str) -> Dict[str, Any]:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM coupons WHERE UPPER(code) = UPPER(?)", (code.strip(),))
+        conn.commit()
+        return {"success": cursor.rowcount > 0}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
+
+# ================= CRM LEADS WRAPPERS =================
+def get_crm_leads_db(stage: Optional[str] = None) -> List[Dict[str, Any]]:
+    return get_crm_leads(stage=stage)
+
+def update_crm_lead_stage_db(lead_id: int, new_stage: str, notes: Optional[str] = None) -> Dict[str, Any]:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        if notes:
+            cursor.execute("UPDATE customer_leads SET pipeline_stage = ?, notes = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", (new_stage, notes, lead_id))
+        else:
+            cursor.execute("UPDATE customer_leads SET pipeline_stage = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?", (new_stage, lead_id))
+        conn.commit()
+        return {"success": cursor.rowcount > 0}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
+
+# ================= INVOICE GENERATION & PAYMENTS =================
+def generate_invoice_db(data: Dict[str, Any]) -> Dict[str, Any]:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        import uuid
+        inv_num = "INV-" + datetime.now().strftime("%Y%m%d") + "-" + str(uuid.uuid4()).replace("-", "")[:6].upper()
+        amount = int(data.get("amount") or data.get("subtotal") or 0)
+        vat_amount = int(data.get("vat_amount") or data.get("tax_amount") or 0)
+        total_amount = int(data.get("total_amount") or (amount + vat_amount))
+        cursor.execute("""
+            INSERT INTO invoices (invoice_number, org_id, subscription_id, amount, vat_amount, total_amount, currency, status, payment_method)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            inv_num,
+            data.get("org_id", 1),
+            data.get("subscription_id"),
+            amount,
+            vat_amount,
+            total_amount,
+            data.get("currency", "THB"),
+            data.get("status", "PAID"),
+            data.get("payment_method", "CREDIT_CARD")
+        ))
+        inv_id = cursor.lastrowid
+        conn.commit()
+        return {"success": True, "invoice_id": inv_id, "invoice_number": inv_num}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
+
+def record_payment_transaction_db(data: Dict[str, Any]) -> Dict[str, Any]:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        invoice_id = data.get("invoice_id")
+        if not invoice_id and data.get("invoice_number"):
+            cursor.execute("SELECT id FROM invoices WHERE invoice_number = ?", (data["invoice_number"],))
+            row = cursor.fetchone()
+            if row:
+                invoice_id = row[0]
+        if not invoice_id:
+            invoice_id = 1
+            
+        cursor.execute("""
+            INSERT INTO payment_transactions (invoice_id, org_id, transaction_ref, payment_method, amount, currency, status)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (
+            invoice_id,
+            data.get("org_id", 1),
+            data.get("transaction_ref", f"TXN_{datetime.now().strftime('%Y%m%d%H%M%S')}"),
+            data.get("payment_method", "CREDIT_CARD"),
+            int(data.get("amount", 0)),
+            data.get("currency", "THB"),
+            data.get("status", "SUCCESS")
+        ))
+        conn.commit()
+        return {"success": True, "transaction_id": cursor.lastrowid}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
+
+# ================= SEARCH LOGS & FAVORITES DELETE =================
+def delete_search_log(log_id: int, org_id: int) -> Dict[str, Any]:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("DELETE FROM search_logs WHERE id = ? AND org_id = ?", (log_id, org_id))
+        conn.commit()
+        return {"success": cursor.rowcount > 0}
+    except Exception as e:
         return {"success": False, "error": str(e)}
     finally:
         conn.close()
