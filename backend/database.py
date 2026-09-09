@@ -295,7 +295,7 @@ def create_db_user(username: str, password_hash: str, role: str):
         conn.commit()
         user_id = cursor.lastrowid
         return {"success": True, "user_id": user_id}
-    except sqlite3.IntegrityError:
+    except Exception as e:
         return {"success": False, "error": "ชื่อผู้ใช้นี้มีอยู่ในระบบแล้ว"}
     finally:
         conn.close()
@@ -999,7 +999,7 @@ def add_meta_aftermarket_brand(name: str):
         cursor.execute("INSERT INTO meta_aftermarket_brands (name) VALUES (?)", (name.strip().upper(),))
         conn.commit()
         return {"success": True, "id": cursor.lastrowid}
-    except sqlite3.IntegrityError:
+    except Exception as e:
         return {"success": False, "error": "แบรนด์นี้มีอยู่แล้ว"}
     finally:
         conn.close()
@@ -1011,7 +1011,7 @@ def add_meta_car_brand(name: str):
         cursor.execute("INSERT INTO meta_car_brands (name) VALUES (?)", (name.strip().upper(),))
         conn.commit()
         return {"success": True, "id": cursor.lastrowid}
-    except sqlite3.IntegrityError:
+    except Exception as e:
         return {"success": False, "error": "ยี่ห้อนี้มีอยู่แล้ว"}
     finally:
         conn.close()
@@ -1023,7 +1023,7 @@ def add_meta_car_model(car_brand: str, name: str):
         cursor.execute("INSERT INTO meta_car_models (car_brand, name) VALUES (?, ?)", (car_brand.strip().upper(), name.strip()))
         conn.commit()
         return {"success": True, "id": cursor.lastrowid}
-    except sqlite3.IntegrityError:
+    except Exception as e:
         return {"success": False, "error": "รุ่นรถนี้มีอยู่แล้ว"}
     finally:
         conn.close()
@@ -1035,7 +1035,7 @@ def add_meta_car_year(year: str):
         cursor.execute("INSERT INTO meta_car_years (year) VALUES (?)", (year.strip(),))
         conn.commit()
         return {"success": True, "id": cursor.lastrowid}
-    except sqlite3.IntegrityError:
+    except Exception as e:
         return {"success": False, "error": "ปีรุ่นนี้มีอยู่แล้ว"}
     finally:
         conn.close()
@@ -1047,7 +1047,7 @@ def add_meta_category(name: str, name_en: str = ""):
         cursor.execute("INSERT INTO meta_categories (name, name_en) VALUES (?, ?)", (name.strip(), (name_en or "").strip()))
         conn.commit()
         return {"success": True, "id": cursor.lastrowid}
-    except sqlite3.IntegrityError:
+    except Exception as e:
         return {"success": False, "error": "หมวดหมู่นี้มีอยู่แล้ว"}
     finally:
         conn.close()
@@ -1060,7 +1060,7 @@ def add_preset_ai_model(model_name: str, provider: str = "Custom", description: 
                        (model_name.strip(), provider.strip(), description.strip()))
         conn.commit()
         return {"success": True, "id": cursor.lastrowid}
-    except sqlite3.IntegrityError:
+    except Exception as e:
         return {"success": False, "error": "โมเดลนี้มีอยู่แล้วในรายการ"}
     finally:
         conn.close()
@@ -1359,7 +1359,7 @@ def add_owner_ai_model(model_name: str, provider: str = "Custom", description: s
         """, (final_model_name, provider.strip(), description.strip(), is_active, is_default, cost_per_1k_tokens))
         conn.commit()
         return {"success": True, "id": cursor.lastrowid, "model_id": cursor.lastrowid}
-    except sqlite3.IntegrityError:
+    except Exception as e:
         return {"success": False, "error": f"โมเดล '{model_name}' มีอยู่ในระบบแล้ว"}
     except Exception as e:
         return {"success": False, "error": str(e)}

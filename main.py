@@ -8,9 +8,10 @@ from datetime import datetime
 from dotenv import load_dotenv
 load_dotenv()
 
-from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends, Header
-from fastapi.responses import HTMLResponse, StreamingResponse, Response
+from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Depends, Header, Request
+from fastapi.responses import HTMLResponse, StreamingResponse, Response, JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
+import traceback
 from fastapi.staticfiles import StaticFiles
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel, Field
@@ -165,6 +166,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    print(f"Global Error: {exc}")
+    traceback.print_exc()
+    return JSONResponse(
+        status_code=500,
+        content={"success": False, "error": str(exc), "traceback": traceback.format_exc()}
+    )
+
 
 @app.on_event("startup")
 async def app_startup_event():
