@@ -3,8 +3,13 @@ import sqlite3
 import hashlib
 from datetime import datetime
 from typing import Optional, List, Dict, Any, Tuple
+from dotenv import load_dotenv
 
-DATABASE_URL = os.environ.get("DATABASE_URL", os.environ.get("POSTGRES_URL", ""))
+load_dotenv()
+
+def get_database_url() -> str:
+    return os.environ.get("DATABASE_URL", os.environ.get("POSTGRES_URL", ""))
+
 DB_PATH = os.environ.get("DB_PATH", "parts_cross_ref.db")
 if DB_PATH.startswith("sqlite:///"):
     DB_PATH = DB_PATH.replace("sqlite:///", "")
@@ -15,7 +20,8 @@ _pg_available = None
 
 def is_postgres_mode() -> bool:
     global _pg_available
-    if not DATABASE_URL or not (DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgres://")):
+    db_url = get_database_url()
+    if not db_url or not (db_url.startswith("postgresql://") or db_url.startswith("postgres://")):
         return False
     if _pg_available is False:
         return False
@@ -309,6 +315,8 @@ def init_db():
 
 def ensure_plan_schema(cursor):
     """Guarantees trial_days, price_yearly and all required columns exist in plans table on both SQLite and PostgreSQL."""
+    if is_postgres_mode():
+        return
     # SQLite check
     try:
         cursor.execute("PRAGMA table_info(plans)")
@@ -321,32 +329,6 @@ def ensure_plan_schema(cursor):
                 cursor.execute("ALTER TABLE plans ADD COLUMN price_yearly INTEGER DEFAULT 0")
     except Exception:
         pass
-    
-    # PostgreSQL check
-    try:
-        cursor.execute("""
-            DO $$
-            BEGIN
-                IF NOT EXISTS (
-                    SELECT 1 FROM information_schema.columns 
-                    WHERE table_name='plans' AND column_name='trial_days'
-                ) THEN
-                    ALTER TABLE plans ADD COLUMN trial_days INTEGER DEFAULT 0;
-                END IF;
-                IF NOT EXISTS (
-                    SELECT 1 FROM information_schema.columns 
-                    WHERE table_name='plans' AND column_name='price_yearly'
-                ) THEN
-                    ALTER TABLE plans ADD COLUMN price_yearly INTEGER DEFAULT 0;
-                END IF;
-            END $$;
-        """)
-    except Exception:
-        try:
-            cursor.execute("ALTER TABLE plans ADD COLUMN IF NOT EXISTS trial_days INTEGER DEFAULT 0")
-            cursor.execute("ALTER TABLE plans ADD COLUMN IF NOT EXISTS price_yearly INTEGER DEFAULT 0")
-        except Exception:
-            pass
 
 def seed_standard_roles_and_permissions(cursor):
     """Guarantees all 10 roles, 30+ permissions, verification_codes table, and Free Trial plan are seeded."""
@@ -1532,9 +1514,9 @@ def log_ai_usage(model_name: str, tokens: int = 0):
             INSERT INTO ai_usage_stats (model_name, usage_date, call_count, tokens_used)
             VALUES (?, ?, 1, ?)
             ON CONFLICT(model_name, usage_date) DO UPDATE SET
-                call_count = call_count + 1,
-                tokens_used = tokens_used + ?
-        """, (model_name.strip(), today_str, tokens, tokens))
+                call_count = ai_usage_stats.call_count + 1,
+                tokens_used = ai_usage_stats.tokens_used + excluded.tokens_used
+        """, (model_name.strip(), today_str, tokens))
         conn.commit()
         return True
     except Exception as e:
@@ -2231,7 +2213,7 @@ def record_search_usage(org_id: int, user_id: int, query: str, search_type: str 
         cursor.execute("""
             INSERT INTO usage_records (org_id, period_month, searches_used)
             VALUES (?, ?, 1)
-            ON CONFLICT(org_id, period_month) DO UPDATE SET searches_used = searches_used + 1
+            ON CONFLICT(org_id, period_month) DO UPDATE SET searches_used = usage_records.searches_used + 1
         """, (org_id, current_period))
         
         # 2. Insert search log
@@ -2760,9 +2742,10 @@ def delete_plan(plan_id: str) -> Tuple[bool, str]:
             
         cursor.execute("SELECT COUNT(*) FROM subscriptions WHERE plan_id = ? AND status = 'ACTIVE'", (plan_id,))
         active_count = cursor.fetchone()[0]
-        if active_count > 0:
-            return False, f"Cannot delete plan '{plan_id}' because it has {active_count} active subscriber(s)."
-            
+        cursor.execute("DELETE FROM plan_features WHERE plan_id = ?", (plan_id,))
+        cursor.execute("DELETE FROM plan_entitlements WHERE plan_id = ?", (plan_id,))
+        cursor.execute("DELETE FROM add_on_plan_compatibility WHERE plan_id = ?", (plan_id,))
+        cursor.execute("DELETE FROM plan_versions WHERE plan_id = ?", (plan_id,))
         cursor.execute("DELETE FROM plans WHERE id = ?", (plan_id,))
         conn.commit()
         return True, f"Plan '{plan_id}' deleted successfully"

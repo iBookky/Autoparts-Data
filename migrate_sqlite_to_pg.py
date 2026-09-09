@@ -9,14 +9,19 @@ import sys
 import sqlite3
 import psycopg2
 from psycopg2.extras import execute_values
+from dotenv import load_dotenv
+
+load_dotenv()
 
 SQLITE_PATH = os.environ.get("SQLITE_PATH", "parts_cross_ref.db")
 if not os.path.exists(SQLITE_PATH) and os.path.exists("data/parts_cross_ref.db"):
     SQLITE_PATH = "data/parts_cross_ref.db"
 
-PG_URL = os.environ.get("DATABASE_URL", os.environ.get("POSTGRES_URL", "postgresql://autoparts_user:autoparts_secure_pass123@localhost:5432/autoparts_db"))
+def get_pg_url():
+    return os.environ.get("DATABASE_URL", os.environ.get("POSTGRES_URL", "postgresql://localhost:5432/autoparts_db"))
 
 def migrate_to_postgres():
+    PG_URL = get_pg_url()
     print("=" * 80)
     print("🚀 STARTING AUTOPARTS SQLITE -> POSTGRESQL BIG DATA MIGRATION")
     print(f"📦 Source SQLite DB : {SQLITE_PATH}")

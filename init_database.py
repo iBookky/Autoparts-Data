@@ -8,6 +8,9 @@ Usage:
 
 import os
 import sys
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Ensure backend package is importable
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))

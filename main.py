@@ -220,13 +220,13 @@ def get_current_user(
     return {"username": username, "role": role.upper()}
 
 def require_owner(user = Depends(get_current_user)):
-    if user["role"] not in ["OWNER", "SUPER_ADMIN"]:
-        raise HTTPException(status_code=403, detail="เฉพาะเจ้าของระบบ (System Owner) เท่านั้นที่เข้าถึงส่วนนี้ได้")
+    if user["role"] not in ["OWNER", "SUPER_ADMIN", "ADMIN"]:
+        raise HTTPException(status_code=403, detail="เฉพาะเจ้าของระบบ (System Owner) หรือผู้ดูแลระบบ (Admin) เท่านั้นที่เข้าถึงส่วนนี้ได้")
     return user
 
 def require_super_admin(user = Depends(get_current_user)):
-    if user["role"] not in ["SUPER_ADMIN", "OWNER"]:
-        raise HTTPException(status_code=403, detail="สิทธิ์ผู้ใช้งานไม่เพียงพอ (ต้องการ SUPER_ADMIN)")
+    if user["role"] not in ["SUPER_ADMIN", "OWNER", "ADMIN"]:
+        raise HTTPException(status_code=403, detail="สิทธิ์ผู้ใช้งานไม่เพียงพอ (ต้องการ ADMIN, SUPER_ADMIN หรือ OWNER)")
     return user
 
 def require_admin(user = Depends(get_current_user)):

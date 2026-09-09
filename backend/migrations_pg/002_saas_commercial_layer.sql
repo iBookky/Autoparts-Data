@@ -31,10 +31,20 @@ CREATE TABLE IF NOT EXISTS organization_members (
     UNIQUE(org_id, user_id)
 );
 
+CREATE TABLE IF NOT EXISTS verification_codes (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    code VARCHAR(50) NOT NULL,
+    expires_at TIMESTAMP WITH TIME ZONE NOT NULL,
+    is_used INTEGER DEFAULT 0,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+);
+
 CREATE TABLE IF NOT EXISTS plans (
     id VARCHAR(100) PRIMARY KEY,
     name VARCHAR(150) NOT NULL,
     price_monthly INTEGER NOT NULL,
+    price_yearly INTEGER DEFAULT 0,
     max_brands INTEGER NOT NULL,
     max_categories INTEGER NOT NULL,
     max_users INTEGER NOT NULL,

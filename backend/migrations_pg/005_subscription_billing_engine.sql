@@ -105,7 +105,7 @@ CREATE TABLE IF NOT EXISTS subscription_entitlements_snapshot (
 );
 
 CREATE TABLE IF NOT EXISTS coupons (
-    id VARCHAR(100) PRIMARY KEY,
+    id SERIAL PRIMARY KEY,
     code VARCHAR(100) UNIQUE NOT NULL,
     description TEXT,
     discount_type VARCHAR(50) NOT NULL DEFAULT 'PERCENT',

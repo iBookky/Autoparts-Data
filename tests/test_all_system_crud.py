@@ -391,6 +391,9 @@ class FullSystemCRUDComprehensiveTest(unittest.TestCase):
         delete_db_user(member_user_id)
         delete_db_user(owner_user_id)
         conn = get_db_connection()
+        conn.cursor().execute("DELETE FROM usage_records WHERE org_id = ?", (org_id,))
+        conn.cursor().execute("DELETE FROM entitlements WHERE org_id = ?", (org_id,))
+        conn.cursor().execute("DELETE FROM subscriptions WHERE org_id = ?", (org_id,))
         conn.cursor().execute("DELETE FROM organization_members WHERE org_id = ?", (org_id,))
         conn.cursor().execute("DELETE FROM organizations WHERE id = ?", (org_id,))
         conn.commit()
@@ -525,7 +528,11 @@ class FullSystemCRUDComprehensiveTest(unittest.TestCase):
         # Clean up
         conn = get_db_connection()
         conn.cursor().execute("DELETE FROM payment_transactions WHERE org_id = ?", (org_id,))
+        conn.cursor().execute("DELETE FROM invoice_items WHERE invoice_id IN (SELECT id FROM invoices WHERE org_id = ?)", (org_id,))
         conn.cursor().execute("DELETE FROM invoices WHERE org_id = ?", (org_id,))
+        conn.cursor().execute("DELETE FROM usage_records WHERE org_id = ?", (org_id,))
+        conn.cursor().execute("DELETE FROM entitlements WHERE org_id = ?", (org_id,))
+        conn.cursor().execute("DELETE FROM subscriptions WHERE org_id = ?", (org_id,))
         conn.cursor().execute("DELETE FROM organizations WHERE id = ?", (org_id,))
         conn.commit()
         conn.close()
@@ -610,6 +617,11 @@ class FullSystemCRUDComprehensiveTest(unittest.TestCase):
 
         # Clean up
         conn = get_db_connection()
+        conn.cursor().execute("DELETE FROM search_logs WHERE org_id = ?", (org_id,))
+        conn.cursor().execute("DELETE FROM user_favorites WHERE org_id = ?", (org_id,))
+        conn.cursor().execute("DELETE FROM usage_records WHERE org_id = ?", (org_id,))
+        conn.cursor().execute("DELETE FROM entitlements WHERE org_id = ?", (org_id,))
+        conn.cursor().execute("DELETE FROM subscriptions WHERE org_id = ?", (org_id,))
         conn.cursor().execute("DELETE FROM organization_members WHERE org_id = ?", (org_id,))
         conn.cursor().execute("DELETE FROM organizations WHERE id = ?", (org_id,))
         conn.cursor().execute("DELETE FROM users WHERE id = ?", (u_id,))
@@ -641,6 +653,11 @@ class FullSystemCRUDComprehensiveTest(unittest.TestCase):
 
         # Clean up
         conn = get_db_connection()
+        conn.cursor().execute("DELETE FROM api_keys WHERE org_id = ?", (org_id,))
+        conn.cursor().execute("DELETE FROM usage_records WHERE org_id = ?", (org_id,))
+        conn.cursor().execute("DELETE FROM entitlements WHERE org_id = ?", (org_id,))
+        conn.cursor().execute("DELETE FROM subscriptions WHERE org_id = ?", (org_id,))
+        conn.cursor().execute("DELETE FROM organization_members WHERE org_id = ?", (org_id,))
         conn.cursor().execute("DELETE FROM organizations WHERE id = ?", (org_id,))
         conn.commit()
         conn.close()

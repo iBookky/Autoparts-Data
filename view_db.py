@@ -12,8 +12,13 @@ Usage:
 import os
 import sys
 import json
+from dotenv import load_dotenv
 
-DATABASE_URL = os.environ.get("DATABASE_URL", os.environ.get("POSTGRES_URL", ""))
+load_dotenv()
+
+def get_database_url():
+    return os.environ.get("DATABASE_URL", os.environ.get("POSTGRES_URL", ""))
+
 DB_PATHS = [
     os.environ.get("DB_PATH", ""),
     "data/parts_cross_ref.db",
@@ -22,13 +27,14 @@ DB_PATHS = [
 ]
 
 def is_pg_mode():
-    return bool(DATABASE_URL and (DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgres://")))
+    db_url = get_database_url()
+    return bool(db_url and (db_url.startswith("postgresql://") or db_url.startswith("postgres://")))
 
 def inspect_postgres(table_target=None, limit=100):
     import psycopg2
     from psycopg2.extras import RealDictCursor
 
-    url = DATABASE_URL
+    url = get_database_url()
     if url.startswith("postgres://"):
         url = url.replace("postgres://", "postgresql://", 1)
 

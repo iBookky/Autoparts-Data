@@ -12,7 +12,8 @@ from backend.database import (
     get_db_connection,
     get_org_category_entitlements,
     update_org_category_entitlements,
-    register_trial_tenant_db
+    register_trial_tenant_db,
+    is_postgres_mode
 )
 from backend.services.entitlement_service import EntitlementService
 
@@ -41,6 +42,7 @@ class CategoryEntitlementsAndAdjustmentsTest(unittest.TestCase):
             cls.org_id = cls.cursor.lastrowid
         else:
             cls.org_id = org_row["id"]
+            cls.cursor.execute("UPDATE organizations SET plan_tier = 'STARTER' WHERE id = ?", (cls.org_id,))
 
         cls.cursor.execute("""
             INSERT OR REPLACE INTO organization_members (org_id, user_id, org_role, status)
@@ -51,6 +53,7 @@ class CategoryEntitlementsAndAdjustmentsTest(unittest.TestCase):
             INSERT OR REPLACE INTO subscriptions (org_id, plan_id, status, billing_cycle, current_period_start, current_period_end)
             VALUES (?, 'starter', 'ACTIVE', 'MONTHLY', CURRENT_TIMESTAMP, datetime('now', '+30 days'))
         """, (cls.org_id,))
+        cls.cursor.execute("UPDATE subscriptions SET plan_id = 'starter' WHERE org_id = ?", (cls.org_id,))
 
         # Explicitly grant only 'Brake' and 'Filters' categories
         cls.cursor.execute("DELETE FROM entitlements WHERE org_id = ?", (cls.org_id,))
@@ -261,6 +264,11 @@ class CategoryEntitlementsAndAdjustmentsTest(unittest.TestCase):
         self.assertNotIn("Suspension", wl["allowed_categories"])
 
         # Clean up trial records
+        c.execute("DELETE FROM commercial_audit_logs WHERE org_id = ?", (trial_org_id,))
+        c.execute("DELETE FROM payment_transactions WHERE org_id = ?", (trial_org_id,))
+        c.execute("DELETE FROM invoice_items WHERE invoice_id IN (SELECT id FROM invoices WHERE org_id = ?)", (trial_org_id,))
+        c.execute("DELETE FROM invoices WHERE org_id = ?", (trial_org_id,))
+        c.execute("DELETE FROM usage_records WHERE org_id = ?", (trial_org_id,))
         c.execute("DELETE FROM entitlements WHERE org_id = ?", (trial_org_id,))
         c.execute("DELETE FROM subscriptions WHERE org_id = ?", (trial_org_id,))
         c.execute("DELETE FROM organization_members WHERE org_id = ?", (trial_org_id,))
@@ -286,7 +294,10 @@ class CategoryEntitlementsAndAdjustmentsTest(unittest.TestCase):
         """Verifies database schema has not been altered or mutated."""
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
+        if is_postgres_mode():
+            cursor.execute("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name")
+        else:
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name")
         tables = [r[0] for r in cursor.fetchall()]
         conn.close()
 
@@ -302,6 +313,11 @@ class CategoryEntitlementsAndAdjustmentsTest(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         # Clean up test records
+        cls.cursor.execute("DELETE FROM commercial_audit_logs WHERE org_id = ?", (cls.org_id,))
+        cls.cursor.execute("DELETE FROM payment_transactions WHERE org_id = ?", (cls.org_id,))
+        cls.cursor.execute("DELETE FROM invoice_items WHERE invoice_id IN (SELECT id FROM invoices WHERE org_id = ?)", (cls.org_id,))
+        cls.cursor.execute("DELETE FROM invoices WHERE org_id = ?", (cls.org_id,))
+        cls.cursor.execute("DELETE FROM usage_records WHERE org_id = ?", (cls.org_id,))
         cls.cursor.execute("DELETE FROM entitlements WHERE org_id = ?", (cls.org_id,))
         cls.cursor.execute("DELETE FROM subscriptions WHERE org_id = ?", (cls.org_id,))
         cls.cursor.execute("DELETE FROM organization_members WHERE org_id = ?", (cls.org_id,))

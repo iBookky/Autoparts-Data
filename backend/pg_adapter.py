@@ -9,16 +9,21 @@ import re
 import psycopg2
 from psycopg2 import pool
 from psycopg2.extras import RealDictCursor, DictCursor
+from dotenv import load_dotenv
 
-DATABASE_URL = os.environ.get("DATABASE_URL", os.environ.get("POSTGRES_URL", ""))
+load_dotenv()
+
+def get_database_url() -> str:
+    return os.environ.get("DATABASE_URL", os.environ.get("POSTGRES_URL", ""))
 
 _pg_pool = None
 
 def get_pg_pool():
     global _pg_pool
-    if _pg_pool is None and DATABASE_URL and (DATABASE_URL.startswith("postgresql://") or DATABASE_URL.startswith("postgres://")):
+    db_url = get_database_url()
+    if _pg_pool is None and db_url and (db_url.startswith("postgresql://") or db_url.startswith("postgres://")):
         try:
-            url = DATABASE_URL
+            url = db_url
             if url.startswith("postgres://"):
                 url = url.replace("postgres://", "postgresql://", 1)
             _pg_pool = psycopg2.pool.SimpleConnectionPool(1, 30, url)
@@ -77,27 +82,48 @@ class PGCursorWrapper:
             if "ON CONFLICT" not in converted_sql.upper():
                 converted_sql = converted_sql.rstrip().rstrip(";") + " ON CONFLICT DO NOTHING"
 
-        # 4. Convert INSERT OR REPLACE INTO master_parts
-        if "INSERT OR REPLACE INTO MASTER_PARTS" in converted_sql.upper():
-            converted_sql = re.sub(r'INSERT\s+OR\s+REPLACE\s+INTO\s+master_parts', 'INSERT INTO master_parts', converted_sql, flags=re.IGNORECASE)
-            if "ON CONFLICT" not in converted_sql.upper():
-                conflict_clause = (
-                    " ON CONFLICT (brand, part_number, oem_number, car_brand, car_model) "
-                    "DO UPDATE SET "
-                    "product_name_th = EXCLUDED.product_name_th, "
-                    "product_name_en = EXCLUDED.product_name_en, "
-                    "category = EXCLUDED.category, "
-                    "year_start = EXCLUDED.year_start, "
-                    "year_end = EXCLUDED.year_end, "
-                    "engine = EXCLUDED.engine, "
-                    "fuel = EXCLUDED.fuel, "
-                    "transmission = EXCLUDED.transmission, "
-                    "description = EXCLUDED.description, "
-                    "cost_unit = EXCLUDED.cost_unit, "
-                    "notes = EXCLUDED.notes, "
-                    "updated_at = CURRENT_TIMESTAMP"
-                )
-                converted_sql = converted_sql.rstrip().rstrip(";") + conflict_clause
+        # 4. Convert INSERT OR REPLACE INTO
+        if "INSERT OR REPLACE INTO" in converted_sql.upper():
+            if re.search(r'INSERT\s+OR\s+REPLACE\s+INTO\s+master_parts', converted_sql, re.IGNORECASE):
+                converted_sql = re.sub(r'INSERT\s+OR\s+REPLACE\s+INTO\s+master_parts', 'INSERT INTO master_parts', converted_sql, flags=re.IGNORECASE)
+                if "ON CONFLICT" not in converted_sql.upper():
+                    conflict_clause = (
+                        " ON CONFLICT (brand, part_number, oem_number, car_brand, car_model) "
+                        "DO UPDATE SET "
+                        "product_name_th = EXCLUDED.product_name_th, "
+                        "product_name_en = EXCLUDED.product_name_en, "
+                        "category = EXCLUDED.category, "
+                        "year_start = EXCLUDED.year_start, "
+                        "year_end = EXCLUDED.year_end, "
+                        "engine = EXCLUDED.engine, "
+                        "fuel = EXCLUDED.fuel, "
+                        "transmission = EXCLUDED.transmission, "
+                        "description = EXCLUDED.description, "
+                        "cost_unit = EXCLUDED.cost_unit, "
+                        "notes = EXCLUDED.notes, "
+                        "updated_at = CURRENT_TIMESTAMP"
+                    )
+                    converted_sql = converted_sql.rstrip().rstrip(";") + conflict_clause
+            elif re.search(r'INSERT\s+OR\s+REPLACE\s+INTO\s+organization_members', converted_sql, re.IGNORECASE):
+                converted_sql = re.sub(r'INSERT\s+OR\s+REPLACE\s+INTO\s+organization_members', 'INSERT INTO organization_members', converted_sql, flags=re.IGNORECASE)
+                if "ON CONFLICT" not in converted_sql.upper():
+                    converted_sql = converted_sql.rstrip().rstrip(";") + " ON CONFLICT (org_id, user_id) DO UPDATE SET org_role = EXCLUDED.org_role, status = EXCLUDED.status, updated_at = CURRENT_TIMESTAMP"
+            elif re.search(r'INSERT\s+OR\s+REPLACE\s+INTO\s+add_ons', converted_sql, re.IGNORECASE):
+                converted_sql = re.sub(r'INSERT\s+OR\s+REPLACE\s+INTO\s+add_ons', 'INSERT INTO add_ons', converted_sql, flags=re.IGNORECASE)
+                if "ON CONFLICT" not in converted_sql.upper():
+                    converted_sql = converted_sql.rstrip().rstrip(";") + " ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, code = EXCLUDED.code, description = EXCLUDED.description, price_monthly = EXCLUDED.price_monthly, price_yearly = EXCLUDED.price_yearly, currency = EXCLUDED.currency, status = EXCLUDED.status, entitlement_type = EXCLUDED.entitlement_type, quota_increase = EXCLUDED.quota_increase, user_increase = EXCLUDED.user_increase"
+            elif re.search(r'INSERT\s+OR\s+REPLACE\s+INTO\s+subscriptions', converted_sql, re.IGNORECASE):
+                converted_sql = re.sub(r'INSERT\s+OR\s+REPLACE\s+INTO\s+subscriptions', 'INSERT INTO subscriptions', converted_sql, flags=re.IGNORECASE)
+                if "ON CONFLICT" not in converted_sql.upper():
+                    converted_sql = converted_sql.rstrip().rstrip(";") + " ON CONFLICT (org_id) DO UPDATE SET plan_id = EXCLUDED.plan_id, status = EXCLUDED.status, billing_cycle = EXCLUDED.billing_cycle, current_period_start = EXCLUDED.current_period_start, current_period_end = EXCLUDED.current_period_end"
+            elif re.search(r'INSERT\s+OR\s+REPLACE\s+INTO\s+roles', converted_sql, re.IGNORECASE):
+                converted_sql = re.sub(r'INSERT\s+OR\s+REPLACE\s+INTO\s+roles', 'INSERT INTO roles', converted_sql, flags=re.IGNORECASE)
+                if "ON CONFLICT" not in converted_sql.upper():
+                    converted_sql = converted_sql.rstrip().rstrip(";") + " ON CONFLICT (id) DO UPDATE SET name = EXCLUDED.name, portal_access = EXCLUDED.portal_access, tier_level = EXCLUDED.tier_level, is_system_role = EXCLUDED.is_system_role, description = EXCLUDED.description"
+            else:
+                converted_sql = re.sub(r'INSERT\s+OR\s+REPLACE\s+INTO', 'INSERT INTO', converted_sql, flags=re.IGNORECASE)
+                if "ON CONFLICT" not in converted_sql.upper():
+                    converted_sql = converted_sql.rstrip().rstrip(";") + " ON CONFLICT DO NOTHING"
 
         # 5. Handle lastrowid via RETURNING id for single INSERT statements
         is_insert = bool(re.match(r'^\s*INSERT\s+INTO', converted_sql, re.IGNORECASE))
@@ -110,6 +136,10 @@ class PGCursorWrapper:
 
 
     def execute(self, sql: str, params=None):
+        clean_check = sql.strip().upper()
+        if clean_check.startswith("PRAGMA"):
+            return self
+
         converted_sql, final_params = self._convert_query(sql, params)
         self.lastrowid = None
         try:
@@ -152,27 +182,36 @@ class PGCursorWrapper:
     def executescript(self, sql_script: str):
         statements = [s.strip() for s in sql_script.split(';') if s.strip()]
         for stmt in statements:
-            self.execute(stmt)
+            try:
+                self.execute(stmt)
+                if self.cursor and self.cursor.connection:
+                    self.cursor.connection.commit()
+            except Exception:
+                try:
+                    if self.cursor and self.cursor.connection:
+                        self.cursor.connection.rollback()
+                except Exception:
+                    pass
         return self
 
     def fetchone(self):
         try:
             row = self.cursor.fetchone()
-            return dict(row) if row is not None else None
+            return row if row is not None else None
         except Exception:
             return None
 
     def fetchall(self):
         try:
             rows = self.cursor.fetchall()
-            return [dict(r) for r in rows] if rows else []
+            return list(rows) if rows else []
         except Exception:
             return []
 
     def fetchmany(self, size=None):
         try:
             rows = self.cursor.fetchmany(size)
-            return [dict(r) for r in rows] if rows else []
+            return list(rows) if rows else []
         except Exception:
             return []
 
@@ -193,7 +232,7 @@ class PGConnectionWrapper:
         self.row_factory = None
 
     def cursor(self):
-        raw_cursor = self.conn.cursor(cursor_factory=RealDictCursor)
+        raw_cursor = self.conn.cursor(cursor_factory=DictCursor)
         return PGCursorWrapper(raw_cursor)
 
     def commit(self):
@@ -214,9 +253,13 @@ class PGConnectionWrapper:
     def close(self):
         if self.pool_ref and self.conn:
             try:
+                self.conn.rollback()
                 self.pool_ref.putconn(self.conn)
             except Exception:
-                pass
+                try:
+                    self.pool_ref.putconn(self.conn)
+                except Exception:
+                    pass
         elif self.conn:
             try:
                 self.conn.close()
@@ -229,7 +272,7 @@ def get_pg_connection():
         raw_conn = pool_instance.getconn()
         return PGConnectionWrapper(raw_conn, pool_instance)
     else:
-        url = DATABASE_URL
+        url = get_database_url()
         if url.startswith("postgres://"):
             url = url.replace("postgres://", "postgresql://", 1)
         raw_conn = psycopg2.connect(url)
