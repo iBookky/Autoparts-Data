@@ -38,10 +38,10 @@ COPY uploads/ ./uploads/
 COPY index.html ./
 COPY main.py ./
 COPY scraper.py ./
-COPY sheets_helper.py ./
 COPY view_db.py ./
 COPY migrate_sqlite_to_pg.py ./
 COPY init_database.py ./
+COPY tests/ ./tests/
 COPY entrypoint.sh ./
 COPY parts_cross_ref.db ./parts_cross_ref.db
 
