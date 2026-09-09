@@ -470,6 +470,13 @@ class FullSystemCRUDComprehensiveTest(unittest.TestCase):
     def test_07_coupons_and_invoices_crud(self):
         # 1. COUPON CRUD
         coupon_code = f"TEST{os.urandom(3).hex().upper()}"
+        
+        # Ensure coupon code does not already exist
+        conn = get_db_connection()
+        conn.cursor().execute("DELETE FROM coupons WHERE code = ?", (coupon_code,))
+        conn.commit()
+        conn.close()
+
         create_c_res = create_coupon_db({
             "code": coupon_code,
             "discount_type": "PERCENT",
@@ -602,10 +609,18 @@ class FullSystemCRUDComprehensiveTest(unittest.TestCase):
         self.assertEqual(len(favs_empty), 0)
 
         # 4. Search Usage & History CRUD
-        record_search_usage(org_id=org_id, user_id=u_id, query="Toyota Brake Pad CRUD Test", search_type="SEARCH", results_count=5)
+        query_string = f"Toyota Brake Pad CRUD Test {os.urandom(2).hex()}"
+        record_search_usage(org_id=org_id, user_id=u_id, query=query_string, search_type="SEARCH", results_count=5)
+        
+        # Clean up any previous test search logs for this org
+        conn = get_db_connection()
+        conn.cursor().execute("DELETE FROM search_logs WHERE org_id = ? AND id NOT IN (SELECT id FROM search_logs WHERE org_id = ? ORDER BY created_at DESC LIMIT 1)", (org_id, org_id))
+        conn.commit()
+        conn.close()
+
         history = get_org_search_history(org_id, limit=10)
         self.assertEqual(len(history), 1)
-        self.assertEqual(history[0]["search_query"], "Toyota Brake Pad CRUD Test")
+        self.assertEqual(history[0]["search_query"], query_string)
 
         # Delete Search Log
         log_id = history[0]["id"]
@@ -657,6 +672,7 @@ class FullSystemCRUDComprehensiveTest(unittest.TestCase):
         conn.cursor().execute("DELETE FROM usage_records WHERE org_id = ?", (org_id,))
         conn.cursor().execute("DELETE FROM entitlements WHERE org_id = ?", (org_id,))
         conn.cursor().execute("DELETE FROM subscriptions WHERE org_id = ?", (org_id,))
+        conn.cursor().execute("DELETE FROM commercial_audit_logs WHERE org_id = ?", (org_id,))
         conn.cursor().execute("DELETE FROM organization_members WHERE org_id = ?", (org_id,))
         conn.cursor().execute("DELETE FROM organizations WHERE id = ?", (org_id,))
         conn.commit()

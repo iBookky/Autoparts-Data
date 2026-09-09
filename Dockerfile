@@ -9,13 +9,11 @@ FROM python:3.11-slim as base
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     APP_HOME=/app \
-    DB_PATH=/app/data/parts_cross_ref.db \
     PORT=8000
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
-    sqlite3 \
     postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
@@ -43,13 +41,11 @@ COPY migrate_sqlite_to_pg.py ./
 COPY init_database.py ./
 COPY tests/ ./tests/
 COPY entrypoint.sh ./
-COPY parts_cross_ref.db ./parts_cross_ref.db
 
-# Create data and uploads directories for persistence and grant read/write permissions
-RUN mkdir -p /app/data /app/uploads/logos && \
-    cp /app/parts_cross_ref.db /app/data/parts_cross_ref.db 2>/dev/null || true && \
+# Create uploads directory for persistence and grant read-write permissions
+RUN mkdir -p /app/uploads/logos && \
     chmod +x /app/entrypoint.sh && \
-    chmod -R 777 /app/data /app/uploads /app/parts_cross_ref.db* 2>/dev/null || true
+    chmod -R 777 /app/uploads 2>/dev/null || true
 
 
 

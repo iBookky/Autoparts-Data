@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-AutoParts SaaS Platform — Direct 1-Command Database Builder & Initializer
+AutoParts SaaS Platform — PostgreSQL Database Builder & Initializer
 Usage:
   python3 init_database.py
   DATABASE_URL="postgresql://user:pass@localhost:5432/autoparts_db" python3 init_database.py
@@ -8,6 +8,7 @@ Usage:
 
 import os
 import sys
+import time
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -15,70 +16,66 @@ load_dotenv()
 # Ensure backend package is importable
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
-from backend.database import init_db, is_postgres_mode, get_db_connection
-from migrate_sqlite_to_pg import migrate_to_postgres
+from backend.database import init_db, get_db_connection
 
 def main():
     print("=" * 80)
-    print("🚀 AUTOPARTS SAAS — ZERO-TOUCH DATABASE INITIALIZATION & MIGRATION")
+    print("🚀 AUTOPARTS SAAS — POSTGRESQL DATABASE INITIALIZATION")
     print("=" * 80)
 
     db_url = os.environ.get("DATABASE_URL", os.environ.get("POSTGRES_URL", ""))
-    print(f"📡 Engine Mode     : {'🐘 PostgreSQL' if is_postgres_mode() else '📦 SQLite'}")
-    if is_postgres_mode():
-        safe_url = db_url.split('@')[-1] if '@' in db_url else db_url
-        print(f"🔗 Target Database : {safe_url}")
-    else:
-        print(f"📁 SQLite DB Path  : parts_cross_ref.db")
-    print("-" * 80)
-
-    # 1. Initialize Schema & Tables
-    print("[1/2] Initializing all 46 Schema Tables & System Accounts...")
-    if is_postgres_mode():
-        import time
-        for attempt in range(1, 11):
-            try:
-                test_conn = get_db_connection()
-                test_conn.close()
-                break
-            except Exception as conn_err:
-                print(f"  ⏳ Waiting for PostgreSQL (attempt {attempt}/10)...")
-                time.sleep(1)
-
-    try:
-        init_db()
-        print("  ✓ Schema migrations applied successfully.")
-        print("  ✓ Default platform accounts seeded (owner, superadmin, admin, staff, customer).")
-    except Exception as e:
-        print(f"  ❌ Error applying migrations: {e}")
+    if not db_url:
+        print("❌ DATABASE_URL environment variable is not set.")
+        print("   Set it to: postgresql://user:pass@host:5432/dbname")
         sys.exit(1)
 
-    # 2. Migrate existing SQLite data if running in PostgreSQL mode
-    if is_postgres_mode():
-        sqlite_candidates = ["parts_cross_ref.db", "data/parts_cross_ref.db", "/app/data/parts_cross_ref.db"]
-        found_sqlite = any(os.path.exists(p) for p in sqlite_candidates)
-        if found_sqlite:
-            print("\n[2/2] Migrating 8,111+ Records from SQLite -> PostgreSQL...")
-            migrate_to_postgres()
-        else:
-            print("\n[2/2] No previous SQLite database file found. Clean PostgreSQL initialized.")
-    else:
-        print("\n[2/2] SQLite database is fully initialized and operational.")
+    safe_url = db_url.split('@')[-1] if '@' in db_url else db_url
+    print(f"🐘 Engine Mode     : PostgreSQL")
+    print(f"🔗 Target Database : {safe_url}")
+    print("-" * 80)
 
-    # 3. Verification
+    # 1. Wait for PostgreSQL readiness
+    print("[1/2] Waiting for PostgreSQL to be ready...")
+    for attempt in range(1, 31):
+        try:
+            test_conn = get_db_connection()
+            test_conn.close()
+            print(f"  ✅ PostgreSQL connected (attempt {attempt})")
+            break
+        except Exception as conn_err:
+            print(f"  ⏳ Waiting for PostgreSQL (attempt {attempt}/30): {conn_err}")
+            time.sleep(2)
+    else:
+        print("  ❌ Could not connect to PostgreSQL after 30 attempts.")
+        sys.exit(1)
+
+    # 2. Initialize Schema & Seed Data
+    print("[2/2] Applying migrations and seeding system accounts...")
+    try:
+        init_db()
+        print("  ✓ All PostgreSQL migrations applied successfully.")
+        print("  ✓ Default accounts seeded: owner, superadmin")
+        print("  ✓ Standard plans, roles, and permissions seeded.")
+    except Exception as e:
+        print(f"  ❌ Error during initialization: {e}")
+        sys.exit(1)
+
+    # 3. Done
     print("\n" + "=" * 80)
     print("🎉 DATABASE INITIALIZATION COMPLETE & READY FOR PRODUCTION!")
     print("=" * 80)
-    
-    # Run inspector summary
+
+    # Quick table count check
     try:
-        from view_db import is_pg_mode, inspect_postgres, inspect_sqlite
-        if is_pg_mode():
-            inspect_postgres("--summary")
-        else:
-            inspect_sqlite("--summary")
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'")
+        row = cursor.fetchone()
+        count = row[0] if row else "?"
+        conn.close()
+        print(f"📊 Tables created: {count} tables in public schema")
     except Exception as e:
-        print(f"Summary check: {e}")
+        print(f"  Summary check: {e}")
 
 if __name__ == "__main__":
     main()

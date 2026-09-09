@@ -1,5 +1,4 @@
 import os
-import sqlite3
 import hashlib
 from datetime import datetime
 from typing import Optional, List, Dict, Any, Tuple
@@ -10,43 +9,14 @@ load_dotenv()
 def get_database_url() -> str:
     return os.environ.get("DATABASE_URL", os.environ.get("POSTGRES_URL", ""))
 
-DB_PATH = os.environ.get("DB_PATH", "parts_cross_ref.db")
-if DB_PATH.startswith("sqlite:///"):
-    DB_PATH = DB_PATH.replace("sqlite:///", "")
-elif DB_PATH.startswith("sqlite://"):
-    DB_PATH = DB_PATH.replace("sqlite://", "")
-
-_pg_available = None
-
 def is_postgres_mode() -> bool:
-    db_url = get_database_url()
-    if not db_url or not (db_url.startswith("postgresql://") or db_url.startswith("postgres://")):
-        return False
+    """Always PostgreSQL — SQLite support removed."""
     return True
 
 def get_db_connection():
-    if is_postgres_mode():
-        from backend.pg_adapter import get_pg_connection
-        return get_pg_connection()
-
-    db_dir = os.path.dirname(DB_PATH)
-    if db_dir and not os.path.exists(db_dir):
-        try:
-            os.makedirs(db_dir, mode=0o777, exist_ok=True)
-        except Exception as e:
-            print(f"Warning creating db_dir {db_dir}: {e}")
-    if os.path.exists(DB_PATH):
-        try:
-            os.chmod(DB_PATH, 0o666)
-        except Exception:
-            pass
-    conn = sqlite3.connect(DB_PATH, timeout=30.0)
-    conn.row_factory = sqlite3.Row
-    try:
-        conn.execute("PRAGMA journal_mode = WAL")
-    except Exception as e:
-        print(f"Warning setting WAL mode: {e}")
-    return conn
+    """Always returns a PostgreSQL connection via pg_adapter."""
+    from backend.pg_adapter import get_pg_connection
+    return get_pg_connection()
 
 def init_db():
     """Reads migration schemas and initializes database tables (PostgreSQL or SQLite)."""
@@ -135,244 +105,11 @@ def init_db():
         conn.close()
         return
 
-    migrations = [
-        "001_init_schema.sql",
-        "002_saas_commercial_layer.sql",
-        "003_rbac_and_crm_pipeline.sql",
-        "004_customer_organization_rbac.sql",
-        "005_subscription_billing_engine.sql",
-        "006_owner_command_center.sql",
-        "007_platform_settings.sql"
-    ]
-    conn = get_db_connection()
-    try:
-        for mig in migrations:
-            migration_path = os.path.join(os.path.dirname(__file__), "migrations", mig)
-            if not os.path.exists(migration_path):
-                migration_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend", "migrations", mig))
-            if os.path.exists(migration_path):
-                with open(migration_path, "r", encoding="utf-8") as f:
-                    sql_script = f.read()
-                conn.executescript(sql_script)
 
-        # Safe non-destructive table migration for users
-        cursor = conn.cursor()
-        cursor.execute("PRAGMA foreign_keys = OFF")
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS users_new (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE NOT NULL,
-                password TEXT NOT NULL,
-                role TEXT NOT NULL CHECK (role IN ('OWNER', 'SUPER_ADMIN', 'ADMIN', 'STAFF', 'CUSTOMER', 'CUSTOMER_OWNER', 'CUSTOMER_MANAGER', 'CUSTOMER_STAFF', 'SYSTEM_OWNER')),
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        """)
-        cursor.execute("""
-            INSERT OR IGNORE INTO users_new (id, username, password, role, created_at)
-            SELECT id, username, password, role, created_at FROM users
-        """)
-        cursor.execute("DROP TABLE IF EXISTS users")
-        cursor.execute("ALTER TABLE users_new RENAME TO users")
-
-        # Security hardening: ensure all passwords in users table are SHA-256 hashed
-        cursor.execute("SELECT id, password FROM users WHERE length(password) < 32")
-        legacy_users = cursor.fetchall()
-        for lu in legacy_users:
-            h = hashlib.sha256(lu["password"].encode("utf-8")).hexdigest()
-            cursor.execute("UPDATE users SET password = ? WHERE id = ?", (h, lu["id"]))
-
-        # Safe non-destructive table migration for organization_members
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS organization_members_new (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                org_id INTEGER NOT NULL,
-                user_id INTEGER NOT NULL,
-                org_role TEXT NOT NULL CHECK (org_role IN ('OWNER', 'MANAGER', 'STAFF', 'ADMIN', 'MEMBER')),
-                status TEXT NOT NULL DEFAULT 'ACTIVE' CHECK (status IN ('ACTIVE', 'INVITED', 'SUSPENDED', 'DISABLED')),
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updated_at DATETIME,
-                FOREIGN KEY(org_id) REFERENCES organizations(id) ON DELETE CASCADE,
-                FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE,
-                UNIQUE(org_id, user_id)
-            )
-        """)
-        cursor.execute("""
-            INSERT OR IGNORE INTO organization_members_new (id, org_id, user_id, org_role, status, created_at)
-            SELECT id, org_id, user_id, org_role, 'ACTIVE', created_at FROM organization_members
-        """)
-        cursor.execute("DROP TABLE IF EXISTS organization_members")
-        cursor.execute("ALTER TABLE organization_members_new RENAME TO organization_members")
-
-        # Safe non-destructive table migration for subscriptions (state machine & commercial attributes)
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS subscriptions_new (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                org_id INTEGER NOT NULL UNIQUE,
-                plan_id TEXT NOT NULL,
-                plan_version_id INTEGER,
-                status TEXT NOT NULL CHECK (status IN ('TRIAL', 'TRIALING', 'ACTIVE', 'PAST_DUE', 'GRACE_PERIOD', 'SUSPENDED', 'CANCELLED', 'CANCELED', 'EXPIRED')) DEFAULT 'ACTIVE',
-                billing_cycle TEXT NOT NULL DEFAULT 'MONTHLY',
-                billing_interval TEXT NOT NULL DEFAULT 'MONTHLY',
-                current_period_start DATETIME DEFAULT CURRENT_TIMESTAMP,
-                current_period_end DATETIME NOT NULL,
-                trial_end DATETIME,
-                next_billing_date DATETIME,
-                cancel_at_period_end INTEGER DEFAULT 0,
-                cancelled_at DATETIME,
-                grace_period_end DATETIME,
-                currency TEXT NOT NULL DEFAULT 'THB',
-                base_price INTEGER DEFAULT 0,
-                discount_amount INTEGER DEFAULT 0,
-                tax_amount INTEGER DEFAULT 0,
-                total_amount INTEGER DEFAULT 0,
-                ai_power_pack INTEGER DEFAULT 0,
-                extra_searches INTEGER DEFAULT 0,
-                extra_users INTEGER DEFAULT 0,
-                extra_brands INTEGER DEFAULT 0,
-                extra_categories INTEGER DEFAULT 0,
-                FOREIGN KEY(org_id) REFERENCES organizations(id),
-                FOREIGN KEY(plan_id) REFERENCES plans(id)
-            )
-        """)
-        cursor.execute("""
-            INSERT OR IGNORE INTO subscriptions_new (
-                id, org_id, plan_id, status, billing_cycle, billing_interval,
-                current_period_start, current_period_end,
-                ai_power_pack, extra_searches, extra_users, extra_brands, extra_categories
-            )
-            SELECT 
-                id, org_id, plan_id, status, billing_cycle, billing_cycle,
-                current_period_start, current_period_end,
-                COALESCE(ai_power_pack, 0), COALESCE(extra_searches, 0), COALESCE(extra_users, 0),
-                COALESCE(extra_brands, 0), COALESCE(extra_categories, 0)
-            FROM subscriptions
-        """)
-        cursor.execute("DROP TABLE IF EXISTS subscriptions")
-        cursor.execute("ALTER TABLE subscriptions_new RENAME TO subscriptions")
-
-        # Safe non-destructive table migration for invoices (commercial status enum)
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS invoices_new (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                invoice_number TEXT NOT NULL UNIQUE,
-                org_id INTEGER NOT NULL,
-                subscription_id INTEGER,
-                amount INTEGER NOT NULL,
-                vat_amount INTEGER NOT NULL DEFAULT 0,
-                total_amount INTEGER NOT NULL,
-                currency TEXT NOT NULL DEFAULT 'THB',
-                status TEXT NOT NULL CHECK (status IN ('DRAFT', 'OPEN', 'PENDING', 'PAID', 'VOID', 'OVERDUE', 'REFUNDED')) DEFAULT 'OPEN',
-                payment_method TEXT,
-                period_start DATETIME,
-                period_end DATETIME,
-                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY(org_id) REFERENCES organizations(id)
-            )
-        """)
-        cursor.execute("""
-            INSERT OR IGNORE INTO invoices_new (
-                id, invoice_number, org_id, subscription_id, amount, vat_amount, total_amount, currency, status, payment_method, period_start, period_end, created_at
-            )
-            SELECT 
-                id, invoice_number, org_id, NULL, amount, vat_amount, total_amount, 'THB', 
-                CASE WHEN status = 'PENDING' THEN 'OPEN' ELSE status END,
-                payment_method, period_start, period_end, created_at
-            FROM invoices
-        """)
-        cursor.execute("DROP TABLE IF EXISTS invoices")
-        cursor.execute("ALTER TABLE invoices_new RENAME TO invoices")
-        cursor.execute("PRAGMA foreign_keys = ON")
-
-        cursor.execute("PRAGMA table_info(organizations)")
-        org_cols = [c[1] for c in cursor.fetchall()]
-        if 'legal_name' not in org_cols:
-            cursor.execute("ALTER TABLE organizations ADD COLUMN legal_name TEXT")
-        if 'business_type' not in org_cols:
-            cursor.execute("ALTER TABLE organizations ADD COLUMN business_type TEXT")
-        if 'phone' not in org_cols:
-            cursor.execute("ALTER TABLE organizations ADD COLUMN phone TEXT")
-        if 'website' not in org_cols:
-            cursor.execute("ALTER TABLE organizations ADD COLUMN website TEXT")
-        if 'contact_person' not in org_cols:
-            cursor.execute("ALTER TABLE organizations ADD COLUMN contact_person TEXT")
-        if 'industry' not in org_cols:
-            cursor.execute("ALTER TABLE organizations ADD COLUMN industry TEXT")
-        if 'country' not in org_cols:
-            cursor.execute("ALTER TABLE organizations ADD COLUMN country TEXT DEFAULT 'Thailand'")
-        if 'timezone' not in org_cols:
-            cursor.execute("ALTER TABLE organizations ADD COLUMN timezone TEXT DEFAULT 'Asia/Bangkok'")
-        # Permanent Security Rule: Archive export add-ons and disable customer export feature
-        cursor.execute("UPDATE add_ons SET status = 'ARCHIVED' WHERE id = 'export_pack' OR code = 'EXPORT_PACK'")
-        cursor.execute("UPDATE plan_features SET is_included = 0 WHERE feature_code = 'EXPORT'")
-        cursor.execute("UPDATE plan_versions SET export_quota = 0")
-        cursor.execute("UPDATE entitlements SET is_granted = 0 WHERE entitlement_type = 'EXPORT'")
-
-        # Ensure meta_ai_models has is_active, is_default, cost_per_1k_tokens columns if not present
-        cursor.execute("PRAGMA table_info(meta_ai_models)")
-        ai_cols = [c[1] for c in cursor.fetchall()]
-        if 'is_active' not in ai_cols:
-            cursor.execute("ALTER TABLE meta_ai_models ADD COLUMN is_active INTEGER DEFAULT 1")
-        if 'is_default' not in ai_cols:
-            cursor.execute("ALTER TABLE meta_ai_models ADD COLUMN is_default INTEGER DEFAULT 0")
-        if 'cost_per_1k_tokens' not in ai_cols:
-            cursor.execute("ALTER TABLE meta_ai_models ADD COLUMN cost_per_1k_tokens REAL DEFAULT 0.001")
-            
-        cursor.execute("PRAGMA table_info(meta_categories)")
-        cat_cols = [c[1] for c in cursor.fetchall()]
-        if 'description' not in cat_cols:
-            cursor.execute("ALTER TABLE meta_categories ADD COLUMN description TEXT DEFAULT ''")
-
-        # Ensure platform_settings has primary_color, navbar_bg_color, navbar_style columns
-        cursor.execute("PRAGMA table_info(platform_settings)")
-        ps_cols = [c[1] for c in cursor.fetchall()]
-        if 'primary_color' not in ps_cols:
-            cursor.execute("ALTER TABLE platform_settings ADD COLUMN primary_color TEXT DEFAULT '#3B82F6'")
-        if 'navbar_bg_color' not in ps_cols:
-            cursor.execute("ALTER TABLE platform_settings ADD COLUMN navbar_bg_color TEXT DEFAULT ''")
-        if 'navbar_style' not in ps_cols:
-            cursor.execute("ALTER TABLE platform_settings ADD COLUMN navbar_style TEXT DEFAULT 'default'")
-            
-        cursor.execute("SELECT COUNT(*) FROM meta_ai_models WHERE is_default = 1")
-        if cursor.fetchone()[0] == 0:
-            cursor.execute("UPDATE meta_ai_models SET is_default = 1 WHERE model_name = 'gemini-2.5-flash'")
-
-        # Seed default platform & customer accounts (Only Owner & SuperAdmin for production)
-        pwd_hash = "43a0d17178a9d26c9e0fe9a74b0b45e38d32f27aed887a008a54bf6e033bf7b9" # SHA-256 for admin123
-        default_seed_users = [
-            ("owner", pwd_hash, "OWNER"),
-            ("superadmin", pwd_hash, "SUPER_ADMIN")
-        ]
-        for u, p, r in default_seed_users:
-            cursor.execute("INSERT OR IGNORE INTO users (username, password, role) VALUES (?, ?, ?)", (u, p, r))
-
-        # Guarantee all standard roles, permissions, verification_codes, and free trial package exist
-        seed_standard_roles_and_permissions(cursor)
-
-        conn.commit()
-        print("Database initialized successfully with all migrations, roles, permissions, and packages.")
-    except Exception as e:
-        print(f"Error initializing database: {e}")
-        conn.rollback()
-        raise e
-    finally:
-        conn.close()
 
 def ensure_plan_schema(cursor):
-    """Guarantees trial_days, price_yearly and all required columns exist in plans table on both SQLite and PostgreSQL."""
-    if is_postgres_mode():
-        return
-    # SQLite check
-    try:
-        cursor.execute("PRAGMA table_info(plans)")
-        rows = cursor.fetchall()
-        if rows:
-            plan_cols = [r[1] if isinstance(r, (tuple, list)) else (r["name"] if "name" in r.keys() else str(r[1])) for r in rows]
-            if 'trial_days' not in plan_cols:
-                cursor.execute("ALTER TABLE plans ADD COLUMN trial_days INTEGER DEFAULT 0")
-            if 'price_yearly' not in plan_cols:
-                cursor.execute("ALTER TABLE plans ADD COLUMN price_yearly INTEGER DEFAULT 0")
-    except Exception:
-        pass
+    """No-op: PostgreSQL schema is managed via migrations_pg/. Columns always exist."""
+    pass
 
 def seed_standard_roles_and_permissions(cursor):
     """Guarantees all 10 roles, 30+ permissions, verification_codes table, and Free Trial plan are seeded."""
@@ -3971,10 +3708,7 @@ def update_platform_settings(data: Dict[str, Any]) -> bool:
             row = cursor.fetchone()
             count = row[0] if row else 0
             if count == 0:
-                if is_postgres_mode():
-                    cursor.execute("INSERT INTO platform_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING")
-                else:
-                    cursor.execute("INSERT OR IGNORE INTO platform_settings (id) VALUES (1)")
+                cursor.execute("INSERT INTO platform_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING")
                 conn.commit()
         except Exception:
             pass
@@ -4011,10 +3745,7 @@ def update_platform_settings(data: Dict[str, Any]) -> bool:
             if "no such column" in err_str or "does not exist" in err_str or "column" in err_str:
                 for col in ["primary_color", "navbar_bg_color", "navbar_style"]:
                     try:
-                        if is_postgres_mode():
-                            cursor.execute(f"ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS {col} VARCHAR(50) DEFAULT ''")
-                        else:
-                            cursor.execute(f"ALTER TABLE platform_settings ADD COLUMN {col} TEXT DEFAULT ''")
+                        cursor.execute(f"ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS {col} VARCHAR(50) DEFAULT ''")
                     except Exception:
                         pass
                 conn.commit()
@@ -4146,17 +3877,14 @@ def clean_production_database() -> Dict[str, Any]:
 
         # 9. Reset Sequences
         try:
-            if is_postgres_mode():
-                cursor.execute("ALTER SEQUENCE IF EXISTS invoices_id_seq RESTART WITH 1")
-                cursor.execute("ALTER SEQUENCE IF EXISTS payment_transactions_id_seq RESTART WITH 1")
-                cursor.execute("ALTER SEQUENCE IF EXISTS customer_subscriptions_id_seq RESTART WITH 1")
-                cursor.execute("ALTER SEQUENCE IF EXISTS customer_organizations_id_seq RESTART WITH 1")
-                cursor.execute("ALTER SEQUENCE IF EXISTS organization_members_id_seq RESTART WITH 1")
-                cursor.execute("ALTER SEQUENCE IF EXISTS crm_leads_id_seq RESTART WITH 1")
-                cursor.execute("ALTER SEQUENCE IF EXISTS usage_logs_id_seq RESTART WITH 1")
-                cursor.execute("ALTER SEQUENCE IF EXISTS temp_parts_id_seq RESTART WITH 1")
-            else:
-                cursor.execute("DELETE FROM sqlite_sequence WHERE name IN ('invoices', 'payment_transactions', 'customer_subscriptions', 'customer_organizations', 'organization_members', 'crm_leads', 'usage_logs', 'temp_parts', 'search_logs')")
+            cursor.execute("ALTER SEQUENCE IF EXISTS invoices_id_seq RESTART WITH 1")
+            cursor.execute("ALTER SEQUENCE IF EXISTS payment_transactions_id_seq RESTART WITH 1")
+            cursor.execute("ALTER SEQUENCE IF EXISTS customer_subscriptions_id_seq RESTART WITH 1")
+            cursor.execute("ALTER SEQUENCE IF EXISTS customer_organizations_id_seq RESTART WITH 1")
+            cursor.execute("ALTER SEQUENCE IF EXISTS organization_members_id_seq RESTART WITH 1")
+            cursor.execute("ALTER SEQUENCE IF EXISTS crm_leads_id_seq RESTART WITH 1")
+            cursor.execute("ALTER SEQUENCE IF EXISTS usage_logs_id_seq RESTART WITH 1")
+            cursor.execute("ALTER SEQUENCE IF EXISTS temp_parts_id_seq RESTART WITH 1")
         except Exception as sq_e:
             print(f"Note on sequence reset: {sq_e}")
             
@@ -4372,22 +4100,41 @@ def create_coupon_db(data: Dict[str, Any]) -> Dict[str, Any]:
         disc_type = str(data.get("discount_type", "PERCENT")).upper()
         if disc_type == "PERCENTAGE":
             disc_type = "PERCENT"
-        cursor.execute("""
-            INSERT INTO coupons (code, description, discount_type, discount_value, min_purchase, usage_limit, per_org_limit, applicable_plans, is_active)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
-        """, (
-            code,
-            data.get("description", f"Coupon {code}"),
-            disc_type,
-            float(data.get("discount_value", 10)),
-            int(data.get("min_purchase", 0)),
-            int(data.get("max_uses") or data.get("usage_limit") or 100),
-            int(data.get("per_org_limit", 1)),
-            data.get("applicable_plans", "*")
-        ))
+        disc_val = float(data.get("discount_value", 10))
+        min_purchase = int(data.get("min_purchase", 0))
+        usage_limit = int(data.get("max_uses") or data.get("usage_limit") or 100)
+        per_org_limit = int(data.get("per_org_limit", 1))
+        applicable_plans = data.get("applicable_plans", "*")
+        description = data.get("description", f"Coupon {code}")
+
+        if is_postgres_mode():
+            cursor.execute("""
+                INSERT INTO coupons (code, description, discount_type, discount_value, min_purchase, usage_limit, per_org_limit, applicable_plans, is_active)
+                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 1)
+                ON CONFLICT (code) DO UPDATE SET
+                    description = EXCLUDED.description,
+                    discount_type = EXCLUDED.discount_type,
+                    discount_value = EXCLUDED.discount_value,
+                    min_purchase = EXCLUDED.min_purchase,
+                    usage_limit = EXCLUDED.usage_limit,
+                    per_org_limit = EXCLUDED.per_org_limit,
+                    applicable_plans = EXCLUDED.applicable_plans,
+                    is_active = 1
+                RETURNING id
+            """, (code, description, disc_type, disc_val, min_purchase, usage_limit, per_org_limit, applicable_plans))
+            row = cursor.fetchone()
+            coupon_id = row[0] if row else cursor.lastrowid
+        else:
+            cursor.execute("""
+                INSERT OR REPLACE INTO coupons (code, description, discount_type, discount_value, min_purchase, usage_limit, per_org_limit, applicable_plans, is_active)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)
+            """, (code, description, disc_type, disc_val, min_purchase, usage_limit, per_org_limit, applicable_plans))
+            coupon_id = cursor.lastrowid
+
         conn.commit()
-        return {"success": True, "coupon_id": cursor.lastrowid, "code": code}
+        return {"success": True, "coupon_id": coupon_id, "code": code}
     except Exception as e:
+        conn.rollback()
         return {"success": False, "error": str(e)}
     finally:
         conn.close()
