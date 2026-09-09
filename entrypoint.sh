@@ -17,11 +17,23 @@ if [ -n "$DATA_DIR" ] && [ "$DATA_DIR" != "." ]; then
     chmod -R 777 "$DATA_DIR" 2>/dev/null || true
 fi
 
-# 2. Run Zero-Touch Database Initialization & Migration (PostgreSQL / SQLite)
+# 2. Wait for PostgreSQL Database readiness (if configured)
+if [ -n "$DATABASE_URL" ] || [ -n "$POSTGRES_URL" ]; then
+    echo "⏳ [Bootstrap] Waiting for PostgreSQL to be ready..."
+    for i in {1..30}; do
+        if python3 -c "from backend.database import get_db_connection; conn = get_db_connection(); conn.close()" 2>/dev/null; then
+            echo "✅ [Bootstrap] PostgreSQL connected successfully!"
+            break
+        fi
+        sleep 1
+    done
+fi
+
+# 3. Run Zero-Touch Database Initialization & Migration (PostgreSQL / SQLite)
 echo "🐘 [Bootstrap] Initializing & Verifying Database..."
 python3 init_database.py || true
 
-# 3. Launch FastAPI Application Server
+# 4. Launch FastAPI Application Server
 echo "🚀 [Bootstrap] Launching AutoParts SaaS Engine on port ${PORT:-8000}..."
 exec python3 main.py
 

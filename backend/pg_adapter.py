@@ -76,6 +76,11 @@ class PGCursorWrapper:
             flags=re.IGNORECASE
         )
 
+        # SQLite DDL types to PostgreSQL
+        converted_sql = re.sub(r'INTEGER\s+PRIMARY\s+KEY\s+AUTOINCREMENT', 'SERIAL PRIMARY KEY', converted_sql, flags=re.IGNORECASE)
+        converted_sql = re.sub(r'DATETIME\s+DEFAULT\s+CURRENT_TIMESTAMP', 'TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP', converted_sql, flags=re.IGNORECASE)
+        converted_sql = re.sub(r'\bDATETIME\b', 'TIMESTAMP WITH TIME ZONE', converted_sql, flags=re.IGNORECASE)
+
         # 3. Convert INSERT OR IGNORE INTO
         if "INSERT OR IGNORE INTO" in converted_sql.upper():
             converted_sql = re.sub(r'INSERT\s+OR\s+IGNORE\s+INTO', 'INSERT INTO', converted_sql, flags=re.IGNORECASE)

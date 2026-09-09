@@ -19,23 +19,15 @@ elif DB_PATH.startswith("sqlite://"):
 _pg_available = None
 
 def is_postgres_mode() -> bool:
-    global _pg_available
     db_url = get_database_url()
     if not db_url or not (db_url.startswith("postgresql://") or db_url.startswith("postgres://")):
-        return False
-    if _pg_available is False:
         return False
     return True
 
 def get_db_connection():
-    global _pg_available
     if is_postgres_mode():
-        try:
-            from backend.pg_adapter import get_pg_connection
-            return get_pg_connection()
-        except Exception as e:
-            print(f"⚠️ [Database] PostgreSQL connection failed: {e}. Falling back to SQLite...")
-            _pg_available = False
+        from backend.pg_adapter import get_pg_connection
+        return get_pg_connection()
 
     db_dir = os.path.dirname(DB_PATH)
     if db_dir and not os.path.exists(db_dir):
@@ -58,38 +50,39 @@ def get_db_connection():
 
 def init_db():
     """Reads migration schemas and initializes database tables (PostgreSQL or SQLite)."""
-    global _pg_available
     if is_postgres_mode():
-        try:
-            conn = get_db_connection()
-            migrations_dir = os.path.join(os.path.dirname(__file__), "migrations_pg")
-            if not os.path.exists(migrations_dir):
-                migrations_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend", "migrations_pg"))
-            if os.path.exists(migrations_dir):
-                migration_files = sorted([f for f in os.listdir(migrations_dir) if f.endswith(".sql")])
-                for mf in migration_files:
-                    mf_path = os.path.join(migrations_dir, mf)
-                    with open(mf_path, "r", encoding="utf-8") as f:
-                        sql = f.read()
-                    conn.executescript(sql)
-                    conn.commit()
+        conn = get_db_connection()
+        migrations_dir = os.path.join(os.path.dirname(__file__), "migrations_pg")
+        if not os.path.exists(migrations_dir):
+            migrations_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend", "migrations_pg"))
+        if os.path.exists(migrations_dir):
+            migration_files = sorted([f for f in os.listdir(migrations_dir) if f.endswith(".sql")])
+            for mf in migration_files:
+                mf_path = os.path.join(migrations_dir, mf)
+                with open(mf_path, "r", encoding="utf-8") as f:
+                    sql = f.read()
+                conn.executescript(sql)
+                conn.commit()
 
-            cursor = conn.cursor()
-            pwd_hash = "43a0d17178a9d26c9e0fe9a74b0b45e38d32f27aed887a008a54bf6e033bf7b9"
-            default_seed_users = [
-                ("owner", pwd_hash, "OWNER"),
-                ("superadmin", pwd_hash, "SUPER_ADMIN")
-            ]
-            for u, p, r in default_seed_users:
-                cursor.execute("INSERT INTO users (username, password, role) VALUES (%s, %s, %s) ON CONFLICT (username) DO NOTHING", (u, p, r))
-            conn.commit()
-            print("PostgreSQL database initialized successfully with all migrations.")
-            conn.close()
-            return
-        except Exception as e:
-            print(f"⚠️ [Database] Could not initialize PostgreSQL: {e}. Falling back to SQLite...")
-            _pg_available = False
-
+        cursor = conn.cursor()
+        pwd_hash = "43a0d17178a9d26c9e0fe9a74b0b45e38d32f27aed887a008a54bf6e033bf7b9"
+        default_seed_users = [
+            ("owner", pwd_hash, "OWNER"),
+            ("superadmin", pwd_hash, "SUPER_ADMIN")
+        ]
+        for u, p, r in default_seed_users:
+            cursor.execute("INSERT INTO users (username, password, role) VALUES (%s, %s, %s) ON CONFLICT (username) DO NOTHING", (u, p, r))
+        
+        # Ensure platform_settings columns exist in PG
+        cursor.execute("ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS primary_color VARCHAR(50) DEFAULT '#3B82F6'")
+        cursor.execute("ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS navbar_bg_color VARCHAR(50) DEFAULT ''")
+        cursor.execute("ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS navbar_style VARCHAR(50) DEFAULT 'default'")
+        
+        seed_standard_roles_and_permissions(cursor)
+        conn.commit()
+        print("PostgreSQL database initialized successfully with all migrations.")
+        conn.close()
+        return
 
     migrations = [
         "001_init_schema.sql",
@@ -3921,6 +3914,20 @@ def update_platform_settings(data: Dict[str, Any]) -> bool:
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
+        # Guarantee row id=1 exists
+        try:
+            cursor.execute("SELECT COUNT(*) FROM platform_settings WHERE id = 1")
+            row = cursor.fetchone()
+            count = row[0] if row else 0
+            if count == 0:
+                if is_postgres_mode():
+                    cursor.execute("INSERT INTO platform_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING")
+                else:
+                    cursor.execute("INSERT OR IGNORE INTO platform_settings (id) VALUES (1)")
+                conn.commit()
+        except Exception:
+            pass
+
         allowed_keys = [
             "site_title", "logo_url", "favicon_url", "hero_badge", "hero_title",
             "hero_subtitle", "hero_bg_style", "hero_bg_gradient", "hero_bg_color",
@@ -3946,7 +3953,24 @@ def update_platform_settings(data: Dict[str, Any]) -> bool:
             return True
         
         sql = f"UPDATE platform_settings SET {', '.join(updates)}, updated_at = CURRENT_TIMESTAMP WHERE id = 1"
-        cursor.execute(sql, tuple(params))
+        try:
+            cursor.execute(sql, tuple(params))
+        except Exception as query_err:
+            err_str = str(query_err).lower()
+            if "no such column" in err_str or "does not exist" in err_str or "column" in err_str:
+                for col in ["primary_color", "navbar_bg_color", "navbar_style"]:
+                    try:
+                        if is_postgres_mode():
+                            cursor.execute(f"ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS {col} VARCHAR(50) DEFAULT ''")
+                        else:
+                            cursor.execute(f"ALTER TABLE platform_settings ADD COLUMN {col} TEXT DEFAULT ''")
+                    except Exception:
+                        pass
+                conn.commit()
+                cursor.execute(sql, tuple(params))
+            else:
+                raise query_err
+
         conn.commit()
         return True
     except Exception as e:

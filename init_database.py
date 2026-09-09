@@ -33,7 +33,18 @@ def main():
     print("-" * 80)
 
     # 1. Initialize Schema & Tables
-    print("[1/2] Initializing all 44 Schema Tables & System Accounts...")
+    print("[1/2] Initializing all 46 Schema Tables & System Accounts...")
+    if is_postgres_mode():
+        import time
+        for attempt in range(1, 11):
+            try:
+                test_conn = get_db_connection()
+                test_conn.close()
+                break
+            except Exception as conn_err:
+                print(f"  ⏳ Waiting for PostgreSQL (attempt {attempt}/10)...")
+                time.sleep(1)
+
     try:
         init_db()
         print("  ✓ Schema migrations applied successfully.")
