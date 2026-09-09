@@ -17,7 +17,11 @@ if [ -n "$DATA_DIR" ] && [ "$DATA_DIR" != "." ]; then
     chmod -R 777 "$DATA_DIR" 2>/dev/null || true
 fi
 
-# 2. Launch FastAPI Application Server (Python automatically runs schema migration & seeds)
+# 2. Run Zero-Touch Database Initialization & Migration (PostgreSQL / SQLite)
+echo "🐘 [Bootstrap] Initializing & Verifying Database..."
+python3 init_database.py || true
+
+# 3. Launch FastAPI Application Server
 echo "🚀 [Bootstrap] Launching AutoParts SaaS Engine on port ${PORT:-8000}..."
 exec python3 main.py
 
