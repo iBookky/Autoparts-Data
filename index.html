@@ -6364,7 +6364,17 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             // Fill Invoice Header Info
             document.getElementById('receipt-inv-no').textContent = inv.invoice_number;
             document.getElementById('receipt-inv-date').textContent = inv.created_at ? new Date(inv.created_at).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) : new Date().toLocaleDateString('th-TH');
-            document.getElementById('receipt-inv-period').textContent = `${inv.period_start || '-'} ถึง ${inv.period_end || '-'}`;
+            
+            const formatInvDate = (dStr) => {
+                if (!dStr) return '-';
+                // If it's already in DD/MM/YYYY, return it (for sample invoice)
+                if (dStr.includes('/')) return dStr;
+                return new Date(dStr).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            };
+            const pStart = formatInvDate(inv.period_start);
+            const pEnd = formatInvDate(inv.period_end);
+            
+            document.getElementById('receipt-inv-period').textContent = `${pStart} ถึง ${pEnd}`;
 
             // Fetch latest org details for accurate billing info
             try {
@@ -6395,7 +6405,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 <td style="padding: 0.65rem 0.75rem; text-align: center; color: var(--text-muted);">1</td>
                 <td style="padding: 0.65rem 0.75rem;">
                     <div style="font-weight: 600; color: var(--text-primary);">Siam Auto Parts AI Cloud - Enterprise Subscription</div>
-                    <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.2rem;">รอบการใช้งาน: ${inv.period_start || '-'} ถึง ${inv.period_end || '-'} &bull; วิธีชำระ: ${inv.payment_method || 'CREDIT_CARD'}</div>
+                    <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.2rem;">รอบการใช้งาน: ${pStart} ถึง ${pEnd} &bull; วิธีชำระ: ${inv.payment_method || 'CREDIT_CARD'}</div>
                 </td>
                 <td style="padding: 0.65rem 0.75rem; text-align: center;">1</td>
                 <td style="padding: 0.65rem 0.75rem; text-align: right; font-family: var(--font-mono);">฿${subtotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
@@ -10684,12 +10694,20 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         }
 
         function previewSampleInvoiceModal() {
+            const now = new Date();
+            const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            
+            const formatDate = (d) => {
+                return d.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            };
+
             const sampleInv = {
                 id: 9999,
-                invoice_number: `${document.getElementById('owner-cfg-inv-prefix').value || 'INV-'}202609-0099`,
-                created_at: new Date().toISOString(),
-                period_start: '01/09/2026',
-                period_end: '30/09/2026',
+                invoice_number: `${document.getElementById('owner-cfg-inv-prefix').value || 'INV-'}${now.getFullYear()}${String(now.getMonth() + 1).padStart(2, '0')}-0099`,
+                created_at: now.toISOString(),
+                period_start: formatDate(firstDay),
+                period_end: formatDate(lastDay),
                 payment_method: 'CREDIT_CARD',
                 amount: 2990.0,
                 vat_amount: 209.30,

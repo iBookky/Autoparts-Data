@@ -3590,6 +3590,27 @@ select.form-control option {
     flex-wrap: wrap;
 }
 
+@media (max-width: 768px) {
+    .date-presets-group {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        padding-bottom: 0.25rem;
+        width: 100%;
+        -webkit-overflow-scrolling: touch;
+    }
+    .date-preset-btn {
+        white-space: nowrap;
+    }
+    .owner-date-filter-bar {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .owner-date-filter-bar > div {
+        width: 100%;
+        justify-content: flex-start;
+    }
+}
+
 .date-preset-btn {
     background: transparent;
     border: 1px solid var(--border-color);
