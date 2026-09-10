@@ -584,17 +584,26 @@ async def get_product_detail(
 
     # Fetch OE interchange parts sharing identical OEM or vehicle fitment strictly filtered by allowed_categories
     conn = get_db_connection()
-    cursor = conn.cursor()
-    int_where = ["(oem_number = ? OR (car_brand = ? AND car_model = ? AND category = ?))", "id != ?"]
-    int_params = [product.get("oem_number"), product.get("car_brand"), product.get("car_model"), product.get("category"), part_id]
-    
-    if allowed_c is not None and '*' not in allowed_c:
-        if len(allowed_c) == 0:
-            interchanges = []
+    try:
+        cursor = conn.cursor()
+        int_where = ["(oem_number = ? OR (car_brand = ? AND car_model = ? AND category = ?))", "id != ?"]
+        int_params = [product.get("oem_number"), product.get("car_brand"), product.get("car_model"), product.get("category"), part_id]
+        
+        if allowed_c is not None and '*' not in allowed_c:
+            if len(allowed_c) == 0:
+                interchanges = []
+            else:
+                cat_filters = ["LOWER(category) LIKE ?" for _ in allowed_c]
+                int_where.append(f"({' OR '.join(cat_filters)})")
+                int_params.extend([f"%{c.strip().lower()}%" for c in allowed_c])
+                cursor.execute(f"""
+                    SELECT id, brand, part_number, oem_number, product_name_th, category, car_brand, car_model, year_start, year_end, 'MASTER' as source
+                    FROM master_parts 
+                    WHERE {' AND '.join(int_where)}
+                    LIMIT 10
+                """, tuple(int_params))
+                interchanges = [dict(r) for r in cursor.fetchall()]
         else:
-            cat_filters = ["LOWER(category) LIKE ?" for _ in allowed_c]
-            int_where.append(f"({' OR '.join(cat_filters)})")
-            int_params.extend([f"%{c.strip().lower()}%" for c in allowed_c])
             cursor.execute(f"""
                 SELECT id, brand, part_number, oem_number, product_name_th, category, car_brand, car_model, year_start, year_end, 'MASTER' as source
                 FROM master_parts 
@@ -602,15 +611,8 @@ async def get_product_detail(
                 LIMIT 10
             """, tuple(int_params))
             interchanges = [dict(r) for r in cursor.fetchall()]
-    else:
-        cursor.execute(f"""
-            SELECT id, brand, part_number, oem_number, product_name_th, category, car_brand, car_model, year_start, year_end, 'MASTER' as source
-            FROM master_parts 
-            WHERE {' AND '.join(int_where)}
-            LIMIT 10
-        """, tuple(int_params))
-        interchanges = [dict(r) for r in cursor.fetchall()]
-    conn.close()
+    finally:
+        conn.close()
 
     return {
         "success": True, 
@@ -1713,10 +1715,12 @@ async def verify_corporate_invoice_payment(
     
     # Find org for invoice
     conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT org_id FROM invoices WHERE id = ?", (invoice_id,))
-    inv_row = cursor.fetchone()
-    conn.close()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT org_id FROM invoices WHERE id = ?", (invoice_id,))
+        inv_row = cursor.fetchone()
+    finally:
+        conn.close()
     if not inv_row:
         raise HTTPException(status_code=404, detail="Invoice not found.")
 
@@ -1809,10 +1813,12 @@ async def delete_saas_history_item(log_id: int, x_username: Optional[str] = Head
     ctx = get_user_tenant_context(x_username or "admin")
     org_id = ctx["organization"]["id"] if ctx else 1
     conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("DELETE FROM search_logs WHERE id = ? AND org_id = ?", (log_id, org_id))
-    conn.commit()
-    conn.close()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM search_logs WHERE id = ? AND org_id = ?", (log_id, org_id))
+        conn.commit()
+    finally:
+        conn.close()
     return {"success": True, "message": "Search history item removed"}
 
 @app.get("/api/saas/api-keys")
@@ -2838,25 +2844,27 @@ async def get_cross_ref_matrix(
             if len(allowed_c) == 0:
                 return {"success": True, "matrix": []}
             conn = get_db_connection()
-            cursor = conn.cursor()
-            filtered_matrix = []
-            for item in matrix:
-                src_p = item.get("source_part_number") or item.get("source_part") or ""
-                tgt_p = item.get("target_part_number") or item.get("target_part") or ""
-                cursor.execute("""
-                    SELECT category FROM master_parts WHERE part_number IN (?, ?) OR oem_number IN (?, ?)
-                    UNION
-                    SELECT category FROM temp_parts WHERE part_number IN (?, ?) OR oem_number IN (?, ?)
-                    LIMIT 1
-                """, (src_p, tgt_p, src_p, tgt_p, src_p, tgt_p, src_p, tgt_p))
-                row = cursor.fetchone()
-                if row and row["category"]:
-                    cat = row["category"]
-                    if any(c.lower() in cat.lower() or cat.lower() in c.lower() for c in allowed_c):
+            try:
+                cursor = conn.cursor()
+                filtered_matrix = []
+                for item in matrix:
+                    src_p = item.get("source_part_number") or item.get("source_part") or ""
+                    tgt_p = item.get("target_part_number") or item.get("target_part") or ""
+                    cursor.execute("""
+                        SELECT category FROM master_parts WHERE part_number IN (?, ?) OR oem_number IN (?, ?)
+                        UNION
+                        SELECT category FROM temp_parts WHERE part_number IN (?, ?) OR oem_number IN (?, ?)
+                        LIMIT 1
+                    """, (src_p, tgt_p, src_p, tgt_p, src_p, tgt_p, src_p, tgt_p))
+                    row = cursor.fetchone()
+                    if row and row["category"]:
+                        cat = row["category"]
+                        if any(c.lower() in cat.lower() or cat.lower() in c.lower() for c in allowed_c):
+                            filtered_matrix.append(item)
+                    else:
                         filtered_matrix.append(item)
-                else:
-                    filtered_matrix.append(item)
-            conn.close()
+            finally:
+                conn.close()
             return {"success": True, "matrix": filtered_matrix}
 
     return {"success": True, "matrix": matrix}
@@ -2866,10 +2874,12 @@ async def get_cross_ref_matrix(
 async def get_staff_tasks(user = Depends(require_staff)):
     leads = get_crm_leads()
     conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM temp_parts WHERE status IN ('PENDING', 'PENDING_URGENT') ORDER BY created_at DESC LIMIT 10")
-    pending_parts = [dict(r) for r in cursor.fetchall()]
-    conn.close()
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM temp_parts WHERE status IN ('PENDING', 'PENDING_URGENT') ORDER BY created_at DESC LIMIT 10")
+        pending_parts = [dict(r) for r in cursor.fetchall()]
+    finally:
+        conn.close()
     return {
         "success": True,
         "sales_tasks": [l for l in leads if l["pipeline_stage"] in ["LEAD", "CONTACTED", "DEMO", "TRIAL"]],
@@ -2967,8 +2977,10 @@ async def healthcheck():
     db_status = "connected"
     try:
         conn = get_db_connection()
-        conn.execute("SELECT 1").fetchone()
-        conn.close()
+        try:
+            conn.execute("SELECT 1").fetchone()
+        finally:
+            conn.close()
     except Exception as e:
         db_status = f"error: {str(e)}"
 

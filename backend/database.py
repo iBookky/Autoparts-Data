@@ -22,87 +22,89 @@ def init_db():
     """Reads migration schemas and initializes database tables (PostgreSQL or SQLite)."""
     if is_postgres_mode():
         conn = get_db_connection()
-        migrations_dir = os.path.join(os.path.dirname(__file__), "migrations_pg")
-        if not os.path.exists(migrations_dir):
-            migrations_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend", "migrations_pg"))
-        if os.path.exists(migrations_dir):
-            migration_files = sorted([f for f in os.listdir(migrations_dir) if f.endswith(".sql")])
-            for mf in migration_files:
-                mf_path = os.path.join(migrations_dir, mf)
-                with open(mf_path, "r", encoding="utf-8") as f:
-                    sql = f.read()
-                conn.executescript(sql)
-                conn.commit()
+        try:
+            migrations_dir = os.path.join(os.path.dirname(__file__), "migrations_pg")
+            if not os.path.exists(migrations_dir):
+                migrations_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend", "migrations_pg"))
+            if os.path.exists(migrations_dir):
+                migration_files = sorted([f for f in os.listdir(migrations_dir) if f.endswith(".sql")])
+                for mf in migration_files:
+                    mf_path = os.path.join(migrations_dir, mf)
+                    with open(mf_path, "r", encoding="utf-8") as f:
+                        sql = f.read()
+                    conn.executescript(sql)
+                    conn.commit()
 
-        cursor = conn.cursor()
-        pwd_hash = "43a0d17178a9d26c9e0fe9a74b0b45e38d32f27aed887a008a54bf6e033bf7b9"
+            cursor = conn.cursor()
+            pwd_hash = "43a0d17178a9d26c9e0fe9a74b0b45e38d32f27aed887a008a54bf6e033bf7b9"
 
-        # Seed default users
-        for u, p, r in [("owner", pwd_hash, "OWNER"), ("superadmin", pwd_hash, "SUPER_ADMIN")]:
-            cursor.execute("INSERT INTO users (username, password, role) VALUES (%s, %s, %s) ON CONFLICT (username) DO NOTHING", (u, p, r))
+            # Seed default users
+            for u, p, r in [("owner", pwd_hash, "OWNER"), ("superadmin", pwd_hash, "SUPER_ADMIN")]:
+                cursor.execute("INSERT INTO users (username, password, role) VALUES (%s, %s, %s) ON CONFLICT (username) DO NOTHING", (u, p, r))
 
-        # Ensure all required columns exist (safe idempotent ALTER)
-        for col_sql in [
-            "ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS primary_color VARCHAR(50) DEFAULT '#3B82F6'",
-            "ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS navbar_bg_color VARCHAR(50) DEFAULT ''",
-            "ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS navbar_style VARCHAR(50) DEFAULT 'default'",
-            "ALTER TABLE plans ADD COLUMN IF NOT EXISTS price_yearly INTEGER DEFAULT 0",
-            "ALTER TABLE plans ADD COLUMN IF NOT EXISTS trial_days INTEGER DEFAULT 0",
-        ]:
-            try:
-                cursor.execute(col_sql)
-                conn.commit()
-            except Exception:
-                try: conn.rollback()
-                except Exception: pass
+            # Ensure all required columns exist (safe idempotent ALTER)
+            for col_sql in [
+                "ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS primary_color VARCHAR(50) DEFAULT '#3B82F6'",
+                "ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS navbar_bg_color VARCHAR(50) DEFAULT ''",
+                "ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS navbar_style VARCHAR(50) DEFAULT 'default'",
+                "ALTER TABLE plans ADD COLUMN IF NOT EXISTS price_yearly INTEGER DEFAULT 0",
+                "ALTER TABLE plans ADD COLUMN IF NOT EXISTS trial_days INTEGER DEFAULT 0",
+            ]:
+                try:
+                    cursor.execute(col_sql)
+                    conn.commit()
+                except Exception:
+                    try: conn.rollback()
+                    except Exception: pass
 
-        # Seed standard plans (native PG: ON CONFLICT)
-        standard_plans = [
-            ('starter', 'STARTER', 1490, 14900, 2, 2, 1, 1000, 0, 0, 0, 0, 14),
-            ('professional', 'PROFESSIONAL', 3990, 39900, 5, 5, 3, 5000, 1, 0, 1, 1, 14),
-            ('business', 'BUSINESS', 8990, 89900, -1, -1, 10, 20000, 1, 1, 1, 1, 14),
-            ('enterprise', 'ENTERPRISE', 19900, 199000, -1, -1, -1, -1, 1, 1, 1, 1, 0),
-            ('free_trial', 'FREE TRIAL (ทดลองใช้ฟรี)', 0, 0, 3, 3, 1, 1000, 1, 0, 0, 1, 14),
-        ]
-        for sp in standard_plans:
-            cursor.execute("""
-                INSERT INTO plans (id, name, price_monthly, price_yearly, max_brands, max_categories, max_users,
-                    monthly_search_quota, vin_search_enabled, api_access_enabled, export_enabled, ai_search_enabled, trial_days)
-                VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT (id) DO UPDATE SET
-                    price_monthly = EXCLUDED.price_monthly,
-                    price_yearly = EXCLUDED.price_yearly,
-                    max_brands = EXCLUDED.max_brands,
-                    max_categories = EXCLUDED.max_categories,
-                    max_users = EXCLUDED.max_users,
-                    monthly_search_quota = EXCLUDED.monthly_search_quota,
-                    trial_days = EXCLUDED.trial_days
-            """, sp)
-        conn.commit()
+            # Seed standard plans (native PG: ON CONFLICT)
+            standard_plans = [
+                ('starter', 'STARTER', 1490, 14900, 2, 2, 1, 1000, 0, 0, 0, 0, 14),
+                ('professional', 'PROFESSIONAL', 3990, 39900, 5, 5, 3, 5000, 1, 0, 1, 1, 14),
+                ('business', 'BUSINESS', 8990, 89900, -1, -1, 10, 20000, 1, 1, 1, 1, 14),
+                ('enterprise', 'ENTERPRISE', 19900, 199000, -1, -1, -1, -1, 1, 1, 1, 1, 0),
+                ('free_trial', 'FREE TRIAL (ทดลองใช้ฟรี)', 0, 0, 3, 3, 1, 1000, 1, 0, 0, 1, 14),
+            ]
+            for sp in standard_plans:
+                cursor.execute("""
+                    INSERT INTO plans (id, name, price_monthly, price_yearly, max_brands, max_categories, max_users,
+                        monthly_search_quota, vin_search_enabled, api_access_enabled, export_enabled, ai_search_enabled, trial_days)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                    ON CONFLICT (id) DO UPDATE SET
+                        price_monthly = EXCLUDED.price_monthly,
+                        price_yearly = EXCLUDED.price_yearly,
+                        max_brands = EXCLUDED.max_brands,
+                        max_categories = EXCLUDED.max_categories,
+                        max_users = EXCLUDED.max_users,
+                        monthly_search_quota = EXCLUDED.monthly_search_quota,
+                        trial_days = EXCLUDED.trial_days
+                """, sp)
+            conn.commit()
 
-        # Seed standard roles (native PG)
-        standard_roles = [
-            ('owner', 'System Owner', '/owner', 1, 'Highest business authority.'),
-            ('super_admin', 'Super Admin', '/super-admin', 2, 'Technical platform authority.'),
-            ('admin', 'Operations Admin', '/admin', 3, 'Daily operations authority.'),
-            ('staff_sales', 'Sales Staff', '/staff', 4, 'Sales specialist.'),
-            ('staff_data', 'Data Staff', '/staff', 4, 'Automotive data specialist.'),
-            ('staff_cs', 'Customer Success', '/staff', 4, 'Customer success manager.'),
-            ('staff_support', 'Support Staff', '/staff', 4, 'Technical support specialist.'),
-            ('org_owner', 'Organization Owner', '/app', 5, 'External organization owner.'),
-            ('org_manager', 'Organization Manager', '/app', 5, 'External organization manager.'),
-            ('org_staff', 'Organization Staff', '/app', 5, 'Standard workspace.'),
-        ]
-        for r_id, name, portal, tier, desc in standard_roles:
-            cursor.execute("""
-                INSERT INTO roles (id, name, portal_access, tier_level, description)
-                VALUES (%s, %s, %s, %s, %s)
-                ON CONFLICT (id) DO NOTHING
-            """, (r_id, name, portal, tier, desc))
-        conn.commit()
+            # Seed standard roles (native PG)
+            standard_roles = [
+                ('owner', 'System Owner', '/owner', 1, 'Highest business authority.'),
+                ('super_admin', 'Super Admin', '/super-admin', 2, 'Technical platform authority.'),
+                ('admin', 'Operations Admin', '/admin', 3, 'Daily operations authority.'),
+                ('staff_sales', 'Sales Staff', '/staff', 4, 'Sales specialist.'),
+                ('staff_data', 'Data Staff', '/staff', 4, 'Automotive data specialist.'),
+                ('staff_cs', 'Customer Success', '/staff', 4, 'Customer success manager.'),
+                ('staff_support', 'Support Staff', '/staff', 4, 'Technical support specialist.'),
+                ('org_owner', 'Organization Owner', '/app', 5, 'External organization owner.'),
+                ('org_manager', 'Organization Manager', '/app', 5, 'External organization manager.'),
+                ('org_staff', 'Organization Staff', '/app', 5, 'Standard workspace.'),
+            ]
+            for r_id, name, portal, tier, desc in standard_roles:
+                cursor.execute("""
+                    INSERT INTO roles (id, name, portal_access, tier_level, description)
+                    VALUES (%s, %s, %s, %s, %s)
+                    ON CONFLICT (id) DO NOTHING
+                """, (r_id, name, portal, tier, desc))
+            conn.commit()
 
-        print("PostgreSQL database initialized successfully with all migrations.")
-        conn.close()
+            print("PostgreSQL database initialized successfully with all migrations.")
+        finally:
+            conn.close()
         return
 
 
@@ -278,11 +280,13 @@ init_db()
 
 def get_user_by_username(username: str):
     conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
-    row = cursor.fetchone()
-    conn.close()
-    return dict(row) if row else None
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+        row = cursor.fetchone()
+        return dict(row) if row else None
+    finally:
+        conn.close()
 
 def create_db_user(username: str, password_hash: str, role: str):
     conn = get_db_connection()
@@ -302,11 +306,13 @@ def create_db_user(username: str, password_hash: str, role: str):
 
 def get_all_db_users():
     conn = get_db_connection()
-    cursor = conn.cursor()
-    cursor.execute("SELECT id, username, role, created_at FROM users")
-    rows = cursor.fetchall()
-    conn.close()
-    return [dict(r) for r in rows]
+    try:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id, username, role, created_at FROM users")
+        rows = cursor.fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
 
 def delete_db_user(user_id: int):
     conn = get_db_connection()
@@ -524,15 +530,17 @@ def get_part_by_id(part_id: int, source: str = "MASTER") -> Optional[Dict[str, A
     Retrieves full details for a single part.
     """
     conn = get_db_connection()
-    cursor = conn.cursor()
-    table = "master_parts" if source.upper() == "MASTER" else "temp_parts"
-    cursor.execute(f"SELECT *, '{source.upper()}' as source FROM {table} WHERE id = ?", (part_id,))
-    row = cursor.fetchone()
-    if not row and source.upper() == "MASTER":
-        cursor.execute("SELECT *, 'TEMP' as source FROM temp_parts WHERE id = ?", (part_id,))
+    try:
+        cursor = conn.cursor()
+        table = "master_parts" if source.upper() == "MASTER" else "temp_parts"
+        cursor.execute(f"SELECT *, '{source.upper()}' as source FROM {table} WHERE id = ?", (part_id,))
         row = cursor.fetchone()
-    conn.close()
-    return dict(row) if row else None
+        if not row and source.upper() == "MASTER":
+            cursor.execute("SELECT *, 'TEMP' as source FROM temp_parts WHERE id = ?", (part_id,))
+            row = cursor.fetchone()
+        return dict(row) if row else None
+    finally:
+        conn.close()
 
 def get_all_parts_system(filter_brand=None, filter_car=None, filter_source=None):
     """

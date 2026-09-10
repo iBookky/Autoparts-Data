@@ -20,14 +20,14 @@
         
         <!-- STICKY TOP NAVBAR -->
         <header class="landing-header">
-            <div style="display: flex; align-items: center; gap: 0.85rem;">
+            <div class="landing-logo-group">
                 <div class="logo-icon-box" id="landing-logo-icon" style="width: 40px; height: 40px; font-size: 1.25rem;">
                     <i class="fa-solid fa-layer-group"></i>
                 </div>
                 <img id="landing-logo-img" src="" style="display: none; height: 38px; width: auto; object-fit: contain;">
-                <div>
-                    <div class="logo-name" id="landing-logo-name" style="font-weight: 800; font-size: 1.15rem; color: #fff; letter-spacing: -0.5px;">AutoParts <span style="color: var(--primary);">Cross-Ref</span></div>
-                    <div style="font-size: 0.72rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;" data-i18n="landing.brand.tagline">B2B Automotive Intelligence</div>
+                <div class="landing-logo-text">
+                    <div class="logo-name" id="landing-logo-name">AutoParts <span style="color: var(--primary);">Cross-Ref</span></div>
+                    <div class="logo-tagline" data-i18n="landing.brand.tagline">B2B Automotive Intelligence</div>
                 </div>
             </div>
             
@@ -39,7 +39,7 @@
                 <a href="#landing-demo"><i class="fa-solid fa-magnifying-glass" style="color: #ec4899; margin-right: 4px;"></i> <span data-i18n="landing.nav.demo">ทดลองค้นหาจริง</span></a>
             </nav>
             
-            <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div class="landing-header-actions">
                 <!-- Theme Switcher (Day / Night) -->
                 <button type="button" class="theme-toggle-btn" id="landing-theme-toggle-btn" onclick="toggleAppTheme()" title="สลับโหมดสว่าง / โหมดมืด">
                     <i class="fa-solid fa-moon" id="landing-theme-icon"></i>
@@ -56,8 +56,33 @@
                 <button class="btn btn-primary" onclick="openTrialModal()" style="padding: 0.5rem 1.25rem; font-size: 0.88rem; font-weight: 600; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);">
                     <i class="fa-solid fa-rocket"></i> <span data-i18n="landing.nav.trial">ทดลองใช้ฟรี 14 วัน</span>
                 </button>
+                
+                <!-- Mobile Hamburger Toggle (hidden on desktop) -->
+                <button class="landing-mobile-toggle" onclick="toggleLandingMobileMenu()" aria-label="Menu">
+                    <i class="fa-solid fa-bars"></i>
+                </button>
             </div>
         </header>
+        
+        <!-- MOBILE FULL-SCREEN NAVIGATION DROPDOWN -->
+        <div id="landing-mobile-dropdown" class="landing-mobile-dropdown">
+            <button class="mobile-menu-close" onclick="toggleLandingMobileMenu()">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <a href="#landing-hero" onclick="toggleLandingMobileMenu()"><i class="fa-solid fa-bolt" style="color: #f59e0b;"></i> <span data-i18n="landing.nav.home">หน้าแรก</span></a>
+            <a href="#landing-solutions" onclick="toggleLandingMobileMenu()"><i class="fa-solid fa-briefcase" style="color: #3b82f6;"></i> <span data-i18n="landing.nav.solutions">โซลูชันธุรกิจ</span></a>
+            <a href="#landing-coverage" onclick="toggleLandingMobileMenu()"><i class="fa-solid fa-shield-halved" style="color: #10b981;"></i> <span data-i18n="landing.nav.coverage">ความครอบคลุมข้อมูล</span></a>
+            <a href="#landing-pricing" onclick="toggleLandingMobileMenu()"><i class="fa-solid fa-tags" style="color: #8b5cf6;"></i> <span data-i18n="landing.nav.pricing">ราคาและแพ็กเกจ</span></a>
+            <a href="#landing-demo" onclick="toggleLandingMobileMenu()"><i class="fa-solid fa-magnifying-glass" style="color: #ec4899;"></i> <span data-i18n="landing.nav.demo">ทดลองค้นหาจริง</span></a>
+            <div class="mobile-menu-actions">
+                <button class="btn btn-outline" onclick="toggleLandingMobileMenu(); showAuthScreen();">
+                    <i class="fa-solid fa-arrow-right-to-bracket"></i> <span data-i18n="landing.nav.signin">เข้าสู่ระบบ</span>
+                </button>
+                <button class="btn btn-primary" onclick="toggleLandingMobileMenu(); openTrialModal();" style="font-weight: 600; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);">
+                    <i class="fa-solid fa-rocket"></i> <span data-i18n="landing.nav.trial">ทดลองใช้ฟรี 14 วัน</span>
+                </button>
+            </div>
+        </div>
 
         <!-- HERO BANNER -->
         <section class="landing-hero" id="landing-hero">
@@ -4127,6 +4152,14 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             document.getElementById('public-landing-view').style.display = 'none';
             document.getElementById('auth-screen').style.display = 'flex';
             document.getElementById('main-app').style.display = 'none';
+        }
+
+        function toggleLandingMobileMenu() {
+            const dropdown = document.getElementById('landing-mobile-dropdown');
+            if (dropdown) {
+                dropdown.classList.toggle('open');
+                document.body.style.overflow = dropdown.classList.contains('open') ? 'hidden' : '';
+            }
         }
 
         window._publicPlans = [];

@@ -2,12 +2,19 @@
 AutoParts SaaS Platform — Enterprise PostgreSQL Adapter Layer
 Provides high-concurrency Big Data PostgreSQL connection pooling,
 parameter normalization, schema migrations, and seamless SQLite-compatible API.
+
+Key improvements:
+- ThreadedConnectionPool for thread-safe concurrent access
+- Connection health checks before returning from pool
+- Auto-reconnect on stale/dead connections
+- Context manager support for automatic connection lifecycle
 """
 
 import os
 import re
+import threading
 import psycopg2
-from psycopg2 import pool
+from psycopg2 import pool, OperationalError
 from psycopg2.extras import RealDictCursor, DictCursor
 from dotenv import load_dotenv
 
@@ -17,20 +24,50 @@ def get_database_url() -> str:
     return os.environ.get("DATABASE_URL", os.environ.get("POSTGRES_URL", ""))
 
 _pg_pool = None
+_pg_pool_lock = threading.Lock()
 
 def get_pg_pool():
     global _pg_pool
     db_url = get_database_url()
     if _pg_pool is None and db_url and (db_url.startswith("postgresql://") or db_url.startswith("postgres://")):
-        try:
-            url = db_url
-            if url.startswith("postgres://"):
-                url = url.replace("postgres://", "postgresql://", 1)
-            _pg_pool = psycopg2.pool.SimpleConnectionPool(1, 30, url)
-        except Exception as e:
-            print(f"Error creating PostgreSQL connection pool: {e}")
-            raise e
+        with _pg_pool_lock:
+            # Double-check inside lock
+            if _pg_pool is not None:
+                return _pg_pool
+            try:
+                url = db_url
+                if url.startswith("postgres://"):
+                    url = url.replace("postgres://", "postgresql://", 1)
+                # ThreadedConnectionPool is thread-safe (vs SimpleConnectionPool)
+                # min=2, max=20 — conservative to avoid hitting PG max_connections
+                _pg_pool = psycopg2.pool.ThreadedConnectionPool(
+                    2, 20, url,
+                    # TCP keepalive to detect dead connections
+                    keepalives=1,
+                    keepalives_idle=30,
+                    keepalives_interval=10,
+                    keepalives_count=5,
+                    # Connection timeout
+                    connect_timeout=10,
+                )
+                print(f"[PG Pool] ThreadedConnectionPool created (min=2, max=20)")
+            except Exception as e:
+                print(f"Error creating PostgreSQL connection pool: {e}")
+                raise e
     return _pg_pool
+
+
+def _reset_pool():
+    """Reset the pool (e.g. after all connections become stale)."""
+    global _pg_pool
+    with _pg_pool_lock:
+        if _pg_pool is not None:
+            try:
+                _pg_pool.closeall()
+            except Exception:
+                pass
+            _pg_pool = None
+
 
 class PGCursorWrapper:
     def __init__(self, cursor):
@@ -231,10 +268,20 @@ class PGCursorWrapper:
             pass
 
 class PGConnectionWrapper:
+    """Thread-safe PostgreSQL connection wrapper with context manager support."""
+    
     def __init__(self, raw_conn, pool_ref=None):
         self.conn = raw_conn
         self.pool_ref = pool_ref
         self.row_factory = None
+        self._closed = False
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.close()
+        return False  # Don't suppress exceptions
 
     def cursor(self):
         raw_cursor = self.conn.cursor(cursor_factory=DictCursor)
@@ -244,7 +291,10 @@ class PGConnectionWrapper:
         self.conn.commit()
 
     def rollback(self):
-        self.conn.rollback()
+        try:
+            self.conn.rollback()
+        except Exception:
+            pass
 
     def execute(self, sql: str, params=None):
         cur = self.cursor()
@@ -256,30 +306,76 @@ class PGConnectionWrapper:
         return cur.executescript(sql_script)
 
     def close(self):
+        if self._closed:
+            return
+        self._closed = True
         if self.pool_ref and self.conn:
             try:
                 self.conn.rollback()
                 self.pool_ref.putconn(self.conn)
             except Exception:
+                # If putconn fails, the connection is likely broken
+                # Try to discard it from the pool
                 try:
-                    self.pool_ref.putconn(self.conn)
+                    self.pool_ref.putconn(self.conn, close=True)
                 except Exception:
-                    pass
+                    try:
+                        self.conn.close()
+                    except Exception:
+                        pass
         elif self.conn:
             try:
                 self.conn.close()
             except Exception:
                 pass
 
-def get_pg_connection():
-    pool_instance = get_pg_pool()
-    if pool_instance:
-        raw_conn = pool_instance.getconn()
-        return PGConnectionWrapper(raw_conn, pool_instance)
-    else:
-        url = get_database_url()
-        if url.startswith("postgres://"):
-            url = url.replace("postgres://", "postgresql://", 1)
-        raw_conn = psycopg2.connect(url)
-        return PGConnectionWrapper(raw_conn)
+def _check_connection_health(conn):
+    """Test if a connection is alive by executing a simple query."""
+    try:
+        cur = conn.cursor()
+        cur.execute("SELECT 1")
+        cur.close()
+        return True
+    except Exception:
+        return False
 
+def get_pg_connection():
+    """Get a healthy PostgreSQL connection from the pool with auto-retry."""
+    max_retries = 3
+    for attempt in range(max_retries):
+        pool_instance = get_pg_pool()
+        if pool_instance:
+            try:
+                raw_conn = pool_instance.getconn()
+                # Health check — if connection is stale, get a new one
+                if not _check_connection_health(raw_conn):
+                    print(f"[PG Pool] Stale connection detected, discarding (attempt {attempt + 1})")
+                    try:
+                        pool_instance.putconn(raw_conn, close=True)
+                    except Exception:
+                        pass
+                    continue
+                return PGConnectionWrapper(raw_conn, pool_instance)
+            except pool.PoolError as e:
+                # Pool exhausted — try to reset and recreate
+                print(f"[PG Pool] Pool error: {e} (attempt {attempt + 1}/{max_retries})")
+                if attempt < max_retries - 1:
+                    _reset_pool()
+                    continue
+                raise
+            except OperationalError as e:
+                print(f"[PG Pool] Operational error: {e} (attempt {attempt + 1}/{max_retries})")
+                if attempt < max_retries - 1:
+                    _reset_pool()
+                    continue
+                raise
+        else:
+            # Fallback: direct connection without pool
+            url = get_database_url()
+            if url.startswith("postgres://"):
+                url = url.replace("postgres://", "postgresql://", 1)
+            raw_conn = psycopg2.connect(url, connect_timeout=10)
+            return PGConnectionWrapper(raw_conn)
+    
+    # Final fallback
+    raise Exception("[PG Pool] Failed to get a healthy connection after all retries")
