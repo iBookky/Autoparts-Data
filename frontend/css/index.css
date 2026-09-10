@@ -2550,6 +2550,11 @@ select.form-control option {
     border-color: var(--primary);
 }
 
+/* Landing Mobile Dropdown Menu (Hidden on desktop by default) */
+.landing-mobile-dropdown {
+    display: none;
+}
+
 /* Landing Header Right Actions */
 .landing-header-actions {
     display: flex;
