@@ -793,11 +793,13 @@ class OwnerAnalyticsService:
         cursor.execute("""
             SELECT ao.code, ao.name, ao.price_monthly,
                    COUNT(si.id) as attachment_count,
-                   COALESCE(SUM(ao.price_monthly), 0) as addon_monthly_revenue
+                   COALESCE(SUM(CASE WHEN s.status IN ('ACTIVE', 'GRACE_PERIOD') THEN ao.price_monthly ELSE 0 END), 0) as addon_monthly_revenue
             FROM add_ons ao
-            LEFT JOIN subscription_items si ON si.item_code = ao.code AND si.item_type = 'ADD_ON'
-            GROUP BY ao.code
-            ORDER BY attachment_count DESC
+            LEFT JOIN subscription_items si ON (si.item_code = ao.code OR si.item_code = ao.id) AND si.item_type = 'ADD_ON'
+            LEFT JOIN subscriptions s ON s.id = si.subscription_id
+            WHERE ao.status = 'ACTIVE' OR ao.status IS NULL
+            GROUP BY ao.code, ao.name, ao.price_monthly
+            ORDER BY attachment_count DESC, ao.price_monthly DESC
         """)
         addon_rows = [dict(r) for r in cursor.fetchall()]
 

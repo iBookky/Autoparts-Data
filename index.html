@@ -1883,52 +1883,52 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
                     <!-- 9. Reports & Secure Exports -->
                     <div id="owner-sub-reports" style="display: none;">
-                        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem; max-width: 700px;">
-                            <h3 style="font-size: 1.1rem; color: #fff; margin-bottom: 0.5rem;" data-i18n="owner.reports.title"><i class="fa-solid fa-file-csv" style="color: #10B981;"></i> Export Executive Business Reports</h3>
+                        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem; max-width: 750px;">
+                            <h3 style="font-size: 1.1rem; color: var(--text-primary); margin-bottom: 0.5rem;" data-i18n="owner.reports.title"><i class="fa-solid fa-file-csv" style="color: #10B981;"></i> Export Executive Business Reports</h3>
                             <p style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 1.25rem;" data-i18n="owner.reports.subtitle">Download sanitized, audit-logged financial and operational datasets in CSV or JSON format.</p>
 
                             <div style="display: flex; flex-direction: column; gap: 1rem;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
                                     <div>
-                                        <strong style="color: #fff;" data-i18n="owner.reports.revTitle">Revenue & Financial Trend Report</strong>
+                                        <strong style="color: var(--text-primary);" data-i18n="owner.reports.revTitle">Revenue & Financial Trend Report</strong>
                                         <div style="font-size: 0.78rem; color: var(--text-muted);" data-i18n="owner.reports.revDesc">Daily paid revenue, invoice counts, VAT 7%, discounts</div>
                                     </div>
                                     <div style="display: flex; gap: 0.4rem;">
-                                        <a href="/api/owner/reports/export?report_type=REVENUE&format=csv" target="_blank" class="btn btn-secondary btn-sm"><i class="fa-solid fa-download"></i> CSV</a>
-                                        <a href="/api/owner/reports/export?report_type=REVENUE&format=json" target="_blank" class="btn btn-secondary btn-sm"><i class="fa-solid fa-code"></i> JSON</a>
+                                        <button type="button" class="btn btn-secondary btn-sm" onclick="downloadOwnerReport('REVENUE', 'csv')"><i class="fa-solid fa-download"></i> CSV</button>
+                                        <button type="button" class="btn btn-secondary btn-sm" onclick="downloadOwnerReport('REVENUE', 'json')"><i class="fa-solid fa-code"></i> JSON</button>
                                     </div>
                                 </div>
 
                                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
                                     <div>
-                                        <strong style="color: #fff;" data-i18n="owner.reports.custTitle">Customer 360 & Health Directory</strong>
+                                        <strong style="color: var(--text-primary);" data-i18n="owner.reports.custTitle">Customer 360 & Health Directory</strong>
                                         <div style="font-size: 0.78rem; color: var(--text-muted);" data-i18n="owner.reports.custDesc">All tenant organizations, MRR, Health score, seat usage, renewal date</div>
                                     </div>
                                     <div style="display: flex; gap: 0.4rem;">
-                                        <a href="/api/owner/reports/export?report_type=CUSTOMERS&format=csv" target="_blank" class="btn btn-secondary btn-sm"><i class="fa-solid fa-download"></i> CSV</a>
-                                        <a href="/api/owner/reports/export?report_type=CUSTOMERS&format=json" target="_blank" class="btn btn-secondary btn-sm"><i class="fa-solid fa-code"></i> JSON</a>
+                                        <button type="button" class="btn btn-secondary btn-sm" onclick="downloadOwnerReport('CUSTOMERS', 'csv')"><i class="fa-solid fa-download"></i> CSV</button>
+                                        <button type="button" class="btn btn-secondary btn-sm" onclick="downloadOwnerReport('CUSTOMERS', 'json')"><i class="fa-solid fa-code"></i> JSON</button>
                                     </div>
                                 </div>
 
                                 <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
                                     <div>
-                                        <strong style="color: #fff;" data-i18n="owner.reports.subsTitle">Subscriptions & Renewal Pipeline</strong>
+                                        <strong style="color: var(--text-primary);" data-i18n="owner.reports.subsTitle">Subscriptions & Renewal Pipeline</strong>
                                         <div style="font-size: 0.78rem; color: var(--text-muted);" data-i18n="owner.reports.subsDesc">Active, trial, and upcoming subscription renewal schedule</div>
                                     </div>
                                     <div style="display: flex; gap: 0.4rem;">
-                                        <a href="/api/owner/reports/export?report_type=SUBSCRIPTIONS&format=csv" target="_blank" class="btn btn-secondary btn-sm"><i class="fa-solid fa-download"></i> CSV</a>
-                                        <a href="/api/owner/reports/export?report_type=SUBSCRIPTIONS&format=json" target="_blank" class="btn btn-secondary btn-sm"><i class="fa-solid fa-code"></i> JSON</a>
+                                        <button type="button" class="btn btn-secondary btn-sm" onclick="downloadOwnerReport('SUBSCRIPTIONS', 'csv')"><i class="fa-solid fa-download"></i> CSV</button>
+                                        <button type="button" class="btn btn-secondary btn-sm" onclick="downloadOwnerReport('SUBSCRIPTIONS', 'json')"><i class="fa-solid fa-code"></i> JSON</button>
                                     </div>
                                 </div>
 
                                 <div style="display: flex; justify-content: space-between; align-items: center;">
                                     <div>
-                                        <strong style="color: #fff;" data-i18n="owner.reports.dataTitle">Automotive Data Gap Intelligence</strong>
+                                        <strong style="color: var(--text-primary);" data-i18n="owner.reports.dataTitle">Automotive Data Gap Intelligence</strong>
                                         <div style="font-size: 0.78rem; color: var(--text-muted);" data-i18n="owner.reports.dataDesc">Top zero-result search queries and missing OEM parts</div>
                                     </div>
                                     <div style="display: flex; gap: 0.4rem;">
-                                        <a href="/api/owner/reports/export?report_type=USAGE&format=csv" target="_blank" class="btn btn-secondary btn-sm"><i class="fa-solid fa-download"></i> CSV</a>
-                                        <a href="/api/owner/reports/export?report_type=USAGE&format=json" target="_blank" class="btn btn-secondary btn-sm"><i class="fa-solid fa-code"></i> JSON</a>
+                                        <button type="button" class="btn btn-secondary btn-sm" onclick="downloadOwnerReport('USAGE', 'csv')"><i class="fa-solid fa-download"></i> CSV</button>
+                                        <button type="button" class="btn btn-secondary btn-sm" onclick="downloadOwnerReport('USAGE', 'json')"><i class="fa-solid fa-code"></i> JSON</button>
                                     </div>
                                 </div>
                             </div>
@@ -8451,6 +8451,42 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             else if (activeTab === 'searchbi') loadOwnerSearchBITab();
         }
 
+        async function downloadOwnerReport(reportType, format = 'csv') {
+            try {
+                let url = `/api/owner/reports/export?report_type=${encodeURIComponent(reportType)}&format=${encodeURIComponent(format)}`;
+                if (window.ownerFilterStartDate) url += `&start_date=${encodeURIComponent(window.ownerFilterStartDate)}`;
+                if (window.ownerFilterEndDate) url += `&end_date=${encodeURIComponent(window.ownerFilterEndDate)}`;
+
+                showToast(`กำลังส่งออกรายงาน ${reportType}...`, 'info');
+                const res = await fetch(url, { headers: getAuthHeaders() });
+                if (!res.ok) {
+                    const errData = await res.json().catch(() => ({}));
+                    throw new Error(errData.detail || 'ดาวน์โหลดไม่สำเร็จ');
+                }
+
+                const blob = await res.blob();
+                const blobUrl = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = blobUrl;
+
+                const disposition = res.headers.get('Content-Disposition');
+                let filename = `Owner_Report_${reportType}.${format}`;
+                if (disposition && disposition.includes('filename=')) {
+                    const match = disposition.match(/filename=["']?([^"';]+)["']?/);
+                    if (match && match[1]) filename = match[1].trim();
+                }
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(blobUrl);
+                a.remove();
+                showToast(`✓ ดาวน์โหลดรายงาน ${reportType} (${format.toUpperCase()}) สำเร็จแล้ว`, 'success');
+            } catch (err) {
+                console.error('Owner report export failed:', err);
+                showToast(`เกิดข้อผิดพลาดในการดาวน์โหลดรายงาน: ${err.message}`, 'error');
+            }
+        }
+
         function navigateToOwnerSection(tabName, element) {
             window.currentOwnerActiveTab = tabName || 'overview';
             switchSaaSView('owner-view', element);
@@ -9098,16 +9134,33 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 }
 
                 const addonsEl = document.getElementById('owner-addons-perf-container');
-                if (addonsEl && perfData.addons_performance) {
-                    addonsEl.innerHTML = perfData.addons_performance.map(a => `
-                        <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.75rem;">
-                            <div style="display: flex; justify-content: space-between; margin-bottom: 0.2rem;">
-                                <strong style="color: var(--text-primary); font-size: 0.85rem;">${a.name}</strong>
-                                <span style="color: #60A5FA; font-weight: 700;">${a.attachment_count} attached</span>
+                if (addonsEl) {
+                    const addons = (perfData && perfData.addons_performance) ? perfData.addons_performance : [];
+                    if (addons.length === 0) {
+                        addonsEl.innerHTML = `
+                            <div style="grid-column: 1 / -1; text-align: center; padding: 1.5rem; color: var(--text-muted); font-size: 0.85rem; background: rgba(148, 163, 184, 0.05); border-radius: var(--radius-sm); border: 1px dashed var(--border-color);">
+                                <i class="fa-solid fa-puzzle-piece" style="font-size: 1.5rem; margin-bottom: 0.5rem; opacity: 0.5; display: block; color: #10B981;"></i>
+                                <span data-i18n="owner.plans.noAddons">ยังไม่มีข้อมูลแพ็กเกจเสริมหรือการสั่งซื้อเพิ่มเติมในขณะนี้</span>
                             </div>
-                            <div style="font-size: 0.78rem; color: #10B981;">฿${a.addon_monthly_revenue.toLocaleString()} / mo</div>
-                        </div>
-                    `).join('');
+                        `;
+                    } else {
+                        addonsEl.innerHTML = addons.map(a => `
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.85rem; display: flex; flex-direction: column; gap: 0.4rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: center;">
+                                    <strong style="color: var(--text-primary); font-size: 0.88rem; display: flex; align-items: center; gap: 0.4rem;">
+                                        <i class="fa-solid fa-puzzle-piece" style="color: #10B981; font-size: 0.8rem;"></i> ${a.name}
+                                    </strong>
+                                    <span class="badge" style="background: rgba(59, 130, 246, 0.12); color: #3B82F6; font-weight: 700; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px;">
+                                        ${a.attachment_count || 0} attached
+                                    </span>
+                                </div>
+                                <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 0.8rem; margin-top: 2px;">
+                                    <span style="color: var(--text-muted);">ราคา: ฿${(a.price_monthly || 0).toLocaleString()}/ด.</span>
+                                    <span style="color: #10B981; font-weight: 700;">฿${(a.addon_monthly_revenue || 0).toLocaleString()} / ด.</span>
+                                </div>
+                            </div>
+                        `).join('');
+                    }
                 }
 
             } catch (err) {

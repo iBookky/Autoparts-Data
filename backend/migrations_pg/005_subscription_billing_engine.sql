@@ -177,3 +177,47 @@ CREATE TABLE IF NOT EXISTS commercial_audit_logs (
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Seed Add-ons Catalog
+INSERT INTO add_ons (id, name, code, description, price_monthly, price_yearly, entitlement_type, quota_increase, user_increase) VALUES
+('extra_searches_5k', '+5,000 Search Credits Pack', 'EXTRA_SEARCH_5K', 'Add 5,000 monthly searches to your organization quota', 890, 8900, 'SEARCH_QUOTA', 5000, 0),
+('extra_searches_20k', '+20,000 Search Credits Pack', 'EXTRA_SEARCH_20K', 'Add 20,000 monthly searches to your organization quota', 2490, 24900, 'SEARCH_QUOTA', 20000, 0),
+('extra_users_5', '+5 Team Member Seats', 'EXTRA_USERS_5', 'Expand your team access with 5 additional staff/manager seats', 990, 9900, 'USER_LIMIT', 0, 5),
+('extra_users_10', '+10 Team Member Seats', 'EXTRA_USERS_10', 'Expand your team access with 10 additional staff/manager seats', 1790, 17900, 'USER_LIMIT', 0, 10),
+('api_access_pack', 'REST API Developer Pack', 'API_DEV_PACK', 'Enable secure REST API access with 5,000 monthly requests and API keys', 1490, 14900, 'API_ACCESS', 0, 0),
+('ai_power_pack', 'AI Neural Match & Cross-Ref Pack', 'AI_POWER_PACK', 'Enhanced AI model search assistance, smart cross-reference & image lookup', 1990, 19900, 'AI_POWER_PACK', 0, 0),
+('priority_support_pack', '24/7 Dedicated Priority Support', 'PRIORITY_SUPPORT', 'Dedicated technical account manager and expedited catalog lookup SLA', 990, 9900, 'SUPPORT_PACK', 0, 0)
+ON CONFLICT (id) DO NOTHING;
+
+-- Seed Add-on Plan Compatibility
+INSERT INTO add_on_plan_compatibility (add_on_id, plan_id, availability) VALUES
+('extra_searches_5k', 'starter', 'AVAILABLE'),
+('extra_searches_20k', 'starter', 'NOT_AVAILABLE'),
+('extra_users_5', 'starter', 'AVAILABLE'),
+('extra_users_10', 'starter', 'NOT_AVAILABLE'),
+('api_access_pack', 'starter', 'NOT_AVAILABLE'),
+('ai_power_pack', 'starter', 'AVAILABLE'),
+('priority_support_pack', 'starter', 'AVAILABLE'),
+('extra_searches_5k', 'professional', 'AVAILABLE'),
+('extra_searches_20k', 'professional', 'AVAILABLE'),
+('extra_users_5', 'professional', 'AVAILABLE'),
+('extra_users_10', 'professional', 'AVAILABLE'),
+('api_access_pack', 'professional', 'AVAILABLE'),
+('ai_power_pack', 'professional', 'AVAILABLE'),
+('priority_support_pack', 'professional', 'AVAILABLE'),
+('extra_searches_5k', 'business', 'AVAILABLE'),
+('extra_searches_20k', 'business', 'AVAILABLE'),
+('extra_users_5', 'business', 'AVAILABLE'),
+('extra_users_10', 'business', 'AVAILABLE'),
+('api_access_pack', 'business', 'AVAILABLE'),
+('ai_power_pack', 'business', 'AVAILABLE'),
+('priority_support_pack', 'business', 'AVAILABLE'),
+('extra_searches_5k', 'enterprise', 'AVAILABLE'),
+('extra_searches_20k', 'enterprise', 'AVAILABLE'),
+('extra_users_5', 'enterprise', 'AVAILABLE'),
+('extra_users_10', 'enterprise', 'AVAILABLE'),
+('api_access_pack', 'enterprise', 'AVAILABLE'),
+('ai_power_pack', 'enterprise', 'AVAILABLE'),
+('priority_support_pack', 'enterprise', 'AVAILABLE')
+ON CONFLICT (add_on_id, plan_id) DO NOTHING;
+
+
