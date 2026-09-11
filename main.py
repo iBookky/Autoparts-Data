@@ -143,6 +143,10 @@ from backend.database import (
     get_platform_settings,
     update_platform_settings,
     clean_production_database,
+    create_add_on_db,
+    get_all_addons_db,
+    update_add_on_db,
+    delete_add_on_db,
     init_db
 )
 from backend.services.entitlement_service import EntitlementService
@@ -2322,6 +2326,60 @@ async def delete_plan_endpoint(plan_id: str, user = Depends(require_owner)):
         log_audit_action(user.get("id", 1), user["username"], user["role"], "DELETE_PLAN", "plans", plan_id, None, "DELETED")
         return {"success": True, "message": msg}
     return {"success": False, "error": msg}
+
+# 4.1 Add-on Packages CRUD (Add, Edit, Delete, View)
+class AddOnCreateRequest(BaseModel):
+    id: Optional[str] = None
+    name: str
+    code: Optional[str] = None
+    description: Optional[str] = ""
+    price_monthly: int
+    price_yearly: Optional[int] = 0
+    entitlement_type: Optional[str] = "SEARCH_QUOTA"
+    quota_increase: Optional[int] = 0
+    user_increase: Optional[int] = 0
+    status: Optional[str] = "ACTIVE"
+
+class AddOnUpdateRequest(BaseModel):
+    name: Optional[str] = None
+    code: Optional[str] = None
+    description: Optional[str] = None
+    price_monthly: Optional[int] = None
+    price_yearly: Optional[int] = None
+    entitlement_type: Optional[str] = None
+    quota_increase: Optional[int] = None
+    user_increase: Optional[int] = None
+    status: Optional[str] = None
+
+@app.get("/api/owner/addons")
+async def get_owner_addons_list(user = Depends(require_owner)):
+    addons = get_all_addons_db()
+    return {"success": True, "addons": addons}
+
+@app.post("/api/owner/addons")
+async def create_owner_addon(req: AddOnCreateRequest, user = Depends(require_owner)):
+    res = create_add_on_db(req.dict())
+    if res.get("success"):
+        log_audit_action(user.get("id", 1), user["username"], user["role"], "CREATE_ADDON", "add_ons", res.get("id"), None, str(req.dict()))
+        return {"success": True, "message": "สร้างแพ็กเกจเสริมสำเร็จ", "id": res.get("id")}
+    return {"success": False, "error": res.get("error", "Failed to create add-on")}
+
+@app.put("/api/owner/addons/{addon_id}")
+async def update_owner_addon(addon_id: str, req: AddOnUpdateRequest, user = Depends(require_owner)):
+    data = req.dict(exclude_unset=True)
+    res = update_add_on_db(addon_id, data)
+    if res.get("success"):
+        log_audit_action(user.get("id", 1), user["username"], user["role"], "UPDATE_ADDON", "add_ons", addon_id, None, str(data))
+        return {"success": True, "message": "อัปเดตแพ็กเกจเสริมสำเร็จ"}
+    return {"success": False, "error": res.get("error", "Failed to update add-on")}
+
+@app.delete("/api/owner/addons/{addon_id}")
+async def delete_owner_addon(addon_id: str, user = Depends(require_owner)):
+    res = delete_add_on_db(addon_id)
+    if res.get("success"):
+        log_audit_action(user.get("id", 1), user["username"], user["role"], "DELETE_ADDON", "add_ons", addon_id, None, "DELETED")
+        return {"success": True, "message": "ลบแพ็กเกจเสริมสำเร็จ"}
+    return {"success": False, "error": res.get("error", "Failed to delete add-on")}
 
 # 5. Platform Owner Automotive AI Engine, Models & Keys Orchestration
 class OwnerAIModelCreateRequest(BaseModel):

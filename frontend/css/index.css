@@ -524,24 +524,6 @@
     color: #64748B !important;
 }
 
-/* Operator Hub - Monthly Recurring Revenue & Metrics Banner (Borderless Display) */
-#admin-metrics-row .usage-card {
-    border: none !important;
-    box-shadow: none !important;
-    background: transparent !important;
-    padding: 0.5rem 0.25rem !important;
-}
-[data-theme="light"] #admin-metrics-row .usage-card {
-    border: none !important;
-    box-shadow: none !important;
-    background: transparent !important;
-}
-[data-theme="dark"] #admin-metrics-row .usage-card {
-    border: none !important;
-    box-shadow: none !important;
-    background: transparent !important;
-}
-
 /* Light Mode - Landing Footer */
 [data-theme="light"] .landing-footer {
     background: #F1F5F9 !important;

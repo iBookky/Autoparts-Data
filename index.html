@@ -1838,9 +1838,14 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
                         <!-- Add-on Attachment Rates -->
                         <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
-                                <h3 style="font-size: 1rem; color: var(--text-primary); margin: 0;" data-i18n="owner.plans.addonsPerfTitle"><i class="fa-solid fa-puzzle-piece" style="color: #10B981;"></i> Commercial Add-on Attachment Rates</h3>
-                                <span style="font-size: 0.78rem; color: var(--text-muted);" data-i18n="owner.plans.addonsPerfSub">อัตราการซื้อและเปิดใช้งานฟังก์ชันเสริมเพิ่มเติมของลูกค้า</span>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                                <div>
+                                    <h3 style="font-size: 1rem; color: var(--text-primary); margin: 0;" data-i18n="owner.plans.addonsPerfTitle"><i class="fa-solid fa-puzzle-piece" style="color: #10B981;"></i> Commercial Add-on Attachment Rates</h3>
+                                    <span style="font-size: 0.78rem; color: var(--text-muted);" data-i18n="owner.plans.addonsPerfSub">อัตราการซื้อและเปิดใช้งานฟังก์ชันเสริมเพิ่มเติมของลูกค้า</span>
+                                </div>
+                                <button type="button" class="btn btn-primary btn-sm" onclick="openCreateAddonModal()">
+                                    <i class="fa-solid fa-plus"></i> <span data-i18n="owner.plans.btnAddon">เพิ่มแพ็กเกจเสริมใหม่ (Add New Add-on)</span>
+                                </button>
                             </div>
                             <div id="owner-addons-perf-container" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0.85rem;">
                                 <!-- Populated dynamically -->
@@ -3243,6 +3248,140 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem; padding: 1rem 1.25rem;">
                     <button type="button" class="btn btn-secondary" onclick="closeEditPlanModal()" data-i18n="common.cancel">ยกเลิก</button>
                     <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> <span data-i18n="modal.editPlan.submit">บันทึกการแก้ไข</span></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= CREATE ADD-ON MODAL ================= -->
+    <div class="modal-overlay" id="modal-create-addon" style="display: none;">
+        <div class="modal-card" style="max-width: 580px; width: 100%;">
+            <div class="modal-header">
+                <h3 style="color: var(--text-primary);"><i class="fa-solid fa-puzzle-piece" style="color: #10B981;"></i> <span>เพิ่มแพ็กเกจเสริมใหม่ (Create Commercial Add-on)</span></h3>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closeCreateAddonModal()">&times;</button>
+            </div>
+            <form id="form-create-addon" onsubmit="submitCreateAddon(event)">
+                <div class="modal-body" style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label"><span>Add-on ID / Code (รหัสเฉพาะ)</span> <span style="color: var(--danger);">*</span></label>
+                            <input type="text" id="ca-id" class="form-control" placeholder="extra_searches_50k" required pattern="[a-zA-Z0-9_-]+" title="อักษรภาษาอังกฤษ ตัวเลข _ และ - เท่านั้น">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label"><span>ชื่อแพ็กเกจเสริม (Display Name)</span> <span style="color: var(--danger);">*</span></label>
+                            <input type="text" id="ca-name" class="form-control" placeholder="+50,000 Search Credits Pack" required>
+                        </div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label"><span>ราคาต่อเดือน (บาท/ด.)</span> <span style="color: var(--danger);">*</span></label>
+                            <input type="number" id="ca-price" class="form-control" min="0" value="990" oninput="autoSuggestYearlyPrice('ca')" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label"><span>ราคาต่อปี (บาท/ปี)</span> <small style="color: var(--primary); font-size: 0.72rem; cursor: pointer;" onclick="calcSuggestYearly('ca')"><i class="fa-solid fa-wand-magic-sparkles"></i> แนะนำ</small></label>
+                            <input type="number" id="ca-price-yearly" class="form-control" min="0" value="9900" placeholder="กำหนดราคาต่อปี">
+                        </div>
+                    </div>
+                    <div class="form-grid-3">
+                        <div class="form-group">
+                            <label class="form-label"><span>ประเภทสิทธิ์ (Type)</span></label>
+                            <select id="ca-type" class="form-control">
+                                <option value="SEARCH_QUOTA">โควตาค้นหา (Search Quota)</option>
+                                <option value="USER_LIMIT">เพิ่มจำนวนผู้ใช้งาน (Seats/Users)</option>
+                                <option value="API_ACCESS">REST API Access</option>
+                                <option value="AI_POWER_PACK">AI Intelligence Engine</option>
+                                <option value="SUPPORT_PACK">Support Package</option>
+                                <option value="FEATURE_PACK">Feature Pack</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label"><span>โควตาค้นหาเพิ่ม (+Quota)</span></label>
+                            <input type="number" id="ca-quota-inc" class="form-control" min="0" value="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label"><span>เพิ่มผู้ใช้ (+Seats)</span></label>
+                            <input type="number" id="ca-user-inc" class="form-control" min="0" value="0">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"><span>คำอธิบายสิทธิประโยชน์ (Description)</span></label>
+                        <input type="text" id="ca-desc" class="form-control" placeholder="เพิ่มโควตาการค้นหาอะไหล่ 50,000 ครั้งต่อเดือนสำหรับองค์กร">
+                    </div>
+                </div>
+                <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem; padding: 1rem 1.25rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateAddonModal()" data-i18n="common.cancel">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-plus-circle"></i> <span>บันทึกและสร้างแพ็กเกจเสริม</span></button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= EDIT ADD-ON MODAL ================= -->
+    <div class="modal-overlay" id="modal-edit-addon" style="display: none;">
+        <div class="modal-card" style="max-width: 580px; width: 100%;">
+            <div class="modal-header">
+                <h3 style="color: var(--text-primary);"><i class="fa-solid fa-pen-to-square" style="color: var(--primary);"></i> <span>แก้ไขแพ็กเกจเสริม (Edit Commercial Add-on)</span></h3>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closeEditAddonModal()">&times;</button>
+            </div>
+            <form id="form-edit-addon" onsubmit="submitEditAddon(event)">
+                <input type="hidden" id="ea-id">
+                <div class="modal-body" style="display: flex; flex-direction: column; gap: 1rem;">
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label"><span>Add-on ID</span></label>
+                            <input type="text" id="ea-id-display" class="form-control" disabled style="opacity: 0.7; cursor: not-allowed;">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label"><span>ชื่อแพ็กเกจเสริม (Display Name)</span> <span style="color: var(--danger);">*</span></label>
+                            <input type="text" id="ea-name" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label"><span>ราคาต่อเดือน (บาท/ด.)</span> <span style="color: var(--danger);">*</span></label>
+                            <input type="number" id="ea-price" class="form-control" min="0" oninput="autoSuggestYearlyPrice('ea')" required>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label"><span>ราคาต่อปี (บาท/ปี)</span> <small style="color: var(--primary); font-size: 0.72rem; cursor: pointer;" onclick="calcSuggestYearly('ea')"><i class="fa-solid fa-wand-magic-sparkles"></i> แนะนำ</small></label>
+                            <input type="number" id="ea-price-yearly" class="form-control" min="0">
+                        </div>
+                    </div>
+                    <div class="form-grid-3">
+                        <div class="form-group">
+                            <label class="form-label"><span>ประเภทสิทธิ์ (Type)</span></label>
+                            <select id="ea-type" class="form-control">
+                                <option value="SEARCH_QUOTA">โควตาค้นหา (Search Quota)</option>
+                                <option value="USER_LIMIT">เพิ่มจำนวนผู้ใช้งาน (Seats/Users)</option>
+                                <option value="API_ACCESS">REST API Access</option>
+                                <option value="AI_POWER_PACK">AI Intelligence Engine</option>
+                                <option value="SUPPORT_PACK">Support Package</option>
+                                <option value="FEATURE_PACK">Feature Pack</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label"><span>โควตาค้นหาเพิ่ม (+Quota)</span></label>
+                            <input type="number" id="ea-quota-inc" class="form-control" min="0">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label"><span>เพิ่มผู้ใช้ (+Seats)</span></label>
+                            <input type="number" id="ea-user-inc" class="form-control" min="0">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"><span>คำอธิบายสิทธิประโยชน์ (Description)</span></label>
+                        <input type="text" id="ea-desc" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label"><span>สถานะ (Status)</span></label>
+                        <select id="ea-status" class="form-control">
+                            <option value="ACTIVE">เปิดใช้งาน (ACTIVE)</option>
+                            <option value="INACTIVE">ปิดใช้งานชั่วคราว (INACTIVE)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem; padding: 1rem 1.25rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditAddonModal()" data-i18n="common.cancel">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-floppy-disk"></i> <span>บันทึกการแก้ไข</span></button>
                 </div>
             </form>
         </div>
@@ -6998,11 +7137,6 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     const m = data.metrics;
                     document.getElementById('admin-metrics-row').innerHTML = `
                         <div class="usage-card">
-                            <span class="usage-title">Monthly Recurring Revenue (MRR)</span>
-                            <div class="usage-metric" style="color: #34D399;">฿${m.mrr.toLocaleString()}</div>
-                            <div style="font-size: 0.75rem; color: var(--text-muted);">ARR: ฿${m.arr.toLocaleString()}</div>
-                        </div>
-                        <div class="usage-card">
                             <span class="usage-title">Active Organizations</span>
                             <div class="usage-metric">${m.total_organizations} <span style="font-size: 0.85rem;">tenants</span></div>
                             <div style="font-size: 0.75rem; color: var(--text-muted);">Master Catalog: ${m.total_master_parts} parts</div>
@@ -9136,30 +9270,48 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 const addonsEl = document.getElementById('owner-addons-perf-container');
                 if (addonsEl) {
                     const addons = (perfData && perfData.addons_performance) ? perfData.addons_performance : [];
+                    window._allAddonsDetailed = addons;
                     if (addons.length === 0) {
                         addonsEl.innerHTML = `
                             <div style="grid-column: 1 / -1; text-align: center; padding: 1.5rem; color: var(--text-muted); font-size: 0.85rem; background: rgba(148, 163, 184, 0.05); border-radius: var(--radius-sm); border: 1px dashed var(--border-color);">
                                 <i class="fa-solid fa-puzzle-piece" style="font-size: 1.5rem; margin-bottom: 0.5rem; opacity: 0.5; display: block; color: #10B981;"></i>
                                 <span data-i18n="owner.plans.noAddons">ยังไม่มีข้อมูลแพ็กเกจเสริมหรือการสั่งซื้อเพิ่มเติมในขณะนี้</span>
+                                <div style="margin-top: 0.75rem;">
+                                    <button type="button" class="btn btn-primary btn-sm" onclick="openCreateAddonModal()"><i class="fa-solid fa-plus"></i> เพิ่มแพ็กเกจเสริมแรก</button>
+                                </div>
                             </div>
                         `;
                     } else {
-                        addonsEl.innerHTML = addons.map(a => `
-                            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.85rem; display: flex; flex-direction: column; gap: 0.4rem;">
-                                <div style="display: flex; justify-content: space-between; align-items: center;">
-                                    <strong style="color: var(--text-primary); font-size: 0.88rem; display: flex; align-items: center; gap: 0.4rem;">
+                        addonsEl.innerHTML = addons.map(a => {
+                            const aid = a.id || a.code;
+                            const aName = (a.name || '').replace(/'/g, "\\'");
+                            const pMonthly = a.price_monthly || 0;
+                            const pYearly = a.price_yearly || (pMonthly * 10);
+                            return `
+                            <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.85rem; display: flex; flex-direction: column; gap: 0.5rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
+                                    <strong style="color: var(--text-primary); font-size: 0.88rem; display: flex; align-items: center; gap: 0.4rem; flex: 1;">
                                         <i class="fa-solid fa-puzzle-piece" style="color: #10B981; font-size: 0.8rem;"></i> ${a.name}
                                     </strong>
-                                    <span class="badge" style="background: rgba(59, 130, 246, 0.12); color: #3B82F6; font-weight: 700; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px;">
+                                    <span class="badge" style="background: rgba(59, 130, 246, 0.12); color: #3B82F6; font-weight: 700; font-size: 0.75rem; padding: 2px 8px; border-radius: 4px; white-space: nowrap;">
                                         ${a.attachment_count || 0} attached
                                     </span>
                                 </div>
+                                <div style="font-size: 0.73rem; color: var(--text-muted); font-family: var(--font-mono);">${aid}</div>
                                 <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 0.8rem; margin-top: 2px;">
-                                    <span style="color: var(--text-muted);">ราคา: ฿${(a.price_monthly || 0).toLocaleString()}/ด.</span>
+                                    <span style="color: var(--text-muted);">฿${pMonthly.toLocaleString()}/ด. <small style="color: #60A5FA;">(฿${pYearly.toLocaleString()}/ปี)</small></span>
                                     <span style="color: #10B981; font-weight: 700;">฿${(a.addon_monthly_revenue || 0).toLocaleString()} / ด.</span>
                                 </div>
+                                <div style="display: flex; justify-content: flex-end; gap: 0.35rem; margin-top: 0.35rem; padding-top: 0.45rem; border-top: 1px dashed var(--border-color);">
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="openEditAddonModal('${aid}')" title="แก้ไขแพ็กเกจเสริม" style="padding: 0.2rem 0.55rem; font-size: 0.75rem;">
+                                        <i class="fa-solid fa-pen-to-square"></i> แก้ไข
+                                    </button>
+                                    <button type="button" class="btn btn-danger btn-sm" onclick="deleteAddonConfirm('${aid}', '${aName}', ${a.attachment_count || 0})" title="ลบแพ็กเกจเสริม" style="padding: 0.2rem 0.55rem; font-size: 0.75rem;">
+                                        <i class="fa-solid fa-trash-can"></i> ลบ
+                                    </button>
+                                </div>
                             </div>
-                        `).join('');
+                        `}).join('');
                     }
                 }
 
@@ -9381,6 +9533,171 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             } catch (err) {
                 console.error("Error deleting plan:", err);
                 showToast("ไม่สามารถลบแพ็กเกจได้เนื่องจากข้อผิดพลาดเครือข่าย", "danger");
+            }
+        }
+
+        // ================= COMMERCIAL ADD-ONS CRUD =================
+        function openCreateAddonModal() {
+            const form = document.getElementById('form-create-addon');
+            if (form) form.reset();
+            document.getElementById('ca-price').value = '990';
+            const yrEl = document.getElementById('ca-price-yearly');
+            if (yrEl) {
+                yrEl.value = '9900';
+                yrEl.dataset.autoFilled = "false";
+            }
+            document.getElementById('ca-quota-inc').value = '0';
+            document.getElementById('ca-user-inc').value = '0';
+            document.getElementById('modal-create-addon').style.display = 'flex';
+        }
+
+        function closeCreateAddonModal() {
+            document.getElementById('modal-create-addon').style.display = 'none';
+        }
+
+        async function submitCreateAddon(e) {
+            e.preventDefault();
+            const addonId = document.getElementById('ca-id').value.trim().toLowerCase();
+            const name = document.getElementById('ca-name').value.trim();
+            const priceMonthly = parseInt(document.getElementById('ca-price').value || 0);
+            const yrVal = document.getElementById('ca-price-yearly').value;
+            const priceYearly = (yrVal !== "" && yrVal !== null) ? parseInt(yrVal) : (priceMonthly * 10);
+            const entType = document.getElementById('ca-type').value;
+            const quotaInc = parseInt(document.getElementById('ca-quota-inc').value || 0);
+            const userInc = parseInt(document.getElementById('ca-user-inc').value || 0);
+            const desc = document.getElementById('ca-desc').value.trim();
+
+            const payload = {
+                id: addonId,
+                code: addonId.toUpperCase(),
+                name: name,
+                description: desc,
+                price_monthly: priceMonthly,
+                price_yearly: priceYearly,
+                entitlement_type: entType,
+                quota_increase: quotaInc,
+                user_increase: userInc,
+                status: 'ACTIVE'
+            };
+
+            try {
+                const res = await fetch('/api/owner/addons', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json', ...getAuthHeaders()},
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`🎉 เพิ่มแพ็กเกจเสริม '${name}' เรียบร้อยแล้ว!`, "success");
+                    closeCreateAddonModal();
+                    loadOwnerPlanPerformanceTab();
+                } else {
+                    showToast(`⚠️ ${data.error || 'ไม่สามารถสร้างแพ็กเกจเสริมได้'}`, "danger");
+                }
+            } catch (err) {
+                console.error("Error creating addon:", err);
+                showToast("ไม่สามารถสร้างแพ็กเกจเสริมได้เนื่องจากข้อผิดพลาดเครือข่าย", "danger");
+            }
+        }
+
+        function openEditAddonModal(addonId) {
+            const addon = (window._allAddonsDetailed || []).find(a => (a.id === addonId || a.code === addonId));
+            if (!addon) {
+                showToast(`ไม่พบข้อมูลแพ็กเกจเสริม ${addonId}`, "danger");
+                return;
+            }
+
+            const aid = addon.id || addon.code;
+            document.getElementById('ea-id').value = aid;
+            document.getElementById('ea-id-display').value = aid;
+            document.getElementById('ea-name').value = addon.name || '';
+            const pMo = addon.price_monthly || 0;
+            document.getElementById('ea-price').value = pMo;
+            const pYr = addon.price_yearly !== undefined ? addon.price_yearly : (pMo * 10);
+            document.getElementById('ea-price-yearly').value = pYr;
+            document.getElementById('ea-type').value = addon.entitlement_type || 'SEARCH_QUOTA';
+            document.getElementById('ea-quota-inc').value = addon.quota_increase || 0;
+            document.getElementById('ea-user-inc').value = addon.user_increase || 0;
+            document.getElementById('ea-desc').value = addon.description || '';
+            document.getElementById('ea-status').value = addon.status || 'ACTIVE';
+
+            document.getElementById('modal-edit-addon').style.display = 'flex';
+        }
+
+        function closeEditAddonModal() {
+            document.getElementById('modal-edit-addon').style.display = 'none';
+        }
+
+        async function submitEditAddon(e) {
+            e.preventDefault();
+            const addonId = document.getElementById('ea-id').value;
+            const name = document.getElementById('ea-name').value.trim();
+            const priceMonthly = parseInt(document.getElementById('ea-price').value || 0);
+            const yrVal = document.getElementById('ea-price-yearly').value;
+            const priceYearly = (yrVal !== "" && yrVal !== null) ? parseInt(yrVal) : (priceMonthly * 10);
+            const entType = document.getElementById('ea-type').value;
+            const quotaInc = parseInt(document.getElementById('ea-quota-inc').value || 0);
+            const userInc = parseInt(document.getElementById('ea-user-inc').value || 0);
+            const desc = document.getElementById('ea-desc').value.trim();
+            const status = document.getElementById('ea-status').value;
+
+            const payload = {
+                name: name,
+                description: desc,
+                price_monthly: priceMonthly,
+                price_yearly: priceYearly,
+                entitlement_type: entType,
+                quota_increase: quotaInc,
+                user_increase: userInc,
+                status: status
+            };
+
+            try {
+                const res = await fetch(`/api/owner/addons/${addonId}`, {
+                    method: 'PUT',
+                    headers: {'Content-Type': 'application/json', ...getAuthHeaders()},
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`✅ บันทึกการแก้ไขแพ็กเกจเสริม '${name}' เรียบร้อยแล้ว!`, "success");
+                    closeEditAddonModal();
+                    loadOwnerPlanPerformanceTab();
+                } else {
+                    showToast(`⚠️ ${data.error || 'ไม่สามารถแก้ไขแพ็กเกจเสริมได้'}`, "danger");
+                }
+            } catch (err) {
+                console.error("Error editing addon:", err);
+                showToast("ไม่สามารถแก้ไขแพ็กเกจเสริมได้เนื่องจากข้อผิดพลาดเครือข่าย", "danger");
+            }
+        }
+
+        function deleteAddonConfirm(addonId, addonName, attachmentCount) {
+            const warningMsg = (attachmentCount && attachmentCount > 0)
+                ? `⚠️ คำเตือน: แพ็กเกจเสริม '${addonName}' มีลูกค้าสั่งซื้ออยู่ ${attachmentCount} รายการ!\n\nคุณแน่ใจหรือไม่ว่าต้องการลบแพ็กเกจเสริมนี้ออกจากระบบ?`
+                : `คุณแน่ใจหรือไม่ว่าต้องการลบแพ็กเกจเสริม '${addonName}' (${addonId}) ออกจากระบบ?`;
+
+            if (confirm(warningMsg)) {
+                executeDeleteAddon(addonId, addonName);
+            }
+        }
+
+        async function executeDeleteAddon(addonId, addonName) {
+            try {
+                const res = await fetch(`/api/owner/addons/${addonId}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`🗑️ ลบแพ็กเกจเสริม '${addonName}' ออกจากระบบเรียบร้อยแล้ว`, "success");
+                    loadOwnerPlanPerformanceTab();
+                } else {
+                    showToast(`⚠️ ${data.error || 'ไม่สามารถลบแพ็กเกจเสริมได้'}`, "danger");
+                }
+            } catch (err) {
+                console.error("Error deleting addon:", err);
+                showToast("ไม่สามารถลบแพ็กเกจเสริมได้เนื่องจากข้อผิดพลาดเครือข่าย", "danger");
             }
         }
 
