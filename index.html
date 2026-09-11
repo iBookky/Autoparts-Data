@@ -2155,11 +2155,18 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             </div>
 
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.25rem; margin-bottom: 1.25rem;">
-                                <!-- Column 1: Identity & Brand Theme -->
+                                <!-- Column 1: Identity & Hero Content -->
                                 <div style="display: flex; flex-direction: column; gap: 1rem;">
-                                    <div class="form-group">
-                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">ชื่อเว็บไซต์ / ไตเติลหลัก (Site Title) *</label>
-                                        <input type="text" id="owner-cfg-site-title" class="form-control" placeholder="AutoParts Cross-Ref - B2B Automotive Intelligence" oninput="onSiteTitleLiveInput(this.value)">
+                                    <!-- Site Title TH & EN -->
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                                        <div class="form-group">
+                                            <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">ชื่อเว็บไซต์ (ภาษาไทย) *</label>
+                                            <input type="text" id="owner-cfg-site-title-th" class="form-control" placeholder="AutoParts Cross-Ref ศูนย์ข้อมูลอะไหล่" oninput="onSiteTitleLiveInput(this.value)">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">Site Title (English) *</label>
+                                            <input type="text" id="owner-cfg-site-title-en" class="form-control" placeholder="AutoParts Pro Cross-Reference SaaS" oninput="onSiteTitleLiveInput(this.value)">
+                                        </div>
                                     </div>
                                     <div class="form-group">
                                         <label class="form-label" style="font-weight: 600; font-size: 0.85rem; display: flex; justify-content: space-between; align-items: center;">
@@ -2233,17 +2240,40 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                         </div>
                                     </div>
 
-                                    <div class="form-group">
-                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">ข้อความแถบป้าย Hero Badge</label>
-                                        <input type="text" id="owner-cfg-hero-badge" class="form-control" placeholder="แพลตฟอร์มสืบค้นและเทียบรหัสอะไหล่รถยนต์อันดับ 1 ในไทย">
+                                    <!-- Hero Badge TH & EN -->
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                                        <div class="form-group">
+                                            <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">ข้อความป้าย Hero Badge (ไทย)</label>
+                                            <input type="text" id="owner-cfg-hero-badge-th" class="form-control" placeholder="แพลตฟอร์มสืบค้นและเทียบรหัสอะไหล่รถยนต์อันดับ 1 ในไทย">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">Hero Badge (English)</label>
+                                            <input type="text" id="owner-cfg-hero-badge-en" class="form-control" placeholder="Thailand's #1 Automotive Cross-Reference Platform">
+                                        </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">หัวข้อใหญ่ Hero Title (บรรทัดแรก)</label>
-                                        <input type="text" id="owner-cfg-hero-title" class="form-control" placeholder="เทียบเบอร์อะไหล่แท้ & อะไหล่ทดแทน">
+
+                                    <!-- Hero Title TH & EN -->
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                                        <div class="form-group">
+                                            <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">หัวข้อใหญ่ Hero Title (ไทย)</label>
+                                            <input type="text" id="owner-cfg-hero-title-th" class="form-control" placeholder="เทียบเบอร์อะไหล่แท้ & อะไหล่ทดแทน">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">Hero Title (English)</label>
+                                            <input type="text" id="owner-cfg-hero-title-en" class="form-control" placeholder="Cross-Reference OEM & Aftermarket Parts">
+                                        </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">หัวข้อรอง Hero Subtitle / คำบรรยายใต้หัวข้อ</label>
-                                        <textarea id="owner-cfg-hero-subtitle" class="form-control" rows="3" placeholder="ค้นหาข้ามแบรนด์ แม่นยำ รวดเร็ว พร้อมเชื่อมต่อระบบ AI และสต็อกสินค้าอัจฉริยะ"></textarea>
+
+                                    <!-- Hero Subtitle TH & EN -->
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                                        <div class="form-group">
+                                            <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">คำบรรยาย Hero Subtitle (ไทย)</label>
+                                            <textarea id="owner-cfg-hero-subtitle-th" class="form-control" rows="3" placeholder="ค้นหาข้ามแบรนด์ แม่นยำ รวดเร็ว พร้อมเชื่อมต่อระบบ AI และสต็อกสินค้าอัจฉริยะ"></textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">Hero Subtitle (English)</label>
+                                            <textarea id="owner-cfg-hero-subtitle-en" class="form-control" rows="3" placeholder="Accurate multi-brand lookup powered by AI cataloging and smart inventory intelligence."></textarea>
+                                        </div>
                                     </div>
                                 </div>
 
@@ -2265,17 +2295,41 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                             <input type="text" id="owner-cfg-hero-bg-gradient" class="form-control" placeholder="linear-gradient(135deg, #0B132B, #1E3A8A)" style="flex: 1;">
                                         </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem;"><i class="fa-solid fa-magnifying-glass" style="color: #10B981;"></i> SEO Meta Title (แสดงในผลการค้นหา Google)</label>
-                                        <input type="text" id="owner-cfg-seo-title" class="form-control" placeholder="AutoParts Cross-Ref | ระบบเทียบเบอร์อะไหล่และค้นหาด้วย VIN">
+
+                                    <!-- SEO Meta Title TH & EN -->
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                                        <div class="form-group">
+                                            <label class="form-label" style="font-weight: 600; font-size: 0.85rem;"><i class="fa-solid fa-magnifying-glass" style="color: #10B981;"></i> SEO Meta Title (ไทย)</label>
+                                            <input type="text" id="owner-cfg-seo-title-th" class="form-control" placeholder="AutoParts Cross-Ref | ระบบเทียบเบอร์อะไหล่และค้นหาด้วย VIN">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label" style="font-weight: 600; font-size: 0.85rem;"><i class="fa-solid fa-magnifying-glass" style="color: #10B981;"></i> SEO Meta Title (English)</label>
+                                            <input type="text" id="owner-cfg-seo-title-en" class="form-control" placeholder="AutoParts Cross-Ref | VIN Decoder & OEM Part Lookup">
+                                        </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">SEO Meta Description (คำอธิบายใน Search Engine)</label>
-                                        <textarea id="owner-cfg-seo-desc" class="form-control" rows="2" placeholder="แพลตฟอร์มค้นหาและเทียบเคียงรหัสอะไหล่แท้และอะไหล่ทดแทน (OEM & Aftermarket) ที่ใหญ่ที่สุดในประเทศไทย"></textarea>
+
+                                    <!-- SEO Meta Description TH & EN -->
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                                        <div class="form-group">
+                                            <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">SEO Description (ไทย)</label>
+                                            <textarea id="owner-cfg-seo-desc-th" class="form-control" rows="3" placeholder="แพลตฟอร์มค้นหาและเทียบเคียงรหัสอะไหล่แท้และอะไหล่ทดแทน (OEM & Aftermarket) ที่ใหญ่ที่สุดในประเทศไทย"></textarea>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">SEO Description (English)</label>
+                                            <textarea id="owner-cfg-seo-desc-en" class="form-control" rows="3" placeholder="Thailand's leading automotive aftermarket intelligence platform with 17-digit VIN decoding."></textarea>
+                                        </div>
                                     </div>
-                                    <div class="form-group">
-                                        <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">SEO Keywords (คั่นด้วยจุลภาค)</label>
-                                        <input type="text" id="owner-cfg-seo-keywords" class="form-control" placeholder="อะไหล่รถยนต์, เทียบเบอร์อะไหล่, OEM parts, Aftermarket, VIN decoder">
+
+                                    <!-- SEO Keywords TH & EN -->
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
+                                        <div class="form-group">
+                                            <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">SEO Keywords (ไทย)</label>
+                                            <input type="text" id="owner-cfg-seo-keywords-th" class="form-control" placeholder="อะไหล่รถยนต์, เทียบเบอร์อะไหล่, อะไหล่ทดแทน">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label" style="font-weight: 600; font-size: 0.85rem;">SEO Keywords (English)</label>
+                                            <input type="text" id="owner-cfg-seo-keywords-en" class="form-control" placeholder="autoparts, cross-reference, OEM parts">
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -2283,7 +2337,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             <!-- Row 2: Contact & Footer Info -->
                             <div style="border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
                                 <h4 style="font-size: 0.95rem; font-weight: 700; color: #fff; margin-bottom: 0.75rem;">ข้อมูลติดต่อและ Footer ท้ายเว็บ</h4>
-                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
+                                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 0.75rem;">
                                     <div class="form-group">
                                         <label class="form-label" style="font-size: 0.8rem;">อีเมลติดต่อ (Contact Email)</label>
                                         <input type="email" id="owner-cfg-contact-email" class="form-control" placeholder="contact@autoparts-crossref.com">
@@ -2296,9 +2350,15 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                         <label class="form-label" style="font-size: 0.8rem;">LINE Official Account</label>
                                         <input type="text" id="owner-cfg-contact-line" class="form-control" placeholder="@autoparts">
                                     </div>
+                                </div>
+                                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;">
                                     <div class="form-group">
-                                        <label class="form-label" style="font-size: 0.8rem;">ข้อความลิขสิทธิ์ Footer Copyright</label>
-                                        <input type="text" id="owner-cfg-footer-copyright" class="form-control" placeholder="© 2026 AutoParts Cross-Ref. All rights reserved.">
+                                        <label class="form-label" style="font-size: 0.8rem;">ข้อความลิขสิทธิ์ Footer Copyright (ภาษาไทย)</label>
+                                        <input type="text" id="owner-cfg-footer-copyright-th" class="form-control" placeholder="© 2026 AutoParts Cross-Ref สงวนลิขสิทธิ์ทั้งหมด">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label" style="font-size: 0.8rem;">Footer Copyright (English)</label>
+                                        <input type="text" id="owner-cfg-footer-copyright-en" class="form-control" placeholder="© 2026 AutoParts Cross-Ref. All rights reserved.">
                                     </div>
                                 </div>
                             </div>
@@ -10775,7 +10835,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             }
 
             // 4. Site Title & Brand Text Synchronization
-            const siteTitle = settings.site_title || 'AutoParts Cross-Ref';
+            const isEn = (typeof currentLanguage !== 'undefined' && currentLanguage === 'en');
+            const siteTitle = (isEn ? (settings.site_title_en || settings.site_title) : (settings.site_title_th || settings.site_title)) || 'AutoParts Cross-Ref';
             if (document.getElementById('landing-logo-name')) {
                 document.getElementById('landing-logo-name').textContent = siteTitle;
             }
@@ -10788,8 +10849,48 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             if (document.getElementById('auth-logo-name')) {
                 document.getElementById('auth-logo-name').textContent = siteTitle;
             }
-            if (settings.seo_meta_title || siteTitle) {
-                document.title = settings.seo_meta_title || `${siteTitle} - Automotive Intelligence Platform`;
+            const seoTitle = (isEn ? (settings.seo_meta_title_en || settings.seo_meta_title) : (settings.seo_meta_title_th || settings.seo_meta_title)) || siteTitle;
+            if (seoTitle) {
+                document.title = `${seoTitle} - Automotive Intelligence Platform`;
+            }
+
+            // 5. Bilingual Hero Banner & SEO Meta Live Synchronization
+            const heroBadge = isEn ? (settings.hero_badge_en || settings.hero_badge) : (settings.hero_badge_th || settings.hero_badge);
+            if (heroBadge && document.getElementById('landing-hero-badge')) {
+                document.getElementById('landing-hero-badge').textContent = heroBadge;
+            }
+            const heroTitle = isEn ? (settings.hero_title_en || settings.hero_title) : (settings.hero_title_th || settings.hero_title);
+            if (heroTitle && document.getElementById('landing-hero-title')) {
+                document.getElementById('landing-hero-title').textContent = heroTitle;
+            }
+            const heroSubtitle = isEn ? (settings.hero_subtitle_en || settings.hero_subtitle) : (settings.hero_subtitle_th || settings.hero_subtitle);
+            if (heroSubtitle && document.getElementById('landing-hero-desc')) {
+                document.getElementById('landing-hero-desc').textContent = heroSubtitle;
+            }
+            const footerCopyright = isEn ? (settings.footer_copyright_en || settings.footer_copyright) : (settings.footer_copyright_th || settings.footer_copyright);
+            if (footerCopyright && document.getElementById('footer-copyright-text')) {
+                document.getElementById('footer-copyright-text').textContent = footerCopyright;
+            }
+
+            const seoDesc = isEn ? (settings.seo_meta_description_en || settings.seo_meta_description) : (settings.seo_meta_description_th || settings.seo_meta_description);
+            if (seoDesc) {
+                let metaDesc = document.querySelector('meta[name="description"]');
+                if (!metaDesc) {
+                    metaDesc = document.createElement('meta');
+                    metaDesc.setAttribute('name', 'description');
+                    document.head.appendChild(metaDesc);
+                }
+                metaDesc.setAttribute('content', seoDesc);
+            }
+            const seoKeywords = isEn ? (settings.seo_meta_keywords_en || settings.seo_meta_keywords) : (settings.seo_meta_keywords_th || settings.seo_meta_keywords);
+            if (seoKeywords) {
+                let metaKey = document.querySelector('meta[name="keywords"]');
+                if (!metaKey) {
+                    metaKey = document.createElement('meta');
+                    metaKey.setAttribute('name', 'keywords');
+                    document.head.appendChild(metaKey);
+                }
+                metaKey.setAttribute('content', seoKeywords);
             }
         }
 
@@ -10804,7 +10905,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 navbar_style: document.getElementById('owner-cfg-navbar-style')?.value || 'default',
                 navbar_bg_color: document.getElementById('owner-cfg-navbar-bg-color')?.value || '',
                 logo_url: document.getElementById('owner-cfg-logo-url')?.value || '',
-                site_title: document.getElementById('owner-cfg-site-title')?.value || ''
+                site_title_th: document.getElementById('owner-cfg-site-title-th')?.value || '',
+                site_title_en: document.getElementById('owner-cfg-site-title-en')?.value || ''
             });
         }
 
@@ -10816,7 +10918,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 navbar_style: document.getElementById('owner-cfg-navbar-style')?.value || 'default',
                 navbar_bg_color: document.getElementById('owner-cfg-navbar-bg-color')?.value || '',
                 logo_url: document.getElementById('owner-cfg-logo-url')?.value || '',
-                site_title: document.getElementById('owner-cfg-site-title')?.value || ''
+                site_title_th: document.getElementById('owner-cfg-site-title-th')?.value || '',
+                site_title_en: document.getElementById('owner-cfg-site-title-en')?.value || ''
             });
         }
 
@@ -10839,7 +10942,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 navbar_style: style,
                 navbar_bg_color: document.getElementById('owner-cfg-navbar-bg-color')?.value || '',
                 logo_url: document.getElementById('owner-cfg-logo-url')?.value || '',
-                site_title: document.getElementById('owner-cfg-site-title')?.value || ''
+                site_title_th: document.getElementById('owner-cfg-site-title-th')?.value || '',
+                site_title_en: document.getElementById('owner-cfg-site-title-en')?.value || ''
             });
         }
 
@@ -10851,7 +10955,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 navbar_style: 'custom',
                 navbar_bg_color: colorHex,
                 logo_url: document.getElementById('owner-cfg-logo-url')?.value || '',
-                site_title: document.getElementById('owner-cfg-site-title')?.value || ''
+                site_title_th: document.getElementById('owner-cfg-site-title-th')?.value || '',
+                site_title_en: document.getElementById('owner-cfg-site-title-en')?.value || ''
             });
         }
 
@@ -10877,7 +10982,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 navbar_style: document.getElementById('owner-cfg-navbar-style')?.value || 'default',
                 navbar_bg_color: document.getElementById('owner-cfg-navbar-bg-color')?.value || '',
                 logo_url: url,
-                site_title: document.getElementById('owner-cfg-site-title')?.value || ''
+                site_title_th: document.getElementById('owner-cfg-site-title-th')?.value || '',
+                site_title_en: document.getElementById('owner-cfg-site-title-en')?.value || ''
             });
         }
 
@@ -10888,26 +10994,34 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 if (data.success && data.branding) {
                     const b = data.branding;
                     const setVal = (id, val) => { const el = document.getElementById(id); if (el) el.value = (val !== undefined && val !== null) ? val : ''; };
-                    setVal('owner-cfg-site-title', b.site_title);
+                    setVal('owner-cfg-site-title-th', b.site_title_th || b.site_title);
+                    setVal('owner-cfg-site-title-en', b.site_title_en || b.site_title);
                     setVal('owner-cfg-logo-url', b.logo_url);
                     setVal('owner-cfg-primary-color', b.primary_color || '#3B82F6');
                     setVal('owner-cfg-primary-color-text', b.primary_color || '#3B82F6');
                     setVal('owner-cfg-navbar-style', b.navbar_style || 'default');
                     setVal('owner-cfg-navbar-bg-color', b.navbar_bg_color || '#0F172A');
                     setVal('owner-cfg-navbar-bg-color-text', b.navbar_bg_color || '');
-                    setVal('owner-cfg-hero-badge', b.hero_badge);
-                    setVal('owner-cfg-hero-title', b.hero_title);
-                    setVal('owner-cfg-hero-subtitle', b.hero_subtitle);
+                    setVal('owner-cfg-hero-badge-th', b.hero_badge_th || b.hero_badge);
+                    setVal('owner-cfg-hero-badge-en', b.hero_badge_en || b.hero_badge);
+                    setVal('owner-cfg-hero-title-th', b.hero_title_th || b.hero_title);
+                    setVal('owner-cfg-hero-title-en', b.hero_title_en || b.hero_title);
+                    setVal('owner-cfg-hero-subtitle-th', b.hero_subtitle_th || b.hero_subtitle);
+                    setVal('owner-cfg-hero-subtitle-en', b.hero_subtitle_en || b.hero_subtitle);
                     setVal('owner-cfg-hero-bg-style', b.hero_bg_style || 'gradient');
                     setVal('owner-cfg-hero-bg-color', b.hero_bg_color || '#0B132B');
                     setVal('owner-cfg-hero-bg-gradient', b.hero_bg_gradient || '');
-                    setVal('owner-cfg-seo-title', b.seo_meta_title);
-                    setVal('owner-cfg-seo-desc', b.seo_meta_description);
-                    setVal('owner-cfg-seo-keywords', b.seo_meta_keywords);
+                    setVal('owner-cfg-seo-title-th', b.seo_meta_title_th || b.seo_meta_title);
+                    setVal('owner-cfg-seo-title-en', b.seo_meta_title_en || b.seo_meta_title);
+                    setVal('owner-cfg-seo-desc-th', b.seo_meta_description_th || b.seo_meta_description);
+                    setVal('owner-cfg-seo-desc-en', b.seo_meta_description_en || b.seo_meta_description);
+                    setVal('owner-cfg-seo-keywords-th', b.seo_meta_keywords_th || b.seo_meta_keywords);
+                    setVal('owner-cfg-seo-keywords-en', b.seo_meta_keywords_en || b.seo_meta_keywords);
                     setVal('owner-cfg-contact-email', b.contact_email);
                     setVal('owner-cfg-contact-phone', b.contact_phone);
                     setVal('owner-cfg-contact-line', b.contact_line);
-                    setVal('owner-cfg-footer-copyright', b.footer_copyright);
+                    setVal('owner-cfg-footer-copyright-th', b.footer_copyright_th || b.footer_copyright);
+                    setVal('owner-cfg-footer-copyright-en', b.footer_copyright_en || b.footer_copyright);
 
                     updateLogoPreview(b.logo_url);
                     previewHeroBgStyle(b.hero_bg_style || 'gradient');
@@ -10928,25 +11042,42 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         }
 
         async function saveOwnerBrandingSettings() {
+            const getVal = (id) => (document.getElementById(id)?.value || '').trim();
             const payload = {
-                site_title: document.getElementById('owner-cfg-site-title').value.trim(),
-                logo_url: document.getElementById('owner-cfg-logo-url').value.trim(),
-                primary_color: document.getElementById('owner-cfg-primary-color').value.trim() || '#3B82F6',
-                navbar_style: document.getElementById('owner-cfg-navbar-style').value,
-                navbar_bg_color: document.getElementById('owner-cfg-navbar-bg-color').value.trim(),
-                hero_badge: document.getElementById('owner-cfg-hero-badge').value.trim(),
-                hero_title: document.getElementById('owner-cfg-hero-title').value.trim(),
-                hero_subtitle: document.getElementById('owner-cfg-hero-subtitle').value.trim(),
-                hero_bg_style: document.getElementById('owner-cfg-hero-bg-style').value,
-                hero_bg_color: document.getElementById('owner-cfg-hero-bg-color').value,
-                hero_bg_gradient: document.getElementById('owner-cfg-hero-bg-gradient').value.trim(),
-                seo_meta_title: document.getElementById('owner-cfg-seo-title').value.trim(),
-                seo_meta_description: document.getElementById('owner-cfg-seo-desc').value.trim(),
-                seo_meta_keywords: document.getElementById('owner-cfg-seo-keywords').value.trim(),
-                contact_email: document.getElementById('owner-cfg-contact-email').value.trim(),
-                contact_phone: document.getElementById('owner-cfg-contact-phone').value.trim(),
-                contact_line: document.getElementById('owner-cfg-contact-line').value.trim(),
-                footer_copyright: document.getElementById('owner-cfg-footer-copyright').value.trim()
+                site_title_th: getVal('owner-cfg-site-title-th'),
+                site_title_en: getVal('owner-cfg-site-title-en'),
+                site_title: getVal('owner-cfg-site-title-th') || getVal('owner-cfg-site-title-en'),
+                logo_url: getVal('owner-cfg-logo-url'),
+                primary_color: getVal('owner-cfg-primary-color') || '#3B82F6',
+                navbar_style: document.getElementById('owner-cfg-navbar-style')?.value || 'default',
+                navbar_bg_color: getVal('owner-cfg-navbar-bg-color'),
+                hero_badge_th: getVal('owner-cfg-hero-badge-th'),
+                hero_badge_en: getVal('owner-cfg-hero-badge-en'),
+                hero_badge: getVal('owner-cfg-hero-badge-th') || getVal('owner-cfg-hero-badge-en'),
+                hero_title_th: getVal('owner-cfg-hero-title-th'),
+                hero_title_en: getVal('owner-cfg-hero-title-en'),
+                hero_title: getVal('owner-cfg-hero-title-th') || getVal('owner-cfg-hero-title-en'),
+                hero_subtitle_th: getVal('owner-cfg-hero-subtitle-th'),
+                hero_subtitle_en: getVal('owner-cfg-hero-subtitle-en'),
+                hero_subtitle: getVal('owner-cfg-hero-subtitle-th') || getVal('owner-cfg-hero-subtitle-en'),
+                hero_bg_style: document.getElementById('owner-cfg-hero-bg-style')?.value || 'gradient',
+                hero_bg_color: document.getElementById('owner-cfg-hero-bg-color')?.value || '#0B132B',
+                hero_bg_gradient: getVal('owner-cfg-hero-bg-gradient'),
+                seo_meta_title_th: getVal('owner-cfg-seo-title-th'),
+                seo_meta_title_en: getVal('owner-cfg-seo-title-en'),
+                seo_meta_title: getVal('owner-cfg-seo-title-th') || getVal('owner-cfg-seo-title-en'),
+                seo_meta_description_th: getVal('owner-cfg-seo-desc-th'),
+                seo_meta_description_en: getVal('owner-cfg-seo-desc-en'),
+                seo_meta_description: getVal('owner-cfg-seo-desc-th') || getVal('owner-cfg-seo-desc-en'),
+                seo_meta_keywords_th: getVal('owner-cfg-seo-keywords-th'),
+                seo_meta_keywords_en: getVal('owner-cfg-seo-keywords-en'),
+                seo_meta_keywords: getVal('owner-cfg-seo-keywords-th') || getVal('owner-cfg-seo-keywords-en'),
+                contact_email: getVal('owner-cfg-contact-email'),
+                contact_phone: getVal('owner-cfg-contact-phone'),
+                contact_line: getVal('owner-cfg-contact-line'),
+                footer_copyright_th: getVal('owner-cfg-footer-copyright-th'),
+                footer_copyright_en: getVal('owner-cfg-footer-copyright-en'),
+                footer_copyright: getVal('owner-cfg-footer-copyright-th') || getVal('owner-cfg-footer-copyright-en')
             };
 
             try {
@@ -10957,7 +11088,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 });
                 const data = await res.json();
                 if (data.success) {
-                    showToast("บันทึกการตั้งค่าหน้าแรก แบรนด์ดิ้ง และสีธีมเรียบร้อยแล้ว", "success");
+                    showToast("บันทึกการตั้งค่าหน้าแรก แบรนด์ดิ้ง และสีธีม (ทั้ง 2 ภาษา) เรียบร้อยแล้ว", "success");
                     loadPlatformSettingsPublic();
                 } else {
                     showToast(data.detail || "Failed to save branding", "error");

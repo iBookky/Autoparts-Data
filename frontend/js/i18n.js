@@ -1739,6 +1739,11 @@ function setAppLanguage(lang) {
     if (typeof refreshActiveViewLanguage === 'function') {
         refreshActiveViewLanguage();
     }
+
+    // Re-apply dynamic platform theme branding and localized strings
+    if (typeof applyDynamicPlatformTheme === 'function' && typeof window !== 'undefined' && window.cachedPlatformSettings) {
+        applyDynamicPlatformTheme(window.cachedPlatformSettings);
+    }
 }
 
 function updateCurrentViewTitle() {
