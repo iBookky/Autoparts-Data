@@ -53,7 +53,7 @@
                 <button class="btn btn-outline" onclick="showAuthScreen()" style="padding: 0.5rem 1rem; font-size: 0.88rem;">
                     <i class="fa-solid fa-arrow-right-to-bracket"></i> <span data-i18n="landing.nav.signin">เข้าสู่ระบบ</span>
                 </button>
-                <button class="btn btn-primary" onclick="openTrialModal()" style="padding: 0.5rem 1.25rem; font-size: 0.88rem; font-weight: 600; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);">
+                <button class="btn btn-primary" onclick="openTrialModal()" style="padding: 0.5rem 1.25rem; font-size: 0.88rem; font-weight: 600;">
                     <i class="fa-solid fa-rocket"></i> <span data-i18n="landing.nav.trial">ทดลองใช้ฟรี 14 วัน</span>
                 </button>
                 
@@ -78,7 +78,7 @@
                 <button class="btn btn-outline" onclick="toggleLandingMobileMenu(); showAuthScreen();">
                     <i class="fa-solid fa-arrow-right-to-bracket"></i> <span data-i18n="landing.nav.signin">เข้าสู่ระบบ</span>
                 </button>
-                <button class="btn btn-primary" onclick="toggleLandingMobileMenu(); openTrialModal();" style="font-weight: 600; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);">
+                <button class="btn btn-primary" onclick="toggleLandingMobileMenu(); openTrialModal();" style="font-weight: 600;">
                     <i class="fa-solid fa-rocket"></i> <span data-i18n="landing.nav.trial">ทดลองใช้ฟรี 14 วัน</span>
                 </button>
             </div>
@@ -97,7 +97,7 @@
                 ค้นหารหัส OEM, เบอร์เทียบ Aftermarket 8 แบรนด์ชั้นนำ, ถอดรหัส VIN และตรวจสอบความเข้ากันได้ของชิ้นส่วนรถยนต์กว่า 5,000+ รายการ สำหรับอู่ซ่อมรถ ร้านอะไหล่ บริษัทประกัน และฟลีทรถยนต์
             </p>
             <div style="display: flex; justify-content: center; gap: 1rem; flex-wrap: wrap;">
-                <button class="btn btn-primary" onclick="openTrialModal()" style="padding: 0.85rem 2rem; font-size: 1.05rem; font-weight: 700; box-shadow: 0 6px 20px rgba(59, 130, 246, 0.5);">
+                <button class="btn btn-primary" onclick="openTrialModal()" style="padding: 0.85rem 2rem; font-size: 1.05rem; font-weight: 700;">
                     <i class="fa-solid fa-rocket"></i> <span data-i18n="landing.hero.btnTrial">เริ่มต้นทดลองใช้ฟรี 14 วัน</span>
                 </button>
                 <a href="#landing-demo" class="btn btn-outline" style="padding: 0.85rem 1.75rem; font-size: 1.05rem; text-decoration: none;">
@@ -297,7 +297,7 @@
                             <div class="plan-title" id="title-professional" data-i18n="plan.pro.title">สำหรับอู่มาตรฐาน & ร้านอะไหล่</div>
                             <div class="plan-price" id="price-professional">฿3,990<span class="plan-period">/เดือน</span></div>
                             <p class="plan-subtitle" id="desc-professional" data-i18n="plan.pro.desc">ครบครันสำหรับงานซ่อมและการขายทุกวัน</p>
-                            <button class="btn btn-primary" id="btn-plan-professional" onclick="openTrialModal('professional')" style="width: 100%; margin-bottom: 1.5rem; font-weight: 700; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);" data-i18n="plan.btn.trialPro">
+                            <button class="btn btn-primary" id="btn-plan-professional" onclick="openTrialModal('professional')" style="width: 100%; margin-bottom: 1.5rem; font-weight: 700;" data-i18n="plan.btn.trialPro">
                                 ทดลองใช้ฟรี 14 วัน (แนะนำ)
                             </button>
                         </div>
@@ -1539,6 +1539,12 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                 <i class="fa-solid fa-rotate-left"></i>
                             </button>
                         </div>
+                    </div>
+
+                    <!-- Active Date Range Indicator -->
+                    <div id="owner-active-date-range" style="display: none; margin-bottom: 1rem; padding: 0.5rem 0.85rem; background: rgba(59, 130, 246, 0.08); border: 1px solid rgba(59, 130, 246, 0.2); border-radius: var(--radius-sm); font-size: 0.82rem; color: #60A5FA; display: none; align-items: center; gap: 0.5rem;">
+                        <i class="fa-solid fa-calendar-check"></i>
+                        <span id="owner-date-range-text">แสดงข้อมูลทั้งหมด</span>
                     </div>
 
                     <!-- Top KPI Metrics Grid (8 Executive Cards) -->
@@ -5009,9 +5015,13 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
             // Sync URL Bar seamlessly without page reload
             if (updateUrl && window.history && window.history.pushState) {
-                const targetPath = VIEW_TO_PATH[viewId] || '/search';
-                if (window.location.pathname.toLowerCase() !== targetPath) {
-                    window.history.pushState({ viewId: viewId }, "", targetPath);
+                try {
+                    const targetPath = VIEW_TO_PATH[viewId] || '/search';
+                    if (window.location.pathname.toLowerCase() !== targetPath) {
+                        window.history.pushState({ viewId: viewId }, "", targetPath);
+                    }
+                } catch (e) {
+                    console.warn("history.pushState failed, continuing view switch:", e);
                 }
             }
 
@@ -8383,6 +8393,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 window.event.target.classList.add('active');
             }
 
+            updateOwnerDateRangeLabel();
             loadOwnerFilteredData();
         }
 
@@ -8395,6 +8406,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             const endInput = document.getElementById('owner-filter-end-date');
             window.ownerFilterStartDate = startInput ? startInput.value : '';
             window.ownerFilterEndDate = endInput ? endInput.value : '';
+            updateOwnerDateRangeLabel();
             loadOwnerFilteredData();
         }
 
@@ -8408,7 +8420,27 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             document.querySelectorAll('#owner-date-presets .date-preset-btn').forEach(btn => btn.classList.remove('active'));
             const default30d = document.querySelector('#owner-date-presets .date-preset-btn:nth-child(2)');
             if (default30d) default30d.classList.add('active');
+            updateOwnerDateRangeLabel();
             loadOwnerFilteredData();
+        }
+
+        function updateOwnerDateRangeLabel() {
+            const el = document.getElementById('owner-active-date-range');
+            const textEl = document.getElementById('owner-date-range-text');
+            if (!el || !textEl) return;
+
+            if (window.ownerFilterStartDate && window.ownerFilterEndDate) {
+                const fmt = (d) => { const p = d.split('-'); return `${p[2]}/${p[1]}/${p[0]}`; };
+                textEl.textContent = `กำลังแสดงข้อมูลช่วง: ${fmt(window.ownerFilterStartDate)} — ${fmt(window.ownerFilterEndDate)}`;
+                el.style.display = 'flex';
+            } else if (window.ownerFilterStartDate) {
+                const fmt = (d) => { const p = d.split('-'); return `${p[2]}/${p[1]}/${p[0]}`; };
+                textEl.textContent = `กำลังแสดงข้อมูลตั้งแต่: ${fmt(window.ownerFilterStartDate)}`;
+                el.style.display = 'flex';
+            } else {
+                textEl.textContent = 'แสดงข้อมูลทั้งหมด';
+                el.style.display = 'none';
+            }
         }
 
         function loadOwnerFilteredData() {

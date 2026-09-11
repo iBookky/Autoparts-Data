@@ -509,6 +509,45 @@
     background: #F1F5F9 !important;
 }
 
+/* Light Mode - KPI / Usage Cards */
+[data-theme="light"] .usage-card {
+    background: #FFFFFF !important;
+    border-color: #E2E8F0 !important;
+}
+[data-theme="light"] .usage-card-val {
+    color: #0F172A !important;
+}
+[data-theme="light"] .usage-card-title {
+    color: #475569 !important;
+}
+[data-theme="light"] .usage-card-sub {
+    color: #64748B !important;
+}
+
+/* Light Mode - Landing Footer */
+[data-theme="light"] .landing-footer {
+    background: #F1F5F9 !important;
+    border-top: 1px solid #E2E8F0 !important;
+}
+[data-theme="light"] .landing-footer div[style*="color: #fff"],
+[data-theme="light"] #landing-footer-logo-name {
+    color: #0F172A !important;
+}
+
+/* Light Mode - Role Switcher Dropdown */
+[data-theme="light"] #role-switcher-menu {
+    background: #FFFFFF !important;
+    border-color: #E2E8F0 !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Light Mode - Owner Date Range Indicator */
+[data-theme="light"] #owner-active-date-range {
+    background: rgba(37, 99, 235, 0.06) !important;
+    border-color: rgba(37, 99, 235, 0.15) !important;
+    color: #2563EB !important;
+}
+
 /* Theme Component Overrides */
 [data-theme="light"] .landing-container {
     background: radial-gradient(circle at 50% 0%, rgba(37, 99, 235, 0.08) 0%, #F8FAFC 60%) !important;
@@ -1554,6 +1593,7 @@ select.form-control option {
     max-width: 100%;
     min-width: 0;
     overflow: hidden;
+    box-shadow: none;
 }
 
 .btn-primary {
@@ -2494,6 +2534,19 @@ select.form-control option {
     justify-content: space-around;
     align-items: center;
     padding: 0 0.5rem;
+}
+
+[data-theme="light"] .mobile-bottom-nav {
+    background: rgba(255, 255, 255, 0.95) !important;
+    border-top-color: #E2E8F0 !important;
+}
+
+[data-theme="light"] .mobile-nav-item {
+    color: #64748B !important;
+}
+
+[data-theme="light"] .mobile-nav-item.active {
+    color: #2563EB !important;
 }
 
 .mobile-nav-item {
@@ -3605,7 +3658,28 @@ select.form-control option {
     flex-wrap: wrap;
     gap: 1rem;
     margin-bottom: 1.5rem;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    box-shadow: none;
+}
+
+[data-theme="light"] .owner-date-filter-bar {
+    background: #FFFFFF !important;
+    border-color: #E2E8F0 !important;
+}
+
+[data-theme="light"] .date-preset-btn {
+    border-color: #CBD5E1 !important;
+    color: #334155 !important;
+}
+
+[data-theme="light"] .date-preset-btn:hover {
+    background: #F1F5F9 !important;
+    color: #0F172A !important;
+}
+
+[data-theme="light"] .date-preset-btn.active {
+    background: rgba(37, 99, 235, 0.1) !important;
+    color: #2563EB !important;
+    border-color: #2563EB !important;
 }
 
 .date-presets-group {
