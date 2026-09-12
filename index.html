@@ -9,9 +9,9 @@
     <meta http-equiv="Expires" content="0">
     <script>(function(){const t=localStorage.getItem('autoparts_theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="icon" id="dynamic-favicon" type="image/png" href="/favicon.ico">
-    <link rel="stylesheet" href="/frontend/css/index.css?v=20260912_v15_server_reconnect">
+    <link rel="stylesheet" href="/frontend/css/index.css?v=20260912_v16_fix_network_error_root_cause">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="/frontend/js/i18n.js?v=20260912_v15_server_reconnect"></script>
+    <script src="/frontend/js/i18n.js?v=20260912_v16_fix_network_error_root_cause"></script>
 </head>
 <body>
 
@@ -4497,6 +4497,17 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
     <!-- Core SaaS Scripting Engine -->
     <script>
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+        window.escapeHtml = escapeHtml;
+
         let currentUser = null;
         let currentTenant = null;
         let lastSearchResults = [];
@@ -6727,7 +6738,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 }
             } catch (err) {
                 console.error(err);
-                showToast("Network error executing upgrade", "danger");
+                showToast(err.message || "Network error executing upgrade", "danger");
             }
         }
 
@@ -6845,7 +6856,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 }
             } catch (err) {
                 console.error(err);
-                showToast("Network error cancelling subscription", "danger");
+                showToast(err.message || "Network error cancelling subscription", "danger");
             }
         }
 
@@ -7204,7 +7215,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 }
             } catch (err) {
                 console.error(err);
-                showToast("Network error while updating profile", "danger");
+                showToast(err.message || "Network error while updating profile", "danger");
             }
         }
 
@@ -7326,7 +7337,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 }
             } catch (err) {
                 console.error(err);
-                showToast("Network error creating invitation", "danger");
+                showToast(err.message || "Network error creating invitation", "danger");
             }
         }
 
@@ -7362,7 +7373,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 }
             } catch (err) {
                 console.error(err);
-                showToast("Network error updating role", "danger");
+                showToast(err.message || "Network error updating role", "danger");
             }
         }
 
@@ -7385,7 +7396,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 }
             } catch (err) {
                 console.error(err);
-                showToast("Network error changing status", "danger");
+                showToast(err.message || "Network error changing status", "danger");
             }
         }
 
@@ -7406,7 +7417,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 }
             } catch (err) {
                 console.error(err);
-                showToast("Network error removing member", "danger");
+                showToast(err.message || "Network error removing member", "danger");
             }
         }
 
@@ -7817,8 +7828,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     showToast(data.detail || data.error || 'Failed to perform bulk action', 'error');
                 }
             } catch (err) {
-                console.error(err);
-                showToast('Network error', 'error');
+                console.error("bulkAdminReviewAction error:", err);
+                showToast(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'danger');
             }
         }
 
@@ -7947,7 +7958,12 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 if (data.requires_resolution) {
                     currentImportSession = data;
                     closeImportPartsModal();
-                    openDuplicateResolutionModal(data);
+                    try {
+                        openDuplicateResolutionModal(data);
+                    } catch (renderErr) {
+                        console.error("Failed to render duplicate resolution modal:", renderErr);
+                        showToast(`เกิดข้อผิดพลาดในการแสดงผลหน้าต่างยืนยัน: ${renderErr.message}`, 'danger');
+                    }
                     return;
                 }
 
@@ -7970,7 +7986,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     if (errors.length > 0) {
                         alertHtml += `<div style="max-height: 120px; overflow-y: auto; color: #F87171; font-size: 0.76rem; background: rgba(0,0,0,0.25); padding: 0.5rem; border-radius: 4px;">
                             <strong>พบข้อผิดพลาดบางรายการ (${errors.length}):</strong><br>
-                            ${errors.map(err => `• ${err}`).join('<br>')}
+                            ${errors.map(err => `• ${escapeHtml(err)}`).join('<br>')}
                         </div>`;
                     }
 
@@ -7990,19 +8006,19 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                         alertBox.style.display = 'block';
                         alertBox.style.background = 'rgba(239, 68, 68, 0.1)';
                         alertBox.style.border = '1px solid rgba(239, 68, 68, 0.3)';
-                        alertBox.innerHTML = `<span style="color: #F87171; font-weight: 600;"><i class="fa-solid fa-circle-xmark"></i> ${data.error || 'เกิดข้อผิดพลาดในการนำเข้า'}</span>`;
+                        alertBox.innerHTML = `<span style="color: #F87171; font-weight: 600;"><i class="fa-solid fa-circle-xmark"></i> ${escapeHtml(data.error) || 'เกิดข้อผิดพลาดในการนำเข้า'}</span>`;
                     }
-                    showToast(data.error || 'Import failed', 'error');
+                    showToast(data.error || 'Import failed', 'danger');
                 }
             } catch (err) {
-                console.error(err);
+                console.error("submitImportParts error:", err);
                 if (alertBox) {
                     alertBox.style.display = 'block';
                     alertBox.style.background = 'rgba(239, 68, 68, 0.1)';
                     alertBox.style.border = '1px solid rgba(239, 68, 68, 0.3)';
-                    alertBox.innerHTML = `<span style="color: #F87171; font-weight: 600;"><i class="fa-solid fa-circle-xmark"></i> เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์</span>`;
+                    alertBox.innerHTML = `<span style="color: #F87171; font-weight: 600;"><i class="fa-solid fa-circle-xmark"></i> ${escapeHtml(err.message) || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์'}</span>`;
                 }
-                showToast('Network error', 'error');
+                showToast(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'danger');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalText;
@@ -8350,11 +8366,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     loadAdminTempQueue();
                     loadAdminMasterParts();
                 } else {
-                    showToast(data.error || "เกิดข้อผิดพลาดในการบันทึกข้อมูล", "error");
+                    showToast(data.error || "เกิดข้อผิดพลาดในการบันทึกข้อมูล", "danger");
                 }
             } catch (err) {
-                console.error(err);
-                showToast("Network error", "error");
+                console.error("submitDuplicateResolutions error:", err);
+                showToast(err.message || "เกิดข้อผิดพลาดในการบันทึกข้อมูล", "danger");
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalText;
@@ -8391,17 +8407,19 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
                     const tbody = document.getElementById('master-parts-table-body');
                     tbody.innerHTML = '';
+                    window.cachedMasterPartsMap = window.cachedMasterPartsMap || {};
                     data.results.slice(0, 50).forEach(m => {
+                        window.cachedMasterPartsMap[m.id] = m;
                         const tr = document.createElement('tr');
                         tr.innerHTML = `
-                            <td><strong>${m.brand || '-'}</strong></td>
-                            <td><span class="code-badge">${m.part_number || '-'}</span></td>
-                            <td><span class="oem-badge">${m.oem_number || '-'}</span></td>
-                            <td>${m.product_name_th || '-'}</td>
-                            <td>${m.category || '-'}</td>
-                            <td>${m.car_brand || ''} ${m.car_model || ''}</td>
+                            <td><strong>${escapeHtml(m.brand || '-')}</strong></td>
+                            <td><span class="code-badge">${escapeHtml(m.part_number || '-')}</span></td>
+                            <td><span class="oem-badge">${escapeHtml(m.oem_number || '-')}</span></td>
+                            <td>${escapeHtml(m.product_name_th || '-')}</td>
+                            <td>${escapeHtml(m.category || '-')}</td>
+                            <td>${escapeHtml(((m.car_brand || '') + ' ' + (m.car_model || '')).trim() || '-')}</td>
                             <td style="text-align: right;">
-                                <button class="btn btn-secondary btn-sm" onclick='openEditModalDirect(${JSON.stringify(m).replace(/'/g, "&apos;")})'>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="openEditMasterPart(${m.id})" title="แก้ไขรายการ">
                                     <i class="fa-solid fa-pen"></i>
                                 </button>
                             </td>
@@ -8412,6 +8430,12 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             } catch (err) {
                 console.error(err);
             }
+        }
+
+        function openEditMasterPart(id) {
+            if (!window.cachedMasterPartsMap) return;
+            const item = window.cachedMasterPartsMap[id];
+            if (item) openEditModalDirect(item);
         }
 
         async function loadAdminSkills() {
@@ -8743,8 +8767,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     showToast(data.detail || data.error || 'Failed to add brand', 'error');
                 }
             } catch (err) {
-                console.error(err);
-                showToast('Network error', 'error');
+                console.error("submitAddAftermarketBrand error:", err);
+                showToast(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'danger');
             }
         }
 
@@ -8762,11 +8786,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     await loadAdminMetaOptions();
                     loadMetadataDropdowns();
                 } else {
-                    showToast('Failed to delete brand', 'error');
+                    showToast(data.detail || data.error || 'Failed to delete brand', 'danger');
                 }
             } catch (err) {
-                console.error(err);
-                showToast('Network error', 'error');
+                console.error("deleteMetaAftermarketBrand error:", err);
+                showToast(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'danger');
             }
         }
 
@@ -8789,11 +8813,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     await loadAdminMetaOptions();
                     loadMetadataDropdowns();
                 } else {
-                    showToast(data.detail || data.error || 'Failed to add car brand', 'error');
+                    showToast(data.detail || data.error || 'Failed to add car brand', 'danger');
                 }
             } catch (err) {
-                console.error(err);
-                showToast('Network error', 'error');
+                console.error("submitAddCarBrand error:", err);
+                showToast(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'danger');
             }
         }
 
@@ -8811,11 +8835,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     await loadAdminMetaOptions();
                     loadMetadataDropdowns();
                 } else {
-                    showToast('Failed to delete car brand', 'error');
+                    showToast(data.detail || data.error || 'Failed to delete car brand', 'danger');
                 }
             } catch (err) {
-                console.error(err);
-                showToast('Network error', 'error');
+                console.error("deleteMetaCarBrand error:", err);
+                showToast(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'danger');
             }
         }
 
@@ -8845,7 +8869,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 }
             } catch (err) {
                 console.error(err);
-                showToast('Network error', 'error');
+                showToast(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'danger');
             }
         }
 
@@ -8863,11 +8887,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     await loadAdminMetaOptions();
                     loadMetadataDropdowns();
                 } else {
-                    showToast('Failed to delete category', 'error');
+                    showToast('Failed to delete category', 'danger');
                 }
             } catch (err) {
                 console.error(err);
-                showToast('Network error', 'error');
+                showToast(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'danger');
             }
         }
 
@@ -8905,11 +8929,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     await loadAdminMetaOptions();
                     loadMetadataDropdowns();
                 } else {
-                    showToast(data.detail || data.error || 'Failed to update category', 'error');
+                    showToast(data.detail || data.error || 'Failed to update category', 'danger');
                 }
             } catch (err) {
                 console.error(err);
-                showToast('Network error', 'error');
+                showToast(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'danger');
             }
         }
 
@@ -8944,11 +8968,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     await loadAdminMetaOptions();
                     loadMetadataDropdowns();
                 } else {
-                    showToast(data.detail || data.error || 'Failed to update brand', 'error');
+                    showToast(data.detail || data.error || 'Failed to update brand', 'danger');
                 }
             } catch (err) {
                 console.error(err);
-                showToast('Network error', 'error');
+                showToast(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'danger');
             }
         }
 
@@ -8983,11 +9007,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     await loadAdminMetaOptions();
                     loadMetadataDropdowns();
                 } else {
-                    showToast(data.detail || data.error || 'Failed to update car brand', 'error');
+                    showToast(data.detail || data.error || 'Failed to update car brand', 'danger');
                 }
             } catch (err) {
                 console.error(err);
-                showToast('Network error', 'error');
+                showToast(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'danger');
             }
         }
 
@@ -9027,11 +9051,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     await loadAdminMetaOptions();
                     loadMetadataDropdowns();
                 } else {
-                    showToast(data.detail || data.error || 'Failed to update car model', 'error');
+                    showToast(data.detail || data.error || 'Failed to update car model', 'danger');
                 }
             } catch (err) {
                 console.error(err);
-                showToast('Network error', 'error');
+                showToast(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'danger');
             }
         }
 
@@ -9066,11 +9090,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     await loadAdminMetaOptions();
                     loadMetadataDropdowns();
                 } else {
-                    showToast(data.detail || data.error || 'Failed to update year', 'error');
+                    showToast(data.detail || data.error || 'Failed to update year', 'danger');
                 }
             } catch (err) {
                 console.error(err);
-                showToast('Network error', 'error');
+                showToast(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'danger');
             }
         }
 
@@ -9095,11 +9119,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     await loadAdminMetaOptions();
                     loadMetadataDropdowns();
                 } else {
-                    showToast(data.detail || data.error || 'Failed to add car model', 'error');
+                    showToast(data.detail || data.error || 'Failed to add car model', 'danger');
                 }
             } catch (err) {
                 console.error(err);
-                showToast('Network error', 'error');
+                showToast(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'danger');
             }
         }
 
@@ -9117,11 +9141,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     await loadAdminMetaOptions();
                     loadMetadataDropdowns();
                 } else {
-                    showToast('Failed to delete car model', 'error');
+                    showToast('Failed to delete car model', 'danger');
                 }
             } catch (err) {
                 console.error(err);
-                showToast('Network error', 'error');
+                showToast(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'danger');
             }
         }
 
@@ -9144,11 +9168,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     await loadAdminMetaOptions();
                     loadMetadataDropdowns();
                 } else {
-                    showToast(data.detail || data.error || 'Failed to add car year', 'error');
+                    showToast(data.detail || data.error || 'Failed to add car year', 'danger');
                 }
             } catch (err) {
                 console.error(err);
-                showToast('Network error', 'error');
+                showToast(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'danger');
             }
         }
 
@@ -9166,11 +9190,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     await loadAdminMetaOptions();
                     loadMetadataDropdowns();
                 } else {
-                    showToast('Failed to delete car year', 'error');
+                    showToast('Failed to delete car year', 'danger');
                 }
             } catch (err) {
                 console.error(err);
-                showToast('Network error', 'error');
+                showToast(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'danger');
             }
         }
 
@@ -9195,11 +9219,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     inputProvider.value = '';
                     await loadAdminMetaOptions();
                 } else {
-                    showToast(data.detail || data.error || 'Failed to add AI model', 'error');
+                    showToast(data.detail || data.error || 'Failed to add AI model', 'danger');
                 }
             } catch (err) {
                 console.error(err);
-                showToast('Network error', 'error');
+                showToast(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'danger');
             }
         }
 
@@ -9216,11 +9240,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     showToast((typeof t === 'function') ? t('admin.meta.itemDeleted', 'Item deleted successfully') : 'Item deleted successfully', 'success');
                     await loadAdminMetaOptions();
                 } else {
-                    showToast('Failed to delete AI model', 'error');
+                    showToast('Failed to delete AI model', 'danger');
                 }
             } catch (err) {
                 console.error(err);
-                showToast('Network error', 'error');
+                showToast(err.message || 'เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์', 'danger');
             }
         }
 
@@ -9278,13 +9302,16 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 });
                 const data = await res.json();
                 if (data.success) {
-                    showToast("Part updated successfully", "success");
+                    showToast("แก้ไขข้อมูลอะไหล่เรียบร้อยแล้ว", "success");
                     closeEditModal();
+                    loadAdminMasterParts();
                     performAdvancedSearch();
+                } else {
+                    showToast(data.detail || data.error || "เกิดข้อผิดพลาดในการแก้ไขข้อมูล", "danger");
                 }
             } catch (err) {
                 console.error(err);
-                showToast("Failed to update part", "danger");
+                showToast("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์เพื่อบันทึกข้อมูลได้", "danger");
             }
         }
 
@@ -11275,7 +11302,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 }
             } catch (err) {
                 console.error(err);
-                showToast("Network error saving AI Model", "error");
+                showToast(err.message || "Failed to save AI Model", "danger");
             }
         }
 
@@ -11417,7 +11444,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 }
             } catch (err) {
                 console.error(err);
-                showToast(`Network error testing ${provider.toUpperCase()} connection`, "error");
+                showToast(err.message || `Error testing ${provider.toUpperCase()} connection`, "danger");
             }
         }
 
