@@ -9,9 +9,9 @@
     <meta http-equiv="Expires" content="0">
     <script>(function(){const t=localStorage.getItem('autoparts_theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="icon" id="dynamic-favicon" type="image/png" href="/favicon.ico">
-    <link rel="stylesheet" href="/frontend/css/index.css?v=20260912_v20_remove_search_export">
+    <link rel="stylesheet" href="/frontend/css/index.css?v=20260912_v21_payment_tab_dom_fix">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="/frontend/js/i18n.js?v=20260912_v20_remove_search_export"></script>
+    <script src="/frontend/js/i18n.js?v=20260912_v21_payment_tab_dom_fix"></script>
 </head>
 <body>
 
@@ -2627,6 +2627,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                     <button type="button" class="btn btn-secondary" onclick="previewSampleInvoiceModal()">
                                         <i class="fa-solid fa-eye"></i> ดูตัวอย่างใบกำกับภาษี / ใบเสร็จจริง (Live Preview)
                                     </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- 15. Payment Gateway Settings & API Configurations -->
                     <div id="owner-sub-payments" style="display: none;">
                         <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem; margin-bottom: 1.5rem;">
@@ -10420,79 +10425,103 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 'PROMPTPAY': {
                     title: 'PromptPay QR Payment (พร้อมเพย์ คิวอาร์โค้ด)',
                     icon: 'fa-solid fa-qrcode',
-                    badge: 'ยอดนิยมสำหรับไทย',
+                    badge: 'ยอดนิยมสูงสุดในไทย',
                     color: '#10B981',
-                    pubLabel: 'PromptPay ID / Biller ID',
-                    secLabel: 'Secret Key / Hash Salt',
-                    hasWebhook: false
+                    desc: 'สร้าง QR Code ให้ลูกค้าสแกนจ่ายผ่าน Mobile Banking ได้ทุกธนาคาร เงินเข้าบัญชีทันที',
+                    type: 'promptpay'
                 },
                 'STRIPE': {
                     title: 'Stripe Payment Gateway (บัตรเครดิต/เดบิต สากล)',
                     icon: 'fa-brands fa-stripe',
-                    badge: 'บัตรเครดิตสากล',
+                    badge: 'บัตรเครดิต & ตัดรอบบิลอัตโนมัติ',
                     color: '#6366F1',
-                    pubLabel: 'Stripe Publishable Key (pk_live_... / pk_test_...)',
-                    secLabel: 'Stripe Secret Key (sk_live_... / sk_test_...)',
-                    hasWebhook: true
+                    desc: 'รองรับบัตรเครดิต/เดบิต Visa, Mastercard, JCB ทั้งในและต่างประเทศ พร้อมระบบ Recurring บิลอัตโนมัติ',
+                    type: 'card_gateway'
                 },
                 'OMISE': {
                     title: 'Omise / Opn Payments (บัตรเครดิต, Rabbit LINE Pay, TrueMoney)',
                     icon: 'fa-solid fa-wallet',
-                    badge: 'Thailand Gateway',
+                    badge: 'Thailand Leading Gateway',
                     color: '#3B82F6',
-                    pubLabel: 'Public Key (pkey_...)',
-                    secLabel: 'Secret Key (skey_...)',
-                    hasWebhook: true
+                    desc: 'เกตเวย์ชั้นนำของไทย รองรับบัตรเครดิต, TrueMoney Wallet, Rabbit LINE Pay และ Mobile Banking',
+                    type: 'card_gateway'
                 },
                 'GB_PRIME_PAY': {
                     title: 'GB Prime Pay (บัตรเครดิต, QR, ผ่อนชำระ 0%)',
                     icon: 'fa-solid fa-money-bill-transfer',
-                    badge: 'QR & Installment',
+                    badge: 'QR Cash & ผ่อนชำระ',
                     color: '#F59E0B',
-                    pubLabel: 'Public Key / Merchant ID',
-                    secLabel: 'Secret Key / Token Key',
-                    hasWebhook: true
+                    desc: 'ระบบรับชำระเงินมาตรฐาน ธปท. รองรับ QR รายการ, บัตรเครดิต และโปรแกรมผ่อนชำระ 0%',
+                    type: 'card_gateway'
                 },
                 'BANK_TRANSFER': {
-                    title: 'โอนผ่านบัญชีธนาคารตรง (Direct Bank Transfer / Bill Payment)',
+                    title: 'โอนเงินผ่านบัญชีธนาคารตรง (Direct Bank Transfer / Slip Upload)',
                     icon: 'fa-solid fa-building-columns',
-                    badge: 'โอนตรงเข้าบัญชี',
+                    badge: 'โอนตรงเข้าบัญชีบริษัท',
                     color: '#14B8A6',
-                    pubLabel: 'เลขที่บัญชี & ธนาคาร (Account Info)',
-                    secLabel: 'ชื่อบัญชี / รายละเอียดสาขา (Account Name)',
-                    hasWebhook: false
+                    desc: 'โอนเงินเข้าบัญชีบริษัทโดยตรง แนบสลิปผ่านระบบ รอ Owner กดอนุมัติเปิดใช้งาน 1 คลิก',
+                    type: 'bank'
                 }
             };
 
-            container.innerHTML = gateways.map(g => {
+            const activeCount = gateways.filter(g => g.is_enabled).length;
+
+            const summaryHeader = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-bottom: 0.5rem;">
+                    <div style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); border-radius: var(--radius-sm); padding: 0.85rem 1rem;">
+                        <div style="font-size: 0.78rem; color: var(--text-muted);">ช่องทางที่เปิดใช้งานอยู่</div>
+                        <div style="font-size: 1.4rem; font-weight: 800; color: #10B981;">${activeCount} / ${gateways.length} ช่องทาง</div>
+                    </div>
+                    <div style="background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.25); border-radius: var(--radius-sm); padding: 0.85rem 1rem;">
+                        <div style="font-size: 0.78rem; color: var(--text-muted);">ระบบความปลอดภัย API</div>
+                        <div style="font-size: 1.1rem; font-weight: 700; color: #818CF8;"><i class="fa-solid fa-shield-halved"></i> Masked & Encrypted</div>
+                    </div>
+                </div>
+            `;
+
+            const cardsHtml = gateways.map(g => {
                 const info = providerDetails[g.provider] || {
                     title: g.provider,
                     icon: 'fa-solid fa-credit-card',
                     badge: 'Gateway',
                     color: '#8B5CF6',
-                    pubLabel: 'Public Key / Client ID',
-                    secLabel: 'Secret Key / Token',
-                    hasWebhook: false
+                    desc: '',
+                    type: 'card_gateway'
                 };
 
+                const isBank = info.type === 'bank';
+                const isPromptPay = info.type === 'promptpay';
+
                 return `
-                    <div style="background: rgba(255,255,255,0.02); border: 1px solid ${g.is_enabled ? 'rgba(16,185,129,0.35)' : 'var(--border-color)'}; border-radius: var(--radius-md); padding: 1.25rem;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
-                            <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; color: ${info.color};">
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid ${g.is_enabled ? 'rgba(16,185,129,0.35)' : 'var(--border-color)'}; border-radius: var(--radius-md); padding: 1.25rem; transition: border-color 0.2s;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+                            <div style="display: flex; align-items: flex-start; gap: 0.85rem;">
+                                <div style="width: 44px; height: 44px; border-radius: 10px; background: rgba(255,255,255,0.06); display: flex; align-items: center; justify-content: center; font-size: 1.35rem; color: ${info.color}; flex-shrink: 0; margin-top: 2px;">
                                     <i class="${info.icon}"></i>
                                 </div>
                                 <div>
-                                    <div style="font-weight: 700; color: #fff; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                                    <div style="font-weight: 700; color: #fff; font-size: 1.05rem; display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
                                         ${info.title}
-                                        <span class="badge" style="background: rgba(255,255,255,0.1); color: var(--text-secondary); font-size: 0.7rem; font-weight: 500;">${info.badge}</span>
+                                        <span class="badge" style="background: rgba(255,255,255,0.08); color: var(--text-secondary); font-size: 0.7rem; font-weight: 500;">${info.badge}</span>
+                                        ${g.is_enabled ? `
+                                            <span class="status-badge verified" style="font-size: 0.68rem; padding: 0.15rem 0.45rem;">
+                                                <i class="fa-solid fa-circle-check"></i> เปิดรับเงิน
+                                            </span>
+                                        ` : `
+                                            <span class="status-badge reviewed" style="font-size: 0.68rem; padding: 0.15rem 0.45rem;">
+                                                ปิดชั่วคราว
+                                            </span>
+                                        `}
                                     </div>
-                                    <div style="font-size: 0.75rem; color: var(--text-muted);">รหัสผู้ให้บริการ: ${g.provider} | แก้ไขล่าสุด: ${g.updated_at ? g.updated_at.substring(0, 19).replace('T', ' ') : 'N/A'}</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;">${info.desc}</div>
+                                    <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 0.15rem;">
+                                        รหัสระบบ: <code style="color: #93C5FD;">${g.provider}</code> | อัปเดตล่าสุด: ${g.updated_at ? g.updated_at.substring(0, 19).replace('T', ' ') : 'N/A'}
+                                    </div>
                                 </div>
                             </div>
-                            <div style="display: flex; align-items: center; gap: 0.75rem;">
-                                <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; font-size: 0.85rem; color: #fff;">
-                                    <input type="checkbox" id="gw-enable-${g.provider}" ${g.is_enabled ? 'checked' : ''} style="width: 16px; height: 16px; cursor: pointer;">
+                            <div style="display: flex; align-items: center; background: rgba(255,255,255,0.04); padding: 0.4rem 0.75rem; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.1);">
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem; font-weight: 600; color: ${g.is_enabled ? '#34D399' : '#fff'};">
+                                    <input type="checkbox" id="gw-enable-${g.provider}" ${g.is_enabled ? 'checked' : ''} style="width: 17px; height: 17px; cursor: pointer; accent-color: #10B981;">
                                     เปิดใช้งานช่องทางนี้
                                 </label>
                             </div>
@@ -10500,40 +10529,94 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
                         <form onsubmit="savePaymentGateway('${g.provider}', event)">
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
-                                <div class="form-group">
-                                    <label class="form-label">${info.pubLabel}</label>
-                                    <input type="text" id="gw-pubkey-${g.provider}" class="form-control" value="${g.public_key || ''}" placeholder="ระบุ Public Key หรือ Merchant ID">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">${info.secLabel}</label>
-                                    <input type="password" id="gw-seckey-${g.provider}" class="form-control" value="${g.secret_key || ''}" placeholder="ระบุ Secret Key (เว้นว่างไว้เพื่อคงค่าเดิม)">
-                                </div>
-                                <div class="form-group">
-                                    <label class="form-label">โหมดการทำงาน (Environment)</label>
-                                    <select id="gw-mode-${g.provider}" class="form-control">
-                                        <option value="SANDBOX" ${g.mode === 'SANDBOX' ? 'selected' : ''}>🧪 SANDBOX (ทดสอบระบบ / Test Mode)</option>
-                                        <option value="PRODUCTION" ${g.mode === 'PRODUCTION' ? 'selected' : ''}>🚀 PRODUCTION (ใช้งานจริง / Live Mode)</option>
-                                    </select>
-                                </div>
-                                ${info.hasWebhook ? `
+                                ${isPromptPay ? `
+                                    <div class="form-group">
+                                        <label class="form-label">PromptPay ID (เบอร์โทร 10 หลัก หรือ เลขนิติบุคคล 13 หลัก) <span style="color: var(--danger);">*</span></label>
+                                        <input type="text" id="gw-promptpay-${g.provider}" class="form-control" value="${g.promptpay_id || ''}" placeholder="เช่น 0812345678 หรือ 0105559998881">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">ชื่อบัญชีผู้รับเงิน (Account Name)</label>
+                                        <input type="text" id="gw-acctname-${g.provider}" class="form-control" value="${g.bank_account_name || ''}" placeholder="เช่น บจก. สยาม ออโต้พาร์ท">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">โหมดการทำงาน (Environment)</label>
+                                        <select id="gw-mode-${g.provider}" class="form-control">
+                                            <option value="SANDBOX" ${g.mode === 'SANDBOX' ? 'selected' : ''}>🧪 SANDBOX (ทดสอบระบบ / Test QR)</option>
+                                            <option value="PRODUCTION" ${g.mode === 'PRODUCTION' ? 'selected' : ''}>🚀 PRODUCTION (ใช้งานจริง / Live QR)</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">ค่าธรรมเนียมธุรกรรม (%)</label>
+                                        <input type="number" id="gw-feepct-${g.provider}" class="form-control" value="${g.fee_percentage || '0.0'}" step="0.01" placeholder="0.00">
+                                    </div>
+                                ` : isBank ? `
+                                    <div class="form-group">
+                                        <label class="form-label">ธนาคารผู้รับเงิน (Bank Name) <span style="color: var(--danger);">*</span></label>
+                                        <input type="text" id="gw-bankname-${g.provider}" class="form-control" value="${g.bank_name || ''}" placeholder="เช่น ธนาคารกสิกรไทย (KBANK) สาขาสยาม">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">เลขที่บัญชีธนาคาร (Account Number) <span style="color: var(--danger);">*</span></label>
+                                        <input type="text" id="gw-acctno-${g.provider}" class="form-control" value="${g.bank_account_number || ''}" placeholder="เช่น 123-4-56789-0">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">ชื่อบัญชีเงินฝาก (Account Name) <span style="color: var(--danger);">*</span></label>
+                                        <input type="text" id="gw-acctname-${g.provider}" class="form-control" value="${g.bank_account_name || ''}" placeholder="เช่น บจก. สยาม ออโต้พาร์ท แพลตฟอร์ม">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">โหมดการทำงาน (Environment)</label>
+                                        <select id="gw-mode-${g.provider}" class="form-control">
+                                            <option value="PRODUCTION" ${g.mode === 'PRODUCTION' ? 'selected' : ''}>🚀 PRODUCTION (ใช้งานจริง / Live Mode)</option>
+                                            <option value="SANDBOX" ${g.mode === 'SANDBOX' ? 'selected' : ''}>🧪 SANDBOX (ทดสอบระบบ / Test Mode)</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group" style="grid-column: 1 / -1;">
+                                        <label class="form-label">คำแนะนำการโอนและแจ้งชำระเงิน (Instructions for Customer)</label>
+                                        <input type="text" id="gw-instruct-${g.provider}" class="form-control" value="${g.instructions || ''}" placeholder="เช่น กรุณาโอนเงินตามยอดที่ระบุ และแนบสลิปผ่านระบบ เจ้าหน้าที่จะตรวจสอบและเปิดใช้งานภายใน 15 นาที">
+                                    </div>
+                                ` : `
+                                    <div class="form-group">
+                                        <label class="form-label">Public Key / Merchant ID <span style="color: var(--danger);">*</span></label>
+                                        <input type="text" id="gw-pubkey-${g.provider}" class="form-control" value="${g.public_key || ''}" placeholder="pk_live_... หรือ Merchant ID">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">Secret Key / API Key <span style="color: var(--danger);">*</span></label>
+                                        <input type="password" id="gw-seckey-${g.provider}" class="form-control" value="${g.secret_key || ''}" placeholder="sk_live_... (เว้นว่างไว้เพื่อคงค่าเดิม)">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">โหมดการทำงาน (Environment)</label>
+                                        <select id="gw-mode-${g.provider}" class="form-control">
+                                            <option value="SANDBOX" ${g.mode === 'SANDBOX' ? 'selected' : ''}>🧪 SANDBOX (ทดสอบระบบ / Test Mode)</option>
+                                            <option value="PRODUCTION" ${g.mode === 'PRODUCTION' ? 'selected' : ''}>🚀 PRODUCTION (ใช้งานจริง / Live Mode)</option>
+                                        </select>
+                                    </div>
                                     <div class="form-group">
                                         <label class="form-label">Webhook Secret / Signing Key</label>
                                         <input type="password" id="gw-webhook-${g.provider}" class="form-control" value="${g.webhook_secret || ''}" placeholder="whsec_... (ถ้ามี)">
                                     </div>
-                                ` : ''}
+                                    <div class="form-group">
+                                        <label class="form-label">ค่าธรรมเนียม Gateway (%)</label>
+                                        <input type="number" id="gw-feepct-${g.provider}" class="form-control" value="${g.fee_percentage || '0.0'}" step="0.01" placeholder="3.65">
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="form-label">ค่าธรรมเนียมคงที่ (บาท/รายการ)</label>
+                                        <input type="number" id="gw-feefixed-${g.provider}" class="form-control" value="${g.fee_fixed || '0.0'}" step="0.5" placeholder="0.00">
+                                    </div>
+                                `}
                             </div>
                             <div style="display: flex; justify-content: flex-end; gap: 0.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.75rem;">
                                 <button type="button" class="btn btn-secondary btn-sm" onclick="testPaymentGatewayConnection('${g.provider}')">
                                     <i class="fa-solid fa-plug"></i> ทดสอบการเชื่อมต่อ API
                                 </button>
                                 <button type="submit" class="btn btn-primary btn-sm">
-                                    <i class="fa-solid fa-floppy-disk"></i> บันทึกการตั้งค่า
+                                    <i class="fa-solid fa-floppy-disk"></i> บันทึกการตั้งค่า ${info.badge}
                                 </button>
                             </div>
                         </form>
                     </div>
                 `;
             }).join('');
+
+            container.innerHTML = summaryHeader + cardsHtml;
         }
 
         async function savePaymentGateway(provider, event) {
@@ -10543,6 +10626,13 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             const secretKey = document.getElementById(`gw-seckey-${provider}`)?.value?.trim() || '';
             const mode = document.getElementById(`gw-mode-${provider}`)?.value || 'SANDBOX';
             const webhookSecret = document.getElementById(`gw-webhook-${provider}`)?.value?.trim() || '';
+            const promptpayId = document.getElementById(`gw-promptpay-${provider}`)?.value?.trim() || '';
+            const bankName = document.getElementById(`gw-bankname-${provider}`)?.value?.trim() || '';
+            const bankAccountNo = document.getElementById(`gw-acctno-${provider}`)?.value?.trim() || '';
+            const bankAccountName = document.getElementById(`gw-acctname-${provider}`)?.value?.trim() || '';
+            const feePct = parseFloat(document.getElementById(`gw-feepct-${provider}`)?.value || '0') || 0;
+            const feeFixed = parseFloat(document.getElementById(`gw-feefixed-${provider}`)?.value || '0') || 0;
+            const instructions = document.getElementById(`gw-instruct-${provider}`)?.value?.trim() || '';
 
             try {
                 showToast(`กำลังบันทึกการตั้งค่า ${provider}...`, "info");
@@ -10555,7 +10645,14 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                         public_key: publicKey,
                         secret_key: secretKey,
                         webhook_secret: webhookSecret,
-                        mode: mode
+                        mode: mode,
+                        promptpay_id: promptpayId,
+                        bank_name: bankName,
+                        bank_account_number: bankAccountNo,
+                        bank_account_name: bankAccountName,
+                        fee_percentage: feePct,
+                        fee_fixed: feeFixed,
+                        instructions: instructions
                     })
                 });
                 const data = await res.json();
@@ -10563,7 +10660,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     showToast(`✅ บันทึกการตั้งค่า ${provider} เรียบร้อยแล้ว`, "success");
                     loadOwnerPaymentSettingsTab();
                 } else {
-                    showToast(data.detail || "เกิดข้อผิดพลาดในการบันทึก", "danger");
+                    showToast(data.detail || data.error || "เกิดข้อผิดพลาดในการบันทึก", "danger");
                 }
             } catch (err) {
                 console.error("Error saving payment gateway:", err);
