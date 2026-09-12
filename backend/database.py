@@ -3785,12 +3785,19 @@ def register_trial_tenant_db(data: Dict[str, Any]) -> Dict[str, Any]:
         sub_id = cursor.lastrowid
         
         # 6. Seed Entitlements Whitelist
-        user_brands = data.get("selected_brands") or data.get("brands") or ["HONDA", "TOYOTA", "ISUZU", "NISSAN", "MAZDA"]
-        for brand in user_brands:
+        # Vehicle makes (BRAND) are universally available unless custom-restricted
+        user_brands = data.get("selected_brands") or data.get("brands")
+        if user_brands and isinstance(user_brands, list) and len(user_brands) > 0 and '*' not in user_brands:
+            for brand in user_brands:
+                cursor.execute("""
+                    INSERT OR IGNORE INTO entitlements (org_id, entitlement_type, entitlement_value, is_granted)
+                    VALUES (?, 'BRAND', ?, 1)
+                """, (org_id, str(brand).strip().upper()))
+        else:
             cursor.execute("""
                 INSERT OR IGNORE INTO entitlements (org_id, entitlement_type, entitlement_value, is_granted)
-                VALUES (?, 'BRAND', ?, 1)
-            """, (org_id, brand.strip()))
+                VALUES (?, 'BRAND', '*', 1)
+            """, (org_id,))
 
         user_cats = data.get("selected_categories") or data.get("categories")
         if user_cats and isinstance(user_cats, list) and len(user_cats) > 0:
@@ -3815,8 +3822,10 @@ def register_trial_tenant_db(data: Dict[str, Any]) -> Dict[str, Any]:
                 """, (org_id, cat))
 
         user_aftermarket = data.get("selected_aftermarket_brands") or data.get("aftermarket_brands")
+        max_b_seed = plan_dict.get("max_brands", 2)
         if user_aftermarket and isinstance(user_aftermarket, list) and len(user_aftermarket) > 0:
-            for ab in user_aftermarket:
+            target_brands = user_aftermarket if max_b_seed == -1 else user_aftermarket[:max_b_seed]
+            for ab in target_brands:
                 ab_clean = str(ab).strip().upper()
                 if ab_clean:
                     cursor.execute("""
@@ -3824,11 +3833,19 @@ def register_trial_tenant_db(data: Dict[str, Any]) -> Dict[str, Any]:
                         VALUES (?, 'AFTERMARKET_BRAND', ?, 1)
                     """, (org_id, ab_clean))
         else:
-            # Grant all aftermarket brands by default for trial
-            cursor.execute("""
-                INSERT OR IGNORE INTO entitlements (org_id, entitlement_type, entitlement_value, is_granted)
-                VALUES (?, 'AFTERMARKET_BRAND', '*', 1)
-            """, (org_id,))
+            if max_b_seed == -1:
+                cursor.execute("""
+                    INSERT OR IGNORE INTO entitlements (org_id, entitlement_type, entitlement_value, is_granted)
+                    VALUES (?, 'AFTERMARKET_BRAND', '*', 1)
+                """, (org_id,))
+            else:
+                cursor.execute("SELECT name FROM meta_aftermarket_brands ORDER BY id ASC LIMIT ?", (max_b_seed,))
+                default_abs = [r["name"] for r in cursor.fetchall()]
+                for ab in default_abs:
+                    cursor.execute("""
+                        INSERT OR IGNORE INTO entitlements (org_id, entitlement_type, entitlement_value, is_granted)
+                        VALUES (?, 'AFTERMARKET_BRAND', ?, 1)
+                    """, (org_id, ab))
         
         # 7. Seed Initial usage_records for current month
         cur_month = datetime.now().strftime("%Y-%m")

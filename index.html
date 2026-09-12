@@ -9,9 +9,9 @@
     <meta http-equiv="Expires" content="0">
     <script>(function(){const t=localStorage.getItem('autoparts_theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="icon" id="dynamic-favicon" type="image/png" href="/favicon.ico">
-    <link rel="stylesheet" href="/frontend/css/index.css?v=20260912_v12_modal_all_scroll">
+    <link rel="stylesheet" href="/frontend/css/index.css?v=20260912_v13_aftermarket_brand_quota">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="/frontend/js/i18n.js?v=20260912_v12_modal_all_scroll"></script>
+    <script src="/frontend/js/i18n.js?v=20260912_v13_aftermarket_brand_quota"></script>
 </head>
 <body>
 
@@ -281,7 +281,7 @@
                         </div>
                         <ul class="plan-features">
                             <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="starter-f1" data-i18n="plan.starter.f1">ค้นหา <strong>1,000 ครั้ง</strong> / เดือน</span></li>
-                            <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="starter-f2" data-i18n="plan.starter.f2">เลือกได้ <strong>2 ยี่ห้อรถ</strong></span></li>
+                            <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="starter-f2" data-i18n="plan.starter.f2">เลือกได้ <strong>2 แบรนด์ Aftermarket</strong></span></li>
                             <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="starter-f3" data-i18n="plan.starter.f3">เลือกได้ <strong>2 หมวดหมู่</strong></span></li>
                             <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="starter-f4" data-i18n="plan.starter.f4"><strong>1 บัญชีผู้ใช้</strong></span></li>
                             <li><i class="fa-solid fa-check feature-check"></i> <span data-i18n="plan.starter.f5">ระบบบันทึกอะไหล่ (Saved Parts)</span></li>
@@ -303,7 +303,7 @@
                         </div>
                         <ul class="plan-features">
                             <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="professional-f1" data-i18n="plan.pro.f1">ค้นหา <strong>5,000 ครั้ง</strong> / เดือน</span></li>
-                            <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="professional-f2" data-i18n="plan.pro.f2">เลือกได้ <strong>5 ยี่ห้อรถหลัก</strong></span></li>
+                            <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="professional-f2" data-i18n="plan.pro.f2">เลือกได้ <strong>5 แบรนด์ Aftermarket</strong></span></li>
                             <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="professional-f3" data-i18n="plan.pro.f3">ครบทั้ง <strong>5 หมวดหมู่อะไหล่</strong></span></li>
                             <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="professional-f4" data-i18n="plan.pro.f4"><strong>3 บัญชีผู้ใช้</strong> (ทีมงาน)</span></li>
                             <li><i class="fa-solid fa-check feature-check"></i> <span data-i18n="plan.pro.f5">ถอดรหัส VIN <strong>100 คัน/ด.</strong></span></li>
@@ -324,7 +324,7 @@
                         </div>
                         <ul class="plan-features">
                             <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="business-f1" data-i18n="plan.biz.f1">ค้นหา <strong>20,000 ครั้ง</strong> / เดือน</span></li>
-                            <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="business-f2" data-i18n="plan.biz.f2"><strong>ทุกยี่ห้อรถยนต์</strong> (ไม่จำกัด)</span></li>
+                            <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="business-f2" data-i18n="plan.biz.f2"><strong>ทุกแบรนด์ Aftermarket</strong> (ไม่จำกัด)</span></li>
                             <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="business-f3" data-i18n="plan.biz.f3"><strong>ทุกหมวดหมู่สินค้า</strong></span></li>
                             <li><i class="fa-solid fa-check feature-check"></i> <span data-plan-feature="business-f4" data-i18n="plan.biz.f4"><strong>10 บัญชีผู้ใช้</strong></span></li>
                             <li><i class="fa-solid fa-check feature-check"></i> <span data-i18n="plan.biz.f5">REST API <strong>10,000 calls</strong></span></li>
@@ -3193,7 +3193,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     </div>
                     <div class="form-grid-3">
                         <div class="form-group">
-                            <label class="form-label" data-i18n="modal.createPlan.brands">Max Brands <small style="font-weight: normal; color: var(--text-muted);">(-1=ไม่จำกัด)</small></label>
+                            <label class="form-label" data-i18n="modal.createPlan.brands">จำนวนแบรนด์ Aftermarket <small style="font-weight: normal; color: var(--text-muted);">(-1=ไม่จำกัด)</small></label>
                             <input type="number" id="cp-brands" class="form-control" value="15" required>
                         </div>
                         <div class="form-group">
@@ -3280,7 +3280,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     </div>
                     <div class="form-grid-3">
                         <div class="form-group">
-                            <label class="form-label" data-i18n="modal.createPlan.brands">Max Brands <small style="font-weight: normal; color: var(--text-muted);">(-1=ไม่จำกัด)</small></label>
+                            <label class="form-label" data-i18n="modal.createPlan.brands">จำนวนแบรนด์ Aftermarket <small style="font-weight: normal; color: var(--text-muted);">(-1=ไม่จำกัด)</small></label>
                             <input type="number" id="ep-brands" class="form-control" required>
                         </div>
                         <div class="form-group">
@@ -3962,9 +3962,9 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     <div class="form-group">
                         <label class="form-label" style="font-weight: 600;">แพ็กเกจที่ต้องการสมัคร</label>
                         <select id="trial-plan-id" class="form-control" style="border-color: var(--primary);" onchange="onTrialPlanSelected(this.value)">
-                            <option value="starter">Starter (1,000 ค้นหา/ด. • 2 ยี่ห้อ • 2 หมวดหมู่ • 1 ผู้ใช้)</option>
-                            <option value="professional" selected>⭐ Professional (5,000 ค้นหา/ด. • 5 ยี่ห้อ • 5 หมวดหมู่ • 3 ผู้ใช้ • AI Search)</option>
-                            <option value="business">Business (20,000 ค้นหา/ด. • ทุกยี่ห้อ • ทุกหมวดหมู่ • 10 ผู้ใช้ • API Access)</option>
+                            <option value="starter">Starter (1,000 ค้นหา/ด. • 2 แบรนด์ Aftermarket • 2 หมวดหมู่ • 1 ผู้ใช้)</option>
+                            <option value="professional" selected>⭐ Professional (5,000 ค้นหา/ด. • 5 แบรนด์ Aftermarket • 5 หมวดหมู่ • 3 ผู้ใช้ • AI Search)</option>
+                            <option value="business">Business (20,000 ค้นหา/ด. • ทุกแบรนด์ Aftermarket • ทุกหมวดหมู่ • 10 ผู้ใช้ • API Access)</option>
                         </select>
                     </div>
 
@@ -3983,7 +3983,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     <div class="form-group" id="trial-aftermarket-selection-container">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
                             <label class="form-label" style="font-weight: 600; margin-bottom: 0;">เลือกแบรนด์ Aftermarket ที่ต้องการ (Aftermarket Brands)</label>
-                            <span class="badge" style="font-size: 0.72rem; background: rgba(16,185,129,0.2); color: #34D399;">เข้าถึงได้ทั้งหมด / ระบุแบรนด์</span>
+                            <span id="trial-aftermarket-limit-badge" class="badge" style="font-size: 0.72rem; background: rgba(59,130,246,0.2); color: #60A5FA;">สูงสุด 5 แบรนด์</span>
                         </div>
                         <div id="trial-aftermarket-checklist" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.35rem; max-height: 110px; overflow-y: auto; padding: 0.5rem; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
                             <!-- Populated dynamically -->
@@ -4654,6 +4654,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         }
 
         let currentTrialPlanMaxCats = 5;
+        let currentTrialPlanMaxBrands = 5;
 
         async function renderTrialCategories(planId) {
             const plan = (window._publicPlans || []).find(p => p.id === planId) || (window._allPlansDetailed || []).find(p => p.id === planId);
@@ -4710,6 +4711,23 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         async function renderTrialAftermarketBrands(planId) {
             const container = document.getElementById('trial-aftermarket-checklist');
             if (!container) return;
+
+            const plan = (window._publicPlans || []).find(p => p.id === planId) || (window._allPlansDetailed || []).find(p => p.id === planId);
+            currentTrialPlanMaxBrands = plan && plan.max_brands !== undefined ? plan.max_brands : (planId === 'starter' ? 2 : planId === 'professional' ? 5 : -1);
+
+            const limitBadge = document.getElementById('trial-aftermarket-limit-badge');
+            if (limitBadge) {
+                if (currentTrialPlanMaxBrands === -1) {
+                    limitBadge.textContent = 'ทุกแบรนด์ Aftermarket (All Brands)';
+                    limitBadge.style.background = 'rgba(16,185,129,0.2)';
+                    limitBadge.style.color = '#34D399';
+                } else {
+                    limitBadge.textContent = `สูงสุด ${currentTrialPlanMaxBrands} แบรนด์`;
+                    limitBadge.style.background = 'rgba(59,130,246,0.2)';
+                    limitBadge.style.color = '#60A5FA';
+                }
+            }
+
             container.innerHTML = '<div style="color: var(--text-muted); font-size: 0.8rem;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดแบรนด์...</div>';
 
             try {
@@ -4721,7 +4739,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 }
 
                 container.innerHTML = '';
-                allBrands.forEach(bName => {
+                allBrands.forEach((bName, idx) => {
+                    const isChecked = currentTrialPlanMaxBrands === -1 || idx < (currentTrialPlanMaxBrands > 0 ? currentTrialPlanMaxBrands : 2);
                     const label = document.createElement('label');
                     label.style.display = 'flex';
                     label.style.alignItems = 'center';
@@ -4731,7 +4750,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     label.style.cursor = 'pointer';
 
                     label.innerHTML = `
-                        <input type="checkbox" value="${bName}" class="trial-aftermarket-checkbox" checked>
+                        <input type="checkbox" value="${bName}" class="trial-aftermarket-checkbox" ${isChecked ? 'checked' : ''} onchange="handleTrialAftermarketChange(this)">
                         <span>${bName}</span>
                     `;
                     container.appendChild(label);
@@ -4739,6 +4758,15 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             } catch (err) {
                 console.error("Error loading trial aftermarket brands:", err);
                 container.innerHTML = '<div style="color: var(--danger); font-size: 0.8rem;">ไม่สามารถโหลดแบรนด์ได้</div>';
+            }
+        }
+
+        function handleTrialAftermarketChange(checkbox) {
+            if (currentTrialPlanMaxBrands === -1) return;
+            const checkedBoxes = Array.from(document.querySelectorAll('.trial-aftermarket-checkbox:checked'));
+            if (checkedBoxes.length > currentTrialPlanMaxBrands) {
+                checkbox.checked = false;
+                showToast(`แพ็กเกจนี้เลือกแบรนด์ Aftermarket ได้สูงสุด ${currentTrialPlanMaxBrands} แบรนด์`, "warning");
             }
         }
 
@@ -4828,6 +4856,13 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
             if (currentTrialPlanMaxCats !== -1 && checkedCats.length === 0) {
                 showToast("กรุณาเลือกหมวดหมู่อะไหล่ที่ต้องการใช้งานอย่างน้อย 1 หมวดหมู่", "warning");
+                btn.disabled = false;
+                updateSignupFormTexts();
+                return;
+            }
+
+            if (currentTrialPlanMaxBrands !== -1 && checkedAftermarket.length === 0) {
+                showToast("กรุณาเลือกแบรนด์ Aftermarket ที่ต้องการใช้งานอย่างน้อย 1 แบรนด์", "warning");
                 btn.disabled = false;
                 updateSignupFormTexts();
                 return;
@@ -6285,7 +6320,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                         <p style="font-size: 0.8rem; color: var(--text-secondary); min-height: 36px; margin-top: 0.25rem;">${p.description || ''}</p>
                         
                         <ul class="pricing-features" style="margin-top: 1rem;">
-                            <li><i class="fa-solid fa-check" style="color: #10B981;"></i> ${intData.max_brands === -1 ? t('plan.allBrands', 'All Vehicle Brands') : intData.max_brands + ' ' + t('plan.vehicleBrands', 'Vehicle Brands')}</li>
+                            <li><i class="fa-solid fa-check" style="color: #10B981;"></i> ${intData.max_brands === -1 ? t('plan.allBrands', 'All Aftermarket Brands (Unlimited)') : intData.max_brands + ' ' + t('plan.aftermarketBrands', 'Aftermarket Brands')}</li>
                             <li><i class="fa-solid fa-check" style="color: #10B981;"></i> ${intData.max_categories === -1 ? t('plan.allCategories', 'All Parts Categories') : intData.max_categories + ' ' + t('plan.categories', 'Categories')}</li>
                             <li><i class="fa-solid fa-check" style="color: #10B981;"></i> ${intData.monthly_search_quota.toLocaleString()} ${t('plan.searchesPerMo', 'Searches / mo')}</li>
                             <li><i class="fa-solid fa-check" style="color: #10B981;"></i> ${intData.max_users} ${t('plan.teamSeats', 'Team Seats')}</li>
@@ -6335,6 +6370,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         }
 
         let currentModalPlanMaxCats = -1;
+        let currentModalPlanMaxBrands = -1;
 
         async function openUpgradeModal(planId, interval, preselectedAddons = []) {
             document.getElementById('checkout-plan-id').value = planId;
@@ -6344,10 +6380,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             document.getElementById('checkout-coupon-code').value = '';
             document.getElementById('coupon-feedback-msg').textContent = '';
 
-            // Find plan to determine max_categories limit
+            // Find plan to determine max_categories and max_brands limit
             const plan = cachedPlansList.find(p => p.id === planId) || {};
             const intData = (plan.intervals && plan.intervals[interval || currentSelectedInterval]) || {};
             currentModalPlanMaxCats = intData.max_categories !== undefined ? intData.max_categories : (plan.max_categories !== undefined ? plan.max_categories : (planId === 'starter' ? 2 : planId === 'professional' ? 5 : -1));
+            currentModalPlanMaxBrands = intData.max_brands !== undefined ? intData.max_brands : (plan.max_brands !== undefined ? plan.max_brands : (planId === 'starter' ? 2 : planId === 'professional' ? 5 : -1));
 
             const catBadge = document.getElementById('checkout-cat-count-badge');
             if (catBadge) {
@@ -6359,6 +6396,19 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     catBadge.textContent = `Max: ${currentModalPlanMaxCats} Categories (สูงสุด ${currentModalPlanMaxCats} หมวด)`;
                     catBadge.style.background = 'rgba(59,130,246,0.2)';
                     catBadge.style.color = '#60A5FA';
+                }
+            }
+
+            const abBadge = document.getElementById('checkout-aftermarket-count-badge');
+            if (abBadge) {
+                if (currentModalPlanMaxBrands === -1) {
+                    abBadge.textContent = 'All Aftermarket Brands (ทุกแบรนด์ ไม่จำกัด)';
+                    abBadge.style.background = 'rgba(16,185,129,0.2)';
+                    abBadge.style.color = '#34D399';
+                } else {
+                    abBadge.textContent = `Max: ${currentModalPlanMaxBrands} Brands (สูงสุด ${currentModalPlanMaxBrands} แบรนด์)`;
+                    abBadge.style.background = 'rgba(59,130,246,0.2)';
+                    abBadge.style.color = '#60A5FA';
                 }
             }
 
@@ -6432,14 +6482,14 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                         allBrands = ['DENSO', 'AISIN', 'BOSCH', 'BREMBO', 'TRW', 'NGK', 'TOKICO', 'KAYABA'];
                     }
 
-                    allBrands.forEach(bName => {
+                    allBrands.forEach((bName, idx) => {
                         let isChecked = false;
                         if (currentGrantedBrands.includes('*')) {
-                            isChecked = true;
+                            isChecked = currentModalPlanMaxBrands === -1 || idx < currentModalPlanMaxBrands;
                         } else if (currentGrantedBrands.length > 0) {
                             isChecked = currentGrantedBrands.includes(bName.toUpperCase());
                         } else {
-                            isChecked = true;
+                            isChecked = currentModalPlanMaxBrands === -1 || idx < (currentModalPlanMaxBrands > 0 ? currentModalPlanMaxBrands : 2);
                         }
 
                         const label = document.createElement('label');
@@ -6451,7 +6501,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                         label.style.cursor = 'pointer';
 
                         label.innerHTML = `
-                            <input type="checkbox" value="${bName}" class="checkout-aftermarket-checkbox" ${isChecked ? 'checked' : ''}>
+                            <input type="checkbox" value="${bName}" class="checkout-aftermarket-checkbox" ${isChecked ? 'checked' : ''} onchange="handleCheckoutAftermarketChange(this)">
                             <span>${bName}</span>
                         `;
                         abListEl.appendChild(label);
@@ -6485,6 +6535,15 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
             await calculateCheckoutPreview();
             document.getElementById('modal-upgrade-plan').classList.add('open');
+        }
+
+        function handleCheckoutAftermarketChange(checkbox) {
+            if (currentModalPlanMaxBrands === -1) return;
+            const checkedBoxes = Array.from(document.querySelectorAll('.checkout-aftermarket-checkbox:checked'));
+            if (checkedBoxes.length > currentModalPlanMaxBrands) {
+                checkbox.checked = false;
+                showToast(`This plan allows selecting up to ${currentModalPlanMaxBrands} aftermarket brands. (แพ็กเกจนี้เลือกแบรนด์ Aftermarket ได้สูงสุด ${currentModalPlanMaxBrands} แบรนด์)`, "warning");
+            }
         }
 
         function handleCheckoutCategoryChange(checkbox) {

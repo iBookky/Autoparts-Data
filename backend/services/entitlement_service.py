@@ -102,13 +102,11 @@ class EntitlementService:
         custom_cats = [r["entitlement_value"] for r in ent_rows if r["entitlement_type"] == "CATEGORY"]
         custom_aftermarket = [r["entitlement_value"] for r in ent_rows if r["entitlement_type"] == "AFTERMARKET_BRAND"]
 
-        # Derive allowed brands
+        # Derive allowed brands (Vehicle makes are universally available unless custom-restricted)
         if custom_brands:
             allowed_brands = custom_brands
-        elif max_b == -1 or plan_id in ['business', 'enterprise']:
-            allowed_brands = ['*']  # All brands allowed for unlimited plans
         else:
-            allowed_brands = []
+            allowed_brands = ['*']
 
         # Derive allowed categories (Customer must have explicit purchased categories or unlimited plan)
         if custom_cats:
@@ -118,13 +116,11 @@ class EntitlementService:
         else:
             allowed_categories = []
 
-        # Derive allowed aftermarket brands
+        # Derive allowed aftermarket brands (Governed by plan aftermarket entitlements if configured)
         if custom_aftermarket:
             allowed_aftermarket_brands = custom_aftermarket
-        elif plan_id in ['business', 'enterprise']:
-            allowed_aftermarket_brands = ['*']
         else:
-            allowed_aftermarket_brands = ['*']  # Default open if not specifically restricted
+            allowed_aftermarket_brands = ['*']  # Default open if no specific aftermarket restrictions configured
 
         conn.close()
 
