@@ -9,9 +9,9 @@
     <meta http-equiv="Expires" content="0">
     <script>(function(){const t=localStorage.getItem('autoparts_theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="icon" id="dynamic-favicon" type="image/png" href="/favicon.ico">
-    <link rel="stylesheet" href="/frontend/css/index.css?v=20260912_v18_db_first_search_and_auth_fix">
+    <link rel="stylesheet" href="/frontend/css/index.css?v=20260912_v19_payment_and_customer_mgmt">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="/frontend/js/i18n.js?v=20260912_v18_db_first_search_and_auth_fix"></script>
+    <script src="/frontend/js/i18n.js?v=20260912_v19_payment_and_customer_mgmt"></script>
 </head>
 <body>
 
@@ -607,6 +607,9 @@
                                     <div style="font-size: 0.72rem; color: var(--text-muted);" id="profile-menu-role">Authenticated</div>
                                 </div>
                             </div>
+                            <button type="button" onclick="clearAllCacheAndReset(); closeRoleDropdown();" class="btn btn-secondary btn-sm" style="width: 100%; font-size: 0.82rem; padding: 0.45rem 0.75rem; justify-content: center; margin-bottom: 0.5rem; background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15);">
+                                <i class="fa-solid fa-broom" style="color: #60A5FA;"></i> เคลียร์แคชระบบ (Clear Cache)
+                            </button>
                             <button type="button" onclick="handleLogout(); closeRoleDropdown();" class="btn btn-danger btn-sm" style="width: 100%; font-size: 0.82rem; padding: 0.5rem 0.75rem; justify-content: center; background: rgba(239,68,68,0.15); color: #EF4444; border-color: rgba(239,68,68,0.3);">
                                 <i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ (Log Out)
                             </button>
@@ -1620,6 +1623,9 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                         <button class="workspace-tab-btn" id="tab-owner-invconfig" onclick="switchOwnerTab('invconfig')">
                             <i class="fa-solid fa-file-invoice" style="color: #FBBF24;"></i> <span>รูปแบบ Invoice</span>
                         </button>
+                        <button class="workspace-tab-btn" id="tab-owner-payments" onclick="switchOwnerTab('payments')">
+                            <i class="fa-solid fa-credit-card" style="color: #10B981;"></i> <span>ช่องทางชำระเงิน & API</span>
+                        </button>
                     </div>
 
                     <!-- 1. Executive Overview & Trends -->
@@ -1740,14 +1746,46 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
                     <!-- 4. Revenue & Invoices -->
                     <div id="owner-sub-revenue" style="display: none;">
-                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.25rem; margin-bottom: 1.5rem;" id="owner-revenue-breakdown-cards">
+                        <!-- Executive Net Financial Cockpit Cards -->
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; margin-bottom: 1.5rem;" id="owner-revenue-breakdown-cards">
                             <!-- Populated dynamically -->
                         </div>
 
-                        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
-                            <h3 style="font-size: 1rem; color: #fff; margin-bottom: 1rem;" data-i18n="owner.rev.pmTitle"><i class="fa-solid fa-credit-card" style="color: #10B981;"></i> Payment Transactions by Method</h3>
+                        <!-- Payment Methods Breakdown -->
+                        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.5rem;">
+                            <h3 style="font-size: 1rem; color: #fff; margin-bottom: 1rem;"><i class="fa-solid fa-credit-card" style="color: #10B981;"></i> สัดส่วนยอดรับชำระเงินตามช่องทาง (By Payment Method)</h3>
                             <div id="owner-payment-methods-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem;">
                                 <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- Invoices & Collections Management Table -->
+                        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+                                <h3 style="font-size: 1rem; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fa-solid fa-file-invoice-dollar" style="color: #60A5FA;"></i> รายการใบแจ้งหนี้ & ตรวจสอบการรับชำระเงิน (Invoices & Confirmations)
+                                </h3>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="loadOwnerRevenueTab()">
+                                    <i class="fa-solid fa-rotate"></i> รีเฟรชรายการ
+                                </button>
+                            </div>
+                            <div class="data-table-container">
+                                <table class="data-table">
+                                    <thead>
+                                        <tr>
+                                            <th>เลขที่ Invoice</th>
+                                            <th>องค์กรลูกค้า</th>
+                                            <th>ยอดรวม</th>
+                                            <th>ช่องทางชำระ</th>
+                                            <th>วันที่ออก</th>
+                                            <th>สถานะ</th>
+                                            <th style="text-align: right;">จัดการ</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="owner-invoices-table-body">
+                                        <!-- Populated dynamically -->
+                                    </tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -2592,6 +2630,29 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                     <button type="button" class="btn btn-secondary" onclick="previewSampleInvoiceModal()">
                                         <i class="fa-solid fa-eye"></i> ดูตัวอย่างใบกำกับภาษี / ใบเสร็จจริง (Live Preview)
                                     </button>
+                    <!-- 15. Payment Gateway Settings & API Configurations -->
+                    <div id="owner-sub-payments" style="display: none;">
+                        <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.5rem; margin-bottom: 1.5rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+                                <div>
+                                    <h3 style="font-size: 1.15rem; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+                                        <i class="fa-solid fa-credit-card" style="color: #10B981;"></i> ตั้งค่าช่องทางการรับชำระเงิน & Payment API
+                                    </h3>
+                                    <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
+                                        กำหนดค่า API Credentials, เปิด/ปิดช่องทางรับเงิน (PromptPay, บัตรเครดิต, ธนาคาร) เพื่อให้ลูกค้าร้านอะไหล่/อู่สามารถชำระเงินค่าบริการได้ทันที
+                                    </p>
+                                </div>
+                                <div style="display: flex; gap: 0.5rem;">
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="loadOwnerPaymentSettingsTab()">
+                                        <i class="fa-solid fa-rotate"></i> โหลดข้อมูลใหม่
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Gateways List Container -->
+                            <div id="owner-payment-gateways-container" style="display: flex; flex-direction: column; gap: 1.25rem;">
+                                <div style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                                    <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; color: var(--primary);"></i> กำลังโหลดช่องทางชำระเงิน...
                                 </div>
                             </div>
                         </div>
@@ -3908,6 +3969,127 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         </div>
     </div>
 
+    <!-- Modal: Edit Customer Organization -->
+    <div class="modal-overlay" id="modal-owner-edit-customer" style="display: none;">
+        <div class="modal-card" style="max-width: 520px;">
+            <div class="modal-header">
+                <h3 style="color: #fff; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-building-circle-check" style="color: #3B82F6;"></i> แก้ไขข้อมูลองค์กรลูกค้า
+                </h3>
+                <button class="modal-close" onclick="closeEditCustomerModal()">&times;</button>
+            </div>
+            <form onsubmit="submitEditCustomer(event)">
+                <div class="modal-body" style="display: flex; flex-direction: column; gap: 0.85rem;">
+                    <input type="hidden" id="edit-cust-org-id">
+                    <div class="form-group">
+                        <label class="form-label">ชื่อบริษัท / ร้านอะไหล่ / อู่ <span style="color: var(--danger);">*</span></label>
+                        <input type="text" id="edit-cust-name" class="form-control" required>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label">ชื่อผู้ติดต่อ</label>
+                            <input type="text" id="edit-cust-contact" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">ประเภทธุรกิจ</label>
+                            <select id="edit-cust-industry" class="form-control">
+                                <option value="GARAGE">อู่ซ่อมรถ / ศูนย์บริการ</option>
+                                <option value="RETAILER">ร้านค้า / ตัวแทนจำหน่ายอะไหล่</option>
+                                <option value="INSURANCE">บริษัทประกัน / ประเมินเคลม</option>
+                                <option value="FLEET">ผู้บริหารฟลีทรถยนต์</option>
+                                <option value="OTHER">ธุรกิจยานยนต์อื่นๆ</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label">อีเมลติดต่อ / ใบแจ้งหนี้</label>
+                            <input type="email" id="edit-cust-email" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">เบอร์โทรศัพท์</label>
+                            <input type="tel" id="edit-cust-phone" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label">เลขประจำตัวผู้เสียภาษี (Tax ID)</label>
+                            <input type="text" id="edit-cust-taxid" class="form-control" placeholder="13 หลัก">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">ชื่อนิติบุคคลตามทะเบียน</label>
+                            <input type="text" id="edit-cust-legal-name" class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">ที่อยู่ออกใบกำกับภาษี</label>
+                        <textarea id="edit-cust-address" class="form-control" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditCustomerModal()">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary" id="btn-save-cust-profile"><i class="fa-solid fa-floppy-disk"></i> บันทึกข้อมูล</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Change Customer Subscription & Package -->
+    <div class="modal-overlay" id="modal-owner-change-plan" style="display: none;">
+        <div class="modal-card" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 style="color: #fff; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-arrows-rotate" style="color: #F59E0B;"></i> ปรับเปลี่ยนแพ็กเกจ & โควตาการใช้งาน
+                </h3>
+                <button class="modal-close" onclick="closeChangeCustomerPlanModal()">&times;</button>
+            </div>
+            <form onsubmit="submitChangeCustomerPlan(event)">
+                <div class="modal-body" style="display: flex; flex-direction: column; gap: 0.85rem;">
+                    <input type="hidden" id="change-plan-org-id">
+                    <div style="background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.25); border-radius: var(--radius-sm); padding: 0.75rem;">
+                        <span style="font-size: 0.75rem; color: #93c5fd; text-transform: uppercase; font-weight: 700;">ลูกค้าที่เลือก:</span>
+                        <div id="change-plan-org-name" style="font-weight: 700; color: #fff; font-size: 1.05rem;">-</div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 600;">เลือกแพ็กเกจ (Subscription Plan)</label>
+                        <select id="change-plan-select" class="form-control">
+                            <option value="starter">Starter (1,000 ค้นหา/ด. • 2 แบรนด์ • 2 หมวดหมู่)</option>
+                            <option value="professional">Professional (5,000 ค้นหา/ด. • 5 แบรนด์ • 5 หมวดหมู่ • AI Search)</option>
+                            <option value="business">Business (20,000 ค้นหา/ด. • ทุกแบรนด์ • ทุกหมวดหมู่ • API)</option>
+                            <option value="enterprise">Enterprise (100,000 ค้นหา/ด. • ไม่จำกัดฟังก์ชัน)</option>
+                        </select>
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label" style="font-weight: 600;">สถานะสมาชิก (Status)</label>
+                            <select id="change-plan-status" class="form-control">
+                                <option value="ACTIVE">ACTIVE (เปิดใช้งานปกติ)</option>
+                                <option value="TRIALING">TRIALING (ทดลองใช้งาน)</option>
+                                <option value="CANCELLED">CANCELLED (ยกเลิกการใช้งาน)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label" style="font-weight: 600;">รอบบิล (Billing Cycle)</label>
+                            <select id="change-plan-cycle" class="form-control">
+                                <option value="MONTHLY">รายเดือน (Monthly)</option>
+                                <option value="YEARLY">รายปี (Yearly)</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">กำหนดโควตาค้นหาพิเศษ (Custom Search Quota / เดือน)</label>
+                        <input type="number" id="change-plan-quota" class="form-control" placeholder="ปล่อยว่างเพื่อใช้ค่าเริ่มต้นของแพ็กเกจ">
+                        <span style="font-size: 0.75rem; color: var(--text-muted);">หากไม่ระบุ ระบบจะใช้โควตาตามมาตรฐานของแพ็กเกจที่เลือก</span>
+                    </div>
+                </div>
+                <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeChangeCustomerPlanModal()">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary" id="btn-save-cust-plan"><i class="fa-solid fa-check"></i> ยืนยันการปรับแพ็กเกจ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- ================= PHASE 11: SAAS REGISTRATION & PLAN ONBOARDING MODAL ================= -->
     <div class="modal-overlay" id="modal-trial-register" style="display: none;">
         <div class="modal-card" style="max-width: 560px;">
@@ -5207,15 +5389,33 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
         function handleLogout() {
             currentUser = null;
+            window.currentUser = null;
+            window.cachedOwnerCustomers = null;
+            window.cachedPlatformSettings = null;
+            window.cachedOverviewData = null;
             localStorage.removeItem('autoparts_saas_user');
+            localStorage.removeItem('autoparts_active_tab');
+            localStorage.removeItem('autoparts_user_token');
+            sessionStorage.clear();
             showToast("ออกจากระบบเรียบร้อยแล้ว", "info");
             showLandingPage();
         }
 
-        function clearAllCacheAndReset() {
-            localStorage.clear();
-            sessionStorage.clear();
-            currentUser = null;
+        async function clearAllCacheAndReset() {
+            try {
+                localStorage.clear();
+                sessionStorage.clear();
+                currentUser = null;
+                window.currentUser = null;
+                window.cachedOwnerCustomers = null;
+                window.cachedPlatformSettings = null;
+                if ('caches' in window) {
+                    const cacheKeys = await caches.keys();
+                    await Promise.all(cacheKeys.map(k => caches.delete(k)));
+                }
+            } catch (e) {
+                console.warn("Cache reset error:", e);
+            }
             showToast("🧹 ล้างแคชและรีเซ็ตระบบทั้งหมดเรียบร้อยแล้ว", "success");
             setTimeout(() => {
                 window.location.href = window.location.origin + window.location.pathname + '?nocache=' + Date.now();
@@ -9757,7 +9957,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         function switchOwnerTab(tab) {
             window.currentOwnerActiveTab = tab;
             document.querySelectorAll('#owner-view .workspace-tabs .workspace-tab-btn').forEach(btn => btn.classList.remove('active'));
-            ['overview', 'customers', 'subs', 'revenue', 'searchbi', 'opps', 'plans', 'pipe', 'roles', 'reports', 'audit', 'ai', 'branding', 'company', 'invconfig'].forEach(t => {
+            ['overview', 'customers', 'subs', 'revenue', 'searchbi', 'opps', 'plans', 'pipe', 'roles', 'reports', 'audit', 'ai', 'branding', 'company', 'invconfig', 'payments'].forEach(t => {
                 const el = document.getElementById(`owner-sub-${t}`);
                 if (el) el.style.display = 'none';
             });
@@ -9775,7 +9975,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 'ai': 'nav-owner',
                 'branding': 'nav-owner',
                 'company': 'nav-owner',
-                'invconfig': 'nav-owner'
+                'invconfig': 'nav-owner',
+                'payments': 'nav-owner'
             };
             const targetNavId = navMap[tab] || 'nav-owner';
             document.querySelectorAll('#owner-nav-group .nav-item').forEach(btn => btn.classList.remove('active'));
@@ -9796,6 +9997,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             else if (tab === 'branding') loadOwnerBrandingTab();
             else if (tab === 'company') loadOwnerCompanyTab();
             else if (tab === 'invconfig') loadOwnerInvoiceConfigTab();
+            else if (tab === 'payments') loadOwnerPaymentSettingsTab();
         }
 
         async function loadOwnerOverviewTab() {
@@ -9931,8 +10133,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     <td><span class="status-badge ${healthClass}">${c.health_score} &bull; ${c.health_status}</span></td>
                     <td style="color: var(--text-secondary); font-size: 0.8rem;">${c.renewal_date}</td>
                     <td><span class="status-badge ${subClass}">${c.subscription_status}</span></td>
-                    <td style="text-align: right;">
-                        <button class="btn btn-secondary btn-sm" onclick="openCustomer360Modal(${c.id})"><i class="fa-solid fa-address-card"></i> 360 View</button>
+                    <td style="text-align: right; white-space: nowrap;">
+                        <button class="btn btn-secondary btn-sm" onclick="openCustomer360Modal(${c.id})" title="ดูภาพรวม 360"><i class="fa-solid fa-address-card"></i> 360</button>
+                        <button class="btn btn-secondary btn-sm" onclick="openEditCustomerModal(${c.id})" title="แก้ไขข้อมูลลูกค้า"><i class="fa-solid fa-pen-to-square"></i> แก้ไข</button>
+                        <button class="btn btn-secondary btn-sm" onclick="openChangeCustomerPlanModal(${c.id})" title="ปรับเปลี่ยนแพ็กเกจ"><i class="fa-solid fa-arrows-rotate"></i> ปรับแพ็กเกจ</button>
+                        ${c.id !== 1 ? `<button class="btn btn-danger btn-sm" onclick="confirmDeleteCustomer(${c.id}, '${(c.name || '').replace(/'/g, "\\'")}')" title="ลบข้อมูลลูกค้า"><i class="fa-solid fa-trash"></i></button>` : ''}
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -10061,44 +10266,515 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
         async function loadOwnerRevenueTab() {
             try {
-                const res = await fetch('/api/owner/revenue' + getOwnerDateQuery(30), { headers: getAuthHeaders() });
-                const data = await res.json();
-                if (data.success && data.revenue) {
-                    const r = data.revenue;
-                    const cardsEl = document.getElementById('owner-revenue-breakdown-cards');
-                    if (cardsEl) {
-                        cardsEl.innerHTML = `
-                            <div class="usage-card">
-                                <span class="usage-card-title">Gross Realized Revenue</span>
-                                <div class="usage-card-val" style="color: #34D399;">฿${r.gross_revenue.toLocaleString()}</div>
-                                <span class="usage-card-sub">${r.paid_invoices_count} Paid Invoices</span>
-                            </div>
-                            <div class="usage-card">
-                                <span class="usage-card-title">Thai VAT 7% Tax Collected</span>
-                                <div class="usage-card-val" style="color: #60A5FA;">฿${r.total_vat_7pct.toLocaleString()}</div>
-                                <span class="usage-card-sub">Business Revenue Tax Account</span>
-                            </div>
-                            <div class="usage-card">
-                                <span class="usage-card-title">Promotional Discounts Applied</span>
-                                <div class="usage-card-val" style="color: #FBBF24;">฿${r.total_discounts.toLocaleString()}</div>
-                                <span class="usage-card-sub">Coupon Redemptions</span>
-                            </div>
-                        `;
-                    }
+                const [revRes, finRes] = await Promise.all([
+                    fetch('/api/owner/revenue' + getOwnerDateQuery(30), { headers: getAuthHeaders() }),
+                    fetch('/api/owner/financial-summary', { headers: getAuthHeaders() })
+                ]);
+                const revData = await revRes.json();
+                const finData = await finRes.json();
 
+                const fin = finData.success && finData.summary ? finData.summary : {
+                    cash_collected: 0,
+                    gateway_fees: 0,
+                    owner_net_payout: 0,
+                    pending_invoices: 0,
+                    projected_mrr: 0,
+                    invoices: []
+                };
+
+                const cardsEl = document.getElementById('owner-revenue-breakdown-cards');
+                if (cardsEl) {
+                    cardsEl.innerHTML = `
+                        <div class="usage-card">
+                            <span class="usage-card-title"><i class="fa-solid fa-sack-dollar" style="color: #10B981;"></i> ยอดรับชำระแล้ว (Gross Cash)</span>
+                            <div class="usage-card-val" style="color: #34D399;">฿${Number(fin.cash_collected).toLocaleString()}</div>
+                            <span class="usage-card-sub">เงินที่ตัดเข้าบัญชีสำเร็จแล้ว</span>
+                        </div>
+                        <div class="usage-card">
+                            <span class="usage-card-title"><i class="fa-solid fa-receipt" style="color: #F87171;"></i> ค่าธรรมเนียม Gateway (Fees)</span>
+                            <div class="usage-card-val" style="color: #F87171;">฿${Number(fin.gateway_fees).toLocaleString()}</div>
+                            <span class="usage-card-sub">ประมาณการ 3.65% Stripe / PromptPay</span>
+                        </div>
+                        <div class="usage-card">
+                            <span class="usage-card-title"><i class="fa-solid fa-vault" style="color: #60A5FA;"></i> รายได้สุทธิที่ Owner ได้รับ (Net Payout)</span>
+                            <div class="usage-card-val" style="color: #60A5FA; font-weight: 800;">฿${Number(fin.owner_net_payout).toLocaleString()}</div>
+                            <span class="usage-card-sub">พร้อมโอนเข้าบัญชี Owner</span>
+                        </div>
+                        <div class="usage-card">
+                            <span class="usage-card-title"><i class="fa-solid fa-clock-rotate-left" style="color: #FBBF24;"></i> รอดำเนินการ / ยังไม่ชำระ (Pending)</span>
+                            <div class="usage-card-val" style="color: #FBBF24;">฿${Number(fin.pending_invoices).toLocaleString()}</div>
+                            <span class="usage-card-sub">Invoice ที่ยังไม่ปิดยอด</span>
+                        </div>
+                        <div class="usage-card">
+                            <span class="usage-card-title"><i class="fa-solid fa-chart-line" style="color: #A78BFA;"></i> คาดการณ์รายได้ต่อเดือน (MRR)</span>
+                            <div class="usage-card-val" style="color: #A78BFA;">฿${Number(fin.projected_mrr).toLocaleString()}</div>
+                            <span class="usage-card-sub">Monthly Recurring Revenue</span>
+                        </div>
+                    `;
+                }
+
+                // Payment Methods Breakdown
+                if (revData.success && revData.revenue) {
+                    const r = revData.revenue;
                     const pmEl = document.getElementById('owner-payment-methods-grid');
-                    if (pmEl) {
+                    if (pmEl && r.payment_methods_breakdown) {
                         pmEl.innerHTML = r.payment_methods_breakdown.map(pm => `
                             <div style="background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1rem;">
                                 <div style="font-weight: 600; color: #fff; margin-bottom: 0.25rem;">${pm.method}</div>
-                                <div style="font-size: 1.25rem; font-weight: 700; color: #34D399;">฿${pm.total.toLocaleString()}</div>
+                                <div style="font-size: 1.25rem; font-weight: 700; color: #34D399;">฿${Number(pm.total || 0).toLocaleString()}</div>
                                 <div style="font-size: 0.75rem; color: var(--text-muted);">${pm.count} Transactions</div>
                             </div>
                         `).join('');
                     }
                 }
+
+                // Invoices Table
+                const invBody = document.getElementById('owner-invoices-table-body');
+                if (invBody) {
+                    invBody.innerHTML = '';
+                    const invoices = fin.invoices || [];
+                    if (invoices.length === 0) {
+                        invBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 1.5rem; color: var(--text-muted);">ไม่พบรายการใบแจ้งหนี้</td></tr>';
+                    } else {
+                        invoices.forEach(inv => {
+                            const isPaid = (inv.status || '').toUpperCase() === 'PAID';
+                            const tr = document.createElement('tr');
+                            tr.innerHTML = `
+                                <td><strong style="color: #60A5FA;">${inv.invoice_number || 'INV-' + inv.id}</strong></td>
+                                <td>
+                                    <strong style="color: #fff;">${inv.org_name || 'Organization #' + (inv.org_id || '')}</strong>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">${inv.billing_email || ''}</div>
+                                </td>
+                                <td style="font-weight: 700; color: #34D399;">฿${Number(inv.total_amount || 0).toLocaleString()}</td>
+                                <td><span class="nav-badge" style="background: rgba(147,197,253,0.15); color: #93C5FD;">${inv.payment_method || 'PROMPTPAY'}</span></td>
+                                <td style="color: var(--text-secondary); font-size: 0.8rem;">${inv.created_at ? inv.created_at.substring(0, 10) : 'N/A'}</td>
+                                <td>
+                                    <span class="status-badge ${isPaid ? 'verified' : 'reviewed'}">${inv.status}</span>
+                                </td>
+                                <td style="text-align: right; white-space: nowrap;">
+                                    ${!isPaid ? `
+                                        <button class="btn btn-primary btn-sm" onclick="confirmOwnerInvoicePayment(${inv.id})" title="ยืนยันการรับชำระเงินและเปิดใช้งานแพ็กเกจทันที">
+                                            <i class="fa-solid fa-check"></i> ยืนยันรับเงิน
+                                        </button>
+                                    ` : `
+                                        <span style="color: #34D399; font-size: 0.82rem; font-weight: 600;"><i class="fa-solid fa-circle-check"></i> ชำระเรียบร้อย</span>
+                                    `}
+                                </td>
+                            `;
+                            invBody.appendChild(tr);
+                        });
+                    }
+                }
             } catch (err) {
                 console.error("Error loading revenue tab:", err);
+                showToast("ไม่สามารถโหลดข้อมูลรายได้ได้", "danger");
+            }
+        }
+
+        async function confirmOwnerInvoicePayment(invoiceId) {
+            if (!confirm(`คุณต้องการยืนยันการรับเงินสำหรับใบแจ้งหนี้ #${invoiceId} ใช่หรือไม่?\n(ระบบจะเปลี่ยนสถานะเป็น PAID และเปิดใช้งานแพ็กเกจให้ลูกค้าทันที)`)) {
+                return;
+            }
+            try {
+                showToast("กำลังยืนยันการรับชำระเงิน...", "info");
+                const res = await fetch(`/api/owner/invoices/${invoiceId}/confirm-payment`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() }
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("✅ ยืนยันการรับชำระเงินและเปิดสิทธิ์ลูกค้าเรียบร้อยแล้ว", "success");
+                    loadOwnerRevenueTab();
+                    if (window.currentOwnerActiveTab === 'customers') loadOwnerCustomersTab();
+                } else {
+                    showToast(data.detail || "เกิดข้อผิดพลาดในการยืนยันชำระเงิน", "danger");
+                }
+            } catch (err) {
+                console.error("Error confirming invoice payment:", err);
+                showToast("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์", "danger");
+            }
+        }
+
+        // ================= OWNER PAYMENT GATEWAYS & API CONFIGURATION =================
+        async function loadOwnerPaymentSettingsTab() {
+            const container = document.getElementById('owner-payment-gateways-container');
+            if (!container) return;
+            container.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; color: var(--primary);"></i> กำลังโหลดช่องทางชำระเงิน...</div>`;
+
+            try {
+                const res = await fetch('/api/owner/payment-settings', { headers: getAuthHeaders() });
+                const data = await res.json();
+                if (data.success && data.gateways) {
+                    renderOwnerPaymentSettings(data.gateways);
+                } else {
+                    container.innerHTML = `<div style="padding: 1.5rem; color: #EF4444;">ไม่สามารถโหลดข้อมูลช่องทางชำระเงินได้: ${data.detail || ''}</div>`;
+                }
+            } catch (err) {
+                console.error("Error loading payment settings:", err);
+                container.innerHTML = `<div style="padding: 1.5rem; color: #EF4444;">เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์</div>`;
+            }
+        }
+
+        function renderOwnerPaymentSettings(gateways) {
+            const container = document.getElementById('owner-payment-gateways-container');
+            if (!container) return;
+
+            const providerDetails = {
+                'PROMPTPAY': {
+                    title: 'PromptPay QR Payment (พร้อมเพย์ คิวอาร์โค้ด)',
+                    icon: 'fa-solid fa-qrcode',
+                    badge: 'ยอดนิยมสำหรับไทย',
+                    color: '#10B981',
+                    pubLabel: 'PromptPay ID / Biller ID',
+                    secLabel: 'Secret Key / Hash Salt',
+                    hasWebhook: false
+                },
+                'STRIPE': {
+                    title: 'Stripe Payment Gateway (บัตรเครดิต/เดบิต สากล)',
+                    icon: 'fa-brands fa-stripe',
+                    badge: 'บัตรเครดิตสากล',
+                    color: '#6366F1',
+                    pubLabel: 'Stripe Publishable Key (pk_live_... / pk_test_...)',
+                    secLabel: 'Stripe Secret Key (sk_live_... / sk_test_...)',
+                    hasWebhook: true
+                },
+                'OMISE': {
+                    title: 'Omise / Opn Payments (บัตรเครดิต, Rabbit LINE Pay, TrueMoney)',
+                    icon: 'fa-solid fa-wallet',
+                    badge: 'Thailand Gateway',
+                    color: '#3B82F6',
+                    pubLabel: 'Public Key (pkey_...)',
+                    secLabel: 'Secret Key (skey_...)',
+                    hasWebhook: true
+                },
+                'GB_PRIME_PAY': {
+                    title: 'GB Prime Pay (บัตรเครดิต, QR, ผ่อนชำระ 0%)',
+                    icon: 'fa-solid fa-money-bill-transfer',
+                    badge: 'QR & Installment',
+                    color: '#F59E0B',
+                    pubLabel: 'Public Key / Merchant ID',
+                    secLabel: 'Secret Key / Token Key',
+                    hasWebhook: true
+                },
+                'BANK_TRANSFER': {
+                    title: 'โอนผ่านบัญชีธนาคารตรง (Direct Bank Transfer / Bill Payment)',
+                    icon: 'fa-solid fa-building-columns',
+                    badge: 'โอนตรงเข้าบัญชี',
+                    color: '#14B8A6',
+                    pubLabel: 'เลขที่บัญชี & ธนาคาร (Account Info)',
+                    secLabel: 'ชื่อบัญชี / รายละเอียดสาขา (Account Name)',
+                    hasWebhook: false
+                }
+            };
+
+            container.innerHTML = gateways.map(g => {
+                const info = providerDetails[g.provider] || {
+                    title: g.provider,
+                    icon: 'fa-solid fa-credit-card',
+                    badge: 'Gateway',
+                    color: '#8B5CF6',
+                    pubLabel: 'Public Key / Client ID',
+                    secLabel: 'Secret Key / Token',
+                    hasWebhook: false
+                };
+
+                return `
+                    <div style="background: rgba(255,255,255,0.02); border: 1px solid ${g.is_enabled ? 'rgba(16,185,129,0.35)' : 'var(--border-color)'}; border-radius: var(--radius-md); padding: 1.25rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.75rem;">
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <div style="width: 40px; height: 40px; border-radius: 8px; background: rgba(255,255,255,0.05); display: flex; align-items: center; justify-content: center; font-size: 1.25rem; color: ${info.color};">
+                                    <i class="${info.icon}"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 700; color: #fff; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem;">
+                                        ${info.title}
+                                        <span class="badge" style="background: rgba(255,255,255,0.1); color: var(--text-secondary); font-size: 0.7rem; font-weight: 500;">${info.badge}</span>
+                                    </div>
+                                    <div style="font-size: 0.75rem; color: var(--text-muted);">รหัสผู้ให้บริการ: ${g.provider} | แก้ไขล่าสุด: ${g.updated_at ? g.updated_at.substring(0, 19).replace('T', ' ') : 'N/A'}</div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                <label style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; font-size: 0.85rem; color: #fff;">
+                                    <input type="checkbox" id="gw-enable-${g.provider}" ${g.is_enabled ? 'checked' : ''} style="width: 16px; height: 16px; cursor: pointer;">
+                                    เปิดใช้งานช่องทางนี้
+                                </label>
+                            </div>
+                        </div>
+
+                        <form onsubmit="savePaymentGateway('${g.provider}', event)">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                                <div class="form-group">
+                                    <label class="form-label">${info.pubLabel}</label>
+                                    <input type="text" id="gw-pubkey-${g.provider}" class="form-control" value="${g.public_key || ''}" placeholder="ระบุ Public Key หรือ Merchant ID">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">${info.secLabel}</label>
+                                    <input type="password" id="gw-seckey-${g.provider}" class="form-control" value="${g.secret_key || ''}" placeholder="ระบุ Secret Key (เว้นว่างไว้เพื่อคงค่าเดิม)">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">โหมดการทำงาน (Environment)</label>
+                                    <select id="gw-mode-${g.provider}" class="form-control">
+                                        <option value="SANDBOX" ${g.mode === 'SANDBOX' ? 'selected' : ''}>🧪 SANDBOX (ทดสอบระบบ / Test Mode)</option>
+                                        <option value="PRODUCTION" ${g.mode === 'PRODUCTION' ? 'selected' : ''}>🚀 PRODUCTION (ใช้งานจริง / Live Mode)</option>
+                                    </select>
+                                </div>
+                                ${info.hasWebhook ? `
+                                    <div class="form-group">
+                                        <label class="form-label">Webhook Secret / Signing Key</label>
+                                        <input type="password" id="gw-webhook-${g.provider}" class="form-control" value="${g.webhook_secret || ''}" placeholder="whsec_... (ถ้ามี)">
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div style="display: flex; justify-content: flex-end; gap: 0.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.75rem;">
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="testPaymentGatewayConnection('${g.provider}')">
+                                    <i class="fa-solid fa-plug"></i> ทดสอบการเชื่อมต่อ API
+                                </button>
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    <i class="fa-solid fa-floppy-disk"></i> บันทึกการตั้งค่า
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function savePaymentGateway(provider, event) {
+            if (event) event.preventDefault();
+            const isEnabled = document.getElementById(`gw-enable-${provider}`)?.checked ?? false;
+            const publicKey = document.getElementById(`gw-pubkey-${provider}`)?.value?.trim() || '';
+            const secretKey = document.getElementById(`gw-seckey-${provider}`)?.value?.trim() || '';
+            const mode = document.getElementById(`gw-mode-${provider}`)?.value || 'SANDBOX';
+            const webhookSecret = document.getElementById(`gw-webhook-${provider}`)?.value?.trim() || '';
+
+            try {
+                showToast(`กำลังบันทึกการตั้งค่า ${provider}...`, "info");
+                const res = await fetch('/api/owner/payment-settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    body: JSON.stringify({
+                        provider: provider,
+                        is_enabled: isEnabled,
+                        public_key: publicKey,
+                        secret_key: secretKey,
+                        webhook_secret: webhookSecret,
+                        mode: mode
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`✅ บันทึกการตั้งค่า ${provider} เรียบร้อยแล้ว`, "success");
+                    loadOwnerPaymentSettingsTab();
+                } else {
+                    showToast(data.detail || "เกิดข้อผิดพลาดในการบันทึก", "danger");
+                }
+            } catch (err) {
+                console.error("Error saving payment gateway:", err);
+                showToast("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้", "danger");
+            }
+        }
+
+        async function testPaymentGatewayConnection(provider) {
+            try {
+                showToast(`กำลังทดสอบเชื่อมต่อ API กับ ${provider}...`, "info");
+                const res = await fetch('/api/owner/payment-settings/test-connection', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    body: JSON.stringify({ provider: provider })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`✅ ${data.message || 'เชื่อมต่อ API สำเร็จ'} (Latency: ${data.latency_ms || 12}ms)`, "success");
+                } else {
+                    showToast(`❌ ${data.detail || 'การเชื่อมต่อ API ไม่สำเร็จ'}`, "danger");
+                }
+            } catch (err) {
+                console.error("Error testing payment connection:", err);
+                showToast("เกิดข้อผิดพลาดในการทดสอบเชื่อมต่อ", "danger");
+            }
+        }
+
+        // ================= OWNER CUSTOMER & PACKAGE MANAGEMENT =================
+        function openEditCustomerModal(orgId) {
+            const customer = (window.cachedOwnerCustomers || []).find(c => c.id === orgId);
+            if (!customer) {
+                showToast("ไม่พบข้อมูลองค์กรลูกค้า", "warning");
+                return;
+            }
+
+            document.getElementById('edit-cust-org-id').value = customer.id;
+            document.getElementById('edit-cust-name').value = customer.name || '';
+            document.getElementById('edit-cust-contact').value = customer.contact_name || '';
+            document.getElementById('edit-cust-industry').value = customer.industry_type || 'GARAGE';
+            document.getElementById('edit-cust-email').value = customer.email || customer.billing_email || '';
+            document.getElementById('edit-cust-phone').value = customer.phone || '';
+            document.getElementById('edit-cust-taxid').value = customer.tax_id || '';
+            document.getElementById('edit-cust-legal-name').value = customer.legal_name || '';
+            document.getElementById('edit-cust-address').value = customer.billing_address || '';
+
+            const modal = document.getElementById('modal-owner-edit-customer');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeEditCustomerModal() {
+            const modal = document.getElementById('modal-owner-edit-customer');
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function submitEditCustomer(event) {
+            if (event) event.preventDefault();
+            const orgId = document.getElementById('edit-cust-org-id').value;
+            if (!orgId) return;
+
+            const payload = {
+                name: document.getElementById('edit-cust-name').value.trim(),
+                legal_name: document.getElementById('edit-cust-legal-name').value.trim(),
+                tax_id: document.getElementById('edit-cust-taxid').value.trim(),
+                email: document.getElementById('edit-cust-email').value.trim(),
+                phone: document.getElementById('edit-cust-phone').value.trim(),
+                billing_address: document.getElementById('edit-cust-address').value.trim(),
+                contact_name: document.getElementById('edit-cust-contact').value.trim(),
+                industry_type: document.getElementById('edit-cust-industry').value
+            };
+
+            try {
+                const btn = document.getElementById('btn-save-cust-profile');
+                if (btn) btn.disabled = true;
+                showToast("กำลังบันทึกข้อมูลลูกค้า...", "info");
+
+                const res = await fetch(`/api/owner/customers/${orgId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("✅ บันทึกข้อมูลลูกค้าสำเร็จ", "success");
+                    closeEditCustomerModal();
+                    loadOwnerCustomersTab();
+                } else {
+                    showToast(data.detail || "เกิดข้อผิดพลาดในการบันทึกข้อมูล", "danger");
+                }
+            } catch (err) {
+                console.error("Error updating customer:", err);
+                showToast("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้", "danger");
+            } finally {
+                const btn = document.getElementById('btn-save-cust-profile');
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        function openChangeCustomerPlanModal(orgId) {
+            const customer = (window.cachedOwnerCustomers || []).find(c => c.id === orgId);
+            if (!customer) {
+                showToast("ไม่พบข้อมูลองค์กรลูกค้า", "warning");
+                return;
+            }
+
+            document.getElementById('change-plan-org-id').value = customer.id;
+            document.getElementById('change-plan-org-name').textContent = `${customer.name} (รหัส: ${customer.id})`;
+            
+            const planSelect = document.getElementById('change-plan-select');
+            if (planSelect) {
+                const planKey = (customer.plan_tier || 'starter').toLowerCase();
+                planSelect.value = ['starter', 'professional', 'business', 'enterprise'].includes(planKey) ? planKey : 'starter';
+            }
+
+            const statusSelect = document.getElementById('change-plan-status');
+            if (statusSelect) {
+                statusSelect.value = customer.subscription_status || 'ACTIVE';
+            }
+
+            const cycleSelect = document.getElementById('change-plan-cycle');
+            if (cycleSelect) {
+                cycleSelect.value = customer.billing_interval || 'MONTHLY';
+            }
+
+            const quotaInput = document.getElementById('change-plan-quota');
+            if (quotaInput) {
+                quotaInput.value = customer.search_quota || '';
+            }
+
+            const modal = document.getElementById('modal-owner-change-plan');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeChangeCustomerPlanModal() {
+            const modal = document.getElementById('modal-owner-change-plan');
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function submitChangeCustomerPlan(event) {
+            if (event) event.preventDefault();
+            const orgId = document.getElementById('change-plan-org-id').value;
+            if (!orgId) return;
+
+            const planId = document.getElementById('change-plan-select').value;
+            const status = document.getElementById('change-plan-status').value;
+            const billingCycle = document.getElementById('change-plan-cycle').value;
+            const quotaVal = document.getElementById('change-plan-quota').value;
+            const customQuota = quotaVal ? parseInt(quotaVal, 10) : null;
+
+            try {
+                const btn = document.getElementById('btn-save-cust-plan');
+                if (btn) btn.disabled = true;
+                showToast("กำลังปรับปรุงแพ็กเกจสมาชิก...", "info");
+
+                const res = await fetch(`/api/owner/customers/${orgId}/subscription`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    body: JSON.stringify({
+                        plan_id: planId,
+                        status: status,
+                        billing_cycle: billingCycle,
+                        search_quota: customQuota
+                    })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("✅ ปรับเปลี่ยนแพ็กเกจและโควตาลูกค้าเรียบร้อยแล้ว", "success");
+                    closeChangeCustomerPlanModal();
+                    loadOwnerCustomersTab();
+                } else {
+                    showToast(data.detail || "เกิดข้อผิดพลาดในการปรับแพ็กเกจ", "danger");
+                }
+            } catch (err) {
+                console.error("Error updating customer subscription:", err);
+                showToast("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้", "danger");
+            } finally {
+                const btn = document.getElementById('btn-save-cust-plan');
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        async function confirmDeleteCustomer(orgId, orgName) {
+            if (orgId === 1) {
+                showToast("ไม่อนุญาตให้ลบองค์กรหลักของระบบ (System HQ)", "warning");
+                return;
+            }
+
+            const answer = prompt(`⚠️ คำเตือนความปลอดภัย:\nคุณกำลังจะลบองค์กร "${orgName}" (รหัส #${orgId})\nข้อมูลผู้ใช้ สมาชิก การค้นหา และประวัติขององค์กรนี้ทั้งหมดจะถูกลบถาวร\n\nพิมพ์คำว่า DELETE เพื่อยืนยันการลบ:`);
+            if (answer !== 'DELETE') {
+                if (answer !== null) showToast("ยกเลิกการลบลูกค้า (พิมพ์ข้อความยืนยันไม่ตรง)", "info");
+                return;
+            }
+
+            try {
+                showToast("กำลังลบข้อมูลลูกค้า...", "info");
+                const res = await fetch(`/api/owner/customers/${orgId}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`✅ ลบองค์กร ${orgName} เรียบร้อยแล้ว`, "success");
+                    loadOwnerCustomersTab();
+                } else {
+                    showToast(data.detail || "เกิดข้อผิดพลาดในการลบข้อมูลลูกค้า", "danger");
+                }
+            } catch (err) {
+                console.error("Error deleting customer:", err);
+                showToast("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้", "danger");
             }
         }
 

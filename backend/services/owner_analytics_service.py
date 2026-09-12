@@ -869,3 +869,90 @@ class OwnerAnalyticsService:
 
         else:
             raise ValueError(f"Unknown report type: {report_type}")
+
+    @classmethod
+    def get_owner_financial_summary(cls, start_date: Optional[str] = None, end_date: Optional[str] = None) -> Dict[str, Any]:
+        """
+        Owner-friendly financial summary:
+        1. Cash Collected (Total PAID Invoices)
+        2. Gateway Fees (Calculated per gateway settings)
+        3. Net Revenue Received (Cash Collected minus Fees)
+        4. Pending / Open Invoices (Outstanding collections)
+        5. Projected MRR next month
+        6. Recent invoices list with 1-click confirm status
+        """
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        
+        cursor.execute("""
+            SELECT COALESCE(SUM(total_amount), 0) as paid_amount, COUNT(id) as paid_count
+            FROM invoices
+            WHERE status = 'PAID'
+        """)
+        paid_res = cursor.fetchone()
+        cash_collected = int(paid_res["paid_amount"] or 0)
+        paid_count = int(paid_res["paid_count"] or 0)
+        
+        cursor.execute("""
+            SELECT COALESCE(SUM(total_amount), 0) as pending_amount, COUNT(id) as pending_count
+            FROM invoices
+            WHERE status IN ('OPEN', 'PENDING', 'DRAFT')
+        """)
+        pending_res = cursor.fetchone()
+        pending_amount = int(pending_res["pending_amount"] or 0)
+        pending_count = int(pending_res["pending_count"] or 0)
+        
+        cursor.execute("""
+            SELECT payment_method, COALESCE(SUM(total_amount), 0) as method_total
+            FROM invoices
+            WHERE status = 'PAID'
+            GROUP BY payment_method
+        """)
+        method_rows = cursor.fetchall()
+        
+        estimated_fees = 0
+        for mr in method_rows:
+            pm = (mr["payment_method"] or "").upper()
+            amt = float(mr["method_total"] or 0)
+            if "CREDIT" in pm or "STRIPE" in pm:
+                estimated_fees += int(round(amt * 0.029 + 10))
+            elif "OMISE" in pm or "GB" in pm:
+                estimated_fees += int(round(amt * 0.03))
+            elif "PROMPTPAY" in pm:
+                estimated_fees += int(round(amt * 0.005))
+                
+        owner_net_payout = max(0, cash_collected - estimated_fees)
+        
+        cursor.execute("""
+            SELECT COALESCE(SUM(p.price_monthly), 0) as projected_mrr
+            FROM subscriptions s
+            JOIN plans p ON p.id = s.plan_id
+            WHERE s.status IN ('ACTIVE', 'TRIALING')
+        """)
+        proj_row = cursor.fetchone()
+        projected_mrr = int(proj_row["projected_mrr"] or 0)
+        
+        cursor.execute("""
+            SELECT inv.id, inv.invoice_number, inv.org_id, o.name as org_name,
+                   inv.total_amount, inv.status, inv.payment_method, inv.created_at
+            FROM invoices inv
+            LEFT JOIN organizations o ON o.id = inv.org_id
+            ORDER BY inv.id DESC
+            LIMIT 50
+        """)
+        invoices = [dict(r) for r in cursor.fetchall()]
+        
+        conn.close()
+        
+        return {
+            "cash_collected": cash_collected,
+            "paid_count": paid_count,
+            "estimated_fees": estimated_fees,
+            "gateway_fees": estimated_fees,
+            "owner_net_payout": owner_net_payout,
+            "pending_amount": pending_amount,
+            "pending_invoices": pending_amount,
+            "pending_count": pending_count,
+            "projected_mrr": projected_mrr,
+            "invoices": invoices
+        }

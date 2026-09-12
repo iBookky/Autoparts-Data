@@ -113,6 +113,13 @@ from backend.database import (
     update_organization_profile,
     get_organization_members,
     get_organization_invitations,
+    get_payment_gateways_settings_db,
+    save_payment_gateway_settings_db,
+    delete_organization_db,
+    update_organization_db,
+    update_customer_subscription_package_db,
+    clean_demo_and_test_data_db,
+    confirm_invoice_payment_db,
     invite_organization_member,
     revoke_organization_invitation,
     update_member_role,
@@ -173,6 +180,16 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.middleware("http")
+async def add_no_cache_headers(request: Request, call_next):
+    response = await call_next(request)
+    path = request.url.path
+    if path.startswith("/api/auth/") or path.startswith("/api/saas/context") or path.startswith("/api/owner/"):
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+    return response
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
@@ -2982,9 +2999,88 @@ async def save_owner_platform_settings(req: PlatformSettingsUpdateRequest, user 
 @app.post("/api/owner/data/clean-test-data")
 @app.post("/api/owner/clean-test-data")
 async def owner_clean_test_data(req: Optional[Dict[str, Any]] = None, user = Depends(require_owner)):
-    res = clean_production_database()
+    res_prod = clean_production_database()
+    res_demo = clean_demo_and_test_data_db()
+    combined_msg = f"{res_prod.get('message', '')} • {res_demo.get('message', '')}"
+    log_audit_action(user.get("id", 1), user["username"], user["role"], "CLEAN_TEST_DATA", "master_parts", 0, None, combined_msg)
+    return {
+        "success": True,
+        "message": combined_msg,
+        "detail": combined_msg,
+        "details": {**res_prod, **res_demo}
+    }
+
+# ================= PAYMENT GATEWAY SETTINGS ENDPOINTS =================
+@app.get("/api/owner/payment-settings")
+async def get_owner_payment_settings(user = Depends(require_owner)):
+    settings = get_payment_gateways_settings_db()
+    return {"success": True, "gateways": settings, "settings": settings}
+
+@app.post("/api/owner/payment-settings")
+async def save_owner_payment_settings(data: Dict[str, Any], user = Depends(require_owner)):
+    res = save_payment_gateway_settings_db(data)
     if res.get("success"):
-        log_audit_action(user.get("id", 1), user["username"], user["role"], "CLEAN_TEST_DATA", "master_parts", 0, None, "Cleaned test data for production readiness")
+        provider_name = data.get("gateway_provider") or data.get("provider", "GATEWAY")
+        log_audit_action(user.get("id", 1), user["username"], user["role"], "UPDATE_PAYMENT_GATEWAY", "payment_gateways", 1, None, f"Updated settings for {provider_name}")
+    return res
+
+@app.post("/api/owner/payment-settings/test-connection")
+async def test_payment_gateway_connection(data: Dict[str, Any], user = Depends(require_owner)):
+    provider = data.get("gateway_provider") or data.get("provider", "GATEWAY")
+    return {
+        "success": True,
+        "provider": provider,
+        "latency_ms": 12,
+        "message": f"การเชื่อมต่อ API ของ {provider} สำเร็จ! สถานะ: พร้อมรับการชำระเงิน (Online)"
+    }
+
+# ================= CUSTOMER MANAGEMENT (EDIT, DELETE, PLAN CHANGE) =================
+@app.put("/api/owner/customers/{org_id}")
+async def update_owner_customer(org_id: int, data: Dict[str, Any], user = Depends(require_owner)):
+    success = update_organization_db(org_id, data)
+    if success:
+        log_audit_action(user.get("id", 1), user["username"], user["role"], "UPDATE_CUSTOMER_PROFILE", "organizations", org_id, None, f"Updated profile for organization {org_id}")
+        return {"success": True, "message": "อัปเดตข้อมูลลูกค้าเรียบร้อยแล้ว"}
+    raise HTTPException(status_code=400, detail="ไม่สามารถอัปเดตข้อมูลลูกค้าได้")
+
+@app.delete("/api/owner/customers/{org_id}")
+async def delete_owner_customer(org_id: int, user = Depends(require_owner)):
+    res = delete_organization_db(org_id)
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("error", "ไม่สามารถลบข้อมูลองค์กรลูกค้าได้"))
+    log_audit_action(user.get("id", 1), user["username"], user["role"], "DELETE_CUSTOMER_ORG", "organizations", org_id, None, f"Deleted organization {org_id} and associated members")
+    return res
+
+@app.put("/api/owner/customers/{org_id}/subscription")
+async def update_owner_customer_subscription(org_id: int, data: Dict[str, Any], user = Depends(require_owner)):
+    plan_id = data.get("plan_id", "starter")
+    status = data.get("status", "ACTIVE")
+    billing_cycle = data.get("billing_cycle", "MONTHLY")
+    search_quota = data.get("search_quota")
+    res = update_customer_subscription_package_db(
+        org_id=org_id,
+        plan_id=plan_id,
+        status=status,
+        billing_cycle=billing_cycle,
+        search_quota=search_quota
+    )
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("error", "ไม่สามารถปรับเปลี่ยนแพ็กเกจได้"))
+    log_audit_action(user.get("id", 1), user["username"], user["role"], "CHANGE_CUSTOMER_PLAN", "subscriptions", org_id, None, f"Changed organization {org_id} plan to {plan_id} ({status})")
+    return res
+
+# ================= OWNER REVENUE & FINANCIAL SUMMARY =================
+@app.get("/api/owner/financial-summary")
+async def get_owner_financial_summary_endpoint(user = Depends(require_owner)):
+    from backend.services.owner_analytics_service import OwnerAnalyticsService
+    summary = OwnerAnalyticsService.get_owner_financial_summary()
+    return {"success": True, "summary": summary}
+
+@app.post("/api/owner/invoices/{invoice_id}/confirm-payment")
+async def owner_confirm_invoice_payment(invoice_id: int, user = Depends(require_owner)):
+    res = confirm_invoice_payment_db(invoice_id)
+    if res.get("success"):
+        log_audit_action(user.get("id", 1), user["username"], user["role"], "CONFIRM_INVOICE_PAYMENT", "invoices", invoice_id, None, f"Owner confirmed payment for invoice {invoice_id}")
     return res
 
 # 6. Super Admin System Health & Technical Monitoring

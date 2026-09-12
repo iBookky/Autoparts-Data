@@ -1,4 +1,5 @@
 import os
+import json
 import hashlib
 from datetime import datetime
 from typing import Optional, List, Dict, Any, Tuple
@@ -4248,10 +4249,26 @@ def get_all_organizations_db() -> List[Dict[str, Any]]:
 def update_organization_db(org_id: int, data: Dict[str, Any]) -> bool:
     conn = get_db_connection()
     cursor = conn.cursor()
-    allowed_cols = ["name", "slug", "plan_tier", "billing_email", "phone", "tax_id", "address", "website", "contact_person", "industry", "country", "timezone"]
+    
+    # Normalize aliases
+    normalized = dict(data)
+    if "email" in normalized and "billing_email" not in normalized:
+        normalized["billing_email"] = normalized["email"]
+    if "billing_address" in normalized and "address" not in normalized:
+        normalized["address"] = normalized["billing_address"]
+    if "contact_name" in normalized and "contact_person" not in normalized:
+        normalized["contact_person"] = normalized["contact_name"]
+    if "industry_type" in normalized and "industry" not in normalized:
+        normalized["industry"] = normalized["industry_type"]
+
+    allowed_cols = [
+        "name", "slug", "plan_tier", "billing_email", "phone", "tax_id",
+        "address", "website", "contact_person", "industry", "country",
+        "timezone", "legal_name", "business_type", "currency"
+    ]
     sets = []
     vals = []
-    for k, v in data.items():
+    for k, v in normalized.items():
         if k in allowed_cols:
             sets.append(f"{k} = ?")
             vals.append(v)
@@ -4536,6 +4553,344 @@ def delete_search_log(log_id: int, org_id: int) -> Dict[str, Any]:
         conn.commit()
         return {"success": cursor.rowcount > 0}
     except Exception as e:
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
+
+# ================= PAYMENT GATEWAY SETTINGS CRUD =================
+def get_payment_gateways_settings_db() -> List[Dict[str, Any]]:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT id, gateway_provider, display_name, is_enabled, environment,
+               public_key, secret_key, merchant_id, webhook_secret,
+               bank_name, bank_account_number, bank_account_name, promptpay_id,
+               fee_percentage, fee_fixed, currency, supported_methods, instructions,
+               updated_at
+        FROM payment_gateway_settings
+        ORDER BY id ASC
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+    
+    results = []
+    for r in rows:
+        d = dict(r)
+        sk = str(d.get("secret_key") or "")
+        if len(sk) > 8:
+            d["secret_key_masked"] = sk[:4] + "••••••••" + sk[-4:]
+        elif sk:
+            d["secret_key_masked"] = "••••••••"
+        else:
+            d["secret_key_masked"] = ""
+            
+        wh = str(d.get("webhook_secret") or "")
+        if len(wh) > 8:
+            d["webhook_secret_masked"] = wh[:4] + "••••••••" + wh[-4:]
+        elif wh:
+            d["webhook_secret_masked"] = "••••••••"
+        else:
+            d["webhook_secret_masked"] = ""
+            
+        try:
+            d["supported_methods"] = json.loads(d.get("supported_methods") or "[]")
+        except:
+            d["supported_methods"] = []
+            
+        d["secret_key"] = d["secret_key_masked"]
+        d["webhook_secret"] = d["webhook_secret_masked"]
+        d["provider"] = d.get("gateway_provider")
+        d["mode"] = d.get("environment")
+        results.append(d)
+    return results
+
+def save_payment_gateway_settings_db(data: Dict[str, Any]) -> Dict[str, Any]:
+    provider = (data.get("gateway_provider") or data.get("provider", "")).strip().upper()
+    if not provider:
+        return {"success": False, "error": "Gateway provider is required"}
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM payment_gateway_settings WHERE gateway_provider = ?", (provider,))
+        existing = cursor.fetchone()
+        if not existing:
+            return {"success": False, "error": f"Gateway provider {provider} not found"}
+            
+        secret_key = data.get("secret_key", "").strip()
+        if "••••" in secret_key or not secret_key:
+            secret_key = existing["secret_key"]
+            
+        webhook_secret = data.get("webhook_secret", "").strip()
+        if "••••" in webhook_secret or not webhook_secret:
+            webhook_secret = existing["webhook_secret"]
+            
+        is_enabled = 1 if data.get("is_enabled") in [1, True, "1", "true"] else 0
+        environment = (data.get("environment") or data.get("mode", "SANDBOX")).strip().upper()
+        public_key = data.get("public_key", "").strip()
+        merchant_id = data.get("merchant_id", "").strip()
+        bank_name = data.get("bank_name", "").strip()
+        bank_account_number = data.get("bank_account_number", "").strip()
+        bank_account_name = data.get("bank_account_name", "").strip()
+        promptpay_id = data.get("promptpay_id", "").strip()
+        fee_pct = float(data.get("fee_percentage", 0.0) or 0.0)
+        fee_fixed = float(data.get("fee_fixed", 0.0) or 0.0)
+        instructions = data.get("instructions", "").strip()
+        display_name = data.get("display_name", existing["display_name"]).strip()
+        
+        cursor.execute("""
+            UPDATE payment_gateway_settings SET
+                display_name = ?,
+                is_enabled = ?,
+                environment = ?,
+                public_key = ?,
+                secret_key = ?,
+                merchant_id = ?,
+                webhook_secret = ?,
+                bank_name = ?,
+                bank_account_number = ?,
+                bank_account_name = ?,
+                promptpay_id = ?,
+                fee_percentage = ?,
+                fee_fixed = ?,
+                instructions = ?,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE gateway_provider = ?
+        """, (
+            display_name, is_enabled, environment,
+            public_key, secret_key, merchant_id, webhook_secret,
+            bank_name, bank_account_number, bank_account_name, promptpay_id,
+            fee_pct, fee_fixed, instructions, provider
+        ))
+        conn.commit()
+        return {"success": True, "message": f"บันทึกการตั้งค่า {display_name} สำเร็จ"}
+    except Exception as e:
+        conn.rollback()
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
+
+# ================= CUSTOMER MANAGEMENT (EDIT, DELETE, PACKAGE CHANGE) =================
+def delete_organization_db(org_id: int) -> Dict[str, Any]:
+    if org_id == 1:
+        return {"success": False, "error": "ไม่สามารถลบองค์กรหลักของระบบ (Platform Headquarters) ได้"}
+        
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT id, name FROM organizations WHERE id = ?", (org_id,))
+        org = cursor.fetchone()
+        if not org:
+            return {"success": False, "error": "ไม่พบข้อมูลองค์กรลูกค้าที่ระบุ"}
+            
+        org_name = org["name"]
+        
+        cursor.execute("DELETE FROM entitlements WHERE org_id = ?", (org_id,))
+        cursor.execute("DELETE FROM usage_records WHERE org_id = ?", (org_id,))
+        cursor.execute("DELETE FROM invoice_items WHERE invoice_id IN (SELECT id FROM invoices WHERE org_id = ?)", (org_id,))
+        cursor.execute("DELETE FROM coupon_redemptions WHERE org_id = ?", (org_id,))
+        cursor.execute("DELETE FROM invoices WHERE org_id = ?", (org_id,))
+        cursor.execute("DELETE FROM subscription_items WHERE subscription_id IN (SELECT id FROM subscriptions WHERE org_id = ?)", (org_id,))
+        cursor.execute("DELETE FROM subscription_entitlements_snapshot WHERE subscription_id IN (SELECT id FROM subscriptions WHERE org_id = ?)", (org_id,))
+        cursor.execute("DELETE FROM subscriptions WHERE org_id = ?", (org_id,))
+        
+        cursor.execute("SELECT user_id FROM organization_members WHERE org_id = ?", (org_id,))
+        user_ids = [r["user_id"] for r in cursor.fetchall()]
+        cursor.execute("DELETE FROM organization_members WHERE org_id = ?", (org_id,))
+        
+        for uid in user_ids:
+            cursor.execute("SELECT COUNT(*) as org_cnt FROM organization_members WHERE user_id = ?", (uid,))
+            cnt = cursor.fetchone()["org_cnt"]
+            if cnt == 0:
+                cursor.execute("SELECT role, username FROM users WHERE id = ?", (uid,))
+                u_row = cursor.fetchone()
+                if u_row and u_row["role"] not in ["ADMIN", "SUPER_ADMIN", "OWNER"] and u_row["username"] not in ["admin", "owner", "superadmin"]:
+                    cursor.execute("DELETE FROM users WHERE id = ?", (uid,))
+                    
+        cursor.execute("DELETE FROM commercial_audit_logs WHERE org_id = ?", (org_id,))
+        cursor.execute("DELETE FROM organizations WHERE id = ?", (org_id,))
+        
+        conn.commit()
+        return {"success": True, "message": f"ลบข้อมูลองค์กร {org_name} และข้อมูลสมาชิกลูกค้าเรียบร้อยแล้ว"}
+    except Exception as e:
+        conn.rollback()
+        return {"success": False, "error": f"เกิดข้อผิดพลาดในการลบองค์กร: {str(e)}"}
+    finally:
+        conn.close()
+
+def update_customer_subscription_package_db(
+    org_id: int,
+    plan_id: str,
+    status: str = "ACTIVE",
+    billing_cycle: str = "MONTHLY",
+    search_quota: Optional[int] = None
+) -> Dict[str, Any]:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM organizations WHERE id = ?", (org_id,))
+        org = cursor.fetchone()
+        if not org:
+            return {"success": False, "error": "ไม่พบข้อมูลองค์กรลูกค้า"}
+            
+        clean_plan = plan_id.lower().strip()
+        cursor.execute("SELECT * FROM plans WHERE id = ?", (clean_plan,))
+        plan = cursor.fetchone()
+        if not plan:
+            return {"success": False, "error": f"ไม่พบแพ็กเกจ {plan_id} ในระบบ"}
+            
+        clean_status = status.upper().strip()
+        clean_cycle = billing_cycle.upper().strip()
+        
+        cursor.execute("UPDATE organizations SET plan_tier = ? WHERE id = ?", (clean_plan.upper(), org_id))
+        
+        cursor.execute("SELECT id FROM subscriptions WHERE org_id = ? ORDER BY id DESC LIMIT 1", (org_id,))
+        sub_row = cursor.fetchone()
+        period_end = "+30 days" if clean_cycle == "MONTHLY" else "+365 days"
+        
+        if sub_row:
+            cursor.execute(f"""
+                UPDATE subscriptions SET
+                    plan_id = ?,
+                    status = ?,
+                    billing_cycle = ?,
+                    current_period_end = datetime('now', '{period_end}')
+                WHERE id = ?
+            """, (clean_plan, clean_status, clean_cycle, sub_row["id"]))
+        else:
+            cursor.execute(f"""
+                INSERT INTO subscriptions (org_id, plan_id, status, billing_cycle, current_period_start, current_period_end)
+                VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP, datetime('now', '{period_end}'))
+            """, (org_id, clean_plan, clean_status, clean_cycle))
+            
+        cur_month = datetime.now().strftime("%Y-%m")
+        new_quota = search_quota if (search_quota is not None and search_quota > 0) else plan.get("monthly_search_quota", 5000)
+        
+        cursor.execute("""
+            UPDATE usage_records 
+            SET period_month = ?
+            WHERE org_id = ? AND period_month = ?
+        """, (cur_month, org_id, cur_month))
+        
+        max_cats = plan.get("max_categories", 5)
+        max_brands = plan.get("max_brands", 5)
+        
+        if max_cats == -1:
+            cursor.execute("DELETE FROM entitlements WHERE org_id = ? AND entitlement_type = 'CATEGORY'", (org_id,))
+            cursor.execute("INSERT OR IGNORE INTO entitlements (org_id, entitlement_type, entitlement_value, is_granted) VALUES (?, 'CATEGORY', '*', 1)", (org_id,))
+        else:
+            cursor.execute("SELECT COUNT(*) as cat_cnt FROM entitlements WHERE org_id = ? AND entitlement_type = 'CATEGORY' AND entitlement_value != '*'", (org_id,))
+            c_cnt = cursor.fetchone()["cat_cnt"]
+            if c_cnt == 0:
+                cursor.execute("SELECT name FROM meta_categories ORDER BY id ASC LIMIT ?", (max_cats,))
+                for row in cursor.fetchall():
+                    cursor.execute("INSERT OR IGNORE INTO entitlements (org_id, entitlement_type, entitlement_value, is_granted) VALUES (?, 'CATEGORY', ?, 1)", (org_id, row["name"]))
+
+        if max_brands == -1:
+            cursor.execute("DELETE FROM entitlements WHERE org_id = ? AND entitlement_type = 'AFTERMARKET_BRAND'", (org_id,))
+            cursor.execute("INSERT OR IGNORE INTO entitlements (org_id, entitlement_type, entitlement_value, is_granted) VALUES (?, 'AFTERMARKET_BRAND', '*', 1)", (org_id,))
+            
+        cursor.execute("""
+            INSERT INTO commercial_audit_logs (org_id, action, target_type, target_id, after_state)
+            VALUES (?, 'OWNER_PACKAGE_CHANGE', 'SUBSCRIPTION', ?, ?)
+        """, (org_id, str(org_id), json.dumps({"plan_id": clean_plan, "status": clean_status, "billing_cycle": clean_cycle, "quota": new_quota})))
+        
+        conn.commit()
+        return {
+            "success": True, 
+            "message": f"ปรับเปลี่ยนแพ็กเกจองค์กร {org['name']} เป็น {plan['name']} (สถานะ: {clean_status}) สำเร็จ",
+            "plan_id": clean_plan,
+            "status": clean_status
+        }
+    except Exception as e:
+        conn.rollback()
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
+
+# ================= CLEAN TEST & DEMO DATA =================
+def clean_demo_and_test_data_db() -> Dict[str, Any]:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            SELECT id, name FROM organizations 
+            WHERE id > 1 AND (
+                LOWER(name) LIKE '%test%' OR 
+                LOWER(slug) LIKE '%test%' OR
+                LOWER(name) LIKE '%sample%' OR
+                LOWER(billing_email) LIKE '%test%' OR
+                LOWER(billing_email) LIKE '%example.com%'
+            )
+        """)
+        test_orgs = cursor.fetchall()
+        deleted_org_count = 0
+        
+        for t_org in test_orgs:
+            oid = t_org["id"]
+            cursor.execute("DELETE FROM entitlements WHERE org_id = ?", (oid,))
+            cursor.execute("DELETE FROM usage_records WHERE org_id = ?", (oid,))
+            cursor.execute("DELETE FROM invoice_items WHERE invoice_id IN (SELECT id FROM invoices WHERE org_id = ?)", (oid,))
+            cursor.execute("DELETE FROM invoices WHERE org_id = ?", (oid,))
+            cursor.execute("DELETE FROM subscription_items WHERE subscription_id IN (SELECT id FROM subscriptions WHERE org_id = ?)", (oid,))
+            cursor.execute("DELETE FROM subscriptions WHERE org_id = ?", (oid,))
+            cursor.execute("DELETE FROM organization_members WHERE org_id = ?", (oid,))
+            cursor.execute("DELETE FROM commercial_audit_logs WHERE org_id = ?", (oid,))
+            cursor.execute("DELETE FROM organizations WHERE id = ?", (oid,))
+            deleted_org_count += 1
+            
+        cursor.execute("""
+            DELETE FROM users 
+            WHERE role = 'STAFF' AND (
+                LOWER(username) LIKE '%test%' OR 
+                LOWER(username) LIKE '%sample%' OR 
+                LOWER(username) LIKE '%@example.com%'
+            )
+        """)
+        deleted_users_count = cursor.rowcount
+        
+        cursor.execute("""
+            DELETE FROM customer_leads
+            WHERE LOWER(company_name) LIKE '%test%' OR 
+                  LOWER(email) LIKE '%test%' OR 
+                  LOWER(email) LIKE '%example.com%'
+        """)
+        deleted_leads_count = cursor.rowcount
+        
+        conn.commit()
+        return {
+            "success": True,
+            "message": f"ล้างข้อมูลทดสอบเรียบร้อยแล้ว: ลบ {deleted_org_count} องค์กรทดสอบ, {deleted_users_count} ผู้ใช้ทดสอบ, {deleted_leads_count} Leads",
+            "deleted_orgs": deleted_org_count,
+            "deleted_users": deleted_users_count,
+            "deleted_leads": deleted_leads_count
+        }
+    except Exception as e:
+        conn.rollback()
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
+
+def confirm_invoice_payment_db(invoice_id: int) -> Dict[str, Any]:
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT * FROM invoices WHERE id = ?", (invoice_id,))
+        inv = cursor.fetchone()
+        if not inv:
+            return {"success": False, "error": "ไม่พบข้อมูล Invoice ที่ระบุ"}
+            
+        cursor.execute("UPDATE invoices SET status = 'PAID' WHERE id = ?", (invoice_id,))
+        
+        if inv.get("subscription_id"):
+            cursor.execute("UPDATE subscriptions SET status = 'ACTIVE' WHERE id = ?", (inv["subscription_id"],))
+        elif inv.get("org_id"):
+            cursor.execute("UPDATE subscriptions SET status = 'ACTIVE' WHERE org_id = ?", (inv["org_id"],))
+            
+        conn.commit()
+        return {"success": True, "message": f"ยืนยันยอดชำระเงิน Invoice {inv['invoice_number']} เรียบร้อยแล้ว (สถานะ: PAID)"}
+    except Exception as e:
+        conn.rollback()
         return {"success": False, "error": str(e)}
     finally:
         conn.close()
