@@ -2026,9 +2026,9 @@ select.form-control option {
     -webkit-backdrop-filter: blur(6px);
     z-index: 1000;
     display: none;
-    align-items: center;
+    align-items: flex-start;
     justify-content: center;
-    padding: 1.25rem 1rem;
+    padding: 1.5rem 1rem;
     box-sizing: border-box;
     overflow-y: auto;
     overflow-x: hidden;
@@ -2071,6 +2071,17 @@ select.form-control option {
     overflow: hidden;
     animation: modalIn 0.2s ease-out;
     margin: auto;
+    position: relative;
+}
+
+.modal-card > form {
+    display: flex;
+    flex-direction: column;
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    height: 100%;
+    margin: 0;
 }
 
 @keyframes modalIn {
@@ -2103,12 +2114,34 @@ select.form-control option {
 
 .modal-body {
     padding: 1.25rem 1.35rem;
-    overflow-y: auto;
+    overflow-y: auto !important;
     overflow-x: hidden;
     box-sizing: border-box;
     width: 100%;
     max-width: 100%;
     flex: 1 1 auto;
+    min-height: 0 !important;
+    overscroll-behavior: contain;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
+}
+
+.modal-body::-webkit-scrollbar {
+    width: 6px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.35);
+    border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+    background: var(--primary, #3b82f6);
 }
 
 .modal-footer {
