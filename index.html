@@ -9,9 +9,9 @@
     <meta http-equiv="Expires" content="0">
     <script>(function(){const t=localStorage.getItem('autoparts_theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="icon" id="dynamic-favicon" type="image/png" href="/favicon.ico">
-    <link rel="stylesheet" href="/frontend/css/index.css?v=20260912_v14_import_category_oem_suggestions">
+    <link rel="stylesheet" href="/frontend/css/index.css?v=20260912_v15_server_reconnect">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="/frontend/js/i18n.js?v=20260912_v14_import_category_oem_suggestions"></script>
+    <script src="/frontend/js/i18n.js?v=20260912_v15_server_reconnect"></script>
 </head>
 <body>
 
@@ -9364,8 +9364,9 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=à¸
         function showToast(msg, type = 'info') {
             const box = document.getElementById('toast-box');
             if (!box) return;
+            const normalizedType = (type === 'error') ? 'danger' : type;
             const toast = document.createElement('div');
-            toast.className = `toast-item toast-${type}`;
+            toast.className = `toast-item toast-${normalizedType}`;
             
             const icons = {
                 'success': 'fa-solid fa-circle-check',
@@ -9374,7 +9375,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=à¸
                 'info': 'fa-solid fa-circle-info'
             };
             
-            toast.innerHTML = `<i class="${icons[type] || icons.info}"></i> <span class="toast-msg">${msg}</span>`;
+            toast.innerHTML = `<i class="${icons[normalizedType] || icons.info}"></i> <span class="toast-msg">${msg}</span>`;
             box.appendChild(toast);
             
             setTimeout(() => {
