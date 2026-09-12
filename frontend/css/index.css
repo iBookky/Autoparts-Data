@@ -3960,6 +3960,65 @@ select.form-control option {
     text-transform: uppercase;
 }
 
+/* ================= PAYMENT CHECKOUT MODAL STYLES ================= */
+#modal-payment-checkout.open {
+    display: flex !important;
+}
+
+.checkout-modal-card {
+    animation: checkoutModalIn 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes checkoutModalIn {
+    from {
+        opacity: 0;
+        transform: scale(0.96) translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.checkout-tabs .checkout-tab-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 0.85rem 0.5rem;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 0.82rem;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+.checkout-tabs .checkout-tab-btn:hover {
+    border-color: var(--primary);
+    color: #fff;
+    background: rgba(37, 99, 235, 0.08);
+}
+
+.checkout-tabs .checkout-tab-btn.active {
+    border-color: #38bdf8;
+    background: rgba(56, 189, 248, 0.12);
+    color: #fff;
+    box-shadow: 0 0 14px rgba(56, 189, 248, 0.25);
+}
+
+#checkout-promptpay-qr-container {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+#checkout-promptpay-qr-container:hover {
+    transform: scale(1.02);
+    box-shadow: 0 12px 28px rgba(56, 189, 248, 0.3);
+}
+
 
 
 

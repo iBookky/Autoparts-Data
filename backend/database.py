@@ -3803,11 +3803,22 @@ def register_trial_tenant_db(data: Dict[str, Any]) -> Dict[str, Any]:
                 plan_trial_days = 0
                 
         is_trial = (signup_type == "TRIAL" and plan_trial_days > 0)
-        sub_status = "TRIALING" if is_trial else "ACTIVE"
+        subtotal = float(plan_dict.get("price_monthly", 0) or 0)
+        vat_amount = round(subtotal * 0.07, 2)
+        total_amount = round(subtotal + vat_amount, 2)
+        
+        # If direct signup on a paid plan, status starts as PAST_DUE (awaiting payment settlement)
+        if not is_trial and total_amount > 0:
+            sub_status = "PAST_DUE"
+        elif is_trial:
+            sub_status = "TRIALING"
+        else:
+            sub_status = "ACTIVE"
+            
         trial_days_applied = plan_trial_days if is_trial else 0
         period_end_sql = f"+{plan_trial_days} days" if is_trial else "+30 days"
         
-        # 5. Provision subscription ('TRIALING' if trial, 'ACTIVE' if direct/paid)
+        # 5. Provision subscription ('TRIALING' if trial, 'PENDING_PAYMENT' if direct paid, 'ACTIVE' if free)
         cursor.execute(f"""
             INSERT INTO subscriptions (
                 org_id, plan_id, status, billing_cycle,
@@ -3820,6 +3831,40 @@ def register_trial_tenant_db(data: Dict[str, Any]) -> Dict[str, Any]:
             )
         """, (org_id, plan_id, sub_status))
         sub_id = cursor.lastrowid
+
+        # 5.1 If direct signup on a paid plan, generate initial OPEN invoice
+        inv_id = None
+        inv_num = None
+        if not is_trial and total_amount > 0:
+            from datetime import timedelta
+            now_str = datetime.now().strftime("%Y%m")
+            cursor.execute("SELECT COUNT(*) FROM invoices WHERE invoice_number LIKE ?", (f"INV-{now_str}-%",))
+            cnt_row = cursor.fetchone()
+            seq = (cnt_row[0] if cnt_row else 0) + 1
+            inv_num = f"INV-{now_str}-{seq:04d}"
+            
+            p_start = datetime.now().strftime("%Y-%m-%d")
+            p_end = (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
+            
+            cursor.execute("""
+                INSERT INTO invoices (
+                    invoice_number, org_id, amount, vat_amount, total_amount,
+                    status, payment_method, period_start, period_end, created_at
+                ) VALUES (?, ?, ?, ?, ?, 'OPEN', 'PROMPTPAY', ?, ?, CURRENT_TIMESTAMP)
+            """, (
+                inv_num, org_id, subtotal, vat_amount, total_amount, p_start, p_end
+            ))
+            inv_id = cursor.lastrowid
+            
+            cursor.execute("""
+                INSERT INTO invoice_items (invoice_id, description, item_type, quantity, unit_price, amount)
+                VALUES (?, ?, 'PLAN', 1, ?, ?)
+            """, (
+                inv_id,
+                f"Subscription: {plan_dict.get('name', plan_id.upper())} (1 Month)",
+                subtotal,
+                subtotal
+            ))
         
         # 6. Seed Entitlements Whitelist
         # Vehicle makes (BRAND) are universally available unless custom-restricted
@@ -3929,9 +3974,15 @@ def register_trial_tenant_db(data: Dict[str, Any]) -> Dict[str, Any]:
             "org_role": "OWNER",
             "org_name": company_name,
             "plan_id": plan_id,
+            "plan_name": plan_dict.get("name", plan_id.upper()),
             "is_trial": is_trial,
             "trial_days": trial_days_applied,
             "status": sub_status,
+            "invoice_id": inv_id,
+            "invoice_number": inv_num,
+            "subtotal": subtotal,
+            "vat_amount": vat_amount,
+            "total_amount": total_amount,
             "message": success_msg
         }
     except Exception as e:
@@ -4592,15 +4643,52 @@ def get_payment_gateways_settings_db() -> List[Dict[str, Any]]:
         else:
             d["webhook_secret_masked"] = ""
             
-        try:
-            d["supported_methods"] = json.loads(d.get("supported_methods") or "[]")
-        except:
-            d["supported_methods"] = []
-            
+        if d.get("fee_percentage") is not None:
+            try:
+                d["fee_percentage"] = float(d["fee_percentage"])
+            except Exception:
+                pass
+        if d.get("fee_fixed") is not None:
+            try:
+                d["fee_fixed"] = float(d["fee_fixed"])
+            except Exception:
+                pass
+        if d.get("updated_at") is not None:
+            d["updated_at"] = str(d["updated_at"])
+
         d["secret_key"] = d["secret_key_masked"]
         d["webhook_secret"] = d["webhook_secret_masked"]
         d["provider"] = d.get("gateway_provider")
         d["mode"] = d.get("environment")
+        results.append(d)
+    return results
+
+def get_public_payment_methods_db() -> List[Dict[str, Any]]:
+    """
+    Returns active payment gateways for client checkout (PromptPay, Stripe, Bank Transfer).
+    Masks and excludes all private credentials.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT id, gateway_provider, display_name, environment,
+               public_key, bank_name, bank_account_number, bank_account_name, promptpay_id,
+               currency, supported_methods, instructions
+        FROM payment_gateway_settings
+        WHERE is_enabled = 1
+        ORDER BY id ASC
+    """)
+    rows = cursor.fetchall()
+    conn.close()
+    
+    results = []
+    for r in rows:
+        d = dict(r)
+        try:
+            d["supported_methods"] = json.loads(d.get("supported_methods") or "[]")
+        except Exception:
+            d["supported_methods"] = []
+        d["provider"] = d.get("gateway_provider")
         results.append(d)
     return results
 

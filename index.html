@@ -3748,6 +3748,221 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         </div>
     </div>
 
+    <!-- ================= PAYMENT CHECKOUT MODAL (SECURE CHECKOUT) ================= -->
+    <div class="modal-overlay" id="modal-payment-checkout" style="display: none; z-index: 10000;">
+        <div class="modal-card checkout-modal-card" style="max-width: 680px; width: 95%; max-height: 92vh; overflow-y: auto; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); box-shadow: 0 20px 40px rgba(0,0,0,0.45); padding: 0;">
+            <!-- Checkout Header -->
+            <div class="modal-header" style="padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--border-color); background: var(--bg-surface); display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="width: 36px; height: 36px; border-radius: 8px; background: rgba(16,185,129,0.15); display: flex; align-items: center; justify-content: center; color: #10B981; font-size: 1.1rem;">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div>
+                        <h3 style="margin: 0; font-size: 1.15rem; font-weight: 700; color: #fff;" id="checkout-title">หน้าชำระเงิน (Secure Checkout)</h3>
+                        <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;" id="checkout-subtitle">เลือกช่องทางการชำระเงินที่ต้องการเพื่อเปิดใช้งานแพ็กเกจทันที</div>
+                    </div>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closePaymentCheckoutModal()" style="border-radius: 50%; width: 32px; height: 32px; padding: 0; display: flex; align-items: center; justify-content: center;">&times;</button>
+            </div>
+
+            <div class="modal-body" style="padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem;">
+                <!-- Order Summary Card -->
+                <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.15rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; margin-bottom: 0.75rem;">
+                        <div>
+                            <span style="font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted); font-weight: 700;">รายการสั่งซื้อ:</span>
+                            <div style="font-size: 1.05rem; font-weight: 700; color: #fff; margin-top: 2px;" id="checkout-item-name">แพ็กเกจ Professional (รายเดือน)</div>
+                            <div style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 2px;" id="checkout-customer-info">บริษัท ตัวอย่าง จำกัด</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <span class="badge" id="checkout-invoice-badge" style="background: rgba(59,130,246,0.15); color: #60A5FA; font-family: var(--font-mono); font-size: 0.8rem; padding: 3px 8px;">INV-2026-0001</span>
+                            <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 4px;" id="checkout-date-text"></div>
+                        </div>
+                    </div>
+
+                    <!-- Price Breakdown Rows -->
+                    <div style="display: flex; flex-direction: column; gap: 0.4rem; font-size: 0.85rem;">
+                        <div style="display: flex; justify-content: space-between; color: var(--text-secondary);">
+                            <span>ค่าบริการแพ็กเกจ (Subtotal):</span>
+                            <span id="checkout-row-subtotal" style="font-family: var(--font-mono); font-weight: 600;">฿2,990.00</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; color: var(--text-secondary);" id="checkout-row-discount-container" style="display: none;">
+                            <span style="color: #10B981;">ส่วนลดโปรโมชัน (Coupon):</span>
+                            <span id="checkout-row-discount" style="font-family: var(--font-mono); font-weight: 600; color: #10B981;">-฿0.00</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; color: var(--text-secondary);">
+                            <span>ภาษีมูลค่าเพิ่ม (VAT 7%):</span>
+                            <span id="checkout-row-vat" style="font-family: var(--font-mono); font-weight: 600;">฿209.30</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--border-color); padding-top: 0.6rem; margin-top: 0.2rem;">
+                            <span style="font-size: 1rem; font-weight: 700; color: #fff;">ยอดรวมที่ต้องชำระ (Total Payable):</span>
+                            <span id="checkout-row-total" style="font-size: 1.35rem; font-weight: 800; color: #10B981; font-family: var(--font-mono);">฿3,199.30</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payment Methods Navigation Tabs -->
+                <div>
+                    <label class="form-label" style="font-weight: 700; margin-bottom: 0.5rem; font-size: 0.85rem; color: #fff;">
+                        <i class="fa-solid fa-wallet" style="color: var(--primary); margin-right: 6px;"></i> เลือกวิธีชำระเงิน (Select Payment Method)
+                    </label>
+                    <div class="checkout-tabs" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem;">
+                        <button type="button" class="checkout-tab-btn active" id="chk-tab-promptpay" onclick="switchCheckoutMethod('PROMPTPAY')">
+                            <i class="fa-solid fa-qrcode" style="font-size: 1.1rem; color: #38BDF8;"></i>
+                            <span>พร้อมเพย์ (QR Code)</span>
+                        </button>
+                        <button type="button" class="checkout-tab-btn" id="chk-tab-card" onclick="switchCheckoutMethod('CREDIT_CARD')">
+                            <i class="fa-brands fa-cc-visa" style="font-size: 1.1rem; color: #818CF8;"></i>
+                            <span>บัตรเครดิต / เดบิต</span>
+                        </button>
+                        <button type="button" class="checkout-tab-btn" id="chk-tab-transfer" onclick="switchCheckoutMethod('BANK_TRANSFER')">
+                            <i class="fa-solid fa-building-columns" style="font-size: 1.1rem; color: #F59E0B;"></i>
+                            <span>โอนผ่านธนาคาร</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CHANNEL 1: PROMPTPAY QR -->
+                <div class="checkout-channel-panel" id="chk-panel-promptpay" style="display: block;">
+                    <div style="background: var(--bg-card); border: 1px solid rgba(56,189,248,0.3); border-radius: var(--radius-sm); padding: 1.25rem; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 0.85rem;">
+                        <!-- Thai QR Payment Logo Badge -->
+                        <div style="background: #113566; color: #fff; border-radius: 6px; padding: 6px 14px; display: inline-flex; align-items: center; gap: 8px; font-size: 0.85rem; font-weight: 700; letter-spacing: 0.05em;">
+                            <i class="fa-solid fa-qrcode"></i> Thai QR Payment / พร้อมเพย์
+                        </div>
+
+                        <!-- Dynamic QR Canvas / Box -->
+                        <div id="checkout-promptpay-qr-container" style="background: #fff; padding: 14px; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.25); border: 2px solid #38bdf8;">
+                            <img id="checkout-promptpay-qr-img" src="" alt="PromptPay QR" style="width: 190px; height: 190px; object-fit: contain; display: block;">
+                        </div>
+
+                        <div style="font-size: 0.85rem; color: var(--text-secondary); max-width: 420px; line-height: 1.5;">
+                            <div>สแกนผ่านแอปฯ ธนาคารทุกธนาคารในประเทศไทย</div>
+                            <div style="margin-top: 4px;">
+                                PromptPay ID: <strong id="checkout-promptpay-id-text" style="color: #60A5FA; font-family: var(--font-mono); font-size: 0.95rem;">-</strong>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="copyPromptPayId()" style="margin-left: 6px; padding: 2px 8px; font-size: 0.72rem;">
+                                    <i class="fa-regular fa-copy"></i> คัดลอก
+                                </button>
+                            </div>
+                            <div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 2px;">
+                                ชื่อบัญชี: <span id="checkout-promptpay-name-text">บจก. สยาม ออโต้พาร์ท แพลตฟอร์ม</span>
+                            </div>
+                        </div>
+
+                        <!-- Timer Countdown -->
+                        <div style="background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.25); border-radius: 6px; padding: 4px 12px; font-size: 0.78rem; color: #F59E0B; display: inline-flex; align-items: center; gap: 6px;">
+                            <i class="fa-regular fa-clock"></i> QR Code มีอายุใช้งาน <span id="checkout-promptpay-timer" style="font-weight: 700; font-family: var(--font-mono);">14:59</span> นาที
+                        </div>
+
+                        <button type="button" class="btn btn-primary" id="btn-confirm-promptpay" onclick="confirmPromptPayPayment()" style="width: 100%; max-width: 360px; padding: 0.75rem; font-weight: 700; margin-top: 0.35rem;">
+                            <i class="fa-solid fa-circle-check"></i> ฉันได้สแกนและชำระเงินเรียบร้อยแล้ว
+                        </button>
+                    </div>
+                </div>
+
+                <!-- CHANNEL 2: CREDIT / DEBIT CARD (STRIPE) -->
+                <div class="checkout-channel-panel" id="chk-panel-card" style="display: none;">
+                    <form id="checkout-card-form" onsubmit="handleCardPayment(event)" style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="font-size: 0.82rem; font-weight: 700; color: #fff;">รายละเอียดบัตรเครดิต / เดบิต:</span>
+                            <div style="display: flex; gap: 6px; font-size: 1.25rem; color: var(--text-muted);">
+                                <i class="fa-brands fa-cc-visa" style="color: #60a5fa;"></i>
+                                <i class="fa-brands fa-cc-mastercard" style="color: #f87171;"></i>
+                                <i class="fa-brands fa-cc-jcb" style="color: #34d399;"></i>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" style="font-size: 0.8rem;">หมายเลขบัตร (Card Number) <span style="color: var(--danger);">*</span></label>
+                            <div style="position: relative;">
+                                <input type="text" id="chk-card-number" class="form-control" placeholder="4000 1234 5678 9010" maxlength="19" oninput="formatCardNumberInput(this)" required style="padding-left: 36px; font-family: var(--font-mono); letter-spacing: 0.05em;">
+                                <i class="fa-solid fa-credit-card" style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.9rem;"></i>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem;">
+                            <div class="form-group">
+                                <label class="form-label" style="font-size: 0.8rem;">วันหมดอายุ (MM/YY) <span style="color: var(--danger);">*</span></label>
+                                <input type="text" id="chk-card-expiry" class="form-control" placeholder="MM/YY" maxlength="5" oninput="formatCardExpiryInput(this)" required style="text-align: center; font-family: var(--font-mono);">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" style="font-size: 0.8rem;">รหัส CVC / CVV <span style="color: var(--danger);">*</span></label>
+                                <div style="position: relative;">
+                                    <input type="password" id="chk-card-cvc" class="form-control" placeholder="123" maxlength="4" required style="text-align: center; font-family: var(--font-mono);">
+                                    <i class="fa-solid fa-lock" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.8rem;"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="form-label" style="font-size: 0.8rem;">ชื่อผู้ถือบัตร (Name on Card) <span style="color: var(--danger);">*</span></label>
+                            <input type="text" id="chk-card-name" class="form-control" placeholder="SOMCHAI JAIDEE" style="text-transform: uppercase;" required>
+                        </div>
+
+                        <div style="font-size: 0.75rem; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+                            <i class="fa-solid fa-lock" style="color: #10B981;"></i> ระบบประมวลผลผ่านช่องทางที่เข้ารหัส 256-bit SSL มาตรฐาน PCI-DSS ปลอดภัย 100%
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" id="btn-submit-card-pay" style="padding: 0.75rem; font-weight: 700; margin-top: 0.25rem;">
+                            <i class="fa-solid fa-shield-halved"></i> <span id="btn-submit-card-pay-text">ชำระเงินทันที</span>
+                        </button>
+                    </form>
+                </div>
+
+                <!-- CHANNEL 3: CORPORATE BANK TRANSFER -->
+                <div class="checkout-channel-panel" id="chk-panel-transfer" style="display: none;">
+                    <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="background: var(--bg-card); border: 1px solid rgba(59,130,246,0.3); border-radius: var(--radius-sm); padding: 1rem;">
+                            <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700; margin-bottom: 0.4rem;">
+                                ข้อมูลบัญชีธนาคารสำหรับโอนเงิน:
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                                <div>
+                                    <div style="font-size: 0.95rem; font-weight: 700; color: #fff;" id="checkout-bank-name">ธนาคารไทยพาณิชย์ (SCB)</div>
+                                    <div style="font-size: 0.82rem; color: var(--text-secondary); margin-top: 2px;" id="checkout-bank-accname">บจก. สยาม ออโต้พาร์ท แพลตฟอร์ม</div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div style="font-family: var(--font-mono); font-size: 1.15rem; font-weight: 800; color: #60A5FA;" id="checkout-bank-accno">123-4-56789-0</div>
+                                    <button type="button" class="btn btn-secondary btn-sm" onclick="copyBankAccountNo()" style="margin-top: 4px; padding: 2px 8px; font-size: 0.72rem;">
+                                        <i class="fa-regular fa-copy"></i> คัดลอกเลขบัญชี
+                                    </button>
+                                </div>
+                            </div>
+                            <div style="font-size: 0.78rem; color: var(--text-muted); border-top: 1px solid var(--border-color); padding-top: 0.5rem; margin-top: 0.5rem;" id="checkout-bank-instructions">
+                                โอนเงินเข้าบัญชีบริษัท และแนบเลขอ้างอิงหรือสลิปเพื่อยืนยัน
+                            </div>
+                        </div>
+
+                        <!-- Proof Submission Form -->
+                        <form id="checkout-transfer-form" onsubmit="handleBankTransferSubmit(event)" style="display: flex; flex-direction: column; gap: 0.85rem;">
+                            <div class="form-group">
+                                <label class="form-label" style="font-size: 0.8rem;">หมายเลขอ้างอิงการโอนเงิน (Transfer Reference / Slip Ref) <span style="color: var(--danger);">*</span></label>
+                                <input type="text" id="chk-transfer-ref" class="form-control" placeholder="เช่น 20260912123456 หรือ REF998811" required style="font-family: var(--font-mono); text-transform: uppercase;">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label" style="font-size: 0.8rem;">แนบไฟล์สลิปหรือหลักฐานการโอน (Slip Attachment - ถ้ามี)</label>
+                                <input type="file" id="chk-transfer-slip-file" class="form-control" accept="image/*" onchange="previewTransferSlip(this)">
+                                <div id="chk-transfer-slip-preview" style="display: none; margin-top: 6px; font-size: 0.75rem; color: #10B981;">
+                                    <i class="fa-solid fa-paperclip"></i> แนบไฟล์เรียบร้อยแล้ว
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="btn-submit-transfer-proof" style="padding: 0.75rem; font-weight: 700;">
+                                <i class="fa-solid fa-file-arrow-up"></i> ยืนยันการโอนเงินและส่งหลักฐาน
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer Note -->
+            <div class="modal-footer" style="padding: 0.85rem 1.5rem; background: var(--bg-surface); border-top: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-size: 0.78rem; color: var(--text-muted);">
+                    <i class="fa-solid fa-file-invoice" style="color: #60A5FA;"></i> ออกใบเสร็จรับเงิน/ใบกำกับภาษีเต็มรูปแบบอัตโนมัติ
+                </span>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closePaymentCheckoutModal()">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+
     <!-- ================= OFFICIAL VAT TAX INVOICE & RECEIPT MODAL ================= -->
     <div class="modal-overlay" id="modal-invoice-receipt">
         <div class="modal-card" style="max-width: 860px; max-height: 92vh; overflow-y: auto; padding: 0; background: var(--bg-card); border: 1px solid var(--border-color);">
@@ -5173,10 +5388,30 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     currentUser = { username: res.username, role: res.role || 'CUSTOMER_OWNER', org_role: res.org_role || 'OWNER' };
                     localStorage.setItem('autoparts_saas_user', JSON.stringify(currentUser));
                     await initSaaSSession();
-                    showToast(res.message || "🎉 สมัครสมาชิกและเปิดใช้งานบัญชีสำเร็จ!", "success");
-                    // Open FTUX Onboarding Tour
-                    const ftuxModal = document.getElementById('modal-ftux-onboarding');
-                    if (ftuxModal) ftuxModal.style.display = 'flex';
+                    
+                    if ((signupMode === 'DIRECT' || !res.is_trial) && res.invoice_id) {
+                        showToast("🎉 เปิดบัญชีเรียบร้อย! กำลังนำท่านเข้าสู่หน้าชำระเงิน...", "info");
+                        openPaymentCheckoutModal({
+                            invoice_id: res.invoice_id,
+                            invoice_number: res.invoice_number,
+                            subtotal: res.subtotal || 0,
+                            vat_amount: res.vat_amount || 0,
+                            total_amount: res.total_amount || 0,
+                            plan_id: res.plan_id,
+                            plan_name: res.plan_name || 'Professional',
+                            customer_name: companyName,
+                            is_direct_signup: true,
+                            onSuccess: () => {
+                                const ftuxModal = document.getElementById('modal-ftux-onboarding');
+                                if (ftuxModal) ftuxModal.style.display = 'flex';
+                            }
+                        });
+                    } else {
+                        showToast(res.message || "🎉 สมัครสมาชิกและเปิดใช้งานบัญชีสำเร็จ!", "success");
+                        // Open FTUX Onboarding Tour
+                        const ftuxModal = document.getElementById('modal-ftux-onboarding');
+                        if (ftuxModal) ftuxModal.style.display = 'flex';
+                    }
                 } else {
                     showToast(res.error || "ไม่สามารถลงทะเบียนได้", "danger");
                 }
@@ -6936,7 +7171,6 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             const planId = document.getElementById('checkout-plan-id').value;
             const interval = document.getElementById('checkout-interval').value;
             const couponCode = document.getElementById('checkout-coupon-code').value.trim();
-            const paymentMethod = document.getElementById('checkout-payment-method').value;
             const checkedAddons = Array.from(document.querySelectorAll('.checkout-addon-checkbox:checked')).map(cb => cb.value);
             const checkedCats = Array.from(document.querySelectorAll('.checkout-category-checkbox:checked')).map(cb => cb.value);
             const checkedAftermarket = Array.from(document.querySelectorAll('.checkout-aftermarket-checkbox:checked')).map(cb => cb.value);
@@ -6946,18 +7180,52 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 return;
             }
 
+            // Extract calculated numbers from preview
+            const totalText = document.getElementById('calc-total')?.textContent?.replace(/[^\d.]/g, '') || '0';
+            const subtotalText = document.getElementById('calc-subtotal')?.textContent?.replace(/[^\d.]/g, '') || '0';
+            const vatText = document.getElementById('calc-tax')?.textContent?.replace(/[^\d.]/g, '') || '0';
+            const discountText = document.getElementById('calc-discount')?.textContent?.replace(/[^\d.]/g, '') || '0';
+
+            const total = parseFloat(totalText) || 0;
+            const subtotal = parseFloat(subtotalText) || 0;
+            const vat = parseFloat(vatText) || 0;
+            const discount = parseFloat(discountText) || 0;
+
+            const planObj = (window._publicPlans || []).find(p => p.id === planId) || { name: planId.toUpperCase() };
+
+            const upgradePayload = {
+                plan_id: planId,
+                interval: interval,
+                add_on_ids: checkedAddons,
+                selected_categories: checkedCats,
+                selected_aftermarket_brands: checkedAftermarket,
+                coupon_code: couponCode || null
+            };
+
+            // If total payable > 0, forward to Payment Checkout Modal
+            if (total > 0) {
+                closeUpgradeModal();
+                openPaymentCheckoutModal({
+                    subtotal: subtotal,
+                    vat_amount: vat,
+                    total_amount: total,
+                    discount_amount: discount,
+                    plan_id: planId,
+                    plan_name: `${planObj.name} (${interval === 'YEARLY' ? 'รายปี' : 'รายเดือน'})`,
+                    customer_name: (currentUser ? currentUser.username : 'ร้านอะไหล่'),
+                    upgrade_payload: upgradePayload
+                });
+                return;
+            }
+
+            // If total is 0 (e.g. 100% coupon or free plan), proceed immediately
             try {
                 const res = await fetch('/api/saas/subscription/upgrade', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                     body: JSON.stringify({
-                        plan_id: planId,
-                        interval: interval,
-                        add_on_ids: checkedAddons,
-                        selected_categories: checkedCats,
-                        selected_aftermarket_brands: checkedAftermarket,
-                        coupon_code: couponCode || null,
-                        payment_method: paymentMethod
+                        ...upgradePayload,
+                        payment_method: 'PROMPTPAY'
                     })
                 });
                 const data = await res.json();
@@ -7231,6 +7499,429 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             return result;
         }
 
+        // ================= PAYMENT CHECKOUT ENGINE =================
+        let currentCheckoutContext = null;
+        let checkoutCountdownInterval = null;
+        let cachedPaymentMethods = null;
+
+        async function fetchPaymentMethods() {
+            if (cachedPaymentMethods && cachedPaymentMethods.length > 0) return cachedPaymentMethods;
+            try {
+                const res = await fetch('/api/public/payment-methods');
+                const data = await res.json();
+                if (data.success && data.gateways) {
+                    cachedPaymentMethods = data.gateways;
+                    return cachedPaymentMethods;
+                }
+            } catch (e) {
+                console.error("Error fetching payment methods:", e);
+            }
+            return [];
+        }
+
+        async function openPaymentCheckoutModal(params) {
+            currentCheckoutContext = params || {};
+            
+            const modal = document.getElementById('modal-payment-checkout');
+            if (!modal) return;
+
+            // Load gateways
+            const methods = await fetchPaymentMethods();
+            const promptpayGw = (methods || []).find(m => m.provider === 'PROMPTPAY' || m.gateway_provider === 'PROMPTPAY');
+            const bankGw = (methods || []).find(m => m.provider === 'BANK_TRANSFER' || m.gateway_provider === 'BANK_TRANSFER');
+
+            // Populate Summary
+            const total = parseFloat(params.total_amount || 0);
+            const subtotal = parseFloat(params.subtotal || (total > 0 ? (total / 1.07) : 0));
+            const vat = parseFloat(params.vat_amount || (total > 0 ? (total - subtotal) : 0));
+            const discount = parseFloat(params.discount_amount || 0);
+
+            const planTitle = params.plan_name ? `${params.plan_name}` : 'แพ็กเกจระบบจัดการอะไหล่';
+            const invNo = params.invoice_number || 'INV-PENDING';
+            const custName = params.customer_name || (currentUser ? currentUser.username : 'ร้านอะไหล่ / อู่');
+
+            document.getElementById('checkout-item-name').textContent = planTitle;
+            document.getElementById('checkout-customer-info').textContent = custName;
+            document.getElementById('checkout-invoice-badge').textContent = invNo;
+            document.getElementById('checkout-date-text').textContent = new Date().toLocaleDateString('th-TH');
+
+            document.getElementById('checkout-row-subtotal').textContent = `฿${subtotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('checkout-row-vat').textContent = `฿${vat.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            document.getElementById('checkout-row-total').textContent = `฿${total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+            const discRow = document.getElementById('checkout-row-discount-container');
+            if (discRow) {
+                if (discount > 0) {
+                    discRow.style.display = 'flex';
+                    document.getElementById('checkout-row-discount').textContent = `-฿${discount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                } else {
+                    discRow.style.display = 'none';
+                }
+            }
+
+            // Populate PromptPay QR
+            const promptpayId = (promptpayGw && promptpayGw.promptpay_id) ? promptpayGw.promptpay_id : '0899999999';
+            const promptpayName = (promptpayGw && promptpayGw.bank_account_name) ? promptpayGw.bank_account_name : 'บจก. สยาม ออโต้พาร์ท แพลตฟอร์ม';
+            document.getElementById('checkout-promptpay-id-text').textContent = promptpayId;
+            document.getElementById('checkout-promptpay-name-text').textContent = promptpayName;
+
+            // Generate clean QR code URL
+            const qrPayload = `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=PROMPTPAY:${promptpayId}:${total.toFixed(2)}`;
+            const qrImg = document.getElementById('checkout-promptpay-qr-img');
+            if (qrImg) qrImg.src = qrPayload;
+
+            // Populate Bank Transfer
+            if (bankGw) {
+                if (bankGw.bank_name) document.getElementById('checkout-bank-name').textContent = bankGw.bank_name;
+                if (bankGw.bank_account_number) document.getElementById('checkout-bank-accno').textContent = bankGw.bank_account_number;
+                if (bankGw.bank_account_name) document.getElementById('checkout-bank-accname').textContent = bankGw.bank_account_name;
+                if (bankGw.instructions) document.getElementById('checkout-bank-instructions').textContent = bankGw.instructions;
+            }
+
+            // Start 15-minute countdown
+            startCheckoutTimer(15 * 60);
+
+            // Default tab: PROMPTPAY
+            switchCheckoutMethod('PROMPTPAY');
+
+            // Show Modal
+            modal.classList.add('open');
+            modal.style.display = 'flex';
+        }
+
+        function closePaymentCheckoutModal() {
+            const modal = document.getElementById('modal-payment-checkout');
+            if (modal) {
+                modal.classList.remove('open');
+                modal.style.display = 'none';
+            }
+            if (checkoutCountdownInterval) {
+                clearInterval(checkoutCountdownInterval);
+                checkoutCountdownInterval = null;
+            }
+        }
+
+        function switchCheckoutMethod(method) {
+            document.querySelectorAll('.checkout-tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.checkout-channel-panel').forEach(p => p.style.display = 'none');
+
+            if (method === 'PROMPTPAY') {
+                document.getElementById('chk-tab-promptpay').classList.add('active');
+                document.getElementById('chk-panel-promptpay').style.display = 'block';
+            } else if (method === 'CREDIT_CARD') {
+                document.getElementById('chk-tab-card').classList.add('active');
+                document.getElementById('chk-panel-card').style.display = 'block';
+                const total = currentCheckoutContext ? (currentCheckoutContext.total_amount || 0) : 0;
+                const btnPay = document.getElementById('btn-submit-card-pay-text');
+                if (btnPay) btnPay.textContent = `ชำระเงิน ฿${total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} ทันที`;
+            } else if (method === 'BANK_TRANSFER') {
+                document.getElementById('chk-tab-transfer').classList.add('active');
+                document.getElementById('chk-panel-transfer').style.display = 'block';
+            }
+        }
+
+        function startCheckoutTimer(seconds) {
+            if (checkoutCountdownInterval) clearInterval(checkoutCountdownInterval);
+            let rem = seconds;
+            const timerEl = document.getElementById('checkout-promptpay-timer');
+            function update() {
+                const m = Math.floor(rem / 60);
+                const s = rem % 60;
+                if (timerEl) timerEl.textContent = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+                if (rem <= 0) {
+                    clearInterval(checkoutCountdownInterval);
+                }
+                rem--;
+            }
+            update();
+            checkoutCountdownInterval = setInterval(update, 1000);
+        }
+
+        function copyPromptPayId() {
+            const txt = document.getElementById('checkout-promptpay-id-text').textContent;
+            navigator.clipboard.writeText(txt).then(() => {
+                showToast("คัดลอกเลขพร้อมเพย์เรียบร้อยแล้ว: " + txt, "success");
+            }).catch(() => {
+                showToast("เลขพร้อมเพย์: " + txt, "info");
+            });
+        }
+
+        function copyBankAccountNo() {
+            const txt = document.getElementById('checkout-bank-accno').textContent;
+            navigator.clipboard.writeText(txt).then(() => {
+                showToast("คัดลอกเลขบัญชีธนาคารเรียบร้อยแล้ว: " + txt, "success");
+            }).catch(() => {
+                showToast("เลขบัญชี: " + txt, "info");
+            });
+        }
+
+        function formatCardNumberInput(input) {
+            let v = input.value.replace(/\D/g, '').substring(0, 16);
+            input.value = v.replace(/(\d{4})(?=\d)/g, '$1 ');
+        }
+
+        function formatCardExpiryInput(input) {
+            let v = input.value.replace(/\D/g, '').substring(0, 4);
+            if (v.length >= 3) {
+                input.value = v.substring(0, 2) + '/' + v.substring(2);
+            } else {
+                input.value = v;
+            }
+        }
+
+        function previewTransferSlip(input) {
+            const prev = document.getElementById('chk-transfer-slip-preview');
+            if (input.files && input.files[0]) {
+                if (prev) {
+                    prev.style.display = 'block';
+                    prev.innerHTML = `<i class="fa-solid fa-paperclip"></i> แนบไฟล์: ${input.files[0].name} (${(input.files[0].size/1024).toFixed(1)} KB)`;
+                }
+            }
+        }
+
+        async function confirmPromptPayPayment() {
+            if (!currentCheckoutContext) return;
+            const btn = document.getElementById('btn-confirm-promptpay');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังตรวจสอบการชำระเงิน...';
+
+            try {
+                if (currentCheckoutContext.upgrade_payload) {
+                    const payload = {
+                        ...currentCheckoutContext.upgrade_payload,
+                        payment_method: 'PROMPTPAY'
+                    };
+                    const res = await fetch('/api/saas/subscription/upgrade', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                        closePaymentCheckoutModal();
+                        showToast(`🎉 อัปเกรดแพ็กเกจสำเร็จ! ออกใบเสร็จเลขที่: ${data.invoice_number}`, "success");
+                        loadSubscriptionPlans();
+                        loadSaaSContext();
+                        loadInvoices();
+                        if (data.invoice_number) {
+                            setTimeout(() => { viewInvoiceReceipt(data.invoice_number); }, 400);
+                        }
+                    } else {
+                        showToast(data.detail || data.error || "เกิดข้อผิดพลาดในการอัปเกรด", "danger");
+                    }
+                } else if (currentCheckoutContext.invoice_id) {
+                    const res = await fetch('/api/saas/payments/charge', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                        body: JSON.stringify({
+                            invoice_id: currentCheckoutContext.invoice_id,
+                            amount: currentCheckoutContext.total_amount,
+                            payment_method: 'PROMPTPAY'
+                        })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        const invNum = currentCheckoutContext.invoice_number;
+                        const cb = currentCheckoutContext.onSuccess;
+                        closePaymentCheckoutModal();
+                        showToast("🎉 ชำระเงินผ่าน PromptPay สำเร็จเรียบร้อยแล้ว!", "success");
+                        loadSaaSContext();
+                        loadInvoices();
+                        if (invNum) {
+                            setTimeout(() => { viewInvoiceReceipt(invNum); }, 400);
+                        }
+                        if (typeof cb === 'function') cb();
+                    } else {
+                        showToast(data.error || "ไม่สามารถยืนยันการชำระเงินได้", "danger");
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์", "danger");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> ฉันได้สแกนและชำระเงินเรียบร้อยแล้ว';
+            }
+        }
+
+        async function handleCardPayment(e) {
+            e.preventDefault();
+            if (!currentCheckoutContext) return;
+            const btn = document.getElementById('btn-submit-card-pay');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังตัดบัตรเครดิต...';
+
+            try {
+                if (currentCheckoutContext.upgrade_payload) {
+                    const payload = {
+                        ...currentCheckoutContext.upgrade_payload,
+                        payment_method: 'CREDIT_CARD'
+                    };
+                    const res = await fetch('/api/saas/subscription/upgrade', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                        closePaymentCheckoutModal();
+                        showToast(`🎉 ชำระเงินผ่านบัตรเครดิตและอัปเกรดสำเร็จ! เลขที่ใบเสร็จ: ${data.invoice_number}`, "success");
+                        loadSubscriptionPlans();
+                        loadSaaSContext();
+                        loadInvoices();
+                        if (data.invoice_number) {
+                            setTimeout(() => { viewInvoiceReceipt(data.invoice_number); }, 400);
+                        }
+                    } else {
+                        showToast(data.detail || data.error || "ตัดบัตรไม่สำเร็จ", "danger");
+                    }
+                } else if (currentCheckoutContext.invoice_id) {
+                    const res = await fetch('/api/saas/payments/charge', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                        body: JSON.stringify({
+                            invoice_id: currentCheckoutContext.invoice_id,
+                            amount: currentCheckoutContext.total_amount,
+                            payment_method: 'CREDIT_CARD'
+                        })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        const invNum = currentCheckoutContext.invoice_number;
+                        const cb = currentCheckoutContext.onSuccess;
+                        closePaymentCheckoutModal();
+                        showToast("🎉 ชำระเงินผ่านบัตรเครดิตเรียบร้อยแล้ว!", "success");
+                        loadSaaSContext();
+                        loadInvoices();
+                        if (invNum) {
+                            setTimeout(() => { viewInvoiceReceipt(invNum); }, 400);
+                        }
+                        if (typeof cb === 'function') cb();
+                    } else {
+                        showToast(data.error || "ไม่สามารถตัดบัตรได้", "danger");
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์", "danger");
+            } finally {
+                btn.disabled = false;
+                const total = currentCheckoutContext ? (currentCheckoutContext.total_amount || 0) : 0;
+                const btnPay = document.getElementById('btn-submit-card-pay-text');
+                if (btnPay) btnPay.textContent = `ชำระเงิน ฿${total.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} ทันที`;
+            }
+        }
+
+        async function handleBankTransferSubmit(e) {
+            e.preventDefault();
+            if (!currentCheckoutContext) return;
+            const refNo = document.getElementById('chk-transfer-ref').value.trim();
+            if (!refNo) {
+                showToast("กรุณากรอกเลขอ้างอิงการโอนเงิน", "warning");
+                return;
+            }
+
+            const btn = document.getElementById('btn-submit-transfer-proof');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังส่งหลักฐาน...';
+
+            try {
+                if (currentCheckoutContext.upgrade_payload) {
+                    const payload = {
+                        ...currentCheckoutContext.upgrade_payload,
+                        payment_method: 'BANK_TRANSFER'
+                    };
+                    const res = await fetch('/api/saas/subscription/upgrade', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                        body: JSON.stringify(payload)
+                    });
+                    const data = await res.json();
+                    if (res.ok && data.success) {
+                        if (data.invoice_id) {
+                            await fetch('/api/saas/payments/submit-bank-transfer', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                                body: JSON.stringify({
+                                    invoice_id: data.invoice_id,
+                                    amount: currentCheckoutContext.total_amount,
+                                    proof_reference: refNo
+                                })
+                            });
+                        }
+                        closePaymentCheckoutModal();
+                        showToast(`✅ ส่งหลักฐานการโอนเงินเรียบร้อยแล้ว! เลขที่ใบแจ้งหนี้: ${data.invoice_number}`, "success");
+                        loadSubscriptionPlans();
+                        loadSaaSContext();
+                        loadInvoices();
+                        if (data.invoice_number) {
+                            setTimeout(() => { viewInvoiceReceipt(data.invoice_number); }, 400);
+                        }
+                    } else {
+                        showToast(data.detail || data.error || "เกิดข้อผิดพลาดในการบันทึก", "danger");
+                    }
+                } else if (currentCheckoutContext.invoice_id) {
+                    const res = await fetch('/api/saas/payments/submit-bank-transfer', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                        body: JSON.stringify({
+                            invoice_id: currentCheckoutContext.invoice_id,
+                            amount: currentCheckoutContext.total_amount,
+                            proof_reference: refNo
+                        })
+                    });
+                    const data = await res.json();
+                    if (data.success) {
+                        const invNum = currentCheckoutContext.invoice_number;
+                        const cb = currentCheckoutContext.onSuccess;
+                        closePaymentCheckoutModal();
+                        showToast("✅ ส่งหลักฐานการโอนเงินเรียบร้อยแล้ว เจ้าหน้าที่จะตรวจสอบและเปิดสิทธิ์การใช้งาน", "success");
+                        loadSaaSContext();
+                        loadInvoices();
+                        if (invNum) {
+                            setTimeout(() => { viewInvoiceReceipt(invNum); }, 400);
+                        }
+                        if (typeof cb === 'function') cb();
+                    } else {
+                        showToast(data.error || "ไม่สามารถส่งข้อมูลได้", "danger");
+                    }
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("เกิดข้อผิดพลาดในการเชื่อมต่อ", "danger");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-file-arrow-up"></i> ยืนยันการโอนเงินและส่งหลักฐาน';
+            }
+        }
+
+        async function openPaymentForInvoice(invoiceNumber) {
+            let inv = (currentInvoicesList || []).find(i => i.invoice_number === invoiceNumber || i.id === invoiceNumber);
+            if (!inv) {
+                try {
+                    const res = await fetch('/api/saas/invoices', { headers: getAuthHeaders() });
+                    const data = await res.json();
+                    if (data.success && data.invoices) {
+                        currentInvoicesList = data.invoices;
+                        inv = currentInvoicesList.find(i => i.invoice_number === invoiceNumber || i.id === invoiceNumber);
+                    }
+                } catch(e) {}
+            }
+            if (!inv) {
+                showToast("ไม่พบข้อมูลใบแจ้งหนี้", "warning");
+                return;
+            }
+            openPaymentCheckoutModal({
+                invoice_id: inv.id,
+                invoice_number: inv.invoice_number,
+                subtotal: inv.amount,
+                vat_amount: inv.vat_amount,
+                total_amount: inv.total_amount,
+                plan_name: 'ชำระค่าบริการแพ็กเกจ',
+                customer_name: (currentUser ? currentUser.username : 'ร้านอะไหล่')
+            });
+        }
+
         async function loadInvoices() {
             try {
                 const res = await fetch('/api/saas/invoices', { headers: getAuthHeaders() });
@@ -7245,6 +7936,22 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     }
                     currentInvoicesList.forEach(inv => {
                         const tr = document.createElement('tr');
+                        const isPaid = (inv.status === 'PAID');
+                        let statusHtml = '';
+                        if (isPaid) {
+                            statusHtml = `<span class="status-badge verified">${t('invoices.paid', 'Paid')}</span>`;
+                        } else if (inv.status === 'PENDING_VERIFICATION') {
+                            statusHtml = `<span class="badge" style="background: rgba(245,158,11,0.15); color: #F59E0B; font-weight: 700;">รอตรวจสอบยอด</span>`;
+                        } else {
+                            statusHtml = `<span class="badge" style="background: rgba(239,68,68,0.15); color: #EF4444; font-weight: 700;">รอชำระเงิน</span>`;
+                        }
+
+                        const payBtn = !isPaid ? `
+                            <button class="btn btn-warning btn-sm" onclick="openPaymentForInvoice('${inv.invoice_number}')" title="ชำระเงินทันที" style="margin-right: 5px; font-weight: 700; background: #F59E0B; color: #000; border: none;">
+                                <i class="fa-solid fa-credit-card"></i> <span>ชำระเงิน</span>
+                            </button>
+                        ` : '';
+
                         tr.innerHTML = `
                             <td><strong style="color: #60A5FA; font-family: var(--font-mono);">${inv.invoice_number}</strong></td>
                             <td>${inv.period_start || '-'} to ${inv.period_end || '-'}</td>
@@ -7252,8 +7959,9 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             <td>฿${inv.vat_amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                             <td><strong style="color: var(--text-primary);">฿${inv.total_amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</strong></td>
                             <td><span style="font-size: 0.8rem; color: var(--text-secondary);"><i class="fa-regular fa-credit-card"></i> ${inv.payment_method}</span></td>
-                            <td><span class="status-badge verified">${t('invoices.paid', 'Paid')}</span></td>
+                            <td>${statusHtml}</td>
                             <td style="text-align: right; white-space: nowrap;">
+                                ${payBtn}
                                 <button class="btn btn-primary btn-sm" onclick="viewInvoiceReceipt('${inv.invoice_number}')" title="${t('invoice.viewReceipt', 'Tax Invoice')}">
                                     <i class="fa-solid fa-file-invoice-dollar"></i> <span>${t('invoice.viewReceipt', 'Tax Invoice')}</span>
                                 </button>

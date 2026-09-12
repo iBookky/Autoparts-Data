@@ -18,7 +18,7 @@ class PaymentGateway:
     def create_payment_intent(
         org_id: int,
         invoice_id: int,
-        amount: int,
+        amount: Any,
         currency: str = 'THB',
         payment_method: str = 'CREDIT_CARD',
         idempotency_key: Optional[str] = None
@@ -47,7 +47,7 @@ class PaymentGateway:
             "org_id": org_id,
             "transaction_ref": tx_ref,
             "payment_method": payment_method.upper(),
-            "amount": amount,
+            "amount": float(amount) if amount is not None else 0.0,
             "currency": currency,
             "status": initial_status,
             "gateway_response": json.dumps({
@@ -58,10 +58,11 @@ class PaymentGateway:
         })
 
         if ok and initial_status == "SUCCESS":
-            # Update Invoice to PAID
+            # Update Invoice to PAID and activate subscription if pending
             conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute("UPDATE invoices SET status = 'PAID' WHERE id = ?", (invoice_id,))
+            cursor.execute("UPDATE subscriptions SET status = 'ACTIVE' WHERE org_id = ? AND status IN ('PAST_DUE', 'PENDING_PAYMENT')", (org_id,))
             conn.commit()
             conn.close()
 
@@ -71,10 +72,57 @@ class PaymentGateway:
             "transaction_ref": ref,
             "transaction_id": tx_id,
             "status": initial_status,
-            "amount": amount,
+            "amount": float(amount) if amount is not None else 0.0,
             "currency": currency,
             "payment_method": payment_method.upper()
         }
+
+    @staticmethod
+    def submit_bank_transfer_proof(
+        invoice_id: int,
+        org_id: int,
+        amount: Any,
+        proof_reference: str,
+        slip_url: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Customer bank transfer proof submission for verification by Owner/Admin.
+        """
+        from datetime import datetime
+        tx_ref = f"BT-SUB-{proof_reference.strip().upper()}-{uuid.uuid4().hex[:6].upper()}"
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        try:
+            cursor.execute("""
+                INSERT INTO payment_transactions (
+                    invoice_id, org_id, transaction_ref, payment_method,
+                    amount, currency, status, gateway_response
+                ) VALUES (?, ?, ?, 'BANK_TRANSFER', ?, 'THB', 'PENDING', ?)
+            """, (
+                invoice_id,
+                org_id,
+                tx_ref,
+                float(amount) if amount is not None else 0.0,
+                json.dumps({
+                    "proof_ref": proof_reference,
+                    "slip_url": slip_url,
+                    "submitted_at": datetime.now().isoformat()
+                })
+            ))
+            cursor.execute("UPDATE invoices SET status = 'PENDING_VERIFICATION' WHERE id = ?", (invoice_id,))
+            conn.commit()
+            return {
+                "success": True,
+                "transaction_ref": tx_ref,
+                "status": "PENDING_VERIFICATION",
+                "invoice_id": invoice_id,
+                "message": "ส่งหลักฐานการโอนเงินเรียบร้อยแล้ว เจ้าหน้าที่จะตรวจสอบและเปิดสิทธิ์การใช้งาน"
+            }
+        except Exception as e:
+            conn.rollback()
+            return {"success": False, "error": str(e)}
+        finally:
+            conn.close()
 
     @staticmethod
     def process_manual_bank_transfer(

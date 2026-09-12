@@ -1516,13 +1516,20 @@ class ReactivateSubscriptionRequest(BaseModel):
 
 class PaymentChargeRequest(BaseModel):
     invoice_id: int
-    amount: int
+    amount: float
     payment_method: Optional[str] = "CREDIT_CARD"
     idempotency_key: Optional[str] = None
 
+class CustomerBankTransferSubmitRequest(BaseModel):
+    invoice_id: int
+    amount: float
+    proof_reference: str
+    slip_url: Optional[str] = None
+    notes: Optional[str] = None
+
 class VerifyBankTransferRequest(BaseModel):
     proof_reference: str
-    amount: int
+    amount: float
 
 class CreateApiKeyRequest(BaseModel):
     name: str
@@ -1846,6 +1853,20 @@ async def reactivate_saas_subscription(req: ReactivateSubscriptionRequest, x_use
         raise HTTPException(status_code=400, detail=msg)
     return {"success": True, "message": "Subscription reactivated successfully!", "subscription": sub}
 
+@app.get("/api/public/payment-methods")
+async def get_public_payment_methods():
+    """Returns active payment methods configured by Owner for customer checkout."""
+    from backend.database import get_public_payment_methods_db
+    gateways = get_public_payment_methods_db()
+    return {"success": True, "gateways": gateways, "methods": gateways}
+
+@app.get("/api/saas/payment-methods")
+async def get_saas_payment_methods():
+    """Returns active payment methods for authenticated tenant checkout."""
+    from backend.database import get_public_payment_methods_db
+    gateways = get_public_payment_methods_db()
+    return {"success": True, "gateways": gateways, "methods": gateways}
+
 @app.post("/api/saas/payments/charge")
 async def charge_payment(req: PaymentChargeRequest, x_username: Optional[str] = Header("admin")):
     ctx = get_user_tenant_context(x_username or "admin")
@@ -1858,6 +1879,23 @@ async def charge_payment(req: PaymentChargeRequest, x_username: Optional[str] = 
         currency="THB",
         payment_method=req.payment_method or "CREDIT_CARD",
         idempotency_key=req.idempotency_key
+    )
+    return res
+
+@app.post("/api/saas/payments/submit-bank-transfer")
+async def submit_customer_bank_transfer(
+    req: CustomerBankTransferSubmitRequest,
+    x_username: Optional[str] = Header("admin")
+):
+    ctx = get_user_tenant_context(x_username or "admin")
+    org_id = ctx["organization"]["id"] if ctx else 1
+    
+    res = PaymentGateway.submit_bank_transfer_proof(
+        invoice_id=req.invoice_id,
+        org_id=org_id,
+        amount=req.amount,
+        proof_reference=req.proof_reference,
+        slip_url=req.slip_url
     )
     return res
 
