@@ -23,119 +23,24 @@ def init_db():
     if is_postgres_mode():
         conn = get_db_connection()
         try:
-            migrations_dir = os.path.join(os.path.dirname(__file__), "migrations_pg")
-            if not os.path.exists(migrations_dir):
-                migrations_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend", "migrations_pg"))
-            if os.path.exists(migrations_dir):
-                migration_files = sorted([f for f in os.listdir(migrations_dir) if f.endswith(".sql")])
-                for mf in migration_files:
-                    mf_path = os.path.join(migrations_dir, mf)
-                    with open(mf_path, "r", encoding="utf-8") as f:
-                        sql = f.read()
-                    conn.executescript(sql)
-                    conn.commit()
-
             cursor = conn.cursor()
-            pwd_hash = "43a0d17178a9d26c9e0fe9a74b0b45e38d32f27aed887a008a54bf6e033bf7b9"
+            cursor.execute("SELECT 1 FROM information_schema.tables WHERE table_name = 'master_parts'")
+            schema_exists = cursor.fetchone() is not None
+            
+            if not schema_exists:
+                migrations_dir = os.path.join(os.path.dirname(__file__), "migrations_pg")
+                if not os.path.exists(migrations_dir):
+                    migrations_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "backend", "migrations_pg"))
+                if os.path.exists(migrations_dir):
+                    migration_files = sorted([f for f in os.listdir(migrations_dir) if f.endswith(".sql")])
+                    for mf in migration_files:
+                        mf_path = os.path.join(migrations_dir, mf)
+                        with open(mf_path, "r", encoding="utf-8") as f:
+                            sql = f.read()
+                        conn.executescript(sql)
+                        conn.commit()
 
-            # Seed default users
-            for u, p, r in [("owner", pwd_hash, "OWNER"), ("superadmin", pwd_hash, "SUPER_ADMIN")]:
-                cursor.execute("INSERT INTO users (username, password, role) VALUES (%s, %s, %s) ON CONFLICT (username) DO NOTHING", (u, p, r))
-
-            # Ensure all required columns exist (safe idempotent ALTER)
-            for col_sql in [
-                "ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS primary_color VARCHAR(50) DEFAULT '#3B82F6'",
-                "ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS navbar_bg_color VARCHAR(50) DEFAULT ''",
-                "ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS navbar_style VARCHAR(50) DEFAULT 'default'",
-                "ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS site_title_th VARCHAR(255) DEFAULT ''",
-                "ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS site_title_en VARCHAR(255) DEFAULT ''",
-                "ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS hero_badge_th VARCHAR(255) DEFAULT ''",
-                "ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS hero_badge_en VARCHAR(255) DEFAULT ''",
-                "ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS hero_title_th VARCHAR(255) DEFAULT ''",
-                "ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS hero_title_en VARCHAR(255) DEFAULT ''",
-                "ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS hero_subtitle_th TEXT DEFAULT ''",
-                "ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS hero_subtitle_en TEXT DEFAULT ''",
-                "ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS seo_meta_title_th VARCHAR(255) DEFAULT ''",
-                "ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS seo_meta_title_en VARCHAR(255) DEFAULT ''",
-                "ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS seo_meta_description_th TEXT DEFAULT ''",
-                "ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS seo_meta_description_en TEXT DEFAULT ''",
-                "ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS seo_meta_keywords_th TEXT DEFAULT ''",
-                "ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS seo_meta_keywords_en TEXT DEFAULT ''",
-                "ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS footer_copyright_th VARCHAR(255) DEFAULT ''",
-                "ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS footer_copyright_en VARCHAR(255) DEFAULT ''",
-                "ALTER TABLE plans ADD COLUMN IF NOT EXISTS price_yearly INTEGER DEFAULT 0",
-                "ALTER TABLE plans ADD COLUMN IF NOT EXISTS trial_days INTEGER DEFAULT 0",
-            ]:
-                try:
-                    cursor.execute(col_sql)
-                    conn.commit()
-                except Exception:
-                    try: conn.rollback()
-                    except Exception: pass
-
-            # Seed standard plans (native PG: ON CONFLICT)
-            standard_plans = [
-                ('starter', 'STARTER', 1490, 14900, 2, 2, 1, 1000, 0, 0, 0, 0, 14),
-                ('professional', 'PROFESSIONAL', 3990, 39900, 5, 5, 3, 5000, 1, 0, 1, 1, 14),
-                ('business', 'BUSINESS', 8990, 89900, -1, -1, 10, 20000, 1, 1, 1, 1, 14),
-                ('enterprise', 'ENTERPRISE', 19900, 199000, -1, -1, -1, -1, 1, 1, 1, 1, 0),
-                ('free_trial', 'FREE TRIAL (ทดลองใช้ฟรี)', 0, 0, 3, 3, 1, 1000, 1, 0, 0, 1, 14),
-            ]
-            for sp in standard_plans:
-                cursor.execute("""
-                    INSERT INTO plans (id, name, price_monthly, price_yearly, max_brands, max_categories, max_users,
-                        monthly_search_quota, vin_search_enabled, api_access_enabled, export_enabled, ai_search_enabled, trial_days)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
-                    ON CONFLICT (id) DO UPDATE SET
-                        price_monthly = EXCLUDED.price_monthly,
-                        price_yearly = EXCLUDED.price_yearly,
-                        max_brands = EXCLUDED.max_brands,
-                        max_categories = EXCLUDED.max_categories,
-                        max_users = EXCLUDED.max_users,
-                        monthly_search_quota = EXCLUDED.monthly_search_quota,
-                        trial_days = EXCLUDED.trial_days
-                """, sp)
-            conn.commit()
-
-            # Seed standard roles (native PG)
-            standard_roles = [
-                ('owner', 'System Owner', '/owner', 1, 'Highest business authority.'),
-                ('super_admin', 'Super Admin', '/super-admin', 2, 'Technical platform authority.'),
-                ('admin', 'Operations Admin', '/admin', 3, 'Daily operations authority.'),
-                ('staff_sales', 'Sales Staff', '/staff', 4, 'Sales specialist.'),
-                ('staff_data', 'Data Staff', '/staff', 4, 'Automotive data specialist.'),
-                ('staff_cs', 'Customer Success', '/staff', 4, 'Customer success manager.'),
-                ('staff_support', 'Support Staff', '/staff', 4, 'Technical support specialist.'),
-                ('org_owner', 'Organization Owner', '/app', 5, 'External organization owner.'),
-                ('org_manager', 'Organization Manager', '/app', 5, 'External organization manager.'),
-                ('org_staff', 'Organization Staff', '/app', 5, 'Standard workspace.'),
-            ]
-            for r_id, name, portal, tier, desc in standard_roles:
-                cursor.execute("""
-                    INSERT INTO roles (id, name, portal_access, tier_level, description)
-                    VALUES (%s, %s, %s, %s, %s)
-                    ON CONFLICT (id) DO NOTHING
-                """, (r_id, name, portal, tier, desc))
-
-            # Seed standard add-ons
-            standard_addons = [
-                ('extra_searches_5k', '+5,000 Search Credits Pack', 'EXTRA_SEARCH_5K', 'Add 5,000 monthly searches to your organization quota', 890, 8900, 'SEARCH_QUOTA', 5000, 0),
-                ('extra_searches_20k', '+20,000 Search Credits Pack', 'EXTRA_SEARCH_20K', 'Add 20,000 monthly searches to your organization quota', 2490, 24900, 'SEARCH_QUOTA', 20000, 0),
-                ('extra_users_5', '+5 Team Member Seats', 'EXTRA_USERS_5', 'Expand your team access with 5 additional staff/manager seats', 990, 9900, 'USER_LIMIT', 0, 5),
-                ('extra_users_10', '+10 Team Member Seats', 'EXTRA_USERS_10', 'Expand your team access with 10 additional staff/manager seats', 1790, 17900, 'USER_LIMIT', 0, 10),
-                ('api_access_pack', 'REST API Developer Pack', 'API_DEV_PACK', 'Enable secure REST API access with 5,000 monthly requests and API keys', 1490, 14900, 'API_ACCESS', 0, 0),
-                ('ai_power_pack', 'AI Neural Match & Cross-Ref Pack', 'AI_POWER_PACK', 'Enhanced AI model search assistance, smart cross-reference & image lookup', 1990, 19900, 'AI_POWER_PACK', 0, 0),
-                ('priority_support_pack', '24/7 Dedicated Priority Support', 'PRIORITY_SUPPORT', 'Dedicated technical account manager and expedited catalog lookup SLA', 990, 9900, 'SUPPORT_PACK', 0, 0),
-            ]
-            for aid, name, code, desc, pm, py, etype, qinc, uinc in standard_addons:
-                cursor.execute("""
-                    INSERT INTO add_ons (id, name, code, description, price_monthly, price_yearly, entitlement_type, quota_increase, user_increase, status)
-                    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, 'ACTIVE')
-                    ON CONFLICT (id) DO NOTHING
-                """, (aid, name, code, desc, pm, py, etype, qinc, uinc))
-            conn.commit()
-
-            print("PostgreSQL database initialized successfully with all migrations.")
+            print("PostgreSQL database initialized successfully.")
         finally:
             conn.close()
         return
@@ -723,6 +628,160 @@ def check_exact_duplicate(brand: str, part_number: str, oem_number: str, car_bra
     res = cursor.fetchone() is not None
     conn.close()
     return res
+
+def find_matching_master_part(brand: str, part_number: str, oem_number: str, car_brand: str, car_model: str) -> Optional[dict]:
+    """
+    Finds existing duplicate master part matching brand, vehicle make/model, and part/OEM code.
+    Matches when:
+    - Same aftermarket brand, car brand, car model, and part_number (if provided)
+    - Same aftermarket brand, car brand, car model, and oem_number (if provided)
+    - If brand is empty or 'GENUINE', matches equivalent master part for same car and codes.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    b = (brand or "").strip().upper()
+    pn = (part_number or "").strip().upper()
+    on = (oem_number or "").strip().upper()
+    cb = (car_brand or "").strip().upper()
+    cm = (car_model or "").strip().upper()
+
+    # 1. Exact match on all non-empty fields
+    if pn and on:
+        cursor.execute("""
+            SELECT * FROM master_parts
+            WHERE UPPER(COALESCE(brand, '')) = ?
+              AND UPPER(COALESCE(part_number, '')) = ?
+              AND UPPER(COALESCE(oem_number, '')) = ?
+              AND UPPER(COALESCE(car_brand, '')) = ?
+              AND UPPER(COALESCE(car_model, '')) = ?
+            LIMIT 1
+        """, (b, pn, on, cb, cm))
+        row = cursor.fetchone()
+        if row:
+            conn.close()
+            return dict(row)
+
+    # 2. Match brand + car_brand + car_model + part_number
+    if pn:
+        cursor.execute("""
+            SELECT * FROM master_parts
+            WHERE UPPER(COALESCE(brand, '')) = ?
+              AND UPPER(COALESCE(part_number, '')) = ?
+              AND UPPER(COALESCE(car_brand, '')) = ?
+              AND UPPER(COALESCE(car_model, '')) = ?
+            LIMIT 1
+        """, (b, pn, cb, cm))
+        row = cursor.fetchone()
+        if row:
+            conn.close()
+            return dict(row)
+
+    # 3. Match brand + car_brand + car_model + oem_number
+    if on:
+        cursor.execute("""
+            SELECT * FROM master_parts
+            WHERE UPPER(COALESCE(brand, '')) = ?
+              AND UPPER(COALESCE(oem_number, '')) = ?
+              AND UPPER(COALESCE(car_brand, '')) = ?
+              AND UPPER(COALESCE(car_model, '')) = ?
+            LIMIT 1
+        """, (b, on, cb, cm))
+        row = cursor.fetchone()
+        if row:
+            conn.close()
+            return dict(row)
+
+    conn.close()
+    return None
+
+def update_master_part_from_dict(master_id: int, incoming_data: dict) -> bool:
+    """Overwrites existing master part with incoming data without altering ID."""
+    allowed_keys = [
+        'brand', 'part_number', 'oem_number', 'product_name_th', 'product_name_en', 'category',
+        'car_brand', 'car_model', 'year_start', 'year_end', 'engine', 'fuel',
+        'transmission', 'description', 'cost_unit', 'notes'
+    ]
+    update_dict = {k: incoming_data.get(k, '') for k in allowed_keys if k in incoming_data}
+    return edit_master_part(master_id, update_dict)
+
+def merge_master_part_from_dict(master_id: int, incoming_data: dict) -> bool:
+    """Merges incoming data into existing master part, updating empty fields or overriding enriched details."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT * FROM master_parts WHERE id = ?", (master_id,))
+    row = cursor.fetchone()
+    if not row:
+        conn.close()
+        return False
+    
+    existing = dict(row)
+    allowed_keys = [
+        'brand', 'part_number', 'oem_number', 'product_name_th', 'product_name_en', 'category',
+        'car_brand', 'car_model', 'year_start', 'year_end', 'engine', 'fuel',
+        'transmission', 'description', 'cost_unit', 'notes'
+    ]
+    
+    updated_fields = {}
+    for k in allowed_keys:
+        exist_val = (existing.get(k) or "").strip()
+        inc_val = (incoming_data.get(k) or "").strip()
+        if inc_val:
+            # If existing is empty, fill it with incoming
+            if not exist_val:
+                updated_fields[k] = inc_val
+            # If incoming has specific updated cost or description or notes, prefer incoming if non-empty
+            elif k in ['cost_unit', 'description', 'notes', 'year_start', 'year_end', 'engine', 'fuel', 'transmission']:
+                updated_fields[k] = inc_val
+            else:
+                updated_fields[k] = exist_val
+        else:
+            updated_fields[k] = exist_val
+
+    conn.close()
+    return edit_master_part(master_id, updated_fields)
+
+def apply_duplicate_resolutions(resolutions: list, new_items: list) -> dict:
+    """
+    Applies user resolution decisions on conflicting parts and inserts non-conflicting new parts.
+    resolutions: list of {"conflict_id": str/int, "master_id": int, "action": "KEEP_EXISTING"|"OVERWRITE_NEW"|"MERGE", "incoming": dict}
+    new_items: list of part_data dicts that have no conflicts.
+    """
+    stats = {
+        "kept_count": 0,
+        "updated_count": 0,
+        "merged_count": 0,
+        "new_inserted_count": 0,
+        "errors": []
+    }
+    
+    for res in resolutions:
+        action = res.get("action", "KEEP_EXISTING").upper()
+        master_id = res.get("master_id")
+        incoming = res.get("incoming", {})
+        
+        if not master_id:
+            continue
+            
+        try:
+            if action == "OVERWRITE_NEW":
+                update_master_part_from_dict(master_id, incoming)
+                stats["updated_count"] += 1
+            elif action == "MERGE":
+                merge_master_part_from_dict(master_id, incoming)
+                stats["merged_count"] += 1
+            else: # KEEP_EXISTING
+                stats["kept_count"] += 1
+        except Exception as e:
+            stats["errors"].append(f"Master ID {master_id}: {str(e)}")
+            
+    for item in new_items:
+        try:
+            insert_temp_part(item)
+            stats["new_inserted_count"] += 1
+        except Exception as e:
+            stats["errors"].append(f"New Item ({item.get('part_number', '')}): {str(e)}")
+            
+    return stats
 
 def get_active_temp_parts_sales():
     conn = get_db_connection()

@@ -4104,6 +4104,31 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     </div>
                 </div>
 
+                <!-- Duplicate Policy Selector -->
+                <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 0.85rem 1rem; margin-bottom: 1.25rem;">
+                    <label style="font-size: 0.82rem; font-weight: 600; color: var(--text-primary); display: flex; align-items: center; gap: 0.4rem; margin-bottom: 0.5rem;">
+                        <i class="fa-solid fa-code-compare" style="color: #F59E0B;"></i> เมื่อพบข้อมูลซ้ำกับอะไหล่ที่มีอยู่แล้ว (Duplicate Policy):
+                    </label>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.78rem;">
+                        <label style="display: flex; align-items: center; gap: 0.45rem; cursor: pointer; background: rgba(59,130,246,0.08); padding: 0.5rem 0.65rem; border-radius: 6px; border: 1px solid rgba(59,130,246,0.3);">
+                            <input type="radio" name="import-duplicate-policy" value="ASK" checked style="accent-color: var(--primary);">
+                            <span><strong>สอบถามเลือกตัวหลัก (แนะนำ)</strong></span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.45rem; cursor: pointer; background: rgba(255,255,255,0.02); padding: 0.5rem 0.65rem; border-radius: 6px; border: 1px solid var(--border-color);">
+                            <input type="radio" name="import-duplicate-policy" value="KEEP_EXISTING" style="accent-color: var(--primary);">
+                            <span>ใช้ข้อมูลเดิมในระบบเป็นหลัก</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.45rem; cursor: pointer; background: rgba(255,255,255,0.02); padding: 0.5rem 0.65rem; border-radius: 6px; border: 1px solid var(--border-color);">
+                            <input type="radio" name="import-duplicate-policy" value="OVERWRITE_NEW" style="accent-color: var(--primary);">
+                            <span>อัปเดตทับด้วยข้อมูลใหม่</span>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 0.45rem; cursor: pointer; background: rgba(255,255,255,0.02); padding: 0.5rem 0.65rem; border-radius: 6px; border: 1px solid var(--border-color);">
+                            <input type="radio" name="import-duplicate-policy" value="MERGE" style="accent-color: var(--primary);">
+                            <span>ผสานข้อมูล (Merge fields)</span>
+                        </label>
+                    </div>
+                </div>
+
                 <div id="import-result-alert" style="display: none; margin-bottom: 1rem; padding: 0.75rem 1rem; border-radius: var(--radius-sm); font-size: 0.82rem;"></div>
 
                 <div style="display: flex; justify-content: flex-end; gap: 0.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
@@ -4113,6 +4138,75 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: DUPLICATE RESOLUTION INTERACTIVE DIALOG ================= -->
+    <div class="modal-overlay" id="modal-duplicate-resolution" style="display: none; z-index: 10050;">
+        <div class="modal-card" style="max-width: 1080px; width: 95%; max-height: 92vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; border: 1px solid rgba(245, 158, 11, 0.4); box-shadow: 0 20px 50px rgba(0,0,0,0.7);">
+            <!-- Modal Header -->
+            <div style="background: linear-gradient(90deg, rgba(245, 158, 11, 0.15), rgba(59, 130, 246, 0.12)); border-bottom: 1px solid var(--border-color); padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(245, 158, 11, 0.2); display: flex; align-items: center; justify-content: center; color: #F59E0B; font-size: 1.25rem;">
+                        <i class="fa-solid fa-code-compare"></i>
+                    </div>
+                    <div>
+                        <div style="display: flex; align-items: center; gap: 0.6rem;">
+                            <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0; color: #F8FAFC;">ตรวจพบข้อมูลซ้ำกับอะไหล่ในระบบ (Duplicate Resolution)</h3>
+                            <span id="dup-conflict-badge" style="background: rgba(245, 158, 11, 0.25); color: #FBBF24; font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 9999px; border: 1px solid rgba(245, 158, 11, 0.4);">
+                                0 รายการซ้ำ
+                            </span>
+                            <span id="dup-new-badge" style="background: rgba(16, 185, 129, 0.2); color: #34D399; font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 9999px; border: 1px solid rgba(16, 185, 129, 0.3);">
+                                0 รายการใหม่
+                            </span>
+                        </div>
+                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0.25rem 0 0 0;">
+                            ตรวจพบรายการที่มี แบรนด์ aftermarket, ยี่ห้อรถ, รุ่นรถ และรหัสสินค้า ตรงกับข้อมูลเดิมในระบบ โปรดเลือกว่าจะใช้ข้อมูลชุดใดเป็นหลัก <strong>(ระบบจะไม่สร้างรายการซ้ำ)</strong>
+                        </p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeDuplicateResolutionModal()" class="btn-close" style="width: 32px; height: 32px; font-size: 1.1rem; cursor: pointer; display: flex; align-items: center; justify-content: center; border-radius: 6px;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+
+            <!-- Quick Action Toolbar -->
+            <div style="background: var(--bg-surface); padding: 0.75rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.6rem;">
+                <div style="font-size: 0.8rem; color: var(--text-secondary);">
+                    <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary);"></i> เลือกทั้งหมดอย่างรวดเร็ว:
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="setAllDuplicateResolutions('KEEP_EXISTING')" style="font-size: 0.75rem; padding: 0.3rem 0.7rem;">
+                        <i class="fa-solid fa-shield" style="color: #60A5FA;"></i> ใช้ข้อมูลเดิมทั้งหมด
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="setAllDuplicateResolutions('OVERWRITE_NEW')" style="font-size: 0.75rem; padding: 0.3rem 0.7rem;">
+                        <i class="fa-solid fa-pen-to-square" style="color: #34D399;"></i> ใช้ข้อมูลใหม่ทั้งหมด
+                    </button>
+                    <button type="button" class="btn btn-secondary btn-sm" onclick="setAllDuplicateResolutions('MERGE')" style="font-size: 0.75rem; padding: 0.3rem 0.7rem;">
+                        <i class="fa-solid fa-code-merge" style="color: #FBBF24;"></i> รวมข้อมูลทั้งหมด
+                    </button>
+                </div>
+            </div>
+
+            <!-- Scrollable Conflicts List Container -->
+            <div id="duplicate-conflicts-container" style="flex: 1; overflow-y: auto; padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; background: var(--bg-base);">
+                <!-- Dynamic conflict comparison cards will be rendered here -->
+            </div>
+
+            <!-- Modal Footer -->
+            <div style="background: var(--bg-surface); border-top: 1px solid var(--border-color); padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                <div style="font-size: 0.78rem; color: var(--text-muted);">
+                    <i class="fa-solid fa-circle-info"></i> รายการที่ไม่ซ้ำทั้งหมดจะถูกนำเข้าสู่ระบบโดยอัตโนมัติ
+                </div>
+                <div style="display: flex; gap: 0.6rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeDuplicateResolutionModal()">
+                        ยกเลิก
+                    </button>
+                    <button type="button" id="btn-confirm-duplicate-resolution" class="btn btn-primary" onclick="submitDuplicateResolutions()" style="display: flex; align-items: center; gap: 0.4rem; padding: 0.55rem 1.25rem; font-weight: 600;">
+                        <i class="fa-solid fa-check-double"></i> ยืนยันการนำเข้าข้อมูล (<span id="dup-confirm-btn-count">0</span> รายการ)
+                    </button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -7435,6 +7529,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             }
         }
 
+        let currentImportSession = null;
+
         async function submitImportParts(e) {
             e.preventDefault();
             const input = document.getElementById('import-file-input');
@@ -7447,7 +7543,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             const btn = document.getElementById('btn-submit-import');
             const originalText = btn.innerHTML;
             btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังนำเข้าข้อมูล...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังตรวจสอบข้อมูล...';
 
             const alertBox = document.getElementById('import-result-alert');
             if (alertBox) alertBox.style.display = 'none';
@@ -7455,6 +7551,10 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             try {
                 const formData = new FormData();
                 formData.append('file', file);
+                
+                const policyInput = document.querySelector('input[name="import-duplicate-policy"]:checked');
+                const duplicatePolicy = policyInput ? policyInput.value : 'ASK';
+                formData.append('duplicate_policy', duplicatePolicy);
 
                 const res = await fetch('/api/parts/import', {
                     method: 'POST',
@@ -7463,12 +7563,27 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 });
                 const data = await res.json();
 
+                if (data.requires_resolution) {
+                    currentImportSession = data;
+                    closeImportPartsModal();
+                    openDuplicateResolutionModal(data);
+                    return;
+                }
+
                 if (data.success) {
                     const importedCount = data.imported_count || 0;
+                    const updatedCount = data.updated_count || 0;
+                    const mergedCount = data.merged_count || 0;
+                    const keptCount = data.kept_count || 0;
                     const errors = data.errors || [];
                     
+                    let msg = `นำเข้าข้อมูลสำเร็จ: ใหม่ ${importedCount} รายการ`;
+                    if (updatedCount > 0) msg += `, อัปเดต ${updatedCount} รายการ`;
+                    if (mergedCount > 0) msg += `, ผสาน ${mergedCount} รายการ`;
+                    if (keptCount > 0) msg += `, ข้าม ${keptCount} รายการ`;
+
                     let alertHtml = `<div style="color: #34D399; font-weight: 600; margin-bottom: ${errors.length ? '0.5rem' : '0'};">
-                        <i class="fa-solid fa-circle-check"></i> นำเข้าข้อมูลสำเร็จ ${importedCount} รายการ (ส่งไปยังคิวตรวจสอบ)
+                        <i class="fa-solid fa-circle-check"></i> ${msg}
                     </div>`;
                     
                     if (errors.length > 0) {
@@ -7485,9 +7600,10 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                         alertBox.innerHTML = alertHtml;
                     }
 
-                    showToast(`นำเข้าสำเร็จ ${importedCount} รายการ`, 'success');
+                    showToast(msg, 'success');
                     loadAdminDashboard();
                     loadAdminTempQueue();
+                    loadAdminMasterParts();
                 } else {
                     if (alertBox) {
                         alertBox.style.display = 'block';
@@ -7506,6 +7622,220 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     alertBox.innerHTML = `<span style="color: #F87171; font-weight: 600;"><i class="fa-solid fa-circle-xmark"></i> เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์</span>`;
                 }
                 showToast('Network error', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalText;
+            }
+        }
+
+        // ================= DUPLICATE RESOLUTION MODAL LOGIC =================
+        function openDuplicateResolutionModal(data) {
+            const modal = document.getElementById('modal-duplicate-resolution');
+            if (!modal) return;
+            
+            const conflictBadge = document.getElementById('dup-conflict-badge');
+            const newBadge = document.getElementById('dup-new-badge');
+            const btnCount = document.getElementById('dup-confirm-btn-count');
+            
+            if (conflictBadge) conflictBadge.textContent = `${data.conflict_count || data.conflicts.length} รายการซ้ำ`;
+            if (newBadge) newBadge.textContent = `${data.new_count || 0} รายการใหม่`;
+            if (btnCount) btnCount.textContent = (data.conflict_count || data.conflicts.length) + (data.new_count || 0);
+
+            renderDuplicateConflicts(data.conflicts || []);
+            modal.style.display = 'flex';
+        }
+
+        function closeDuplicateResolutionModal() {
+            const modal = document.getElementById('modal-duplicate-resolution');
+            if (modal) modal.style.display = 'none';
+            currentImportSession = null;
+        }
+
+        function renderDuplicateConflicts(conflicts) {
+            const container = document.getElementById('duplicate-conflicts-container');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const compareFields = [
+                { key: 'brand', label: 'แบรนด์สินค้า' },
+                { key: 'part_number', label: 'รหัสสินค้า (Part No.)' },
+                { key: 'oem_number', label: 'เบอร์ OEM' },
+                { key: 'car_brand', label: 'ยี่ห้อรถ' },
+                { key: 'car_model', label: 'รุ่นรถ' },
+                { key: 'year_start', label: 'ปีเริ่มต้น' },
+                { key: 'year_end', label: 'ปีสิ้นสุด' },
+                { key: 'product_name_th', label: 'ชื่อสินค้า (ไทย)' },
+                { key: 'category', label: 'หมวดหมู่' },
+                { key: 'cost_unit', label: 'ราคาทุน' },
+                { key: 'engine', label: 'เครื่องยนต์' },
+                { key: 'transmission', label: 'เกียร์' },
+                { key: 'description', label: 'รายละเอียด' },
+                { key: 'notes', label: 'หมายเหตุ' }
+            ];
+
+            conflicts.forEach((c, idx) => {
+                const ex = c.existing || {};
+                const inc = c.incoming || {};
+                const diffs = c.differences || {};
+                const diffCount = Object.keys(diffs).length;
+
+                const card = document.createElement('div');
+                card.className = 'duplicate-conflict-card';
+                card.style.background = 'var(--bg-surface)';
+                card.style.border = '1px solid var(--border-color)';
+                card.style.borderRadius = 'var(--radius-md)';
+                card.style.overflow = 'hidden';
+                card.style.boxShadow = '0 4px 14px rgba(0,0,0,0.2)';
+
+                // Card Header
+                let headerHtml = `
+                    <div style="background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--border-color); padding: 0.85rem 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                        <div style="display: flex; align-items: center; gap: 0.6rem;">
+                            <span style="background: rgba(245, 158, 11, 0.2); color: #FBBF24; font-weight: 700; font-size: 0.76rem; padding: 0.2rem 0.55rem; border-radius: 4px;">
+                                #${idx + 1}
+                            </span>
+                            <strong style="color: #F8FAFC; font-size: 0.92rem;">
+                                ${inc.car_brand || ex.car_brand || ''} ${inc.car_model || ex.car_model || ''} &bull; ${inc.product_name_th || ex.product_name_th || 'อะไหล่'}
+                            </strong>
+                            <span style="font-size: 0.78rem; color: var(--text-muted);">
+                                (รหัส: <code style="color: #60A5FA;">${inc.part_number || ex.part_number || '-'}</code> | OEM: <code style="color: #34D399;">${inc.oem_number || ex.oem_number || '-'}</code>)
+                            </span>
+                        </div>
+                        <div>
+                            <span style="font-size: 0.76rem; background: ${diffCount > 0 ? 'rgba(239, 68, 68, 0.15)' : 'rgba(52, 211, 153, 0.15)'}; color: ${diffCount > 0 ? '#F87171' : '#34D399'}; padding: 0.2rem 0.6rem; border-radius: 9999px; border: 1px solid ${diffCount > 0 ? 'rgba(239, 68, 68, 0.3)' : 'rgba(52, 211, 153, 0.3)'};">
+                                ${diffCount > 0 ? `พบความแตกต่าง ${diffCount} จุด` : 'ข้อมูลตรงกันทุกฟิลด์'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+
+                // Side-by-Side Comparison Table
+                let rowsHtml = '';
+                compareFields.forEach(f => {
+                    const exVal = String(ex[f.key] || '').trim();
+                    const incVal = String(inc[f.key] || '').trim();
+                    const isDiff = exVal !== incVal;
+
+                    if (!exVal && !incVal) return; // skip both empty
+
+                    rowsHtml += `
+                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.04); ${isDiff ? 'background: rgba(245, 158, 11, 0.04);' : ''}">
+                            <td style="padding: 0.45rem 0.75rem; font-size: 0.76rem; color: var(--text-muted); width: 22%; font-weight: 500;">
+                                ${f.label}
+                            </td>
+                            <td style="padding: 0.45rem 0.75rem; font-size: 0.8rem; width: 39%; border-right: 1px solid var(--border-color); color: ${isDiff ? '#93C5FD' : 'var(--text-secondary)'};">
+                                ${exVal || '<span style="color: var(--text-muted); font-style: italic;">- ว่าง -</span>'}
+                            </td>
+                            <td style="padding: 0.45rem 0.75rem; font-size: 0.8rem; width: 39%; color: ${isDiff ? '#FDE047; font-weight: 600;' : 'var(--text-secondary)'};">
+                                ${incVal || '<span style="color: var(--text-muted); font-style: italic;">- ว่าง -</span>'}
+                                ${isDiff ? '<i class="fa-solid fa-asterisk" style="font-size: 0.55rem; color: #F59E0B; margin-left: 4px;" title="ข้อมูลต่างกัน"></i>' : ''}
+                            </td>
+                        </tr>
+                    `;
+                });
+
+                // Radio Choice Selector
+                let choiceHtml = `
+                    <div style="background: rgba(0,0,0,0.25); border-top: 1px solid var(--border-color); padding: 0.85rem 1.25rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+                        <span style="font-size: 0.8rem; font-weight: 600; color: #F8FAFC;">
+                            <i class="fa-solid fa-hand-pointer" style="color: var(--primary);"></i> เลือกข้อมูลที่จะใช้เป็นหลัก:
+                        </span>
+                        <div style="display: flex; gap: 0.6rem; flex-wrap: wrap;">
+                            <label class="dup-choice-label" style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.35); padding: 0.45rem 0.75rem; border-radius: 6px; font-size: 0.78rem;">
+                                <input type="radio" name="resolution-for-${c.conflict_id}" value="KEEP_EXISTING" checked style="accent-color: #3B82F6;">
+                                <span style="color: #93C5FD; font-weight: 600;">🔵 ใช้ข้อมูลเดิม (ไม่เปลี่ยนแปลง)</span>
+                            </label>
+                            <label class="dup-choice-label" style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.35); padding: 0.45rem 0.75rem; border-radius: 6px; font-size: 0.78rem;">
+                                <input type="radio" name="resolution-for-${c.conflict_id}" value="OVERWRITE_NEW" style="accent-color: #10B981;">
+                                <span style="color: #6EE7B7; font-weight: 600;">🟢 ใช้ข้อมูลใหม่ (อัปเดตทับ)</span>
+                            </label>
+                            <label class="dup-choice-label" style="display: flex; align-items: center; gap: 0.4rem; cursor: pointer; background: rgba(245,158,11,0.1); border: 1px solid rgba(245,158,11,0.35); padding: 0.45rem 0.75rem; border-radius: 6px; font-size: 0.78rem;">
+                                <input type="radio" name="resolution-for-${c.conflict_id}" value="MERGE" style="accent-color: #F59E0B;">
+                                <span style="color: #FDE047; font-weight: 600;">🟡 รวมข้อมูล (ผสานฟิลด์)</span>
+                            </label>
+                        </div>
+                    </div>
+                `;
+
+                card.innerHTML = `
+                    ${headerHtml}
+                    <div style="padding: 0.5rem 1.25rem;">
+                        <table style="width: 100%; border-collapse: collapse;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--border-color); text-align: left;">
+                                    <th style="padding: 0.45rem 0.75rem; font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase;">ฟิลด์ข้อมูล</th>
+                                    <th style="padding: 0.45rem 0.75rem; font-size: 0.72rem; color: #60A5FA; text-transform: uppercase; border-right: 1px solid var(--border-color);">
+                                        <i class="fa-solid fa-database"></i> ข้อมูลเดิมในระบบ (Existing)
+                                    </th>
+                                    <th style="padding: 0.45rem 0.75rem; font-size: 0.72rem; color: #FBBF24; text-transform: uppercase;">
+                                        <i class="fa-solid fa-file-arrow-up"></i> ข้อมูลใหม่จากไฟล์ (Incoming)
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rowsHtml}
+                            </tbody>
+                        </table>
+                    </div>
+                    ${choiceHtml}
+                `;
+
+                container.appendChild(card);
+            });
+        }
+
+        function setAllDuplicateResolutions(action) {
+            if (!currentImportSession || !currentImportSession.conflicts) return;
+            currentImportSession.conflicts.forEach(c => {
+                const radio = document.querySelector(`input[name="resolution-for-${c.conflict_id}"][value="${action}"]`);
+                if (radio) radio.checked = true;
+            });
+            showToast(`เลือก "${action === 'KEEP_EXISTING' ? 'ใช้ข้อมูลเดิมทั้งหมด' : action === 'OVERWRITE_NEW' ? 'ใช้ข้อมูลใหม่ทั้งหมด' : 'รวมข้อมูลทั้งหมด'}" เรียบร้อยแล้ว`, 'info');
+        }
+
+        async function submitDuplicateResolutions() {
+            if (!currentImportSession || !currentImportSession.session_id) {
+                showToast("Session หมดอายุ โปรดอัปโหลดใหม่อีกครั้ง", "error");
+                closeDuplicateResolutionModal();
+                return;
+            }
+
+            const btn = document.getElementById('btn-confirm-duplicate-resolution');
+            const originalText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังประมวลผลการนำเข้า...';
+
+            try {
+                const resolutions = (currentImportSession.conflicts || []).map(c => {
+                    const selected = document.querySelector(`input[name="resolution-for-${c.conflict_id}"]:checked`);
+                    return {
+                        conflict_id: c.conflict_id,
+                        action: selected ? selected.value : 'KEEP_EXISTING'
+                    };
+                });
+
+                const res = await fetch('/api/parts/import/resolve-duplicates', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    body: JSON.stringify({
+                        session_id: currentImportSession.session_id,
+                        resolutions: resolutions
+                    })
+                });
+
+                const data = await res.json();
+                if (data.success) {
+                    showToast(data.message || "บันทึกการจัดการข้อมูลซ้ำสำเร็จ", "success");
+                    closeDuplicateResolutionModal();
+                    loadAdminDashboard();
+                    loadAdminTempQueue();
+                    loadAdminMasterParts();
+                } else {
+                    showToast(data.error || "เกิดข้อผิดพลาดในการบันทึกข้อมูล", "error");
+                }
+            } catch (err) {
+                console.error(err);
+                showToast("Network error", "error");
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = originalText;

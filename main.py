@@ -155,7 +155,7 @@ from backend.services.payment_gateway import PaymentGateway
 from backend.services.subscription_state_machine import SubscriptionStateMachine
 from backend.services.owner_analytics_service import OwnerAnalyticsService
 from backend.web_scraper import scrape_external_parts, run_ai_parts_search
-from backend.import_helper import parse_csv_file, parse_excel_file
+from backend.import_helper import parse_csv_file, parse_excel_file, resolve_import_session
 
 app = FastAPI(
     title="OEM vs Aftermarket Cross-Reference System API",
@@ -888,16 +888,28 @@ async def export_import_template_xlsx(admin = Depends(require_admin)):
     response.headers["Content-Disposition"] = "attachment; filename=parts_import_template.xlsx"
     return response
 
+class ResolveDuplicateItem(BaseModel):
+    conflict_id: str
+    action: str  # 'KEEP_EXISTING' | 'OVERWRITE_NEW' | 'MERGE'
+
+class ResolveDuplicatesRequest(BaseModel):
+    session_id: str
+    resolutions: List[ResolveDuplicateItem]
+
 # Import Excel/CSV files (restricted to ADMIN)
 @app.post("/api/parts/import")
-async def import_parts(file: UploadFile = File(...), admin = Depends(require_admin)):
+async def import_parts(
+    file: UploadFile = File(...),
+    duplicate_policy: str = Form("ASK"),
+    admin = Depends(require_admin)
+):
     filename = file.filename.lower()
     content = await file.read()
     try:
         if filename.endswith(".csv"):
-            result = parse_csv_file(content)
+            result = parse_csv_file(content, duplicate_policy=duplicate_policy)
         elif filename.endswith(".xlsx") or filename.endswith(".xls"):
-            result = parse_excel_file(content)
+            result = parse_excel_file(content, duplicate_policy=duplicate_policy)
         else:
             return {
                 "success": False,
@@ -906,6 +918,21 @@ async def import_parts(file: UploadFile = File(...), admin = Depends(require_adm
         return result
     except Exception as e:
         return {"success": False, "error": f"เกิดข้อผิดพลาด: {str(e)}"}
+
+# Resolve Duplicate Conflicts from interactive modal
+@app.post("/api/parts/import/resolve-duplicates")
+async def resolve_duplicate_parts(
+    req: ResolveDuplicatesRequest,
+    admin = Depends(require_admin)
+):
+    try:
+        result = resolve_import_session(
+            req.session_id,
+            [{"conflict_id": r.conflict_id, "action": r.action} for r in req.resolutions]
+        )
+        return result
+    except Exception as e:
+        return {"success": False, "error": f"เกิดข้อผิดพลาดในการจัดการข้อมูลซ้ำ: {str(e)}"}
 
 # Master Catalog Export (Excel / CSV)
 @app.get("/api/admin/master-parts/export")
