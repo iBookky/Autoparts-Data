@@ -1838,12 +1838,14 @@ def get_user_tenant_context(username: str):
         # Fallback to default organization 1
         cursor.execute("SELECT * FROM organizations WHERE id = 1")
         org_row = cursor.fetchone()
-        org_role = "OWNER" if user_dict["role"] in ["ADMIN", "SUPER_ADMIN"] else "MEMBER"
-        org_dict = dict(org_row) if org_row else {"id": 1, "name": "Default Organization", "slug": "default", "plan_tier": "PROFESSIONAL"}
+        org_role = "OWNER" if user_dict["role"] in ["OWNER", "ADMIN", "SUPER_ADMIN"] else "MEMBER"
+        org_dict = dict(org_row) if org_row else {"id": 1, "name": "Platform Master HQ", "slug": "default", "plan_tier": "ENTERPRISE"}
         org_dict["org_role"] = org_role
         org_dict["member_status"] = "ACTIVE"
     else:
         org_dict = dict(org_row)
+        if user_dict["role"] in ["OWNER", "SUPER_ADMIN"]:
+            org_dict["org_role"] = "OWNER"
         if "member_status" not in org_dict or not org_dict["member_status"]:
             org_dict["member_status"] = "ACTIVE"
         
@@ -1862,25 +1864,45 @@ def get_user_tenant_context(username: str):
     sub_row = cursor.fetchone()
     
     if not sub_row:
-        # Fallback default professional plan
+        # Fallback default professional plan (or enterprise for Owner)
+        is_owner_role = user_dict["role"] in ["OWNER", "SUPER_ADMIN", "ADMIN"]
         sub_dict = {
-            "plan_id": "professional",
-            "plan_name": "PROFESSIONAL",
+            "plan_id": "enterprise" if is_owner_role else "professional",
+            "plan_name": "SYSTEM OWNER (UNLIMITED)" if is_owner_role else "PROFESSIONAL",
             "status": "ACTIVE",
             "billing_cycle": "MONTHLY",
-            "monthly_search_quota": 5000,
+            "monthly_search_quota": 999999999 if is_owner_role else 5000,
             "ai_power_pack": 1,
             "extra_searches": 0,
             "extra_users": 0,
+            "max_brands": -1 if is_owner_role else 5,
+            "max_categories": -1 if is_owner_role else 5,
+            "max_users": -1 if is_owner_role else 3,
             "vin_search_enabled": 1,
-            "api_access_enabled": 0,
-            "export_enabled": 0,
+            "api_access_enabled": 1 if is_owner_role else 0,
+            "export_enabled": 1 if is_owner_role else 0,
             "ai_search_enabled": 1,
             "current_period_end": datetime.now().strftime("%Y-%m-%d")
         }
     else:
         sub_dict = dict(sub_row)
         
+    # If user is OWNER or SUPER_ADMIN, ensure completely unlimited capabilities across all functions
+    if user_dict["role"] in ["OWNER", "SUPER_ADMIN"]:
+        org_dict["plan_tier"] = "ENTERPRISE"
+        org_dict["org_role"] = "OWNER"
+        sub_dict["plan_id"] = "enterprise"
+        sub_dict["plan_name"] = "SYSTEM OWNER (UNLIMITED)"
+        sub_dict["status"] = "ACTIVE"
+        sub_dict["monthly_search_quota"] = 999999999
+        sub_dict["max_brands"] = -1
+        sub_dict["max_categories"] = -1
+        sub_dict["max_users"] = -1
+        sub_dict["vin_search_enabled"] = 1
+        sub_dict["api_access_enabled"] = 1
+        sub_dict["export_enabled"] = 1
+        sub_dict["ai_search_enabled"] = 1
+
     # Get current month's usage
     current_period = datetime.now().strftime("%Y-%m")
     cursor.execute("SELECT * FROM usage_records WHERE org_id = ? AND period_month = ?", (org_id, current_period))
@@ -1893,7 +1915,10 @@ def get_user_tenant_context(username: str):
         "ai_credits_used": 0
     }
     
-    total_search_quota = sub_dict["monthly_search_quota"] + (sub_dict.get("extra_searches") or 0)
+    if user_dict["role"] in ["OWNER", "SUPER_ADMIN"] or sub_dict["monthly_search_quota"] == -1:
+        total_search_quota = 999999999
+    else:
+        total_search_quota = sub_dict["monthly_search_quota"] + (sub_dict.get("extra_searches") or 0)
     
     conn.close()
     return {

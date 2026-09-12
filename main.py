@@ -450,7 +450,7 @@ async def search_parts(
         ctx = get_user_tenant_context(user_name)
         user_rec = ctx.get("user") if ctx else None
         role = user_rec.get("role") if user_rec else (x_user_role or ("ADMIN" if user_name in ["admin", "superadmin"] else "STAFF"))
-        is_platform_admin = (user_name in ["superadmin", "admin"] and role in ["ADMIN", "SUPER_ADMIN"])
+        is_platform_admin = (role in ["OWNER", "SUPER_ADMIN", "ADMIN"] or user_name.lower() in ["owner", "superadmin", "admin"])
 
         # 1. Server-Side Entitlement & Quota Whitelist Validation
         is_allowed, locked_payload, ctx = EntitlementService.validate_search_access(
@@ -479,7 +479,7 @@ async def search_parts(
         allowed_ab = whitelist.get("allowed_aftermarket_brands") if not is_platform_admin else None
 
         # 3. Server-Side Pagination Clamping & Enumeration Protection
-        safe_limit = min(max(1, limit or 50), 50)
+        safe_limit = min(max(1, limit or 50), 1000) if is_platform_admin else min(max(1, limit or 50), 50)
         safe_page = max(1, page or 1)
         safe_offset = max(0, offset if offset is not None and offset > 0 else ((safe_page - 1) * safe_limit))
 
@@ -557,7 +557,7 @@ async def get_product_detail(
     ctx = get_user_tenant_context(user_name)
     user_rec = ctx.get("user") if ctx else None
     role = user_rec.get("role") if user_rec else (x_user_role or ("ADMIN" if user_name in ["admin", "superadmin"] else "STAFF"))
-    is_platform_admin = (user_name in ["superadmin", "admin"] and role in ["ADMIN", "SUPER_ADMIN"])
+    is_platform_admin = (role in ["OWNER", "SUPER_ADMIN", "ADMIN"] or user_name.lower() in ["owner", "superadmin", "admin"])
 
     allowed, locked_payload = EntitlementService.validate_product_access(
         username=user_name,
@@ -1867,7 +1867,7 @@ async def toggle_saas_favorite(
     role = x_user_role or ctx["user"].get("role", "STAFF")
     
     # Check category entitlement for saving favorite
-    is_platform_admin = (x_username in ["superadmin", "admin"] and role in ["ADMIN", "SUPER_ADMIN"])
+    is_platform_admin = (role in ["OWNER", "SUPER_ADMIN", "ADMIN"] or (x_username or "").lower() in ["owner", "superadmin", "admin"])
     if not is_platform_admin:
         whitelist = EntitlementService.get_organization_whitelist(org_id)
         allowed_c = whitelist.get("allowed_categories", [])
@@ -2060,7 +2060,7 @@ async def invite_saas_org_member(req: OrgInviteRequest, x_username: Optional[str
     actor_id = ctx["user"]["id"]
     actor_role = ctx["organization"].get("org_role", "MEMBER")
 
-    if actor_role not in ["OWNER", "MANAGER", "ADMIN"] and ctx["user"]["role"] not in ["ADMIN", "SUPER_ADMIN"]:
+    if actor_role not in ["OWNER", "MANAGER", "ADMIN"] and ctx["user"]["role"] not in ["OWNER", "ADMIN", "SUPER_ADMIN"]:
         raise HTTPException(status_code=403, detail="Only Organization Owners and Managers can invite new team members.")
 
     res = invite_organization_member(org_id, req.email, req.role or "STAFF", actor_id)
@@ -2096,7 +2096,7 @@ async def revoke_saas_org_invitation(invitation_id: int, x_username: Optional[st
     org_id = ctx["organization"]["id"]
     actor_role = ctx["organization"].get("org_role", "MEMBER")
 
-    if actor_role not in ["OWNER", "MANAGER", "ADMIN"] and ctx["user"]["role"] not in ["ADMIN", "SUPER_ADMIN"]:
+    if actor_role not in ["OWNER", "MANAGER", "ADMIN"] and ctx["user"]["role"] not in ["OWNER", "ADMIN", "SUPER_ADMIN"]:
         raise HTTPException(status_code=403, detail="Permission denied.")
 
     ok = revoke_organization_invitation(org_id, invitation_id)

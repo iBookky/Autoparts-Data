@@ -150,14 +150,35 @@ class EntitlementService:
         Validates whether the user's organization is entitled to perform this search.
         Returns: (is_allowed, locked_payload_or_none, tenant_context)
         """
-        # Privileged system operator accounts have unrestricted search access
-        is_platform_admin = (username in ["superadmin", "admin"] and user_role in ["ADMIN", "SUPER_ADMIN"])
-        if is_platform_admin:
-            ctx = get_user_tenant_context(username) or {
-                "organization": {"id": 1, "name": "System Operator"},
-                "subscription": {"status": "ACTIVE", "plan_name": "ENTERPRISE"},
-                "usage": {"searches_used": 0, "searches_quota": 999999}
-            }
+        # Privileged system operator / system owner accounts have unrestricted access across all functions
+        norm_user = (username or "").strip().lower()
+        norm_role = (user_role or "").strip().upper()
+        is_unrestricted = (
+            norm_role in ["OWNER", "SUPER_ADMIN", "ADMIN"]
+            or norm_user in ["owner", "superadmin", "admin"]
+        )
+        if is_unrestricted:
+            ctx = get_user_tenant_context(username) or {}
+            org = ctx.get("organization") or {"id": 1, "name": "Platform Master HQ", "slug": "default", "plan_tier": "ENTERPRISE"}
+            sub = ctx.get("subscription") or {"status": "ACTIVE", "plan_name": "SYSTEM OWNER (UNLIMITED)", "plan_id": "enterprise"}
+            usage = ctx.get("usage") or {"searches_used": 0, "searches_quota": 999999999}
+            
+            sub["status"] = "ACTIVE"
+            sub["plan_id"] = "enterprise"
+            sub["plan_name"] = "SYSTEM OWNER (UNLIMITED)"
+            sub["monthly_search_quota"] = 999999999
+            sub["max_brands"] = -1
+            sub["max_categories"] = -1
+            sub["max_users"] = -1
+            sub["vin_search_enabled"] = 1
+            sub["api_access_enabled"] = 1
+            sub["export_enabled"] = 1
+            sub["ai_search_enabled"] = 1
+            usage["searches_quota"] = 999999999
+            
+            ctx["organization"] = org
+            ctx["subscription"] = sub
+            ctx["usage"] = usage
             return True, None, ctx
 
         ctx = get_user_tenant_context(username)
@@ -278,8 +299,13 @@ class EntitlementService:
         Validates whether the customer is entitled to view a specific product's full technical specs.
         Prevents direct URL manipulation (e.g. /products/123).
         """
-        is_platform_admin = (username in ["superadmin", "admin"] and user_role in ["ADMIN", "SUPER_ADMIN"])
-        if is_platform_admin:
+        norm_user = (username or "").strip().lower()
+        norm_role = (user_role or "").strip().upper()
+        is_unrestricted = (
+            norm_role in ["OWNER", "SUPER_ADMIN", "ADMIN"]
+            or norm_user in ["owner", "superadmin", "admin"]
+        )
+        if is_unrestricted:
             return True, None
 
         conn = get_db_connection()
