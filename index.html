@@ -9,9 +9,9 @@
     <meta http-equiv="Expires" content="0">
     <script>(function(){const t=localStorage.getItem('autoparts_theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="icon" id="dynamic-favicon" type="image/png" href="/favicon.ico">
-    <link rel="stylesheet" href="/frontend/css/index.css?v=20260912_v13_aftermarket_brand_quota">
+    <link rel="stylesheet" href="/frontend/css/index.css?v=20260912_v14_import_category_oem_suggestions">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="/frontend/js/i18n.js?v=20260912_v13_aftermarket_brand_quota"></script>
+    <script src="/frontend/js/i18n.js?v=20260912_v14_import_category_oem_suggestions"></script>
 </head>
 <body>
 
@@ -4182,27 +4182,30 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         </div>
     </div>
 
-    <!-- ================= MODAL: DUPLICATE RESOLUTION INTERACTIVE DIALOG ================= -->
+    <!-- ================= MODAL: IMPORT REVIEW & DUPLICATE RESOLUTION INTERACTIVE DIALOG ================= -->
     <div class="modal-overlay" id="modal-duplicate-resolution" style="display: none; z-index: 10050;">
-        <div class="modal-card" style="max-width: 1080px; width: 95%; max-height: 92vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; border: 1px solid rgba(245, 158, 11, 0.4); box-shadow: 0 20px 50px rgba(0,0,0,0.7);">
+        <div class="modal-card" style="max-width: 1100px; width: 95%; max-height: 92vh; display: flex; flex-direction: column; padding: 0; overflow: hidden; border: 1px solid rgba(245, 158, 11, 0.4); box-shadow: 0 20px 50px rgba(0,0,0,0.7);">
             <!-- Modal Header -->
             <div style="background: linear-gradient(90deg, rgba(245, 158, 11, 0.15), rgba(59, 130, 246, 0.12)); border-bottom: 1px solid var(--border-color); padding: 1.25rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
                 <div style="display: flex; align-items: center; gap: 0.75rem;">
                     <div style="width: 40px; height: 40px; border-radius: 10px; background: rgba(245, 158, 11, 0.2); display: flex; align-items: center; justify-content: center; color: #F59E0B; font-size: 1.25rem;">
-                        <i class="fa-solid fa-code-compare"></i>
+                        <i class="fa-solid fa-clipboard-check"></i>
                     </div>
                     <div>
-                        <div style="display: flex; align-items: center; gap: 0.6rem;">
-                            <h3 style="font-size: 1.15rem; font-weight: 700; margin: 0; color: #F8FAFC;">ตรวจพบข้อมูลซ้ำกับอะไหล่ในระบบ (Duplicate Resolution)</h3>
-                            <span id="dup-conflict-badge" style="background: rgba(245, 158, 11, 0.25); color: #FBBF24; font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 9999px; border: 1px solid rgba(245, 158, 11, 0.4);">
+                        <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+                            <h3 id="dup-modal-title" style="font-size: 1.15rem; font-weight: 700; margin: 0; color: #F8FAFC;">ตรวจสอบและยืนยันการนำเข้าข้อมูล</h3>
+                            <span id="dup-review-badge" style="display: none; background: rgba(139, 92, 246, 0.2); color: #A78BFA; font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 9999px; border: 1px solid rgba(139, 92, 246, 0.4);">
+                                0 แนะนำหมวดหมู่/OEM
+                            </span>
+                            <span id="dup-conflict-badge" style="display: none; background: rgba(245, 158, 11, 0.25); color: #FBBF24; font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 9999px; border: 1px solid rgba(245, 158, 11, 0.4);">
                                 0 รายการซ้ำ
                             </span>
                             <span id="dup-new-badge" style="background: rgba(16, 185, 129, 0.2); color: #34D399; font-size: 0.75rem; font-weight: 600; padding: 0.2rem 0.6rem; border-radius: 9999px; border: 1px solid rgba(16, 185, 129, 0.3);">
                                 0 รายการใหม่
                             </span>
                         </div>
-                        <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0.25rem 0 0 0;">
-                            ตรวจพบรายการที่มี แบรนด์ aftermarket, ยี่ห้อรถ, รุ่นรถ และรหัสสินค้า ตรงกับข้อมูลเดิมในระบบ โปรดเลือกว่าจะใช้ข้อมูลชุดใดเป็นหลัก <strong>(ระบบจะไม่สร้างรายการซ้ำ)</strong>
+                        <p id="dup-modal-desc" style="font-size: 0.8rem; color: var(--text-secondary); margin: 0.25rem 0 0 0;">
+                            โปรดตรวจสอบหมวดหมู่สินค้าและเบอร์ OEM อะไหล่แท้ที่ระบบแนะนำ รวมถึงจัดการรายการที่ซ้ำซ้อนก่อนนำเข้าจริง
                         </p>
                     </div>
                 </div>
@@ -4211,33 +4214,80 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 </button>
             </div>
 
-            <!-- Quick Action Toolbar -->
-            <div style="background: var(--bg-surface); padding: 0.75rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.6rem;">
-                <div style="font-size: 0.8rem; color: var(--text-secondary);">
-                    <i class="fa-solid fa-wand-magic-sparkles" style="color: var(--primary);"></i> เลือกทั้งหมดอย่างรวดเร็ว:
-                </div>
-                <div style="display: flex; gap: 0.5rem;">
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="setAllDuplicateResolutions('KEEP_EXISTING')" style="font-size: 0.75rem; padding: 0.3rem 0.7rem;">
-                        <i class="fa-solid fa-shield" style="color: #60A5FA;"></i> ใช้ข้อมูลเดิมทั้งหมด
-                    </button>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="setAllDuplicateResolutions('OVERWRITE_NEW')" style="font-size: 0.75rem; padding: 0.3rem 0.7rem;">
-                        <i class="fa-solid fa-pen-to-square" style="color: #34D399;"></i> ใช้ข้อมูลใหม่ทั้งหมด
-                    </button>
-                    <button type="button" class="btn btn-secondary btn-sm" onclick="setAllDuplicateResolutions('MERGE')" style="font-size: 0.75rem; padding: 0.3rem 0.7rem;">
-                        <i class="fa-solid fa-code-merge" style="color: #FBBF24;"></i> รวมข้อมูลทั้งหมด
-                    </button>
-                </div>
-            </div>
+            <!-- Scrollable Modal Content -->
+            <div style="flex: 1; overflow-y: auto; padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 1.5rem; background: var(--bg-base);">
+                
+                <!-- SECTION 1: Suggested Category and OEM Number Review -->
+                <div id="import-review-section" style="display: none; flex-direction: column; gap: 0.75rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+                        <div>
+                            <h4 style="margin: 0; font-size: 0.95rem; font-weight: 700; color: #F8FAFC; display: flex; align-items: center; gap: 0.4rem;">
+                                <i class="fa-solid fa-wand-magic-sparkles" style="color: #A78BFA;"></i>
+                                รายการที่ระบบแนะนำหมวดหมู่ หรือเบอร์ OEM แท้ (<span id="review-items-count">0</span> รายการ)
+                            </h4>
+                            <p style="margin: 0.2rem 0 0 0; font-size: 0.78rem; color: var(--text-secondary);">
+                                ไฟล์ที่นำเข้าไม่มีหมวดหมู่หรือเบอร์ OEM ระบบจึงวิเคราะห์และแนะนำให้ ท่านสามารถแก้ไขหมวดหมู่ หรือปรับเปลี่ยน/เว้นว่างเบอร์ OEM ได้ตามต้องการ
+                            </p>
+                        </div>
+                        <button type="button" class="btn btn-secondary btn-sm" onclick="acceptAllSuggestedValues()" style="font-size: 0.75rem; padding: 0.35rem 0.75rem; color: #A78BFA; border-color: rgba(139, 92, 246, 0.4);">
+                            <i class="fa-solid fa-check"></i> ยอมรับค่าแนะนำทั้งหมด
+                        </button>
+                    </div>
 
-            <!-- Scrollable Conflicts List Container -->
-            <div id="duplicate-conflicts-container" style="flex: 1; overflow-y: auto; padding: 1.25rem 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; background: var(--bg-base);">
-                <!-- Dynamic conflict comparison cards will be rendered here -->
+                    <div style="border: 1px solid var(--border-color); border-radius: var(--radius-md); overflow-x: auto; background: var(--bg-surface); box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                        <table style="width: 100%; border-collapse: collapse; min-width: 780px;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--border-color); background: rgba(255,255,255,0.02); text-align: left;">
+                                    <th style="padding: 0.6rem 0.75rem; font-size: 0.74rem; color: var(--text-muted); width: 45px; text-align: center;">#</th>
+                                    <th style="padding: 0.6rem 0.75rem; font-size: 0.74rem; color: var(--text-muted); width: 140px;">รหัสสินค้า / แบรนด์</th>
+                                    <th style="padding: 0.6rem 0.75rem; font-size: 0.74rem; color: var(--text-muted); width: 220px;">ชื่อสินค้า / รุ่นรถ</th>
+                                    <th style="padding: 0.6rem 0.75rem; font-size: 0.74rem; color: #F59E0B; width: 200px;">
+                                        หมวดหมู่ (Category) <span class="badge-suggested-ai" style="font-size: 0.65rem;">ปรับแก้ได้</span>
+                                    </th>
+                                    <th style="padding: 0.6rem 0.75rem; font-size: 0.74rem; color: #3B82F6;">
+                                        เบอร์ OEM แท้ (OEM No.) <span class="badge-suggested-ai" style="font-size: 0.65rem; background: rgba(59,130,246,0.2); color: #60A5FA; border-color: rgba(59,130,246,0.35);">เว้นว่างได้</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="import-review-table-body">
+                                <!-- Rendered dynamically by renderImportReviewItems -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- SECTION 2: Duplicate Conflicts Resolution -->
+                <div id="import-conflicts-section" style="display: none; flex-direction: column; gap: 0.75rem;">
+                    <!-- Quick Action Toolbar -->
+                    <div style="background: var(--bg-surface); padding: 0.75rem 1rem; border: 1px solid var(--border-color); border-radius: var(--radius-md); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.6rem;">
+                        <div style="font-size: 0.82rem; color: #FBBF24; font-weight: 600; display: flex; align-items: center; gap: 0.4rem;">
+                            <i class="fa-solid fa-code-compare"></i> จัดการรายการที่ซ้ำในระบบ (<span id="conflicts-items-count">0</span> รายการ):
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="setAllDuplicateResolutions('KEEP_EXISTING')" style="font-size: 0.75rem; padding: 0.3rem 0.7rem;">
+                                <i class="fa-solid fa-shield" style="color: #60A5FA;"></i> ใช้ข้อมูลเดิมทั้งหมด
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="setAllDuplicateResolutions('OVERWRITE_NEW')" style="font-size: 0.75rem; padding: 0.3rem 0.7rem;">
+                                <i class="fa-solid fa-pen-to-square" style="color: #34D399;"></i> ใช้ข้อมูลใหม่ทั้งหมด
+                            </button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="setAllDuplicateResolutions('MERGE')" style="font-size: 0.75rem; padding: 0.3rem 0.7rem;">
+                                <i class="fa-solid fa-code-merge" style="color: #FBBF24;"></i> รวมข้อมูลทั้งหมด
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Scrollable Conflicts List Container -->
+                    <div id="duplicate-conflicts-container" style="display: flex; flex-direction: column; gap: 1rem;">
+                        <!-- Dynamic conflict comparison cards will be rendered here -->
+                    </div>
+                </div>
+
             </div>
 
             <!-- Modal Footer -->
             <div style="background: var(--bg-surface); border-top: 1px solid var(--border-color); padding: 1rem 1.5rem; display: flex; justify-content: space-between; align-items: center;">
                 <div style="font-size: 0.78rem; color: var(--text-muted);">
-                    <i class="fa-solid fa-circle-info"></i> รายการที่ไม่ซ้ำทั้งหมดจะถูกนำเข้าสู่ระบบโดยอัตโนมัติ
+                    <i class="fa-solid fa-circle-info"></i> ตรวจสอบความถูกต้องและกดยืนยันเพื่อบันทึกข้อมูลเข้าสู่ระบบ
                 </div>
                 <div style="display: flex; gap: 0.6rem;">
                     <button type="button" class="btn btn-secondary" onclick="closeDuplicateResolutionModal()">
@@ -5010,9 +5060,9 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 const data = await res.json();
                 if (data.success && data.results && data.results.length > 0) {
                     let html = `
-                        <div style="padding: 0.75rem 1rem; background: rgba(0,0,0,0.3); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
-                            <span style="font-size: 0.8rem; color: #60a5fa; font-weight: 600;"><i class="fa-solid fa-bolt"></i> พบ ${data.total} ผลลัพธ์ตัวอย่าง (จำกัด 3 รายการในโหมด Demo)</span>
-                            <a href="javascript:void(0)" onclick="openTrialModal()" style="font-size: 0.8rem; color: #34d399; font-weight: 600; text-decoration: none;">ดูทั้งหมด 5,000+ รายการ →</a>
+                        <div class="demo-results-header">
+                            <span class="demo-badge-info"><i class="fa-solid fa-bolt"></i> พบ ${data.total} ผลลัพธ์ตัวอย่าง (จำกัด 3 รายการในโหมด Demo)</span>
+                            <a href="javascript:void(0)" onclick="openTrialModal()" class="demo-link-more">ดูทั้งหมด 5,000+ รายการ →</a>
                         </div>
                         <div style="overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; max-width: 100%;">
                             <table class="table" style="margin-bottom: 0; font-size: 0.82rem; min-width: 540px; width: 100%;">
@@ -5032,10 +5082,10 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                         html += `
                             <tr>
                                 <td><strong style="color: #60a5fa;">${item.part_number}</strong></td>
-                                <td><code style="color: #34d399;">${item.oem_number || '-'}</code></td>
+                                <td><code class="oem-code-tag">${item.oem_number || '-'}</code></td>
                                 <td><span class="badge badge-primary">${item.brand}</span></td>
                                 <td>${item.car_brand} ${item.car_model || ''} (${item.car_year || ''})</td>
-                                <td><span class="badge" style="background: rgba(255,255,255,0.06); color: #e2e8f0;">${item.category || '-'}</span></td>
+                                <td><span class="demo-badge-category">${item.category || '-'}</span></td>
                                 <td><span class="badge badge-success">${item.relevance_score}% Match</span></td>
                             </tr>
                         `;
@@ -7959,20 +8009,66 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             }
         }
 
-        // ================= DUPLICATE RESOLUTION MODAL LOGIC =================
+        // ================= IMPORT REVIEW & DUPLICATE RESOLUTION MODAL LOGIC =================
         function openDuplicateResolutionModal(data) {
             const modal = document.getElementById('modal-duplicate-resolution');
             if (!modal) return;
             
+            const conflictCount = data.conflict_count || (data.conflicts ? data.conflicts.length : 0);
+            const reviewCount = data.review_count || (data.review_items ? data.review_items.length : 0);
+            const newCount = data.new_count || 0;
+
+            const modalTitle = document.getElementById('dup-modal-title');
+            const modalDesc = document.getElementById('dup-modal-desc');
             const conflictBadge = document.getElementById('dup-conflict-badge');
+            const reviewBadge = document.getElementById('dup-review-badge');
             const newBadge = document.getElementById('dup-new-badge');
             const btnCount = document.getElementById('dup-confirm-btn-count');
-            
-            if (conflictBadge) conflictBadge.textContent = `${data.conflict_count || data.conflicts.length} รายการซ้ำ`;
-            if (newBadge) newBadge.textContent = `${data.new_count || 0} รายการใหม่`;
-            if (btnCount) btnCount.textContent = (data.conflict_count || data.conflicts.length) + (data.new_count || 0);
 
-            renderDuplicateConflicts(data.conflicts || []);
+            if (conflictCount > 0 && reviewCount > 0) {
+                if (modalTitle) modalTitle.textContent = "ตรวจสอบข้อมูลซ้ำ และปรับแต่งหมวดหมู่ / เบอร์ OEM";
+                if (modalDesc) modalDesc.textContent = "พบข้อมูลที่ตรงกับในระบบ และพบรายการที่ระบบแนะนำหมวดหมู่หรือเบอร์ OEM โปรดตรวจสอบและยืนยันก่อนบันทึก";
+            } else if (reviewCount > 0) {
+                if (modalTitle) modalTitle.textContent = "ตรวจสอบและปรับแต่งหมวดหมู่ / เบอร์ OEM แนะนำ";
+                if (modalDesc) modalDesc.textContent = "ไฟล์ที่นำเข้าไม่มีหมวดหมู่หรือเบอร์ OEM ระบบจึงวิเคราะห์และแนะนำให้ ท่านสามารถปรับแก้หรือเว้นว่างได้";
+            } else {
+                if (modalTitle) modalTitle.textContent = "ตรวจพบข้อมูลซ้ำกับอะไหล่ในระบบ (Duplicate Resolution)";
+                if (modalDesc) modalDesc.textContent = "ตรวจพบรายการที่มี แบรนด์ aftermarket, ยี่ห้อรถ, รุ่นรถ และรหัสสินค้า ตรงกับข้อมูลเดิมในระบบ โปรดเลือกข้อมูลหลัก";
+            }
+            
+            if (conflictBadge) {
+                conflictBadge.textContent = `${conflictCount} รายการซ้ำ`;
+                conflictBadge.style.display = conflictCount > 0 ? 'inline-block' : 'none';
+            }
+            if (reviewBadge) {
+                reviewBadge.textContent = `${reviewCount} แนะนำหมวดหมู่/OEM`;
+                reviewBadge.style.display = reviewCount > 0 ? 'inline-block' : 'none';
+            }
+            if (newBadge) newBadge.textContent = `${newCount} รายการใหม่`;
+            if (btnCount) btnCount.textContent = conflictCount + newCount;
+
+            // SECTION 1: Suggested items review
+            const reviewSection = document.getElementById('import-review-section');
+            const reviewItemsCount = document.getElementById('review-items-count');
+            if (data.review_items && data.review_items.length > 0) {
+                if (reviewSection) reviewSection.style.display = 'flex';
+                if (reviewItemsCount) reviewItemsCount.textContent = data.review_items.length;
+                renderImportReviewItems(data.review_items, data.categories || []);
+            } else {
+                if (reviewSection) reviewSection.style.display = 'none';
+            }
+
+            // SECTION 2: Duplicate conflicts
+            const conflictsSection = document.getElementById('import-conflicts-section');
+            const conflictsItemsCount = document.getElementById('conflicts-items-count');
+            if (data.conflicts && data.conflicts.length > 0) {
+                if (conflictsSection) conflictsSection.style.display = 'flex';
+                if (conflictsItemsCount) conflictsItemsCount.textContent = data.conflicts.length;
+                renderDuplicateConflicts(data.conflicts || []);
+            } else {
+                if (conflictsSection) conflictsSection.style.display = 'none';
+            }
+
             modal.style.display = 'flex';
         }
 
@@ -7980,6 +8076,83 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             const modal = document.getElementById('modal-duplicate-resolution');
             if (modal) modal.style.display = 'none';
             currentImportSession = null;
+        }
+
+        function renderImportReviewItems(items, categories) {
+            const tbody = document.getElementById('import-review-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            const defaultCategories = [
+                "ระบบเบรก", "ระบบช่วงล่าง", "กรองอากาศ / กรองน้ำมัน", "โช๊คอัพ",
+                "สายพาน / ลูกรอก", "ระบบหล่อเย็น / หม้อน้ำ", "ระบบเครื่องยนต์",
+                "ระบบส่งกำลัง / เกียร์", "ระบบไฟ / แบตเตอรี่"
+            ];
+            const allCats = Array.from(new Set([...(categories || []), ...defaultCategories]));
+
+            items.forEach((item, idx) => {
+                const tr = document.createElement('tr');
+                tr.style.borderBottom = '1px solid var(--border-color)';
+                tr.style.transition = 'background 0.15s';
+
+                const iid = item.item_id || `item_${idx + 1}`;
+                const currentCat = item.category || '';
+                const currentOem = item.oem_number || '';
+                const isCatSug = item.is_category_suggested;
+                const isOemSug = item.is_oem_suggested;
+
+                // Build category options
+                let catOptionsHtml = '<option value="">-- เลือกหมวดหมู่ --</option>';
+                let foundCatInList = false;
+                allCats.forEach(cat => {
+                    const isSelected = (cat === currentCat);
+                    if (isSelected) foundCatInList = true;
+                    catOptionsHtml += `<option value="${escapeHtml(cat)}" ${isSelected ? 'selected' : ''}>${escapeHtml(cat)}</option>`;
+                });
+                if (currentCat && !foundCatInList) {
+                    catOptionsHtml += `<option value="${escapeHtml(currentCat)}" selected>${escapeHtml(currentCat)}</option>`;
+                }
+
+                tr.innerHTML = `
+                    <td style="padding: 0.6rem 0.75rem; font-size: 0.76rem; text-align: center; color: var(--text-muted);">
+                        ${idx + 1}
+                    </td>
+                    <td style="padding: 0.6rem 0.75rem;">
+                        <code class="oem-code-tag" style="font-size: 0.8rem;">${escapeHtml(item.part_number || '-')}</code>
+                        <div style="font-size: 0.72rem; color: var(--text-muted); margin-top: 2px;">
+                            ${escapeHtml(item.brand || 'GENUINE')}
+                        </div>
+                    </td>
+                    <td style="padding: 0.6rem 0.75rem;">
+                        <strong style="font-size: 0.82rem; color: var(--text-primary); display: block;">
+                            ${escapeHtml(item.product_name_th || 'อะไหล่รถยนต์')}
+                        </strong>
+                        <span style="font-size: 0.74rem; color: var(--text-secondary);">
+                            <i class="fa-solid fa-car" style="font-size: 0.7rem; color: var(--primary);"></i> ${escapeHtml((item.car_brand || '') + ' ' + (item.car_model || '')).trim() || '-'}
+                        </span>
+                    </td>
+                    <td style="padding: 0.6rem 0.75rem;">
+                        <div style="display: flex; align-items: center; gap: 0.4rem;">
+                            <select class="review-category-select ${isCatSug ? 'is-suggested' : ''}" data-item-id="${escapeHtml(iid)}">
+                                ${catOptionsHtml}
+                            </select>
+                            ${isCatSug ? '<span class="badge-suggested-ai" title="ระบบวิเคราะห์และแนะนำจากชื่อสินค้า"><i class="fa-solid fa-wand-magic-sparkles"></i> แนะนำ</span>' : ''}
+                        </div>
+                    </td>
+                    <td style="padding: 0.6rem 0.75rem;">
+                        <div style="display: flex; align-items: center; gap: 0.4rem;">
+                            <input type="text" class="review-oem-input ${isOemSug ? 'is-suggested' : ''}" data-item-id="${escapeHtml(iid)}" value="${escapeHtml(currentOem)}" placeholder="ไม่ระบุ (เว้นว่างได้)">
+                            ${isOemSug && currentOem ? '<span class="badge-suggested-ai" style="background: rgba(59,130,246,0.15); color: #3B82F6; border-color: rgba(59,130,246,0.35);" title="แนะนำจากฐานข้อมูลอะไหล่แท้ในระบบ"><i class="fa-solid fa-link"></i> แนะนำ</span>' : ''}
+                        </div>
+                    </td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        function acceptAllSuggestedValues() {
+            showToast("ยอมรับค่าแนะนำหมวดหมู่และเบอร์ OEM ทั้งหมดเรียบร้อยแล้ว", "success");
         }
 
         function renderDuplicateConflicts(conflicts) {
@@ -8026,10 +8199,10 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                 #${idx + 1}
                             </span>
                             <strong style="color: #F8FAFC; font-size: 0.92rem;">
-                                ${inc.car_brand || ex.car_brand || ''} ${inc.car_model || ex.car_model || ''} &bull; ${inc.product_name_th || ex.product_name_th || 'อะไหล่'}
+                                ${escapeHtml(inc.car_brand || ex.car_brand || '')} ${escapeHtml(inc.car_model || ex.car_model || '')} &bull; ${escapeHtml(inc.product_name_th || ex.product_name_th || 'อะไหล่')}
                             </strong>
                             <span style="font-size: 0.78rem; color: var(--text-muted);">
-                                (รหัส: <code style="color: #60A5FA;">${inc.part_number || ex.part_number || '-'}</code> | OEM: <code style="color: #34D399;">${inc.oem_number || ex.oem_number || '-'}</code>)
+                                (รหัส: <code style="color: #60A5FA;">${escapeHtml(inc.part_number || ex.part_number || '-')}</code> | OEM: <code style="color: #34D399;">${escapeHtml(inc.oem_number || ex.oem_number || '-')}</code>)
                             </span>
                         </div>
                         <div>
@@ -8055,10 +8228,10 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                 ${f.label}
                             </td>
                             <td style="padding: 0.45rem 0.75rem; font-size: 0.8rem; width: 39%; border-right: 1px solid var(--border-color); color: ${isDiff ? '#93C5FD' : 'var(--text-secondary)'};">
-                                ${exVal || '<span style="color: var(--text-muted); font-style: italic;">- ว่าง -</span>'}
+                                ${escapeHtml(exVal) || '<span style="color: var(--text-muted); font-style: italic;">- ว่าง -</span>'}
                             </td>
                             <td style="padding: 0.45rem 0.75rem; font-size: 0.8rem; width: 39%; color: ${isDiff ? '#FDE047; font-weight: 600;' : 'var(--text-secondary)'};">
-                                ${incVal || '<span style="color: var(--text-muted); font-style: italic;">- ว่าง -</span>'}
+                                ${escapeHtml(incVal) || '<span style="color: var(--text-muted); font-style: italic;">- ว่าง -</span>'}
                                 ${isDiff ? '<i class="fa-solid fa-asterisk" style="font-size: 0.55rem; color: #F59E0B; margin-left: 4px;" title="ข้อมูลต่างกัน"></i>' : ''}
                             </td>
                         </tr>
@@ -8137,6 +8310,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังประมวลผลการนำเข้า...';
 
             try {
+                // Collect duplicate conflicts resolutions
                 const resolutions = (currentImportSession.conflicts || []).map(c => {
                     const selected = document.querySelector(`input[name="resolution-for-${c.conflict_id}"]:checked`);
                     return {
@@ -8145,18 +8319,32 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     };
                 });
 
+                // Collect reviewed category and OEM choices
+                const reviewedItems = [];
+                const reviewSelects = document.querySelectorAll('.review-category-select[data-item-id]');
+                reviewSelects.forEach(sel => {
+                    const itemId = sel.dataset.itemId;
+                    const oemInput = document.querySelector(`.review-oem-input[data-item-id="${itemId}"]`);
+                    reviewedItems.push({
+                        item_id: itemId,
+                        category: sel.value.trim(),
+                        oem_number: oemInput ? oemInput.value.trim() : ''
+                    });
+                });
+
                 const res = await fetch('/api/parts/import/resolve-duplicates', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
                     body: JSON.stringify({
                         session_id: currentImportSession.session_id,
-                        resolutions: resolutions
+                        resolutions: resolutions,
+                        reviewed_items: reviewedItems
                     })
                 });
 
                 const data = await res.json();
                 if (data.success) {
-                    showToast(data.message || "บันทึกการจัดการข้อมูลซ้ำสำเร็จ", "success");
+                    showToast(data.message || "บันทึกการนำเข้าข้อมูลสำเร็จ", "success");
                     closeDuplicateResolutionModal();
                     loadAdminDashboard();
                     loadAdminTempQueue();

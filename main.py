@@ -898,9 +898,15 @@ class ResolveDuplicateItem(BaseModel):
     conflict_id: str
     action: str  # 'KEEP_EXISTING' | 'OVERWRITE_NEW' | 'MERGE'
 
+class ReviewPartItem(BaseModel):
+    item_id: str
+    category: Optional[str] = None
+    oem_number: Optional[str] = None
+
 class ResolveDuplicatesRequest(BaseModel):
     session_id: str
-    resolutions: List[ResolveDuplicateItem]
+    resolutions: Optional[List[ResolveDuplicateItem]] = []
+    reviewed_items: Optional[List[ReviewPartItem]] = []
 
 # Import Excel/CSV files (restricted to ADMIN)
 @app.post("/api/parts/import")
@@ -925,7 +931,7 @@ async def import_parts(
     except Exception as e:
         return {"success": False, "error": f"เกิดข้อผิดพลาด: {str(e)}"}
 
-# Resolve Duplicate Conflicts from interactive modal
+# Resolve Duplicate Conflicts & Import Review from interactive modal
 @app.post("/api/parts/import/resolve-duplicates")
 async def resolve_duplicate_parts(
     req: ResolveDuplicatesRequest,
@@ -934,11 +940,12 @@ async def resolve_duplicate_parts(
     try:
         result = resolve_import_session(
             req.session_id,
-            [{"conflict_id": r.conflict_id, "action": r.action} for r in req.resolutions]
+            [{"conflict_id": r.conflict_id, "action": r.action} for r in (req.resolutions or [])],
+            [{"item_id": r.item_id, "category": r.category, "oem_number": r.oem_number} for r in (req.reviewed_items or [])]
         )
         return result
     except Exception as e:
-        return {"success": False, "error": f"เกิดข้อผิดพลาดในการจัดการข้อมูลซ้ำ: {str(e)}"}
+        return {"success": False, "error": f"เกิดข้อผิดพลาดในการจัดการข้อมูลซ้ำหรือการตรวจสอบข้อมูล: {str(e)}"}
 
 # Master Catalog Export (Excel / CSV)
 @app.get("/api/admin/master-parts/export")
