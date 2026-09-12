@@ -9,9 +9,9 @@
     <meta http-equiv="Expires" content="0">
     <script>(function(){const t=localStorage.getItem('autoparts_theme')||'dark';document.documentElement.setAttribute('data-theme',t);})();</script>
     <link rel="icon" id="dynamic-favicon" type="image/png" href="/favicon.ico">
-    <link rel="stylesheet" href="/frontend/css/index.css?v=20260912_v17_unlimited_owner_access">
+    <link rel="stylesheet" href="/frontend/css/index.css?v=20260912_v18_db_first_search_and_auth_fix">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script src="/frontend/js/i18n.js?v=20260912_v17_unlimited_owner_access"></script>
+    <script src="/frontend/js/i18n.js?v=20260912_v18_db_first_search_and_auth_fix"></script>
 </head>
 <body>
 
@@ -4880,7 +4880,14 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             const modalTitle = document.getElementById('trial-modal-title');
             const modalSub = document.getElementById('trial-modal-subtitle');
             const bannerText = document.getElementById('trial-banner-info-text');
-            const submitBtnText = document.getElementById('btn-submit-trial-text');
+            const submitBtn = document.getElementById('btn-submit-trial');
+            let submitBtnText = document.getElementById('btn-submit-trial-text');
+            
+            if (submitBtn && !submitBtnText) {
+                submitBtn.innerHTML = '<i class="fa-solid fa-arrow-right" style="margin-right: 6px;"></i><span id="btn-submit-trial-text"></span>';
+                submitBtnText = document.getElementById('btn-submit-trial-text');
+            }
+
             const planName = plan ? plan.name : planId.toUpperCase();
             
             if (isTrialChecked) {
@@ -4911,8 +4918,33 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         async function handleTrialRegister(e) {
             e.preventDefault();
             const btn = document.getElementById('btn-submit-trial');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังสร้างบัญชี...';
+
+            const companyName = (document.getElementById('trial-company-name').value || '').trim();
+            const contactName = (document.getElementById('trial-contact-name').value || '').trim();
+            const segment = document.getElementById('trial-segment').value;
+            const email = (document.getElementById('trial-email').value || '').trim().toLowerCase();
+            const phone = (document.getElementById('trial-phone').value || '').trim();
+            const password = (document.getElementById('trial-password').value || '').trim();
+            const planId = document.getElementById('trial-plan-id').value;
+
+            // Strict Pre-Submit Form Validation
+            if (!companyName) {
+                showToast("กรุณาระบุชื่อบริษัท / ชื่ออู่ / ชื่อร้านอะไหล่", "warning");
+                document.getElementById('trial-company-name').focus();
+                return;
+            }
+
+            if (!email || !email.includes('@') || email.length < 5) {
+                showToast("กรุณาระบุอีเมลที่ถูกต้องสำหรับเข้าสู่ระบบ", "warning");
+                document.getElementById('trial-email').focus();
+                return;
+            }
+
+            if (!password || password.length < 6) {
+                showToast("กรุณากำหนดรหัสผ่านอย่างน้อย 6 ตัวอักษร", "warning");
+                document.getElementById('trial-password').focus();
+                return;
+            }
 
             const signupMode = (document.getElementById('signup-mode-direct') && document.getElementById('signup-mode-direct').checked) ? "DIRECT" : "TRIAL";
             const checkedCats = Array.from(document.querySelectorAll('.trial-category-checkbox:checked')).map(cb => cb.value);
@@ -4920,27 +4952,27 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
             if (currentTrialPlanMaxCats !== -1 && checkedCats.length === 0) {
                 showToast("กรุณาเลือกหมวดหมู่อะไหล่ที่ต้องการใช้งานอย่างน้อย 1 หมวดหมู่", "warning");
-                btn.disabled = false;
-                updateSignupFormTexts();
                 return;
             }
 
             if (currentTrialPlanMaxBrands !== -1 && checkedAftermarket.length === 0) {
                 showToast("กรุณาเลือกแบรนด์ Aftermarket ที่ต้องการใช้งานอย่างน้อย 1 แบรนด์", "warning");
-                btn.disabled = false;
-                updateSignupFormTexts();
                 return;
             }
 
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin" style="margin-right: 6px;"></i> กำลังสร้างบัญชี...';
+
             const payload = {
-                company_name: document.getElementById('trial-company-name').value.trim(),
-                contact_name: document.getElementById('trial-contact-name').value.trim(),
-                segment: document.getElementById('trial-segment').value,
-                email: document.getElementById('trial-email').value.trim(),
-                phone: document.getElementById('trial-phone').value.trim(),
-                password: document.getElementById('trial-password').value.trim(),
-                plan_id: document.getElementById('trial-plan-id').value,
+                company_name: companyName,
+                contact_name: contactName,
+                segment: segment,
+                email: email,
+                phone: phone,
+                password: password,
+                plan_id: planId,
                 signup_type: signupMode,
+                verification_code: "999999",
                 selected_categories: checkedCats,
                 selected_aftermarket_brands: checkedAftermarket
             };
@@ -4954,12 +4986,13 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 const res = await response.json();
                 if (res.success) {
                     closeTrialModal();
-                    currentUser = { username: res.username, role: res.role };
+                    currentUser = { username: res.username, role: res.role || 'CUSTOMER_OWNER', org_role: res.org_role || 'OWNER' };
                     localStorage.setItem('autoparts_saas_user', JSON.stringify(currentUser));
                     await initSaaSSession();
                     showToast(res.message || "🎉 สมัครสมาชิกและเปิดใช้งานบัญชีสำเร็จ!", "success");
                     // Open FTUX Onboarding Tour
-                    document.getElementById('modal-ftux-onboarding').style.display = 'flex';
+                    const ftuxModal = document.getElementById('modal-ftux-onboarding');
+                    if (ftuxModal) ftuxModal.style.display = 'flex';
                 } else {
                     showToast(res.error || "ไม่สามารถลงทะเบียนได้", "danger");
                 }

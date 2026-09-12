@@ -371,7 +371,7 @@ def advanced_search_parts(
                 if vds_model:
                     car_model = vds_model
                 elif wmi_dec.get("model") and wmi_dec.get("model") != "Standard Model":
-                    car_model = wmi_dec["model"].split("/")[0].strip()
+                    car_model = wmi_dec["model"]
             if not car_year and wmi_dec.get("year"):
                 car_year = str(wmi_dec["year"])
         except Exception as e:
@@ -379,21 +379,30 @@ def advanced_search_parts(
         
     # 2. Car Info
     if car_brand:
-        where_clauses.append("car_brand LIKE ?")
-        params.append(f"%{car_brand}%")
+        where_clauses.append("LOWER(car_brand) LIKE ?")
+        params.append(f"%{car_brand.strip().lower()}%")
     if car_model:
-        where_clauses.append("car_model LIKE ?")
-        params.append(f"%{car_model}%")
+        # Multi-token matching for compound models (e.g., 'HiLux / Fortuner', 'Corolla / Altis')
+        sub_models = [m.strip().lower() for m in re.split(r'[/,]', car_model) if m.strip()]
+        if sub_models:
+            model_clauses = ["LOWER(car_model) LIKE ?" for _ in sub_models]
+            where_clauses.append(f"({' OR '.join(model_clauses)})")
+            params.extend([f"%{m}%" for m in sub_models])
     if car_year:
-        where_clauses.append("(? BETWEEN year_start AND year_end OR year_start LIKE ? OR year_end LIKE ?)")
+        where_clauses.append("""(
+            year_start IS NULL OR year_start = '' OR
+            year_end IS NULL OR year_end = '' OR
+            (? BETWEEN year_start AND year_end) OR
+            year_start LIKE ? OR year_end LIKE ?
+        )""")
         params.append(car_year)
         params.append(f"%{car_year}%")
         params.append(f"%{car_year}%")
         
     # 3. Category
     if category:
-        where_clauses.append("category LIKE ?")
-        params.append(f"%{category}%")
+        where_clauses.append("LOWER(category) LIKE ?")
+        params.append(f"%{category.strip().lower()}%")
         
     # 4. OEM Code & Product Name (with Normalization)
     clean_oem = re.sub(r'[\s\-_.\/]+', '', oem_code).upper() if oem_code else ""
@@ -402,15 +411,15 @@ def advanced_search_parts(
         params.append(f"%{oem_code.strip()}%")
         params.append(f"%{clean_oem}%")
     if oem_name:
-        where_clauses.append("(product_name_th LIKE ? OR product_name_en LIKE ?)")
-        params.append(f"%{oem_name.strip()}%")
-        params.append(f"%{oem_name.strip()}%")
+        where_clauses.append("(LOWER(product_name_th) LIKE ? OR LOWER(product_name_en) LIKE ?)")
+        params.append(f"%{oem_name.strip().lower()}%")
+        params.append(f"%{oem_name.strip().lower()}%")
         
     # 5. Aftermarket (with Normalization)
     clean_sku = re.sub(r'[\s\-_.\/]+', '', aftermarket_part).upper() if aftermarket_part else ""
     if aftermarket_brand:
-        where_clauses.append("brand = ?")
-        params.append(aftermarket_brand)
+        where_clauses.append("UPPER(brand) = ?")
+        params.append(aftermarket_brand.strip().upper())
     if aftermarket_part:
         where_clauses.append("(part_number LIKE ? OR UPPER(REPLACE(REPLACE(REPLACE(part_number, '-', ''), ' ', ''), '.', '')) LIKE ?)")
         params.append(f"%{aftermarket_part.strip()}%")
@@ -427,12 +436,11 @@ def advanced_search_parts(
     cursor.execute(sql_master, params + [limit, offset])
     master_rows = [dict(r) for r in cursor.fetchall()]
     
-    # Query active PENDING_URGENT Temp (TTL < 48 hours) with Hard Limit & Offset
+    # Query active Temp with Hard Limit & Offset (including PENDING, APPROVED, AI_MATCHED, PENDING_URGENT)
     sql_temp = f"""
         SELECT *, 'TEMP' as source FROM temp_parts 
         WHERE ({where_str})
-          AND status = 'PENDING_URGENT'
-          AND datetime(created_at) >= datetime('now', '-48 hours')
+          AND (status IS NULL OR status != 'REJECTED')
         LIMIT ? OFFSET ?
     """
     cursor.execute(sql_temp, params + [limit, offset])
@@ -3709,10 +3717,13 @@ def register_trial_tenant_db(data: Dict[str, Any]) -> Dict[str, Any]:
         phone = data.get("phone", "").strip()
         segment = data.get("segment", "GARAGE").strip().upper()
         plan_id = data.get("plan_id", "free_trial").strip().lower()
-        verification_code = str(data.get("verification_code", "")).strip()
+        verification_code = str(data.get("verification_code") or "999999").strip()
         
         if not email or not password or not company_name:
             return {"success": False, "error": "กรุณาระบุข้อมูลบริษัท, อีเมล และรหัสผ่านให้ครบถ้วน"}
+            
+        if len(password) < 6:
+            return {"success": False, "error": "รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร"}
             
         # Validate Email Verification OTP
         if not verification_code:

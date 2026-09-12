@@ -4,6 +4,7 @@ import csv
 import uuid
 import shutil
 import hashlib
+import re
 from datetime import datetime
 from dotenv import load_dotenv
 load_dotenv()
@@ -709,14 +710,77 @@ async def live_search(
     if not q or not q.strip():
         raise HTTPException(status_code=400, detail="Search query is required")
     try:
+        clean_q = q.strip()
+        cb = car_brand.strip() if car_brand and car_brand.strip() else None
+        cm = car_model.strip() if car_model and car_model.strip() else None
+        cy = car_year.strip() if car_year and car_year.strip() else None
+        pn = product_name.strip() if product_name and product_name.strip() else None
+        tb = brand.strip() if brand and brand.strip() else None
+
+        # =========================================================================
+        # PRIORITY 1: Local Database Search First (Master & Temp Parts)
+        # =========================================================================
+        local_results = []
+        is_code_like = bool(re.search(r'^[0-9A-Za-z\-_.\/]{4,25}$', clean_q))
+
+        if is_code_like:
+            local_results = advanced_search_parts(
+                oem_code=clean_q,
+                car_brand=cb,
+                car_model=cm,
+                car_year=cy,
+                aftermarket_brand=tb,
+                limit=50
+            )
+            if not local_results:
+                local_results = advanced_search_parts(
+                    aftermarket_part=clean_q,
+                    car_brand=cb,
+                    car_model=cm,
+                    car_year=cy,
+                    aftermarket_brand=tb,
+                    limit=50
+                )
+
+        if not local_results and (cb or cm or pn or not is_code_like):
+            local_results = advanced_search_parts(
+                car_brand=cb,
+                car_model=cm,
+                car_year=cy,
+                oem_name=pn or (clean_q if not is_code_like else None),
+                aftermarket_brand=tb,
+                limit=50
+            )
+
+        # If local database has matched items, return them immediately without calling external scrapers
+        if local_results:
+            for item in local_results:
+                if "verification_status" not in item:
+                    item["verification_status"] = "VERIFIED" if item.get("source") == "MASTER" else "REVIEWED"
+                item["is_new_pair"] = check_is_new_pair(
+                    item.get("brand"), item.get("part_number"), item.get("oem_number"),
+                    item.get("car_brand"), item.get("car_model")
+                )
+            return {
+                "success": True,
+                "total": len(local_results),
+                "results": local_results,
+                "source": "DATABASE_LOCAL",
+                "search_tier": "LOCAL_FIRST",
+                "message": f"พบข้อมูลในฐานข้อมูลตัวเองจำนวน {len(local_results)} รายการ (Local First)"
+            }
+
+        # =========================================================================
+        # PRIORITY 2: External Live Scraping (Global EPC) - Only if Local DB is empty
+        # =========================================================================
         scraped_items = await scrape_external_parts(
-            q.strip(), 
+            clean_q, 
             source_type='ON_DEMAND',
-            target_brand=brand.strip() if brand else None,
-            target_product_name=product_name.strip() if product_name else None,
-            car_brand=car_brand.strip() if car_brand else None,
-            car_model=car_model.strip() if car_model else None,
-            car_year=car_year.strip() if car_year else None
+            target_brand=tb,
+            target_product_name=pn,
+            car_brand=cb,
+            car_model=cm,
+            car_year=cy
         )
         for item in scraped_items:
             item["source"] = "TEMP"
@@ -727,7 +791,10 @@ async def live_search(
         return {
             "success": True,
             "total": len(scraped_items),
-            "results": scraped_items
+            "results": scraped_items,
+            "source": "EXTERNAL_SCRAPER",
+            "search_tier": "EXTERNAL_FALLBACK",
+            "message": f"ค้นหาจากเครือข่าย Global EPC สำเร็จ {len(scraped_items)} รายการ"
         }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
