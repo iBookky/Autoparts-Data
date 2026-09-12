@@ -963,7 +963,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     </div>
 
                     <!-- Purchased Categories Card -->
-                    <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 2rem;">
+                    <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 1.25rem;">
                         <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.75rem;">
                             <div style="font-weight: 700; font-size: 1rem; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
                                 <i class="fa-solid fa-tags" style="color: var(--primary);"></i> <span data-i18n="subscription.purchasedCategories">หมวดหมู่สินค้าที่สมัครใช้บริการ (Purchased Categories)</span>
@@ -971,6 +971,24 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             <span id="sub-active-cats-badge" class="badge" style="background: rgba(16,185,129,0.15); color: #34D399; font-size: 0.75rem;">Active</span>
                         </div>
                         <div id="sub-purchased-categories-container" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Purchased Aftermarket Brands Card -->
+                    <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem; margin-bottom: 2rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem; margin-bottom: 0.75rem;">
+                            <div style="font-weight: 700; font-size: 1rem; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+                                <i class="fa-solid fa-certificate" style="color: #60A5FA;"></i> <span data-i18n="subscription.purchasedAftermarketBrands">แบรนด์ Aftermarket ที่ได้รับสิทธิ์ (Purchased Aftermarket Brands)</span>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <span id="sub-active-aftermarket-badge" class="badge" style="background: rgba(16,185,129,0.15); color: #34D399; font-size: 0.75rem;">Active</span>
+                                <button type="button" class="btn btn-secondary btn-sm" onclick="openAftermarketBrandsModal()" style="font-size: 0.78rem; padding: 0.25rem 0.65rem;">
+                                    <i class="fa-solid fa-pen-to-square"></i> <span data-i18n="subscription.manageAftermarketBrands">กำหนดแบรนด์</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div id="sub-purchased-aftermarket-brands-container" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                             <!-- Populated dynamically -->
                         </div>
                     </div>
@@ -3556,6 +3574,18 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                         </div>
                     </div>
 
+                    <!-- Aftermarket Brands Selection Checklist -->
+                    <div id="checkout-aftermarket-section">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                            <label class="form-label" style="margin-bottom: 0; font-weight: 600;" data-i18n="modal.upgrade.aftermarketBrands">Select Aftermarket Brands (แบรนด์ Aftermarket):</label>
+                            <span id="checkout-aftermarket-count-badge" class="badge" style="font-size: 0.72rem; background: rgba(59,130,246,0.2); color: #60A5FA;">All or Specific</span>
+                        </div>
+                        <p style="font-size: 0.75rem; color: var(--text-muted); margin-bottom: 0.45rem;" data-i18n="modal.upgrade.aftermarketBrandsHint">Choose aftermarket brands you need for parts cross-referencing and data access.</p>
+                        <div id="checkout-aftermarket-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.4rem; max-height: 140px; overflow-y: auto; padding: 0.6rem; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
                     <!-- Add-on Selector Checklist -->
                     <div>
                         <label class="form-label" style="margin-bottom: 0.5rem;" data-i18n="modal.upgrade.addons">Select Commercial Add-ons:</label>
@@ -3944,7 +3974,18 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             <label class="form-label" style="font-weight: 600; margin-bottom: 0;">เลือกหมวดหมู่อะไหล่ที่ต้องการใช้งาน (Product Categories) <span style="color: var(--danger);">*</span></label>
                             <span id="trial-cat-limit-badge" class="badge" style="font-size: 0.72rem; background: rgba(59,130,246,0.2); color: #60A5FA;">สูงสุด 5 หมวดหมู่</span>
                         </div>
-                        <div id="trial-categories-checklist" style="display: flex; flex-direction: column; gap: 0.4rem; max-height: 120px; overflow-y: auto; padding: 0.5rem; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                        <div id="trial-categories-checklist" style="display: flex; flex-direction: column; gap: 0.4rem; max-height: 110px; overflow-y: auto; padding: 0.5rem; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- Aftermarket Brand Selection Checklist in Trial Modal -->
+                    <div class="form-group" id="trial-aftermarket-selection-container">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.35rem;">
+                            <label class="form-label" style="font-weight: 600; margin-bottom: 0;">เลือกแบรนด์ Aftermarket ที่ต้องการ (Aftermarket Brands)</label>
+                            <span class="badge" style="font-size: 0.72rem; background: rgba(16,185,129,0.2); color: #34D399;">เข้าถึงได้ทั้งหมด / ระบุแบรนด์</span>
+                        </div>
+                        <div id="trial-aftermarket-checklist" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 0.35rem; max-height: 110px; overflow-y: auto; padding: 0.5rem; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
                             <!-- Populated dynamically -->
                         </div>
                     </div>
@@ -4207,6 +4248,39 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     </button>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: MANAGE AFTERMARKET BRANDS ================= -->
+    <div class="modal-overlay" id="modal-aftermarket-brands" style="display: none;">
+        <div class="modal-card" style="max-width: 560px;">
+            <div class="modal-header">
+                <div>
+                    <h3 style="color: #fff;" data-i18n="modal.aftermarket.title">กำหนดแบรนด์ Aftermarket</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.2rem;" data-i18n="modal.aftermarket.subtitle">เลือกแบรนด์ Aftermarket ที่ต้องการเข้าถึงข้อมูลในแพ็กเกจของคุณ</p>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closeAftermarketBrandsModal()">&times;</button>
+            </div>
+            <form onsubmit="submitAftermarketBrands(event)">
+                <div class="modal-body" style="display: flex; flex-direction: column; gap: 1rem; padding: 1.25rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <span style="font-size: 0.82rem; color: var(--text-muted);" id="aftermarket-modal-sub-info">แบรนด์ที่เลือกจะสามารถค้นหาและเทียบเบอร์อะไหล่ได้</span>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAllAftermarketBrands(true)" style="font-size: 0.75rem; padding: 0.2rem 0.6rem;">เลือกทั้งหมด</button>
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="toggleAllAftermarketBrands(false)" style="font-size: 0.75rem; padding: 0.2rem 0.6rem;">ล้างตัวเลือก</button>
+                        </div>
+                    </div>
+                    <div id="aftermarket-brands-modal-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 0.5rem; max-height: 250px; overflow-y: auto; padding: 0.75rem; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+                <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.75rem; padding: 1rem 1.25rem; border-top: 1px solid var(--border-color);">
+                    <button type="button" class="btn btn-secondary" onclick="closeAftermarketBrandsModal()">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary" id="btn-save-aftermarket-brands">
+                        <i class="fa-solid fa-floppy-disk"></i> บันทึกการเปลี่ยนแปลง
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -4633,6 +4707,41 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             }
         }
 
+        async function renderTrialAftermarketBrands(planId) {
+            const container = document.getElementById('trial-aftermarket-checklist');
+            if (!container) return;
+            container.innerHTML = '<div style="color: var(--text-muted); font-size: 0.8rem;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดแบรนด์...</div>';
+
+            try {
+                const res = await fetch('/api/metadata/aftermarket-brands');
+                const data = await res.json();
+                let allBrands = (data.results || []).map(b => typeof b === 'string' ? b : b.name);
+                if (allBrands.length === 0) {
+                    allBrands = ['DENSO', 'AISIN', 'BOSCH', 'BREMBO', 'TRW', 'NGK', 'TOKICO', 'KAYABA'];
+                }
+
+                container.innerHTML = '';
+                allBrands.forEach(bName => {
+                    const label = document.createElement('label');
+                    label.style.display = 'flex';
+                    label.style.alignItems = 'center';
+                    label.style.gap = '0.4rem';
+                    label.style.fontSize = '0.8rem';
+                    label.style.color = '#fff';
+                    label.style.cursor = 'pointer';
+
+                    label.innerHTML = `
+                        <input type="checkbox" value="${bName}" class="trial-aftermarket-checkbox" checked>
+                        <span>${bName}</span>
+                    `;
+                    container.appendChild(label);
+                });
+            } catch (err) {
+                console.error("Error loading trial aftermarket brands:", err);
+                container.innerHTML = '<div style="color: var(--danger); font-size: 0.8rem;">ไม่สามารถโหลดแบรนด์ได้</div>';
+            }
+        }
+
         function handleTrialCategoryChange(checkbox) {
             if (currentTrialPlanMaxCats === -1) return;
             const checkedBoxes = Array.from(document.querySelectorAll('.trial-category-checkbox:checked'));
@@ -4666,6 +4775,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             
             updateSignupFormTexts();
             renderTrialCategories(planId);
+            renderTrialAftermarketBrands(planId);
         }
 
         function updateSignupFormTexts() {
@@ -4714,6 +4824,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
             const signupMode = (document.getElementById('signup-mode-direct') && document.getElementById('signup-mode-direct').checked) ? "DIRECT" : "TRIAL";
             const checkedCats = Array.from(document.querySelectorAll('.trial-category-checkbox:checked')).map(cb => cb.value);
+            const checkedAftermarket = Array.from(document.querySelectorAll('.trial-aftermarket-checkbox:checked')).map(cb => cb.value);
 
             if (currentTrialPlanMaxCats !== -1 && checkedCats.length === 0) {
                 showToast("กรุณาเลือกหมวดหมู่อะไหล่ที่ต้องการใช้งานอย่างน้อย 1 หมวดหมู่", "warning");
@@ -4731,7 +4842,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 password: document.getElementById('trial-password').value.trim(),
                 plan_id: document.getElementById('trial-plan-id').value,
                 signup_type: signupMode,
-                selected_categories: checkedCats
+                selected_categories: checkedCats,
+                selected_aftermarket_brands: checkedAftermarket
             };
 
             try {
@@ -6063,14 +6175,16 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
         async function loadSubscriptionPlans() {
             try {
-                const [plansRes, subRes, catsRes] = await Promise.all([
+                const [plansRes, subRes, catsRes, aftermarketRes] = await Promise.all([
                     fetch('/api/saas/plans', { headers: getAuthHeaders() }),
                     fetch('/api/saas/subscription', { headers: getAuthHeaders() }),
-                    fetch('/api/saas/subscription/categories', { headers: getAuthHeaders() }).catch(() => null)
+                    fetch('/api/saas/subscription/categories', { headers: getAuthHeaders() }).catch(() => null),
+                    fetch('/api/saas/subscription/aftermarket-brands', { headers: getAuthHeaders() }).catch(() => null)
                 ]);
                 const plansData = await plansRes.json();
                 const subData = await subRes.json();
                 const catsData = catsRes ? await catsRes.json() : null;
+                const aftermarketData = aftermarketRes ? await aftermarketRes.json() : null;
 
                 if (plansData.success) {
                     cachedPlansList = plansData.plans || [];
@@ -6107,6 +6221,28 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                 badge.style.cssText = 'background: rgba(59,130,246,0.15); color: #60A5FA; font-size: 0.85rem; padding: 0.4rem 0.85rem; border: 1px solid rgba(59,130,246,0.3); display: inline-flex; align-items: center; gap: 5px;';
                                 badge.innerHTML = `<i class="fa-solid fa-tag"></i> ${c}`;
                                 subCatsContainer.appendChild(badge);
+                            });
+                        }
+                    }
+                }
+
+                // Render Purchased Aftermarket Brands
+                const subAftermarketContainer = document.getElementById('sub-purchased-aftermarket-brands-container');
+                if (subAftermarketContainer) {
+                    subAftermarketContainer.innerHTML = '';
+                    if (aftermarketData && aftermarketData.success && aftermarketData.granted_brands) {
+                        const gBrands = aftermarketData.granted_brands;
+                        if (gBrands.includes('*')) {
+                            subAftermarketContainer.innerHTML = `<span class="badge" style="background: rgba(16,185,129,0.15); color: #10B981; font-size: 0.85rem; padding: 0.4rem 0.85rem; border: 1px solid rgba(16,185,129,0.3);"><i class="fa-solid fa-check-double" style="margin-right: 5px;"></i> ${t('subscription.allAftermarketBrands', 'All Aftermarket Brands (เข้าถึงได้ทุกแบรนด์)')}</span>`;
+                        } else if (gBrands.length === 0) {
+                            subAftermarketContainer.innerHTML = `<span style="color: var(--text-muted); font-size: 0.85rem;"><i class="fa-solid fa-circle-exclamation" style="color: var(--warning); margin-right: 5px;"></i> ${t('subscription.noAftermarketBrands', 'ยังไม่ได้เลือกแบรนด์ Aftermarket')}</span>`;
+                        } else {
+                            gBrands.forEach(b => {
+                                const badge = document.createElement('span');
+                                badge.className = 'badge';
+                                badge.style.cssText = 'background: rgba(139,92,246,0.15); color: #A78BFA; font-size: 0.85rem; padding: 0.4rem 0.85rem; border: 1px solid rgba(139,92,246,0.3); display: inline-flex; align-items: center; gap: 5px;';
+                                badge.innerHTML = `<i class="fa-solid fa-certificate"></i> ${b}`;
+                                subAftermarketContainer.appendChild(badge);
                             });
                         }
                     }
@@ -6276,6 +6412,56 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 }
             }
 
+            // Render aftermarket brands checklist
+            const abListEl = document.getElementById('checkout-aftermarket-list');
+            if (abListEl) {
+                abListEl.innerHTML = '<div style="color: var(--text-muted); font-size: 0.8rem;"><i class="fa-solid fa-spinner fa-spin"></i> Loading aftermarket brands...</div>';
+                try {
+                    const [metaAbRes, subAbRes] = await Promise.all([
+                        fetch('/api/metadata/aftermarket-brands'),
+                        fetch('/api/saas/subscription/aftermarket-brands', { headers: getAuthHeaders() }).catch(() => null)
+                    ]);
+                    const metaAbData = await metaAbRes.json();
+                    const subAbData = subAbRes ? await subAbRes.json() : null;
+
+                    let allBrands = (metaAbData.results || []).map(b => typeof b === 'string' ? b : b.name);
+                    const currentGrantedBrands = (subAbData && subAbData.granted_brands) ? subAbData.granted_brands : [];
+
+                    abListEl.innerHTML = '';
+                    if (allBrands.length === 0) {
+                        allBrands = ['DENSO', 'AISIN', 'BOSCH', 'BREMBO', 'TRW', 'NGK', 'TOKICO', 'KAYABA'];
+                    }
+
+                    allBrands.forEach(bName => {
+                        let isChecked = false;
+                        if (currentGrantedBrands.includes('*')) {
+                            isChecked = true;
+                        } else if (currentGrantedBrands.length > 0) {
+                            isChecked = currentGrantedBrands.includes(bName.toUpperCase());
+                        } else {
+                            isChecked = true;
+                        }
+
+                        const label = document.createElement('label');
+                        label.style.display = 'flex';
+                        label.style.alignItems = 'center';
+                        label.style.gap = '0.45rem';
+                        label.style.fontSize = '0.82rem';
+                        label.style.color = '#fff';
+                        label.style.cursor = 'pointer';
+
+                        label.innerHTML = `
+                            <input type="checkbox" value="${bName}" class="checkout-aftermarket-checkbox" ${isChecked ? 'checked' : ''}>
+                            <span>${bName}</span>
+                        `;
+                        abListEl.appendChild(label);
+                    });
+                } catch (err) {
+                    console.error("Error rendering checkout aftermarket brands:", err);
+                    abListEl.innerHTML = '<div style="color: var(--danger); font-size: 0.8rem;">Failed to load brands</div>';
+                }
+            }
+
             // Render add-on checklist
             const addonsListEl = document.getElementById('checkout-addons-list');
             addonsListEl.innerHTML = '';
@@ -6394,6 +6580,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             const paymentMethod = document.getElementById('checkout-payment-method').value;
             const checkedAddons = Array.from(document.querySelectorAll('.checkout-addon-checkbox:checked')).map(cb => cb.value);
             const checkedCats = Array.from(document.querySelectorAll('.checkout-category-checkbox:checked')).map(cb => cb.value);
+            const checkedAftermarket = Array.from(document.querySelectorAll('.checkout-aftermarket-checkbox:checked')).map(cb => cb.value);
 
             if (currentModalPlanMaxCats !== -1 && checkedCats.length === 0) {
                 showToast("Please select at least one product category (กรุณาเลือกหมวดหมู่อะไหล่อย่างน้อย 1 หมวดหมู่)", "warning");
@@ -6409,6 +6596,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                         interval: interval,
                         add_on_ids: checkedAddons,
                         selected_categories: checkedCats,
+                        selected_aftermarket_brands: checkedAftermarket,
                         coupon_code: couponCode || null,
                         payment_method: paymentMethod
                     })
@@ -6437,6 +6625,90 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         function openCancelSubModal() {
             document.getElementById('cancel-reason-input').value = '';
             document.getElementById('modal-cancel-sub').classList.add('open');
+        }
+
+        // ================= AFTERMARKET BRANDS MANAGEMENT MODAL =================
+        async function openAftermarketBrandsModal() {
+            const modal = document.getElementById('modal-aftermarket-brands');
+            const listEl = document.getElementById('aftermarket-brands-modal-list');
+            if (!modal || !listEl) return;
+
+            listEl.innerHTML = '<div style="color: var(--text-muted); font-size: 0.8rem;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดรายการแบรนด์...</div>';
+            modal.style.display = 'flex';
+
+            try {
+                const res = await fetch('/api/saas/subscription/aftermarket-brands', { headers: getAuthHeaders() });
+                const data = await res.json();
+                if (!data.success) {
+                    listEl.innerHTML = `<div style="color: var(--danger); font-size: 0.8rem;">${data.error || 'ไม่สามารถโหลดข้อมูลได้'}</div>`;
+                    return;
+                }
+
+                const brands = data.aftermarket_brands || [];
+                const isAllGranted = data.granted_brands && data.granted_brands.includes('*');
+
+                listEl.innerHTML = '';
+                brands.forEach(b => {
+                    const label = document.createElement('label');
+                    label.style.display = 'flex';
+                    label.style.alignItems = 'center';
+                    label.style.gap = '0.5rem';
+                    label.style.fontSize = '0.85rem';
+                    label.style.color = '#fff';
+                    label.style.cursor = 'pointer';
+
+                    label.innerHTML = `
+                        <input type="checkbox" value="${b.name}" class="aftermarket-modal-brand-checkbox" ${b.is_granted ? 'checked' : ''}>
+                        <span>${b.name}</span>
+                    `;
+                    listEl.appendChild(label);
+                });
+            } catch (err) {
+                console.error("Error loading aftermarket brands modal:", err);
+                listEl.innerHTML = '<div style="color: var(--danger); font-size: 0.8rem;">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>';
+            }
+        }
+
+        function closeAftermarketBrandsModal() {
+            const modal = document.getElementById('modal-aftermarket-brands');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function toggleAllAftermarketBrands(select) {
+            document.querySelectorAll('.aftermarket-modal-brand-checkbox').forEach(cb => {
+                cb.checked = select;
+            });
+        }
+
+        async function submitAftermarketBrands(e) {
+            e.preventDefault();
+            const btn = document.getElementById('btn-save-aftermarket-brands');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังบันทึก...';
+
+            const checked = Array.from(document.querySelectorAll('.aftermarket-modal-brand-checkbox:checked')).map(cb => cb.value);
+
+            try {
+                const res = await fetch('/api/saas/subscription/aftermarket-brands', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    body: JSON.stringify({ selected_brands: checked })
+                });
+                const data = await res.json();
+                if (res.ok && data.success) {
+                    showToast("บันทึกสิทธิ์แบรนด์ Aftermarket เรียบร้อยแล้ว", "success");
+                    closeAftermarketBrandsModal();
+                    loadSubscriptionPlans();
+                } else {
+                    showToast(data.detail || data.error || "เกิดข้อผิดพลาดในการบันทึก", "danger");
+                }
+            } catch (err) {
+                console.error("Error updating aftermarket brands:", err);
+                showToast("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้", "danger");
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> บันทึกการเปลี่ยนแปลง';
+            }
         }
 
         function closeCancelSubModal() {

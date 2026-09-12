@@ -100,6 +100,7 @@ class EntitlementService:
 
         custom_brands = [r["entitlement_value"] for r in ent_rows if r["entitlement_type"] == "BRAND"]
         custom_cats = [r["entitlement_value"] for r in ent_rows if r["entitlement_type"] == "CATEGORY"]
+        custom_aftermarket = [r["entitlement_value"] for r in ent_rows if r["entitlement_type"] == "AFTERMARKET_BRAND"]
 
         # Derive allowed brands
         if custom_brands:
@@ -117,6 +118,14 @@ class EntitlementService:
         else:
             allowed_categories = []
 
+        # Derive allowed aftermarket brands
+        if custom_aftermarket:
+            allowed_aftermarket_brands = custom_aftermarket
+        elif plan_id in ['business', 'enterprise']:
+            allowed_aftermarket_brands = ['*']
+        else:
+            allowed_aftermarket_brands = ['*']  # Default open if not specifically restricted
+
         conn.close()
 
         return {
@@ -124,6 +133,7 @@ class EntitlementService:
             "plan_id": plan_id,
             "allowed_brands": allowed_brands,
             "allowed_categories": allowed_categories,
+            "allowed_aftermarket_brands": allowed_aftermarket_brands,
             "max_brands": max_b,
             "max_categories": max_c,
             "vin_search_enabled": vin_enabled,
@@ -137,7 +147,8 @@ class EntitlementService:
         username: str,
         user_role: str,
         car_brand: Optional[str] = None,
-        category: Optional[str] = None
+        category: Optional[str] = None,
+        aftermarket_brand: Optional[str] = None
     ) -> Tuple[bool, Optional[Dict[str, Any]], Dict[str, Any]]:
         """
         Validates whether the user's organization is entitled to perform this search.
@@ -246,6 +257,23 @@ class EntitlementService:
                 }
                 return False, locked, ctx
 
+        # 5. Aftermarket Brand Whitelist Check
+        if aftermarket_brand and '*' not in whitelist.get("allowed_aftermarket_brands", ['*']):
+            matched_ab = any(b.lower() == aftermarket_brand.strip().lower() for b in whitelist["allowed_aftermarket_brands"])
+            if not matched_ab:
+                locked = {
+                    "locked": True,
+                    "reason": "AFTERMARKET_BRAND_LOCKED",
+                    "locked_entity_type": "AFTERMARKET_BRAND",
+                    "locked_entity_name": aftermarket_brand,
+                    "message": f"Data for aftermarket brand '{aftermarket_brand}' is not included in your {whitelist['plan_id'].upper()} plan.",
+                    "action": "ADD_AFTERMARKET_BRAND",
+                    "plan_id": whitelist["plan_id"],
+                    "upgrade_price_thb": 500,
+                    "allowed_aftermarket_brands": whitelist["allowed_aftermarket_brands"]
+                }
+                return False, locked, ctx
+
         return True, None, ctx
 
     @staticmethod
@@ -261,10 +289,10 @@ class EntitlementService:
         conn = get_db_connection()
         cursor = conn.cursor()
         table = "master_parts" if source.upper() == "MASTER" else "temp_parts"
-        cursor.execute(f"SELECT car_brand, category FROM {table} WHERE id = ?", (part_id,))
+        cursor.execute(f"SELECT brand, car_brand, category FROM {table} WHERE id = ?", (part_id,))
         row = cursor.fetchone()
         if not row and source.upper() == "MASTER":
-            cursor.execute("SELECT car_brand, category FROM temp_parts WHERE id = ?", (part_id,))
+            cursor.execute("SELECT brand, car_brand, category FROM temp_parts WHERE id = ?", (part_id,))
             row = cursor.fetchone()
         conn.close()
 
@@ -273,5 +301,8 @@ class EntitlementService:
 
         brand = row["car_brand"]
         cat = row["category"]
-        allowed, locked_payload, _ = EntitlementService.validate_search_access(username, user_role, car_brand=brand, category=cat)
+        part_brand = row["brand"]
+        allowed, locked_payload, _ = EntitlementService.validate_search_access(
+            username, user_role, car_brand=brand, category=cat, aftermarket_brand=part_brand
+        )
         return allowed, locked_payload

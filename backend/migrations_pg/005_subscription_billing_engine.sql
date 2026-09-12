@@ -220,4 +220,52 @@ INSERT INTO add_on_plan_compatibility (add_on_id, plan_id, availability) VALUES
 ('priority_support_pack', 'enterprise', 'AVAILABLE')
 ON CONFLICT (add_on_id, plan_id) DO NOTHING;
 
+-- Seed Plan Versions
+INSERT INTO plan_versions (plan_id, version_number, name, description, billing_interval, base_price, currency, max_brands, max_categories, max_users, monthly_search_quota, api_quota, export_quota, ai_quota, trial_period_days, is_current, status) VALUES
+('starter', 1, 'STARTER (Monthly)', 'For individual technicians & independent repair shops', 'MONTHLY', 1490, 'THB', 2, 2, 1, 1000, 0, 0, 0, 14, 1, 'ACTIVE'),
+('starter', 1, 'STARTER (Yearly)', 'For individual technicians & independent repair shops (Save 2 months)', 'YEARLY', 14900, 'THB', 2, 2, 1, 1000, 0, 0, 0, 14, 1, 'ACTIVE'),
+('professional', 1, 'PROFESSIONAL (Monthly)', 'For auto parts retailers & medium service centers', 'MONTHLY', 3990, 'THB', 5, 5, 3, 5000, 0, 0, 100, 14, 1, 'ACTIVE'),
+('professional', 1, 'PROFESSIONAL (Yearly)', 'For auto parts retailers & medium service centers (Save 2 months)', 'YEARLY', 39900, 'THB', 5, 5, 3, 5000, 0, 0, 100, 14, 1, 'ACTIVE'),
+('business', 1, 'BUSINESS (Monthly)', 'For wholesale distributors & multi-branch garage networks', 'MONTHLY', 8990, 'THB', -1, -1, 10, 20000, 5000, 500, 500, 14, 1, 'ACTIVE'),
+('business', 1, 'BUSINESS (Yearly)', 'For wholesale distributors & multi-branch garage networks (Save 2 months)', 'YEARLY', 89900, 'THB', -1, -1, 10, 20000, 5000, 500, 500, 14, 1, 'ACTIVE'),
+('enterprise', 1, 'ENTERPRISE (Monthly)', 'For insurance groups, major distributors & enterprise fleets', 'MONTHLY', 19900, 'THB', -1, -1, -1, -1, 50000, 5000, 2500, 0, 1, 'ACTIVE'),
+('enterprise', 1, 'ENTERPRISE (Yearly)', 'For insurance groups, major distributors & enterprise fleets', 'YEARLY', 199000, 'THB', -1, -1, -1, -1, 50000, 5000, 2500, 0, 1, 'ACTIVE')
+ON CONFLICT (plan_id, version_number, billing_interval) DO NOTHING;
+
+-- Seed Plan Features
+INSERT INTO plan_features (plan_id, feature_code, is_included, limit_value) VALUES
+('starter', 'SEARCH', 1, 1000),
+('starter', 'VIN_SEARCH', 0, 0),
+('starter', 'VEHICLE_SEARCH', 1, -1),
+('starter', 'CROSS_REFERENCE', 1, -1),
+('starter', 'API', 0, 0),
+('starter', 'EXPORT', 0, 0),
+('starter', 'AI', 0, 0),
+('starter', 'SAVED_PARTS', 1, 50),
+('professional', 'SEARCH', 1, 5000),
+('professional', 'VIN_SEARCH', 1, -1),
+('professional', 'VEHICLE_SEARCH', 1, -1),
+('professional', 'CROSS_REFERENCE', 1, -1),
+('professional', 'API', 0, 0),
+('professional', 'EXPORT', 0, 0),
+('professional', 'AI', 1, 100),
+('professional', 'SAVED_PARTS', 1, 250),
+('business', 'SEARCH', 1, 20000),
+('business', 'VIN_SEARCH', 1, -1),
+('business', 'VEHICLE_SEARCH', 1, -1),
+('business', 'CROSS_REFERENCE', 1, -1),
+('business', 'API', 1, 5000),
+('business', 'EXPORT', 1, 500),
+('business', 'AI', 1, 500),
+('business', 'SAVED_PARTS', 1, 1000),
+('enterprise', 'SEARCH', 1, 100000),
+('enterprise', 'VIN_SEARCH', 1, -1),
+('enterprise', 'VEHICLE_SEARCH', 1, -1),
+('enterprise', 'CROSS_REFERENCE', 1, -1),
+('enterprise', 'API', 1, 50000),
+('enterprise', 'EXPORT', 1, 5000),
+('enterprise', 'AI', 1, 2500),
+('enterprise', 'SAVED_PARTS', 1, 5000)
+ON CONFLICT (plan_id, feature_code) DO NOTHING;
+
 

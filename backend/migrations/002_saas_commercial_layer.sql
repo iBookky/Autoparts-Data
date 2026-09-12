@@ -63,7 +63,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
 CREATE TABLE IF NOT EXISTS entitlements (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     org_id INTEGER NOT NULL,
-    entitlement_type TEXT NOT NULL CHECK (entitlement_type IN ('BRAND', 'CATEGORY', 'FEATURE')),
+    entitlement_type TEXT NOT NULL CHECK (entitlement_type IN ('BRAND', 'CATEGORY', 'FEATURE', 'EXPORT', 'AFTERMARKET_BRAND')),
     entitlement_value TEXT NOT NULL, -- e.g., 'TOYOTA', 'ระบบเบรก', 'API_ACCESS'
     is_granted INTEGER DEFAULT 1,
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,

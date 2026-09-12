@@ -111,6 +111,17 @@ def seed_standard_roles_and_permissions(cursor):
 
     cursor.execute("UPDATE plans SET trial_days = 14 WHERE id IN ('free_trial', 'professional', 'starter', 'business') AND (trial_days IS NULL OR trial_days = 0)")
 
+    # 3.1 Guarantee Standard Aftermarket Brands exist in meta_aftermarket_brands
+    standard_aftermarket_brands = [
+        'DENSO', 'AISIN', 'BOSCH', 'BREMBO', 'TRW', 'NGK', 
+        'TOKICO', 'KAYABA', 'VALEO', '555', 'LUCAS', 'CTR', 
+        'ADVICS', 'GMB', 'BENDIX', 'FERODO'
+    ]
+    for ab in standard_aftermarket_brands:
+        cursor.execute("SELECT 1 FROM meta_aftermarket_brands WHERE UPPER(name) = ?", (ab.upper(),))
+        if not cursor.fetchone():
+            cursor.execute("INSERT INTO meta_aftermarket_brands (name) VALUES (?)", (ab.upper(),))
+
     # 4. Roles table & Permissions table
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS roles (
@@ -300,6 +311,7 @@ def advanced_search_parts(
     aftermarket_part: str = None,
     allowed_brands: Optional[List[str]] = None,
     allowed_categories: Optional[List[str]] = None,
+    allowed_aftermarket_brands: Optional[List[str]] = None,
     limit: int = 50,
     offset: int = 0
 ):
@@ -335,6 +347,16 @@ def advanced_search_parts(
         c_clauses = ["LOWER(category) LIKE ?" for _ in allowed_categories]
         where_clauses.append(f"({' OR '.join(c_clauses)})")
         params.extend([f"%{c.strip().lower()}%" for c in allowed_categories])
+
+    # 0.1 Aftermarket Brand Entitlement Pre-filter
+    if allowed_aftermarket_brands is not None and '*' not in allowed_aftermarket_brands:
+        if len(allowed_aftermarket_brands) == 0:
+            conn.close()
+            return []
+        ab_clauses = ["UPPER(brand) = ?" for _ in allowed_aftermarket_brands]
+        # Include OE parts where brand matches car_brand or is null/empty
+        where_clauses.append(f"({' OR '.join(ab_clauses)} OR brand IS NULL OR brand = '' OR UPPER(brand) = UPPER(car_brand))")
+        params.extend([b.strip().upper() for b in allowed_aftermarket_brands])
     
     # 1. Car Info (Primary basis of search)
     # If VIN is provided but car_brand / car_model / car_year are missing, VIN is used as a helper to decode vehicle specs
@@ -2082,6 +2104,79 @@ def update_org_category_entitlements(org_id: int, selected_categories: List[str]
     finally:
         conn.close()
 
+def get_org_aftermarket_brand_entitlements(org_id: int) -> Dict[str, Any]:
+    """
+    Retrieves all available aftermarket brands and their granted status for an organization.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT id, name FROM meta_aftermarket_brands ORDER BY name ASC")
+    all_brands = [dict(r) for r in cursor.fetchall()]
+    
+    sub = get_org_subscription(org_id)
+    plan_id = sub.get("plan_id", "professional") if sub else "professional"
+    is_unlimited = plan_id.lower() in ['business', 'enterprise']
+    
+    cursor.execute(
+        "SELECT entitlement_value FROM entitlements WHERE org_id = ? AND entitlement_type = 'AFTERMARKET_BRAND' AND is_granted = 1",
+        (org_id,)
+    )
+    granted = set(r["entitlement_value"] for r in cursor.fetchall())
+    conn.close()
+    
+    has_wildcard = '*' in granted or (is_unlimited and len(granted) == 0)
+    
+    return {
+        "org_id": org_id,
+        "plan_id": plan_id,
+        "is_unlimited": is_unlimited,
+        "granted_brands": list(granted) if not has_wildcard else ['*'],
+        "aftermarket_brands": [
+            {
+                "id": b["id"],
+                "name": b["name"],
+                "is_granted": has_wildcard or (b["name"].upper() in granted)
+            }
+            for b in all_brands
+        ]
+    }
+
+def update_org_aftermarket_brand_entitlements(org_id: int, selected_brands: List[str]) -> Tuple[bool, str, List[str]]:
+    """
+    Activates specific aftermarket brand entitlements for an organization package.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    
+    clean_brands = [str(b).strip().upper() for b in selected_brands if str(b).strip()]
+    
+    try:
+        # Delete previous aftermarket brand entitlements for org
+        cursor.execute("DELETE FROM entitlements WHERE org_id = ? AND entitlement_type = 'AFTERMARKET_BRAND'", (org_id,))
+        
+        # If empty or has wildcard, grant wildcard
+        if not clean_brands or '*' in clean_brands or 'ALL' in clean_brands:
+            cursor.execute("""
+                INSERT INTO entitlements (org_id, entitlement_type, entitlement_value, is_granted)
+                VALUES (?, 'AFTERMARKET_BRAND', '*', 1)
+            """, (org_id,))
+            conn.commit()
+            return True, "Aftermarket brand entitlements updated (All Brands granted).", ['*']
+            
+        for brand in clean_brands:
+            cursor.execute("""
+                INSERT INTO entitlements (org_id, entitlement_type, entitlement_value, is_granted)
+                VALUES (?, 'AFTERMARKET_BRAND', ?, 1)
+            """, (org_id, brand))
+            
+        conn.commit()
+        return True, "Aftermarket brand entitlements updated successfully.", clean_brands
+    except Exception as e:
+        conn.rollback()
+        return False, str(e), []
+    finally:
+        conn.close()
+
 def record_search_usage(org_id: int, user_id: int, query: str, search_type: str = "SEARCH", results_count: int = 0):
     """
     Increments monthly search usage and logs search query.
@@ -3718,6 +3813,22 @@ def register_trial_tenant_db(data: Dict[str, Any]) -> Dict[str, Any]:
                     INSERT OR IGNORE INTO entitlements (org_id, entitlement_type, entitlement_value, is_granted)
                     VALUES (?, 'CATEGORY', ?, 1)
                 """, (org_id, cat))
+
+        user_aftermarket = data.get("selected_aftermarket_brands") or data.get("aftermarket_brands")
+        if user_aftermarket and isinstance(user_aftermarket, list) and len(user_aftermarket) > 0:
+            for ab in user_aftermarket:
+                ab_clean = str(ab).strip().upper()
+                if ab_clean:
+                    cursor.execute("""
+                        INSERT OR IGNORE INTO entitlements (org_id, entitlement_type, entitlement_value, is_granted)
+                        VALUES (?, 'AFTERMARKET_BRAND', ?, 1)
+                    """, (org_id, ab_clean))
+        else:
+            # Grant all aftermarket brands by default for trial
+            cursor.execute("""
+                INSERT OR IGNORE INTO entitlements (org_id, entitlement_type, entitlement_value, is_granted)
+                VALUES (?, 'AFTERMARKET_BRAND', '*', 1)
+            """, (org_id,))
         
         # 7. Seed Initial usage_records for current month
         cur_month = datetime.now().strftime("%Y-%m")

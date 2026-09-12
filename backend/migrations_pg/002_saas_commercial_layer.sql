@@ -86,7 +86,7 @@ CREATE TABLE IF NOT EXISTS subscriptions (
 CREATE TABLE IF NOT EXISTS entitlements (
     id SERIAL PRIMARY KEY,
     org_id INTEGER NOT NULL REFERENCES organizations(id),
-    entitlement_type VARCHAR(50) NOT NULL CHECK (entitlement_type IN ('BRAND', 'CATEGORY', 'FEATURE', 'EXPORT')),
+    entitlement_type VARCHAR(50) NOT NULL CHECK (entitlement_type IN ('BRAND', 'CATEGORY', 'FEATURE', 'EXPORT', 'AFTERMARKET_BRAND')),
     entitlement_value VARCHAR(255) NOT NULL,
     is_granted INTEGER DEFAULT 1,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,

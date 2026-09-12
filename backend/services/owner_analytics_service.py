@@ -92,7 +92,7 @@ class OwnerAnalyticsService:
             cursor.execute(f"SELECT COUNT(*) as new_orgs FROM organizations WHERE {' AND '.join(c_where)}", tuple(c_params))
         else:
             current_month = datetime.datetime.now().strftime("%Y-%m")
-            cursor.execute("SELECT COUNT(*) as new_orgs FROM organizations WHERE strftime('%Y-%m', created_at) = ?", (current_month,))
+            cursor.execute("SELECT COUNT(*) as new_orgs FROM organizations WHERE TO_CHAR(created_at, 'YYYY-MM') = ?", (current_month,))
         new_orgs_count = cursor.fetchone()["new_orgs"]
 
         # 5. Churn Metrics
@@ -690,7 +690,7 @@ class OwnerAnalyticsService:
             FROM organizations o
             JOIN subscriptions s ON s.org_id = o.id
             JOIN plans p ON p.id = s.plan_id
-            LEFT JOIN usage_records ur ON ur.org_id = o.id AND ur.period_month = strftime('%Y-%m', 'now')
+            LEFT JOIN usage_records ur ON ur.org_id = o.id AND ur.period_month = TO_CHAR(CURRENT_TIMESTAMP, 'YYYY-MM')
             WHERE s.status = 'ACTIVE'
         """)
         rows = cursor.fetchall()

@@ -82,6 +82,8 @@ from backend.database import (
     get_org_data_coverage,
     get_org_category_entitlements,
     update_org_category_entitlements,
+    get_org_aftermarket_brand_entitlements,
+    update_org_aftermarket_brand_entitlements,
     record_search_usage,
     get_org_search_history,
     get_user_favorites,
@@ -342,6 +344,7 @@ class TrialRegisterRequest(BaseModel):
     verification_code: Optional[str] = "999999"
     selected_categories: Optional[List[str]] = None
     selected_brands: Optional[List[str]] = None
+    selected_aftermarket_brands: Optional[List[str]] = None
 
 class PublicContactLeadRequest(BaseModel):
     company_name: str
@@ -454,7 +457,8 @@ async def search_parts(
             username=user_name,
             user_role=role,
             car_brand=car_brand,
-            category=category
+            category=category,
+            aftermarket_brand=aftermarket_brand
         )
 
         if not is_allowed:
@@ -472,6 +476,7 @@ async def search_parts(
         whitelist = EntitlementService.get_organization_whitelist(org_id)
         allowed_b = whitelist.get("allowed_brands") if not is_platform_admin else None
         allowed_c = whitelist.get("allowed_categories") if not is_platform_admin else None
+        allowed_ab = whitelist.get("allowed_aftermarket_brands") if not is_platform_admin else None
 
         # 3. Server-Side Pagination Clamping & Enumeration Protection
         safe_limit = min(max(1, limit or 50), 50)
@@ -491,6 +496,7 @@ async def search_parts(
             aftermarket_part=aftermarket_part,
             allowed_brands=allowed_b,
             allowed_categories=allowed_c,
+            allowed_aftermarket_brands=allowed_ab,
             limit=safe_limit,
             offset=safe_offset
         )
@@ -1386,12 +1392,16 @@ class UpgradePlanRequest(BaseModel):
     coupon_code: Optional[str] = None
     payment_method: Optional[str] = "CREDIT_CARD"
     selected_categories: Optional[List[str]] = []
+    selected_aftermarket_brands: Optional[List[str]] = []
     ai_power_pack: Optional[int] = 0
     extra_searches: Optional[int] = 0
     extra_users: Optional[int] = 0
 
 class UpdateCategoriesRequest(BaseModel):
     selected_categories: List[str]
+
+class UpdateAftermarketBrandsRequest(BaseModel):
+    selected_brands: List[str]
 
 class CalculateBillingRequest(BaseModel):
     plan_id: str
@@ -1585,6 +1595,10 @@ async def upgrade_saas_subscription(req: UpgradePlanRequest, x_username: Optiona
     if req.selected_categories and len(req.selected_categories) > 0:
         update_org_category_entitlements(org_id, req.selected_categories)
 
+    # 7. If customer selected specific aftermarket brands, activate them in entitlements table
+    if req.selected_aftermarket_brands and len(req.selected_aftermarket_brands) > 0:
+        update_org_aftermarket_brand_entitlements(org_id, req.selected_aftermarket_brands)
+
     return {
         "success": True,
         "message": msg,
@@ -1623,6 +1637,36 @@ async def update_saas_subscription_categories(req: UpdateCategoriesRequest, x_us
     if not ok:
         raise HTTPException(status_code=400, detail=msg)
     return {"success": True, "message": msg, "categories": cats}
+
+@app.get("/api/saas/subscription/aftermarket-brands")
+async def get_saas_subscription_aftermarket_brands(x_username: Optional[str] = Header("admin")):
+    """
+    Returns full aftermarket brand entitlements matrix with granted vs locked status for the customer tenant.
+    """
+    ctx = get_user_tenant_context(x_username or "admin")
+    if not ctx:
+        raise HTTPException(status_code=401, detail="Unauthorized customer session")
+    org_id = ctx["organization"]["id"]
+    data = get_org_aftermarket_brand_entitlements(org_id)
+    return {"success": True, **data}
+
+@app.post("/api/saas/subscription/aftermarket-brands")
+async def update_saas_subscription_aftermarket_brands(req: UpdateAftermarketBrandsRequest, x_username: Optional[str] = Header("admin")):
+    """
+    Activates selected aftermarket brand entitlements for the customer tenant package.
+    """
+    ctx = get_user_tenant_context(x_username or "admin")
+    if not ctx:
+        raise HTTPException(status_code=401, detail="Unauthorized customer session")
+    org_id = ctx["organization"]["id"]
+    actor_role = ctx["organization"].get("org_role", "MEMBER")
+    if actor_role not in ["OWNER", "ADMIN"] and ctx["user"]["role"] not in ["ADMIN", "SUPER_ADMIN", "OWNER"]:
+        raise HTTPException(status_code=403, detail="Only Organization Owner or Admin can manage aftermarket brand entitlements.")
+    
+    ok, msg, brands = update_org_aftermarket_brand_entitlements(org_id, req.selected_brands)
+    if not ok:
+        raise HTTPException(status_code=400, detail=msg)
+    return {"success": True, "message": msg, "aftermarket_brands": brands}
 
 @app.post("/api/saas/subscription/downgrade")
 async def downgrade_saas_subscription(req: UpgradePlanRequest, x_username: Optional[str] = Header("admin")):

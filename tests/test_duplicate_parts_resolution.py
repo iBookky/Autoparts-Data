@@ -14,6 +14,7 @@ class TestDuplicatePartsResolution(unittest.TestCase):
         init_db()
         conn = get_db_connection()
         cursor = conn.cursor()
+        cursor.execute("DELETE FROM master_parts WHERE part_number IN ('IK20', 'FR7DC')")
         # Seed a master part for testing
         cursor.execute("""
             INSERT INTO master_parts (
@@ -27,6 +28,17 @@ class TestDuplicatePartsResolution(unittest.TestCase):
         """)
         conn.commit()
         conn.close()
+
+    @classmethod
+    def tearDownClass(cls):
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM master_parts WHERE part_number IN ('IK20', 'FR7DC')")
+            conn.commit()
+            conn.close()
+        except Exception:
+            pass
 
     def test_01_find_matching_master_part(self):
         # 1. Exact match (same aftermarket brand, same car brand/model, same part_number)
