@@ -2024,19 +2024,34 @@ select.form-control option {
     background: rgba(5, 8, 16, 0.85);
     backdrop-filter: blur(6px);
     -webkit-backdrop-filter: blur(6px);
-    z-index: 1000;
+    z-index: 10000;
     display: none;
-    align-items: flex-start;
-    justify-content: center;
-    padding: 1.5rem 1rem;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    padding: 2rem 1rem 4rem 1rem !important;
     box-sizing: border-box;
-    overflow-y: auto;
+    overflow-y: auto !important;
     overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
 }
 
 .modal-overlay.open,
 .modal-overlay.active {
     display: flex !important;
+}
+
+.modal-overlay::-webkit-scrollbar {
+    width: 8px;
+}
+.modal-overlay::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.2);
+}
+.modal-overlay::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.4);
+    border-radius: 4px;
+}
+.modal-overlay::-webkit-scrollbar-thumb:hover {
+    background: var(--primary, #3b82f6);
 }
 
 /* Tax Invoice & Official Receipt Sheet */
@@ -2065,22 +2080,19 @@ select.form-control option {
     width: 100%;
     max-width: 620px;
     box-sizing: border-box;
-    max-height: calc(100vh - 2.5rem);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    animation: modalIn 0.2s ease-out;
-    margin: auto;
+    margin: 1.5rem auto 3.5rem auto !important;
     position: relative;
+    animation: modalIn 0.2s ease-out;
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    flex-shrink: 0;
 }
 
 .modal-card > form {
-    display: flex;
-    flex-direction: column;
-    flex: 1 1 auto;
-    min-height: 0;
-    overflow: hidden;
-    height: 100%;
+    display: block;
+    height: auto;
+    overflow: visible;
     margin: 0;
 }
 
@@ -2100,6 +2112,16 @@ select.form-control option {
     max-width: 100%;
     flex-shrink: 0;
     gap: 0.75rem;
+    border-top-left-radius: var(--radius-md);
+    border-top-right-radius: var(--radius-md);
+    position: sticky;
+    top: -2rem;
+    z-index: 20;
+    background: var(--bg-surface);
+}
+
+[data-theme="light"] .modal-header {
+    background: #FFFFFF !important;
 }
 
 .modal-header h3 {
@@ -2114,40 +2136,17 @@ select.form-control option {
 
 .modal-body {
     padding: 1.25rem 1.35rem;
-    overflow-y: auto !important;
-    overflow-x: hidden;
     box-sizing: border-box;
     width: 100%;
     max-width: 100%;
-    flex: 1 1 auto;
-    min-height: 0 !important;
-    overscroll-behavior: contain;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(148, 163, 184, 0.4) transparent;
-}
-
-.modal-body::-webkit-scrollbar {
-    width: 6px;
-}
-
-.modal-body::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.05);
-    border-radius: 4px;
-}
-
-.modal-body::-webkit-scrollbar-thumb {
-    background: rgba(148, 163, 184, 0.35);
-    border-radius: 4px;
-}
-
-.modal-body::-webkit-scrollbar-thumb:hover {
-    background: var(--primary, #3b82f6);
+    overflow: visible !important;
+    max-height: none !important;
 }
 
 .modal-footer {
-    padding: 0.85rem 1.35rem;
+    padding: 1rem 1.35rem 1.25rem 1.35rem;
     border-top: 1px solid var(--border-color);
-    background-color: rgba(255, 255, 255, 0.01);
+    background-color: rgba(255, 255, 255, 0.02);
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -2157,6 +2156,8 @@ select.form-control option {
     max-width: 100%;
     flex-shrink: 0;
     flex-wrap: wrap;
+    border-bottom-left-radius: var(--radius-md);
+    border-bottom-right-radius: var(--radius-md);
 }
 
 /* Auth Login Screen */
@@ -3316,10 +3317,10 @@ select.form-control option {
     /* Modals & Drawers */
     .product-detail-drawer { width: 100% !important; right: -100% !important; }
     .product-detail-drawer.open { right: 0 !important; }
-    .modal-overlay { padding: 0.4rem !important; }
-    .modal-card { max-width: 100% !important; width: 100% !important; max-height: calc(100vh - 0.8rem) !important; }
-    .modal-body { padding: 0.85rem !important; max-height: calc(100vh - 120px) !important; }
-    .modal-footer { flex-wrap: wrap !important; gap: 0.4rem !important; }
+    .modal-overlay { padding: 1.5rem 0.6rem 3.5rem 0.6rem !important; overflow-y: auto !important; }
+    .modal-card { max-width: 100% !important; width: 100% !important; max-height: none !important; height: auto !important; overflow: visible !important; margin: 1rem auto 3rem auto !important; }
+    .modal-body { padding: 0.85rem !important; max-height: none !important; overflow: visible !important; }
+    .modal-footer { flex-wrap: wrap !important; gap: 0.5rem !important; }
     
     /* Touch Target Optimization & Input Fluidity */
     .btn, .form-control, .omni-input {
