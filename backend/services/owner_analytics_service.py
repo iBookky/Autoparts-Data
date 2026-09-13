@@ -491,14 +491,24 @@ class OwnerAnalyticsService:
             """, (sub_dict["id"],))
             items = [dict(r) for r in cursor.fetchall()]
 
-        # 4. Team Members
+        # 4. Team Members & Customer Team Quota
         cursor.execute("""
-            SELECT u.id, u.username, om.org_role, om.status, om.created_at
+            SELECT u.id, u.id as user_id, u.username, u.email, om.org_role, om.status, om.created_at
             FROM organization_members om
             JOIN users u ON u.id = om.user_id
             WHERE om.org_id = ?
+            ORDER BY CASE WHEN om.org_role IN ('OWNER', 'ADMIN', 'MANAGER') THEN 1 ELSE 2 END, u.id ASC
         """, (org_id,))
-        members = [dict(r) for r in cursor.fetchall()]
+        members = []
+        for r in cursor.fetchall():
+            m = dict(r)
+            o_role = (m.get("org_role") or "").upper()
+            m["role_display"] = "สมาชิก (เจ้าของบัญชี)" if o_role in ["OWNER", "ADMIN", "MANAGER"] else "ทีมงานของลูกค้า"
+            members.append(m)
+
+        max_u = sub_dict.get("max_users", 5) if sub_dict else 5
+        active_team_count = len([m for m in members if m.get("status") == "ACTIVE"])
+        seat_summary = f"{active_team_count} / {max_u if max_u != -1 else 'ไม่จำกัด'} ที่นั่ง"
 
         # 5. Recent Search Logs
         cursor.execute("""
@@ -534,6 +544,9 @@ class OwnerAnalyticsService:
             "subscription": sub_dict,
             "subscription_items": items,
             "members": members,
+            "seat_summary": seat_summary,
+            "active_team_count": active_team_count,
+            "max_team_users": max_u,
             "recent_searches": recent_searches,
             "invoices": invoices,
             "lifetime_paid_revenue": lifetime_paid,

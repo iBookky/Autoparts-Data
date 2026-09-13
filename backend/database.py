@@ -4335,17 +4335,22 @@ def update_organization_db(org_id: int, data: Dict[str, Any]) -> bool:
 
 # ================= TEAM & OWNER MEMBERS CRUD WRAPPERS =================
 def get_owner_all_members_db() -> List[Dict[str, Any]]:
-    """Returns all system users with their associated organization, role, and active status."""
+    """Returns all system users with their associated organization, role, classification, and package seat status."""
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
         cursor.execute("""
             SELECT u.id, u.username, u.email, u.role, COALESCE(u.is_active, 1) as is_active,
                    om.org_id, o.name as org_name, om.org_role, COALESCE(om.status, 'ACTIVE') as member_status,
-                   u.created_at
+                   u.created_at,
+                   COALESCE(p.name, o.plan_tier, 'STARTER') as plan_name,
+                   COALESCE(p.max_users, 5) as max_users,
+                   (SELECT COUNT(*) FROM organization_members om2 WHERE om2.org_id = om.org_id AND om2.status = 'ACTIVE') as org_active_users
             FROM users u
             LEFT JOIN organization_members om ON om.user_id = u.id
             LEFT JOIN organizations o ON o.id = om.org_id
+            LEFT JOIN subscriptions s ON s.org_id = o.id
+            LEFT JOIN plans p ON p.id = s.plan_id
             ORDER BY u.id ASC
         """)
         rows = cursor.fetchall()
@@ -4356,13 +4361,47 @@ def get_owner_all_members_db() -> List[Dict[str, Any]]:
                 d["created_at"] = str(d["created_at"]).split()[0]
             if not d.get("email"):
                 d["email"] = d["username"] if "@" in d["username"] else f"{d['username']}@autoparts.com"
+
+            # Strictly separate: Platform Provider Team vs Customer Member
+            u_role = (d.get("role") or "").upper()
+            org_id = d.get("org_id")
+            org_name = d.get("org_name") or ""
+            is_platform_org = (not org_id or org_id == 1 or "headquarters" in org_name.lower())
+
+            if (u_role in ["OWNER", "SUPER_ADMIN", "ADMIN"] and is_platform_org) or d["id"] == 1 or d["username"] in ["owner", "superadmin"]:
+                d["user_type"] = "PLATFORM_TEAM"
+                d["user_type_label"] = "ทีมงานเจ้าของระบบ"
+                if d["id"] == 1 or u_role == "OWNER" or d["username"] == "owner":
+                    d["display_role"] = "เจ้าของระบบ (Platform Owner)"
+                else:
+                    d["display_role"] = "ทีมงานแอดมิน (Platform Admin)"
+                d["org_display"] = "ผู้ให้บริการระบบ (System Headquarters)"
+                d["seat_info"] = "ผู้ดูแลระบบส่วนกลาง"
+            else:
+                d["user_type"] = "CUSTOMER_MEMBER"
+                d["user_type_label"] = "สมาชิก / ลูกค้า"
+                org_role = (d.get("org_role") or "").upper()
+                if org_role in ["OWNER", "ADMIN", "MANAGER"] or u_role == "CUSTOMER_OWNER":
+                    d["display_role"] = "สมาชิก (เจ้าของบัญชี)"
+                else:
+                    d["display_role"] = "ทีมงานของลูกค้า (Staff)"
+                d["org_display"] = d.get("org_name") or "องค์กรลูกค้า"
+
+                max_u = d.get("max_users")
+                active_u = d.get("org_active_users") or 1
+                plan_name = d.get("plan_name") or "Starter"
+                if max_u == -1:
+                    d["seat_info"] = f"{active_u} คน (ไม่จำกัดที่นั่ง / {plan_name})"
+                else:
+                    d["seat_info"] = f"{active_u} / {max_u} ที่นั่ง ({plan_name})"
+
             result.append(d)
         return result
     finally:
         conn.close()
 
 def create_owner_member_db(data: Dict[str, Any]) -> Dict[str, Any]:
-    """Creates a new user member and attaches them to the designated organization."""
+    """Creates a new user member and attaches them to the designated organization with seat limit checks."""
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
@@ -4390,12 +4429,35 @@ def create_owner_member_db(data: Dict[str, Any]) -> Dict[str, Any]:
         new_uid = new_u["id"]
         
         org_id = data.get("org_id")
-        if org_id:
+        if org_id and str(org_id).isdigit() and int(org_id) > 1:
+            # Check customer's package seat limit (max_users)
+            cursor.execute("""
+                SELECT COALESCE(p.max_users, 5) as max_users, COALESCE(p.name, o.plan_tier) as plan_name,
+                       (SELECT COUNT(*) FROM organization_members om WHERE om.org_id = o.id AND om.status = 'ACTIVE') as current_users
+                FROM organizations o
+                LEFT JOIN subscriptions s ON s.org_id = o.id
+                LEFT JOIN plans p ON p.id = s.plan_id
+                WHERE o.id = ?
+            """, (int(org_id),))
+            cap = cursor.fetchone()
+            if cap and cap["max_users"] != -1 and cap["current_users"] >= cap["max_users"]:
+                conn.rollback()
+                return {
+                    "success": False,
+                    "error": f"ไม่สามารถเพิ่มทีมงานได้: องค์กรนี้มีทีมงานครบตามโควต้าของแพ็กเกจ {cap['plan_name'] or ''} แล้ว ({cap['current_users']}/{cap['max_users']} ที่นั่ง) กรุณาอัปเกรดแพ็กเกจก่อน"
+                }
+
             org_role = (data.get("org_role") or "STAFF").strip().upper()
             cursor.execute("""
                 INSERT INTO organization_members (org_id, user_id, org_role, status)
                 VALUES (?, ?, ?, 'ACTIVE')
-            """, (org_id, new_uid, org_role))
+            """, (int(org_id), new_uid, org_role))
+        elif org_id and str(org_id).isdigit() and int(org_id) == 1:
+            # System Headquarters
+            cursor.execute("""
+                INSERT INTO organization_members (org_id, user_id, org_role, status)
+                VALUES (1, ?, 'ADMIN', 'ACTIVE')
+            """, (new_uid,))
             
         conn.commit()
         return {"success": True, "user_id": new_uid, "username": username, "message": f"สร้างบัญชี {username} เรียบร้อยแล้ว"}

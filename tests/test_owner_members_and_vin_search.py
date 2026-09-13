@@ -113,6 +113,44 @@ class TestOwnerMembersAndVinSearch(unittest.TestCase):
         self.assertEqual(res_delete.status_code, 200)
         self.assertTrue(res_delete.json()["success"])
 
+    def test_platform_team_vs_customer_member_classification(self):
+        """Verify strict classification of Platform Owner & Admin vs Customer Organization & Team Members."""
+        res = self.client.get("/api/owner/members", headers=self.owner_headers)
+        self.assertEqual(res.status_code, 200)
+        members = res.json().get("members", [])
+        self.assertTrue(len(members) >= 2)
+
+        # 1. Primary Owner must be classified as PLATFORM_TEAM
+        owner_member = next(m for m in members if m["id"] == 1 or m["username"] == "owner")
+        self.assertEqual(owner_member["user_type"], "PLATFORM_TEAM")
+        self.assertEqual(owner_member["user_type_label"], "ทีมงานเจ้าของระบบ")
+        self.assertIn("เจ้าของระบบ", owner_member["display_role"])
+        self.assertIn("ผู้ให้บริการระบบ", owner_member["org_display"])
+
+        # 2. Customer accounts must be classified as CUSTOMER_MEMBER
+        cust_members = [m for m in members if m["user_type"] == "CUSTOMER_MEMBER"]
+        if cust_members:
+            c = cust_members[0]
+            self.assertEqual(c["user_type_label"], "สมาชิก / ลูกค้า")
+            self.assertTrue("สมาชิก" in c["display_role"] or "ทีมงาน" in c["display_role"])
+            self.assertIsNotNone(c.get("seat_info"))
+
+    def test_customer_360_team_quota(self):
+        """Verify Customer 360 includes clear team role labels and seat quota according to package."""
+        cust_res = self.client.get("/api/owner/customers", headers=self.owner_headers)
+        customers = cust_res.json().get("customers", [])
+        self.assertTrue(len(customers) > 0)
+        org_id = customers[0]["id"]
+
+        res_360 = self.client.get(f"/api/owner/customers/{org_id}/360", headers=self.owner_headers)
+        self.assertEqual(res_360.status_code, 200)
+        data = res_360.json().get("customer", {})
+        self.assertIn("seat_summary", data)
+        self.assertIn("active_team_count", data)
+        members = data.get("members", [])
+        if members:
+            self.assertIn("role_display", members[0])
+
     def test_vin_decoding_and_search(self):
         """Test that VIN MR0ZZ69G803102002 decodes and searches real matching automotive parts."""
         # 1. Decode VIN

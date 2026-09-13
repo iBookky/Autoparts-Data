@@ -1741,15 +1741,42 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                         </div>
 
                         <!-- System Members & Organization Staff Management Table -->
-                        <div style="margin-top: 2rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.75rem;">
-                            <div>
-                                <h3 style="font-size: 1.05rem; color: #fff; margin: 0 0 0.25rem 0; display: flex; align-items: center; gap: 0.5rem;">
-                                    <i class="fa-solid fa-users-gear" style="color: #38BDF8;"></i> ข้อมูลสมาชิกและผู้ใช้งานทั้งหมด (Member Management)
-                                </h3>
-                                <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">จัดการบัญชีสมาชิก ปรับเปลี่ยนสิทธิ์ แก้ไขข้อมูล เปิดใช้งาน/ระงับการใช้งาน (Active/Inactive) และลบบัญชี</p>
+                        <!-- Conceptual Structure Clarification Card -->
+                        <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem 1.25rem; margin-top: 2rem; margin-bottom: 1.25rem;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.25rem;">
+                                <div style="border-right: 1px solid var(--border-color); padding-right: 1rem;">
+                                    <div style="font-weight: 700; color: #F59E0B; font-size: 0.95rem; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.45rem;">
+                                        <i class="fa-solid fa-crown"></i> 1. เจ้าของระบบ (Platform Owner) & ทีมงาน Admin
+                                    </div>
+                                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0; line-height: 1.45;">
+                                        ผู้ให้บริการระบบหลัก (Platform Headquarters) มี <strong>Owner (เจ้าของระบบ)</strong> เป็นผู้ให้บริการสูงสุด และมีทีมงานเป็น <strong>Admin</strong> คอยช่วยดูแลระบบส่วนกลาง
+                                    </p>
+                                </div>
+                                <div style="padding-left: 0.25rem;">
+                                    <div style="font-weight: 700; color: #10B981; font-size: 0.95rem; margin-bottom: 0.35rem; display: flex; align-items: center; gap: 0.45rem;">
+                                        <i class="fa-solid fa-users"></i> 2. สมาชิก (ลูกค้า) & ทีมงานของสมาชิกตาม Package
+                                    </div>
+                                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0; line-height: 1.45;">
+                                        <strong>สมาชิก (ลูกค้า)</strong> คือผู้สมัครเข้าใช้งานและซื้อแพ็กเกจ โดยสมาชิกแต่ละองค์กรสามารถมี <strong>ทีมงานของตัวเอง</strong> ได้ตามจำนวนโควต้าที่นั่งที่ระบุใน Package ที่ซื้อ
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.75rem;">
+                            <div style="display: flex; gap: 0.35rem; background: var(--bg-surface); padding: 0.25rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                                <button type="button" class="btn btn-sm btn-primary" id="btn-filter-mem-all" onclick="setOwnerMemberTypeFilter('ALL')" style="font-size: 0.8rem;">
+                                    ทั้งหมด (<span id="count-mem-all">0</span>)
+                                </button>
+                                <button type="button" class="btn btn-sm btn-secondary" id="btn-filter-mem-platform" onclick="setOwnerMemberTypeFilter('PLATFORM_TEAM')" style="font-size: 0.8rem;">
+                                    <i class="fa-solid fa-shield-halved" style="color: #F59E0B;"></i> ทีมงานเจ้าของระบบ (<span id="count-mem-platform">0</span>)
+                                </button>
+                                <button type="button" class="btn btn-sm btn-secondary" id="btn-filter-mem-customer" onclick="setOwnerMemberTypeFilter('CUSTOMER_MEMBER')" style="font-size: 0.8rem;">
+                                    <i class="fa-solid fa-users" style="color: #10B981;"></i> สมาชิกและทีมงานของลูกค้า (<span id="count-mem-customer">0</span>)
+                                </button>
                             </div>
                             <div style="display: flex; gap: 0.5rem; align-items: center;">
-                                <input type="text" id="owner-member-search-input" class="form-control" placeholder="ค้นหาชื่อผู้ใช้, อีเมล..." style="width: 220px;" oninput="filterOwnerMembersTable()">
+                                <input type="text" id="owner-member-search-input" class="form-control" placeholder="ค้นหาชื่อผู้ใช้, อีเมล, องค์กร..." style="width: 220px;" oninput="filterOwnerMembersTable()">
                                 <button type="button" class="btn btn-primary btn-sm" onclick="openCreateMemberModal()">
                                     <i class="fa-solid fa-user-plus"></i> เพิ่มสมาชิกใหม่
                                 </button>
@@ -1761,9 +1788,10 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                     <tr>
                                         <th>ชื่อผู้ใช้ (Username)</th>
                                         <th>อีเมล (Email)</th>
-                                        <th>องค์กร (Organization)</th>
-                                        <th>สิทธิ์ในระบบ</th>
-                                        <th>สิทธิ์ในองค์กร</th>
+                                        <th>ประเภทบัญชี (Scope)</th>
+                                        <th>สังกัดองค์กร (Organization)</th>
+                                        <th>บทบาท (Role)</th>
+                                        <th>โควต้าทีมงานตาม Package</th>
                                         <th>สถานะ (Status)</th>
                                         <th>วันที่สร้าง</th>
                                         <th style="text-align: right;">การจัดการ</th>
@@ -4192,7 +4220,10 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 <!-- Team Members & Recent Invoices -->
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                     <div style="background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1rem;">
-                        <h4 style="font-size: 0.9rem; color: var(--text-primary); margin-bottom: 0.5rem;"><i class="fa-solid fa-users" style="color: #10B981;"></i> Team Roster</h4>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.4rem;">
+                            <h4 style="font-size: 0.9rem; color: var(--text-primary); margin: 0;"><i class="fa-solid fa-users" style="color: #10B981;"></i> ทีมงานของลูกค้า (Customer Team)</h4>
+                            <span id="c360-seat-badge" style="font-size: 0.75rem; color: #10B981; background: rgba(16,185,129,0.12); padding: 0.15rem 0.5rem; border-radius: 4px; font-weight: 600;"></span>
+                        </div>
                         <div id="c360-team-list" style="max-height: 140px; overflow-y: auto; font-size: 0.82rem; display: flex; flex-direction: column; gap: 0.35rem;">
                             <!-- Populated dynamically -->
                         </div>
@@ -4356,12 +4387,26 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         <div class="modal-card" style="max-width: 500px;">
             <div class="modal-header">
                 <h3 style="color: #fff; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
-                    <i class="fa-solid fa-user-plus" style="color: #10B981;"></i> เพิ่มสมาชิกใหม่ในระบบ
+                    <i class="fa-solid fa-user-plus" style="color: #10B981;"></i> เพิ่มผู้ใช้งาน / สมาชิกใหม่
                 </h3>
                 <button class="modal-close" onclick="closeCreateMemberModal()">&times;</button>
             </div>
             <form onsubmit="submitCreateMember(event)">
                 <div class="modal-body" style="display: flex; flex-direction: column; gap: 0.85rem;">
+                    <div class="form-group">
+                        <label class="form-label">ประเภทบัญชี (Account Scope) <span style="color: var(--danger);">*</span></label>
+                        <select id="create-member-scope" class="form-control" onchange="onMemberScopeChange()">
+                            <option value="CUSTOMER_TEAM">👥 ทีมงานของลูกค้า (สังกัดองค์กรลูกค้าตาม Package)</option>
+                            <option value="PLATFORM_ADMIN">🛡️ ทีมงานของเจ้าของระบบ (Platform Admin / HQ)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="create-member-org-group">
+                        <label class="form-label">สังกัดองค์กรของลูกค้า (Customer Organization) <span style="color: var(--danger);">*</span></label>
+                        <select id="create-member-org-id" class="form-control" onchange="onSelectCustomerOrgChange()">
+                            <option value="">-- เลือกองค์กรของลูกค้า --</option>
+                        </select>
+                        <div id="create-member-org-quota-info" style="font-size: 0.78rem; color: #10B981; margin-top: 4px;"></div>
+                    </div>
                     <div class="form-group">
                         <label class="form-label">ชื่อผู้ใช้ (Username) <span style="color: var(--danger);">*</span></label>
                         <input type="text" id="create-member-username" class="form-control" placeholder="e.g. staff_user หรือ email" required>
@@ -4370,30 +4415,23 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                         <label class="form-label">อีเมล (Email)</label>
                         <input type="email" id="create-member-email" class="form-control" placeholder="user@company.com">
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">รหัสผ่านเริ่มต้น (Default Password)</label>
-                        <input type="text" id="create-member-password" class="form-control" value="123456" placeholder="อย่างน้อย 6 ตัวอักษร">
-                    </div>
                     <div class="form-grid-2">
                         <div class="form-group">
-                            <label class="form-label">สิทธิ์ระดับระบบ (System Role)</label>
-                            <select id="create-member-system-role" class="form-control">
-                                <option value="STAFF" selected>STAFF (ผู้ใช้งานทั่วไป)</option>
-                                <option value="ADMIN">ADMIN (ผู้ดูแลระบบ)</option>
-                                <option value="VIEWER">VIEWER (ดูข้อมูลอย่างเดียว)</option>
-                            </select>
+                            <label class="form-label">รหัสผ่านเริ่มต้น</label>
+                            <input type="text" id="create-member-password" class="form-control" value="123456">
                         </div>
                         <div class="form-group">
-                            <label class="form-label">สังกัดองค์กร (Organization)</label>
-                            <select id="create-member-org-id" class="form-control">
-                                <option value="">-- ไม่สังกัดองค์กร --</option>
+                            <label class="form-label">บทบาท (Role)</label>
+                            <select id="create-member-role-select" class="form-control">
+                                <option value="STAFF" selected>ทีมงานของลูกค้า (Staff)</option>
+                                <option value="ADMIN">ผู้ดูแลของลูกค้า (Customer Admin)</option>
                             </select>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem;">
                     <button type="button" class="btn btn-secondary" onclick="closeCreateMemberModal()">ยกเลิก</button>
-                    <button type="submit" class="btn btn-primary" id="btn-save-new-member"><i class="fa-solid fa-check"></i> สร้างบัญชีสมาชิก</button>
+                    <button type="submit" class="btn btn-primary" id="btn-save-new-member"><i class="fa-solid fa-check"></i> สร้างบัญชี</button>
                 </div>
             </form>
         </div>
@@ -11101,25 +11139,42 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                         </span>
                     `).join('') : '<span style="font-size: 0.8rem; color: var(--text-muted);">No standalone add-ons attached.</span>';
 
-                    // Team
+                    // Team & Package Quota
                     const teamEl = document.getElementById('c360-team-list');
-                    teamEl.innerHTML = c.members.length > 0 ? c.members.map(m => `
-                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding: 0.35rem 0;">
+                    const seatBadge = document.getElementById('c360-seat-badge');
+                    const activeCount = (c.members || []).filter(m => m.status === 'ACTIVE').length;
+                    const maxUsers = (c.subscription && c.subscription.max_users != -1) ? c.subscription.max_users : (c.max_team_users != -1 ? c.max_team_users : 'ไม่จำกัด');
+                    const planName = c.subscription ? (c.subscription.plan_name || 'Package') : 'Package';
+                    if (seatBadge) {
+                        seatBadge.innerHTML = `<i class="fa-solid fa-chair"></i> ที่นั่งทีมงาน: ${activeCount} / ${maxUsers} (${planName})`;
+                    }
+
+                    teamEl.innerHTML = (c.members && c.members.length > 0) ? c.members.map(m => {
+                        const isLead = (m.org_role === 'OWNER' || m.org_role === 'ADMIN' || m.org_role === 'MANAGER');
+                        const roleLabel = isLead ? 'สมาชิก (เจ้าของบัญชี)' : 'ทีมงานของลูกค้า';
+                        const roleStyle = isLead 
+                            ? 'background: rgba(245,158,11,0.15); color: #F59E0B; border: 1px solid rgba(245,158,11,0.3);' 
+                            : 'background: rgba(59,130,246,0.15); color: #60A5FA; border: 1px solid rgba(59,130,246,0.3);';
+                        const uId = m.user_id || m.id;
+                        return `
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding: 0.4rem 0;">
                             <div>
                                 <strong style="color: #fff;">${m.username}</strong>
-                                <span style="font-size: 0.75rem; color: #60A5FA; margin-left: 0.5rem;">${m.org_role}</span>
+                                <span style="font-size: 0.72rem; padding: 0.15rem 0.45rem; border-radius: 4px; margin-left: 0.5rem; font-weight: 600; ${roleStyle}">
+                                    <i class="fa-solid ${isLead ? 'fa-crown' : 'fa-user-group'}" style="font-size: 0.65rem; margin-right: 2px;"></i> ${roleLabel}
+                                </span>
                                 <span class="status-badge ${m.status === 'ACTIVE' ? 'verified' : 'danger'}" style="margin-left: 0.35rem; font-size: 0.7rem;">${m.status || 'ACTIVE'}</span>
                             </div>
                             <div style="display: flex; gap: 0.25rem;">
-                                <button class="btn btn-sm ${m.status === 'ACTIVE' ? 'btn-warning' : 'btn-success'}" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;" onclick="toggleOwnerMemberStatus(${m.user_id}, ${m.status === 'ACTIVE' ? 1 : 0}); setTimeout(() => openCustomer360Modal(${org.id}), 600);" title="เปิด/ปิดการใช้งาน">
+                                <button class="btn btn-sm ${m.status === 'ACTIVE' ? 'btn-warning' : 'btn-success'}" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;" onclick="toggleOwnerMemberStatus(${uId}, ${m.status === 'ACTIVE' ? 1 : 0}); setTimeout(() => openCustomer360Modal(${org.id}), 600);" title="เปิด/ปิดการใช้งาน">
                                     ${m.status === 'ACTIVE' ? 'พักใช้' : 'เปิดใช้'}
                                 </button>
-                                <button class="btn btn-sm btn-danger" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;" onclick="confirmDeleteOwnerMember(${m.user_id}, '${(m.username || '').replace(/'/g, "\\'")}'); setTimeout(() => openCustomer360Modal(${org.id}), 600);" title="ลบสมาชิก">
+                                <button class="btn btn-sm btn-danger" style="font-size: 0.7rem; padding: 0.15rem 0.45rem;" onclick="confirmDeleteOwnerMember(${uId}, '${(m.username || '').replace(/'/g, "\\'")}'); setTimeout(() => openCustomer360Modal(${org.id}), 600);" title="ลบสมาชิก">
                                     <i class="fa-solid fa-trash"></i>
                                 </button>
                             </div>
                         </div>
-                    `).join('') : '<span style="color: var(--text-muted); font-size: 0.8rem;">ไม่มีสมาชิกในองค์กรนี้</span>';
+                    `}).join('') : '<span style="color: var(--text-muted); font-size: 0.8rem;">ไม่มีสมาชิกหรือทีมงานในองค์กรนี้</span>';
 
                     // Invoices
                     const invEl = document.getElementById('c360-invoices-list');
@@ -11212,33 +11267,78 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
         // ================= OWNER MEMBER MANAGEMENT CONTROLLER =================
         let cachedOwnerMembers = [];
+        let currentOwnerMemberFilter = 'ALL';
 
         async function loadOwnerMembersTable() {
             const tbody = document.getElementById('owner-members-table-body');
             if (!tbody) return;
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 1.5rem;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดข้อมูลสมาชิก...</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; padding: 1.5rem;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดข้อมูลสมาชิกและทีมงาน...</td></tr>';
 
             try {
                 const res = await fetch('/api/owner/members', { headers: getAuthHeaders() });
                 const data = await res.json();
                 if (data.success) {
                     cachedOwnerMembers = data.members || [];
-                    renderOwnerMembersTable(cachedOwnerMembers);
+                    updateOwnerMemberCountBadges();
+                    filterOwnerMembersTable();
                 } else {
-                    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--danger); padding: 1.5rem;">${data.detail || data.error || 'ไม่สามารถโหลดข้อมูลสมาชิกได้'}</td></tr>`;
+                    tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; color: var(--danger); padding: 1.5rem;">${data.detail || data.error || 'ไม่สามารถโหลดข้อมูลสมาชิกได้'}</td></tr>`;
                 }
             } catch (err) {
                 console.error("Error loading members:", err);
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--danger); padding: 1.5rem;">เกิดข้อผิดพลาดในการโหลดข้อมูลสมาชิก</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--danger); padding: 1.5rem;">เกิดข้อผิดพลาดในการโหลดข้อมูลสมาชิก</td></tr>';
             }
         }
 
+        function updateOwnerMemberCountBadges() {
+            const allCount = cachedOwnerMembers.length;
+            const platformCount = cachedOwnerMembers.filter(m => m.user_type === 'PLATFORM_TEAM').length;
+            const customerCount = cachedOwnerMembers.filter(m => m.user_type === 'CUSTOMER_MEMBER').length;
+
+            const elAll = document.getElementById('count-mem-all');
+            const elPlat = document.getElementById('count-mem-platform');
+            const elCust = document.getElementById('count-mem-customer');
+
+            if (elAll) elAll.innerText = allCount;
+            if (elPlat) elPlat.innerText = platformCount;
+            if (elCust) elCust.innerText = customerCount;
+        }
+
+        function setOwnerMemberTypeFilter(type) {
+            currentOwnerMemberFilter = type;
+            ['btn-filter-mem-all', 'btn-filter-mem-platform', 'btn-filter-mem-customer'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) {
+                    btn.classList.remove('btn-primary');
+                    btn.classList.add('btn-secondary');
+                }
+            });
+
+            if (type === 'PLATFORM_TEAM') {
+                document.getElementById('btn-filter-mem-platform')?.classList.replace('btn-secondary', 'btn-primary');
+            } else if (type === 'CUSTOMER_MEMBER') {
+                document.getElementById('btn-filter-mem-customer')?.classList.replace('btn-secondary', 'btn-primary');
+            } else {
+                document.getElementById('btn-filter-mem-all')?.classList.replace('btn-secondary', 'btn-primary');
+            }
+
+            filterOwnerMembersTable();
+        }
+
         function filterOwnerMembersTable() {
-            const q = (document.getElementById('owner-member-search-input').value || '').toLowerCase().trim();
+            const q = (document.getElementById('owner-member-search-input')?.value || '').toLowerCase().trim();
             const filtered = cachedOwnerMembers.filter(m => {
+                // Type filter
+                if (currentOwnerMemberFilter !== 'ALL' && m.user_type !== currentOwnerMemberFilter) {
+                    return false;
+                }
+                // Text search
+                if (!q) return true;
                 return (m.username && m.username.toLowerCase().includes(q)) ||
                        (m.email && m.email.toLowerCase().includes(q)) ||
                        (m.org_name && m.org_name.toLowerCase().includes(q)) ||
+                       (m.org_display && m.org_display.toLowerCase().includes(q)) ||
+                       (m.display_role && m.display_role.toLowerCase().includes(q)) ||
                        (m.role && m.role.toLowerCase().includes(q));
             });
             renderOwnerMembersTable(filtered);
@@ -11249,7 +11349,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             if (!tbody) return;
             tbody.innerHTML = '';
             if (members.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">ไม่พบบัญชีสมาชิกตามเงื่อนไขที่ค้นหา</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" style="text-align: center; color: var(--text-muted); padding: 2rem;"><i class="fa-solid fa-users-slash"></i> ไม่พบบัญชีผู้ใช้ตามหมวดหมู่หรือคำค้นหานี้</td></tr>';
                 return;
             }
 
@@ -11257,23 +11357,57 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 const tr = document.createElement('tr');
                 const isActive = (m.is_active === 1 || m.is_active === true || m.member_status === 'ACTIVE');
                 const isMasterOwner = (m.id === 1 || m.username === 'owner');
+                const isPlatformTeam = (m.user_type === 'PLATFORM_TEAM');
+
+                // Scope badge
+                const scopeBadge = isPlatformTeam 
+                    ? `<span style="background: rgba(245,158,11,0.15); color: #F59E0B; font-size: 0.72rem; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 600; white-space: nowrap;"><i class="fa-solid fa-shield-halved"></i> ทีมงานเจ้าของระบบ</span>`
+                    : `<span style="background: rgba(16,185,129,0.15); color: #10B981; font-size: 0.72rem; padding: 0.2rem 0.5rem; border-radius: 4px; font-weight: 600; white-space: nowrap;"><i class="fa-solid fa-users"></i> สมาชิก / ลูกค้า</span>`;
+
+                // Org display
+                const orgHtml = isPlatformTeam
+                    ? `<span style="color: #F59E0B; font-weight: 600;"><i class="fa-solid fa-building-shield"></i> System Headquarters</span>`
+                    : `<strong style="color: #60A5FA;"><i class="fa-solid fa-store" style="font-size: 0.75rem;"></i> ${m.org_display || m.org_name || 'ลูกค้าทั่วไป'}</strong>`;
+
+                // Role badge
+                let roleBadge = '';
+                if (isPlatformTeam) {
+                    if (isMasterOwner || m.role === 'OWNER') {
+                        roleBadge = `<span class="status-badge" style="background: rgba(245,158,11,0.2); color: #F59E0B; border: 1px solid rgba(245,158,11,0.3);"><i class="fa-solid fa-crown"></i> เจ้าของระบบ (Owner)</span>`;
+                    } else {
+                        roleBadge = `<span class="status-badge" style="background: rgba(56,189,248,0.2); color: #38BDF8; border: 1px solid rgba(56,189,248,0.3);"><i class="fa-solid fa-user-shield"></i> ทีมงานแอดมิน (Admin)</span>`;
+                    }
+                } else {
+                    const isLead = (m.display_role && m.display_role.includes('เจ้าของบัญชี')) || m.org_role === 'OWNER' || m.role === 'CUSTOMER_OWNER';
+                    if (isLead) {
+                        roleBadge = `<span class="status-badge" style="background: rgba(16,185,129,0.2); color: #10B981; border: 1px solid rgba(16,185,129,0.3);"><i class="fa-solid fa-user-tie"></i> สมาชิก (เจ้าของบัญชี)</span>`;
+                    } else {
+                        roleBadge = `<span class="status-badge" style="background: rgba(59,130,246,0.15); color: #60A5FA; border: 1px solid rgba(59,130,246,0.3);"><i class="fa-solid fa-user-group"></i> ทีมงานของลูกค้า (Staff)</span>`;
+                    }
+                }
+
+                // Seats badge
+                const seatsHtml = isPlatformTeam
+                    ? `<span style="color: var(--text-muted); font-size: 0.8rem;">ผู้ดูแลระบบส่วนกลาง</span>`
+                    : `<span style="background: rgba(139,92,246,0.15); color: #C084FC; font-size: 0.75rem; padding: 0.2rem 0.55rem; border-radius: 4px; font-weight: 600; white-space: nowrap; border: 1px solid rgba(139,92,246,0.3);"><i class="fa-solid fa-chair"></i> ${m.seat_info || '-'}</span>`;
 
                 tr.innerHTML = `
                     <td>
                         <strong style="color: #fff;">${m.username}</strong>
-                        ${isMasterOwner ? '<span class="nav-badge" style="background: rgba(245,158,11,0.2); color: #F59E0B; margin-left: 0.35rem;">Primary Owner</span>' : ''}
+                        ${isMasterOwner ? '<span class="nav-badge" style="background: rgba(245,158,11,0.2); color: #F59E0B; margin-left: 0.35rem; font-size: 0.7rem;">Primary Owner</span>' : ''}
                         <div style="font-size: 0.72rem; color: var(--text-muted);">UID: #${m.id}</div>
                     </td>
                     <td><span style="color: var(--text-secondary); font-size: 0.85rem;">${m.email || '-'}</span></td>
-                    <td><strong style="color: #60A5FA;">${m.org_name || 'System Headquarters'}</strong></td>
-                    <td><span class="status-badge" style="background: rgba(59,130,246,0.15); color: #60A5FA;">${m.role}</span></td>
-                    <td><span style="font-size: 0.8rem; color: var(--text-muted);">${m.org_role || '-'}</span></td>
+                    <td>${scopeBadge}</td>
+                    <td>${orgHtml}</td>
+                    <td>${roleBadge}</td>
+                    <td>${seatsHtml}</td>
                     <td>
                         <span class="status-badge ${isActive ? 'verified' : 'danger'}">
                             <i class="fa-solid ${isActive ? 'fa-circle-check' : 'fa-circle-pause'}"></i> ${isActive ? 'ACTIVE' : 'SUSPENDED'}
                         </span>
                     </td>
-                    <td style="color: var(--text-secondary); font-size: 0.8rem;">${m.created_at || '-'}</td>
+                    <td style="color: var(--text-secondary); font-size: 0.8rem; white-space: nowrap;">${m.created_at || '-'}</td>
                     <td style="text-align: right; white-space: nowrap;">
                         <button class="btn btn-secondary btn-sm" onclick="openEditMemberModal(${m.id})" title="แก้ไขข้อมูลสมาชิก"><i class="fa-solid fa-pen-to-square"></i> แก้ไข</button>
                         ${!isMasterOwner ? `
@@ -11288,17 +11422,69 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             });
         }
 
+        function onMemberScopeChange() {
+            const scope = document.getElementById('create-member-scope')?.value;
+            const orgGroup = document.getElementById('create-member-org-group');
+            const roleSelect = document.getElementById('create-member-role-select');
+            const quotaInfo = document.getElementById('create-member-org-quota-info');
+
+            if (scope === 'PLATFORM_ADMIN') {
+                if (orgGroup) orgGroup.style.display = 'none';
+                if (quotaInfo) quotaInfo.innerText = '';
+                if (roleSelect) {
+                    roleSelect.innerHTML = `<option value="ADMIN" selected>ทีมงานแอดมิน (Admin ดูแลระบบส่วนกลาง)</option>`;
+                }
+            } else {
+                if (orgGroup) orgGroup.style.display = 'block';
+                if (roleSelect) {
+                    roleSelect.innerHTML = `
+                        <option value="STAFF" selected>ทีมงานของลูกค้า (Staff สังกัดองค์กร)</option>
+                        <option value="ADMIN">ผู้ดูแลของลูกค้า (Customer Admin)</option>
+                    `;
+                }
+                onSelectCustomerOrgChange();
+            }
+        }
+
+        function onSelectCustomerOrgChange() {
+            const orgIdVal = document.getElementById('create-member-org-id')?.value;
+            const quotaInfo = document.getElementById('create-member-org-quota-info');
+            if (!quotaInfo) return;
+
+            if (!orgIdVal) {
+                quotaInfo.innerText = 'กรุณาเลือกองค์กรของลูกค้าเพื่อตรวจสอบโควต้าที่นั่ง';
+                quotaInfo.style.color = 'var(--text-muted)';
+                return;
+            }
+
+            const targetCust = (cachedOwnerCustomers || []).find(c => String(c.id) === String(orgIdVal));
+            const orgMembers = cachedOwnerMembers.filter(m => String(m.org_id) === String(orgIdVal) && (m.is_active === 1 || m.is_active === true || m.member_status === 'ACTIVE'));
+            const maxU = (targetCust && targetCust.max_users != -1) ? (targetCust.max_users || 5) : 'ไม่จำกัด';
+            const planName = targetCust ? (targetCust.plan_name || targetCust.plan_tier || 'Package') : 'Package';
+
+            if (maxU !== 'ไม่จำกัด' && orgMembers.length >= maxU) {
+                quotaInfo.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> โควต้าเต็ม: ใช้แล้ว ${orgMembers.length} / ${maxU} ที่นั่ง (แพ็กเกจ ${planName}) ต้องอัปเกรดแพ็กเกจเพื่อเพิ่มสมาชิก`;
+                quotaInfo.style.color = '#EF4444';
+            } else {
+                quotaInfo.innerHTML = `<i class="fa-solid fa-circle-check"></i> ที่นั่งทีมงาน: ${orgMembers.length} / ${maxU} คน (ตามแพ็กเกจ ${planName})`;
+                quotaInfo.style.color = '#10B981';
+            }
+        }
+
         function openCreateMemberModal() {
             const orgSelect = document.getElementById('create-member-org-id');
             if (orgSelect) {
-                orgSelect.innerHTML = '<option value="">-- ไม่สังกัดองค์กร (Platform Admin/HQ) --</option>';
-                (cachedOwnerCustomers || []).forEach(c => {
+                orgSelect.innerHTML = '<option value="">-- เลือกองค์กรของลูกค้า --</option>';
+                (cachedOwnerCustomers || []).filter(c => c.id !== 1).forEach(c => {
                     orgSelect.innerHTML += `<option value="${c.id}">${c.name} (#${c.id})</option>`;
                 });
             }
+            const scopeEl = document.getElementById('create-member-scope');
+            if (scopeEl) scopeEl.value = 'CUSTOMER_TEAM';
             document.getElementById('create-member-username').value = '';
             document.getElementById('create-member-email').value = '';
             document.getElementById('create-member-password').value = '123456';
+            onMemberScopeChange();
             const modal = document.getElementById('modal-owner-create-member');
             if (modal) modal.style.display = 'flex';
         }
@@ -11310,6 +11496,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
         async function submitCreateMember(event) {
             if (event) event.preventDefault();
+            const scope = document.getElementById('create-member-scope').value;
             const username = document.getElementById('create-member-username').value.trim();
             if (!username) {
                 showToast("กรุณากรอก Username", "warning");
@@ -11317,22 +11504,27 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             }
             const email = document.getElementById('create-member-email').value.trim();
             const password = document.getElementById('create-member-password').value.trim() || '123456';
-            const role = document.getElementById('create-member-system-role').value;
+            const roleSelectVal = document.getElementById('create-member-role-select').value;
             const orgIdVal = document.getElementById('create-member-org-id').value;
+
+            if (scope === 'CUSTOMER_TEAM' && !orgIdVal) {
+                showToast("กรุณาเลือกองค์กรของลูกค้า", "warning");
+                return;
+            }
 
             const payload = {
                 username: username,
                 email: email,
                 password: password,
-                role: role,
-                org_id: orgIdVal ? parseInt(orgIdVal, 10) : null,
-                org_role: role === 'ADMIN' ? 'ADMIN' : 'STAFF'
+                role: scope === 'PLATFORM_ADMIN' ? 'ADMIN' : 'STAFF',
+                org_id: scope === 'PLATFORM_ADMIN' ? 1 : parseInt(orgIdVal, 10),
+                org_role: scope === 'PLATFORM_ADMIN' ? 'ADMIN' : roleSelectVal
             };
 
             try {
                 const btn = document.getElementById('btn-save-new-member');
                 if (btn) btn.disabled = true;
-                showToast("กำลังสร้างบัญชีสมาชิก...", "info");
+                showToast("กำลังสร้างบัญชี...", "info");
 
                 const res = await fetch('/api/owner/members', {
                     method: 'POST',
@@ -11341,11 +11533,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 });
                 const data = await res.json();
                 if (data.success) {
-                    showToast(`✅ ${data.message || 'สร้างสมาชิกเรียบร้อยแล้ว'}`, "success");
+                    showToast(`✅ ${data.message || 'สร้างบัญชีเรียบร้อยแล้ว'}`, "success");
                     closeCreateMemberModal();
                     loadOwnerMembersTable();
                 } else {
-                    showToast(data.detail || data.error || "ไม่สามารถสร้างสมาชิกได้", "danger");
+                    showToast(data.detail || data.error || "ไม่สามารถสร้างบัญชีได้", "danger");
                 }
             } catch (err) {
                 console.error("Error creating member:", err);
