@@ -5071,8 +5071,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=à¸
         </div>
     </div>
 
-    <!-- Toast Notifications -->
-    <div id="toast-box" style="position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem;"></div>
+    <!-- Toast Notifications (Topmost Layer Above All Popups) -->
+    <div id="toast-box" style="position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999999; display: flex; flex-direction: column; gap: 0.65rem; pointer-events: none;"></div>
 
     <!-- Core SaaS Scripting Engine -->
     <script>
