@@ -346,11 +346,11 @@ class OwnerAnalyticsService:
                 "searches_used": used,
                 "search_quota": quota,
                 "usage_pct": usage_pct,
-                "renewal_date": r["current_period_end"].split()[0] if r["current_period_end"] else "N/A",
+                "renewal_date": str(r["current_period_end"]).split()[0] if r["current_period_end"] else "N/A",
                 "health_score": health_score,
                 "health_status": health_status,
                 "risk_reasons": risk_reasons,
-                "created_at": r["created_at"].split()[0] if r["created_at"] else "N/A"
+                "created_at": str(r["created_at"]).split()[0] if r["created_at"] else "N/A"
             })
 
         # 2. CRM Funnel Stages & Conversion
@@ -574,8 +574,19 @@ class OwnerAnalyticsService:
         """)
         pipeline_rows = [dict(r) for r in cursor.fetchall()]
 
-        renewals_7d = [r for r in pipeline_rows if r["current_period_end"] <= (datetime.datetime.now() + datetime.timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")]
-        renewals_14d = [r for r in pipeline_rows if r["current_period_end"] <= (datetime.datetime.now() + datetime.timedelta(days=14)).strftime("%Y-%m-%d %H:%M:%S")]
+        def to_iso_str(val):
+            if val is None:
+                return ""
+            if isinstance(val, (datetime.datetime, datetime.date)):
+                return val.strftime("%Y-%m-%d %H:%M:%S")
+            return str(val)
+
+        thresh_7d = (datetime.datetime.now() + datetime.timedelta(days=7)).strftime("%Y-%m-%d %H:%M:%S")
+        thresh_14d = (datetime.datetime.now() + datetime.timedelta(days=14)).strftime("%Y-%m-%d %H:%M:%S")
+        for r in pipeline_rows:
+            r["current_period_end"] = to_iso_str(r.get("current_period_end"))
+        renewals_7d = [r for r in pipeline_rows if r["current_period_end"] and r["current_period_end"] <= thresh_7d]
+        renewals_14d = [r for r in pipeline_rows if r["current_period_end"] and r["current_period_end"] <= thresh_14d]
         renewals_30d = pipeline_rows
 
         conn.close()
@@ -627,7 +638,7 @@ class OwnerAnalyticsService:
             SELECT search_query, search_type, COUNT(*) as search_count, MAX(created_at) as last_queried
             FROM search_logs
             {z_sql}
-            GROUP BY search_query
+            GROUP BY search_query, search_type
             ORDER BY search_count DESC
             LIMIT 10
         """, tuple(s_params))
@@ -749,7 +760,7 @@ class OwnerAnalyticsService:
                     "org_name": r["org_name"],
                     "plan_name": r["plan_name"],
                     "subscription_status": r["sub_status"],
-                    "renewal_date": r["current_period_end"].split()[0] if r["current_period_end"] else "N/A",
+                    "renewal_date": str(r["current_period_end"]).split()[0] if r["current_period_end"] else "N/A",
                     "risk_reasons": reasons,
                     "risk_level": "HIGH" if len(reasons) >= 2 or r["sub_status"] in ["GRACE_PERIOD", "CANCELLED"] else "MEDIUM"
                 })
@@ -776,7 +787,7 @@ class OwnerAnalyticsService:
                    COALESCE(SUM(s.base_price), 0) as total_mrr
             FROM plans p
             LEFT JOIN subscriptions s ON s.plan_id = p.id AND s.status IN ('ACTIVE', 'GRACE_PERIOD', 'CANCELLED')
-            GROUP BY p.id
+            GROUP BY p.id, p.name, p.price_monthly, p.price_yearly
             ORDER BY total_mrr DESC
         """)
         plan_rows = [dict(r) for r in cursor.fetchall()]

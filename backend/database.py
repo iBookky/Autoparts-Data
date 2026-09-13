@@ -4333,7 +4333,203 @@ def update_organization_db(org_id: int, data: Dict[str, Any]) -> bool:
     conn.close()
     return success
 
-# ================= TEAM MEMBERS CRUD WRAPPERS =================
+# ================= TEAM & OWNER MEMBERS CRUD WRAPPERS =================
+def get_owner_all_members_db() -> List[Dict[str, Any]]:
+    """Returns all system users with their associated organization, role, and active status."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("""
+            SELECT u.id, u.username, u.email, u.role, COALESCE(u.is_active, 1) as is_active,
+                   om.org_id, o.name as org_name, om.org_role, COALESCE(om.status, 'ACTIVE') as member_status,
+                   u.created_at
+            FROM users u
+            LEFT JOIN organization_members om ON om.user_id = u.id
+            LEFT JOIN organizations o ON o.id = om.org_id
+            ORDER BY u.id ASC
+        """)
+        rows = cursor.fetchall()
+        result = []
+        for r in rows:
+            d = dict(r)
+            if d.get("created_at"):
+                d["created_at"] = str(d["created_at"]).split()[0]
+            if not d.get("email"):
+                d["email"] = d["username"] if "@" in d["username"] else f"{d['username']}@autoparts.com"
+            result.append(d)
+        return result
+    finally:
+        conn.close()
+
+def create_owner_member_db(data: Dict[str, Any]) -> Dict[str, Any]:
+    """Creates a new user member and attaches them to the designated organization."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        username = data.get("username", "").strip()
+        if not username:
+            return {"success": False, "error": "กรุณาระบุ Username"}
+        
+        cursor.execute("SELECT id FROM users WHERE LOWER(username) = LOWER(?)", (username,))
+        if cursor.fetchone():
+            return {"success": False, "error": f"Username '{username}' มีอยู่ในระบบแล้ว"}
+            
+        email = data.get("email", "").strip() or (username if "@" in username else None)
+        role = (data.get("role") or "STAFF").strip().upper()
+        raw_pwd = data.get("password") or "123456"
+        import hashlib
+        hashed_pwd = hashlib.sha256(raw_pwd.encode('utf-8')).hexdigest()
+        
+        cursor.execute("""
+            INSERT INTO users (username, email, password, role, is_active)
+            VALUES (?, ?, ?, ?, 1)
+        """, (username, email, hashed_pwd, role))
+        
+        cursor.execute("SELECT id FROM users WHERE username = ?", (username,))
+        new_u = cursor.fetchone()
+        new_uid = new_u["id"]
+        
+        org_id = data.get("org_id")
+        if org_id:
+            org_role = (data.get("org_role") or "STAFF").strip().upper()
+            cursor.execute("""
+                INSERT INTO organization_members (org_id, user_id, org_role, status)
+                VALUES (?, ?, ?, 'ACTIVE')
+            """, (org_id, new_uid, org_role))
+            
+        conn.commit()
+        return {"success": True, "user_id": new_uid, "username": username, "message": f"สร้างบัญชี {username} เรียบร้อยแล้ว"}
+    except Exception as e:
+        conn.rollback()
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
+
+def update_owner_member_db(user_id: int, data: Dict[str, Any]) -> Dict[str, Any]:
+    """Updates user information, system role, email, active state, and org membership."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT id, username, role FROM users WHERE id = ?", (user_id,))
+        u = cursor.fetchone()
+        if not u:
+            return {"success": False, "error": "ไม่พบบัญชีผู้ใช้"}
+        
+        sets_u = []
+        params_u = []
+        if "username" in data and data["username"]:
+            sets_u.append("username = ?")
+            params_u.append(data["username"].strip())
+        if "email" in data:
+            sets_u.append("email = ?")
+            params_u.append(data["email"].strip() if data["email"] else None)
+        if "role" in data and data["role"]:
+            # Prevent lowering owner role for primary system user
+            if user_id == 1 and data["role"].upper() != "OWNER":
+                pass
+            else:
+                sets_u.append("role = ?")
+                params_u.append(data["role"].strip().upper())
+        if "is_active" in data:
+            val = 1 if data["is_active"] in [1, True, "1", "true", "ACTIVE"] else 0
+            sets_u.append("is_active = ?")
+            params_u.append(val)
+        
+        if sets_u:
+            params_u.append(user_id)
+            cursor.execute(f"UPDATE users SET {', '.join(sets_u)} WHERE id = ?", tuple(params_u))
+            
+        if "org_role" in data and data["org_role"]:
+            cursor.execute("UPDATE organization_members SET org_role = ? WHERE user_id = ?", (data["org_role"].strip().upper(), user_id))
+        if "status" in data and data["status"]:
+            cursor.execute("UPDATE organization_members SET status = ? WHERE user_id = ?", (data["status"].strip().upper(), user_id))
+            
+        conn.commit()
+        return {"success": True, "user_id": user_id, "message": "อัปเดตข้อมูลสมาชิกเรียบร้อยแล้ว"}
+    except Exception as e:
+        conn.rollback()
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
+
+def toggle_owner_member_active_db(user_id: int) -> Dict[str, Any]:
+    """Toggles user between ACTIVE and SUSPENDED."""
+    if user_id == 1:
+        return {"success": False, "error": "ไม่อนุญาตให้ระงับบัญชี Platform Master Owner"}
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT id, username, role, COALESCE(is_active, 1) as is_active FROM users WHERE id = ?", (user_id,))
+        u = cursor.fetchone()
+        if not u:
+            return {"success": False, "error": "ไม่พบบัญชีผู้ใช้"}
+        if u["username"] in ["owner", "superadmin"] and u["role"] in ["OWNER", "SUPER_ADMIN"]:
+            return {"success": False, "error": "ไม่อนุญาตให้ระงับบัญชีผู้ดูแลระบบหลัก"}
+        
+        curr_active = u["is_active"]
+        new_active = 0 if curr_active == 1 else 1
+        new_status = "ACTIVE" if new_active == 1 else "SUSPENDED"
+
+        cursor.execute("UPDATE users SET is_active = ? WHERE id = ?", (new_active, user_id))
+        cursor.execute("UPDATE organization_members SET status = ? WHERE user_id = ?", (new_status, user_id))
+        conn.commit()
+        return {"success": True, "user_id": user_id, "is_active": new_active, "status": new_status, "message": f"เปลี่ยนสถานะเป็น {new_status} เรียบร้อยแล้ว"}
+    except Exception as e:
+        conn.rollback()
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
+
+def delete_owner_member_db(user_id: int) -> Dict[str, Any]:
+    """Deletes member and unlinks from all organization groups."""
+    if user_id == 1:
+        return {"success": False, "error": "ไม่อนุญาตให้ลบบัญชี Platform Master Owner"}
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT id, username, role FROM users WHERE id = ?", (user_id,))
+        u = cursor.fetchone()
+        if not u:
+            return {"success": False, "error": "ไม่พบบัญชีผู้ใช้"}
+        if u["username"] in ["owner", "superadmin"]:
+            return {"success": False, "error": "ไม่อนุญาตให้ลบบัญชีผู้ดูแลระบบหลัก"}
+            
+        cursor.execute("DELETE FROM organization_members WHERE user_id = ?", (user_id,))
+        cursor.execute("DELETE FROM user_favorites WHERE user_id = ?", (user_id,))
+        cursor.execute("DELETE FROM search_logs WHERE user_id = ?", (user_id,))
+        cursor.execute("DELETE FROM users WHERE id = ?", (user_id,))
+        conn.commit()
+        return {"success": True, "user_id": user_id, "message": f"ลบบัญชีผู้ใช้ {u['username']} เรียบร้อยแล้ว"}
+    except Exception as e:
+        conn.rollback()
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
+
+def toggle_customer_org_active_db(org_id: int) -> Dict[str, Any]:
+    """Toggles customer organization subscription between ACTIVE and SUSPENDED."""
+    if org_id == 1:
+        return {"success": False, "error": "ไม่อนุญาตให้ระงับองค์กรหลักของระบบ"}
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT id, status FROM subscriptions WHERE org_id = ? ORDER BY id DESC LIMIT 1", (org_id,))
+        sub = cursor.fetchone()
+        if not sub:
+            return {"success": False, "error": "ไม่พบข้อมูลการสมัครสมาชิกขององค์กรนี้"}
+        
+        curr_status = (sub["status"] or "").upper()
+        new_status = "SUSPENDED" if curr_status in ["ACTIVE", "TRIALING", "TRIAL"] else "ACTIVE"
+        
+        cursor.execute("UPDATE subscriptions SET status = ? WHERE id = ?", (new_status, sub["id"]))
+        conn.commit()
+        return {"success": True, "org_id": org_id, "new_status": new_status, "previous_status": curr_status, "message": f"เปลี่ยนสถานะองค์กรเป็น {new_status} เรียบร้อยแล้ว"}
+    except Exception as e:
+        conn.rollback()
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
+
 def invite_org_member(org_id: int, user_id: int, role: str = "STAFF", status: str = "ACTIVE") -> Dict[str, Any]:
     conn = get_db_connection()
     cursor = conn.cursor()

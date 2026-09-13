@@ -643,7 +643,7 @@
                                 <div class="form-group">
                                     <label class="form-label"><i class="fa-solid fa-fingerprint" style="color: #F43F5E;"></i> <span data-i18n="adv.vinLabel">17-Digit VIN Number</span></label>
                                     <div style="display: flex; gap: 0.4rem;">
-                                        <input type="text" id="s-vin" class="form-control" data-i18n-placeholder="adv.vinPlaceholder" placeholder="e.g. 1FMCU9G97EUE..." maxlength="17">
+                                        <input type="text" id="s-vin" class="form-control" data-i18n-placeholder="adv.vinPlaceholder" placeholder="e.g. 1FMCU9G97EUE..." maxlength="17" onkeypress="if(event.key==='Enter'){event.preventDefault();decodeVinInput();}">
                                         <button type="button" class="btn btn-secondary btn-sm" onclick="decodeVinInput()" title="Decode VIN Specs">
                                             <i class="fa-solid fa-wand-magic-sparkles" style="color: #F59E0B;"></i>
                                         </button>
@@ -1735,6 +1735,41 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                     </tr>
                                 </thead>
                                 <tbody id="owner-renewals-table-body">
+                                    <!-- Populated dynamically -->
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- System Members & Organization Staff Management Table -->
+                        <div style="margin-top: 2rem; display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.85rem; flex-wrap: wrap; gap: 0.75rem;">
+                            <div>
+                                <h3 style="font-size: 1.05rem; color: #fff; margin: 0 0 0.25rem 0; display: flex; align-items: center; gap: 0.5rem;">
+                                    <i class="fa-solid fa-users-gear" style="color: #38BDF8;"></i> ข้อมูลสมาชิกและผู้ใช้งานทั้งหมด (Member Management)
+                                </h3>
+                                <p style="font-size: 0.8rem; color: var(--text-muted); margin: 0;">จัดการบัญชีสมาชิก ปรับเปลี่ยนสิทธิ์ แก้ไขข้อมูล เปิดใช้งาน/ระงับการใช้งาน (Active/Inactive) และลบบัญชี</p>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <input type="text" id="owner-member-search-input" class="form-control" placeholder="ค้นหาชื่อผู้ใช้, อีเมล..." style="width: 220px;" oninput="filterOwnerMembersTable()">
+                                <button type="button" class="btn btn-primary btn-sm" onclick="openCreateMemberModal()">
+                                    <i class="fa-solid fa-user-plus"></i> เพิ่มสมาชิกใหม่
+                                </button>
+                            </div>
+                        </div>
+                        <div class="data-table-container">
+                            <table class="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ชื่อผู้ใช้ (Username)</th>
+                                        <th>อีเมล (Email)</th>
+                                        <th>องค์กร (Organization)</th>
+                                        <th>สิทธิ์ในระบบ</th>
+                                        <th>สิทธิ์ในองค์กร</th>
+                                        <th>สถานะ (Status)</th>
+                                        <th>วันที่สร้าง</th>
+                                        <th style="text-align: right;">การจัดการ</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="owner-members-table-body">
                                     <!-- Populated dynamically -->
                                 </tbody>
                             </table>
@@ -4242,6 +4277,14 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                         <label class="form-label">ที่อยู่ออกใบกำกับภาษี</label>
                         <textarea id="edit-cust-address" class="form-control" rows="2"></textarea>
                     </div>
+                    <div class="form-group">
+                        <label class="form-label">สถานะบัญชีองค์กรลูกค้า</label>
+                        <select id="edit-cust-status" class="form-control">
+                            <option value="ACTIVE">ACTIVE (เปิดใช้งานปกติ)</option>
+                            <option value="SUSPENDED">SUSPENDED (ระงับการใช้งาน)</option>
+                            <option value="CANCELLED">CANCELLED (ยกเลิก)</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem;">
                     <button type="button" class="btn btn-secondary" onclick="closeEditCustomerModal()">ยกเลิก</button>
@@ -4281,6 +4324,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             <label class="form-label" style="font-weight: 600;">สถานะสมาชิก (Status)</label>
                             <select id="change-plan-status" class="form-control">
                                 <option value="ACTIVE">ACTIVE (เปิดใช้งานปกติ)</option>
+                                <option value="SUSPENDED">SUSPENDED (ระงับการใช้งาน)</option>
                                 <option value="TRIALING">TRIALING (ทดลองใช้งาน)</option>
                                 <option value="CANCELLED">CANCELLED (ยกเลิกการใช้งาน)</option>
                             </select>
@@ -4302,6 +4346,101 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem;">
                     <button type="button" class="btn btn-secondary" onclick="closeChangeCustomerPlanModal()">ยกเลิก</button>
                     <button type="submit" class="btn btn-primary" id="btn-save-cust-plan"><i class="fa-solid fa-check"></i> ยืนยันการปรับแพ็กเกจ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Create New Member / User Account -->
+    <div class="modal-overlay" id="modal-owner-create-member" style="display: none;">
+        <div class="modal-card" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 style="color: #fff; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-user-plus" style="color: #10B981;"></i> เพิ่มสมาชิกใหม่ในระบบ
+                </h3>
+                <button class="modal-close" onclick="closeCreateMemberModal()">&times;</button>
+            </div>
+            <form onsubmit="submitCreateMember(event)">
+                <div class="modal-body" style="display: flex; flex-direction: column; gap: 0.85rem;">
+                    <div class="form-group">
+                        <label class="form-label">ชื่อผู้ใช้ (Username) <span style="color: var(--danger);">*</span></label>
+                        <input type="text" id="create-member-username" class="form-control" placeholder="e.g. staff_user หรือ email" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">อีเมล (Email)</label>
+                        <input type="email" id="create-member-email" class="form-control" placeholder="user@company.com">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">รหัสผ่านเริ่มต้น (Default Password)</label>
+                        <input type="text" id="create-member-password" class="form-control" value="123456" placeholder="อย่างน้อย 6 ตัวอักษร">
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label">สิทธิ์ระดับระบบ (System Role)</label>
+                            <select id="create-member-system-role" class="form-control">
+                                <option value="STAFF" selected>STAFF (ผู้ใช้งานทั่วไป)</option>
+                                <option value="ADMIN">ADMIN (ผู้ดูแลระบบ)</option>
+                                <option value="VIEWER">VIEWER (ดูข้อมูลอย่างเดียว)</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">สังกัดองค์กร (Organization)</label>
+                            <select id="create-member-org-id" class="form-control">
+                                <option value="">-- ไม่สังกัดองค์กร --</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateMemberModal()">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary" id="btn-save-new-member"><i class="fa-solid fa-check"></i> สร้างบัญชีสมาชิก</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal: Edit Member / User Account -->
+    <div class="modal-overlay" id="modal-owner-edit-member" style="display: none;">
+        <div class="modal-card" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3 style="color: #fff; font-size: 1.15rem; display: flex; align-items: center; gap: 0.5rem;">
+                    <i class="fa-solid fa-user-pen" style="color: #3B82F6;"></i> แก้ไขข้อมูลสมาชิก
+                </h3>
+                <button class="modal-close" onclick="closeEditMemberModal()">&times;</button>
+            </div>
+            <form onsubmit="submitEditMember(event)">
+                <div class="modal-body" style="display: flex; flex-direction: column; gap: 0.85rem;">
+                    <input type="hidden" id="edit-member-id">
+                    <div class="form-group">
+                        <label class="form-label">ชื่อผู้ใช้ (Username) <span style="color: var(--danger);">*</span></label>
+                        <input type="text" id="edit-member-username" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">อีเมล (Email)</label>
+                        <input type="email" id="edit-member-email" class="form-control">
+                    </div>
+                    <div class="form-grid-2">
+                        <div class="form-group">
+                            <label class="form-label">สิทธิ์ระดับระบบ</label>
+                            <select id="edit-member-system-role" class="form-control">
+                                <option value="STAFF">STAFF</option>
+                                <option value="ADMIN">ADMIN</option>
+                                <option value="OWNER">OWNER</option>
+                                <option value="VIEWER">VIEWER</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">สถานะการใช้งาน</label>
+                            <select id="edit-member-status" class="form-control">
+                                <option value="1">ACTIVE (เปิดใช้งานปกติ)</option>
+                                <option value="0">SUSPENDED (ระงับการใช้งาน)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.5rem;">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditMemberModal()">ยกเลิก</button>
+                    <button type="submit" class="btn btn-primary" id="btn-save-member-profile"><i class="fa-solid fa-floppy-disk"></i> บันทึกการแก้ไข</button>
                 </div>
             </form>
         </div>
@@ -6580,7 +6719,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             });
         }
 
-        // ================= VIN DECODER =================
+        // ================= VIN DECODER & DIRECT SEARCH =================
         async function decodeVinInput() {
             const vin = document.getElementById('s-vin').value.trim();
             if (!vin || vin.length !== 17) {
@@ -6588,31 +6727,76 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 return;
             }
             try {
-                const res = await fetch(`/api/parts/decode-vin?vin=${vin}`, { headers: getAuthHeaders() });
+                showToast("กำลังถอดรหัส VIN และค้นหาอะไหล่ที่ตรงรุ่น...", "info");
+                const res = await fetch(`/api/parts/decode-vin?vin=${encodeURIComponent(vin)}`, { headers: getAuthHeaders() });
                 const data = await res.json();
                 if (data.success && data.results) {
                     const r = data.results;
                     const b = document.getElementById('vin-decoded-badge');
-                    b.style.display = 'block';
-                    document.getElementById('vin-badge-text').textContent = `${r.make || ''} ${r.model || ''} (${r.year || ''})`;
+                    if (b) {
+                        b.style.display = 'block';
+                        document.getElementById('vin-badge-text').textContent = `${r.make || r.brand || ''} ${r.model || ''} (${r.year || ''})`;
+                    }
 
-                    if (r.make) {
+                    // 1. Select Car Brand
+                    const brandName = (r.make || r.brand || '').toUpperCase();
+                    if (brandName) {
                         const brandSelect = document.getElementById('s-car-brand');
+                        let brandMatched = false;
                         for (let opt of brandSelect.options) {
-                            if (opt.value.toUpperCase() === r.make.toUpperCase()) {
+                            if (opt.value && opt.value.toUpperCase() === brandName) {
                                 brandSelect.value = opt.value;
                                 onSalesCarBrandChanged();
+                                brandMatched = true;
                                 break;
                             }
                         }
+                        if (!brandMatched) {
+                            brandSelect.add(new Option(r.make || r.brand, r.make || r.brand, true, true));
+                            onSalesCarBrandChanged();
+                        }
                     }
+
+                    // 2. Select Car Year
                     if (r.year) {
-                        document.getElementById('s-car-year').value = r.year;
+                        const yearSelect = document.getElementById('s-car-year');
+                        if (yearSelect) {
+                            yearSelect.value = r.year;
+                            if (yearSelect.value !== r.year) {
+                                yearSelect.add(new Option(r.year, r.year, true, true));
+                            }
+                        }
                     }
-                    showToast(`ถอดรหัส VIN สำเร็จ: ${r.make} ${r.model} (${r.year})`, "success");
+
+                    // 3. Match & Select Car Model
+                    if (r.model) {
+                        const modelSelect = document.getElementById('s-car-model');
+                        if (modelSelect) {
+                            const subTokens = r.model.split(/[\/,]/).map(s => s.trim().toUpperCase()).filter(Boolean);
+                            let matched = false;
+                            for (let opt of modelSelect.options) {
+                                if (!opt.value) continue;
+                                const optVal = opt.value.toUpperCase();
+                                if (subTokens.some(tok => optVal.includes(tok) || tok.includes(optVal))) {
+                                    modelSelect.value = opt.value;
+                                    matched = true;
+                                    break;
+                                }
+                            }
+                            if (!matched) {
+                                modelSelect.add(new Option(r.model, r.model, true, true));
+                            }
+                        }
+                    }
+
+                    showToast(`✅ ถอดรหัส VIN สำเร็จ: ${r.make || r.brand} ${r.model} (${r.year})`, "success");
+                    // 4. Immediately execute search to display live matched parts
+                    performAdvancedSearch();
+                } else {
+                    showToast(data.detail || "ไม่สามารถถอดรหัส VIN ได้", "danger");
                 }
             } catch (err) {
-                console.error(err);
+                console.error("Error decoding VIN:", err);
                 showToast("ไม่สามารถถอดรหัส VIN ได้", "danger");
             }
         }
@@ -10824,12 +11008,13 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             customers.forEach(c => {
                 const tr = document.createElement('tr');
                 const healthClass = c.health_status === 'HEALTHY' ? 'verified' : (c.health_status === 'AT_RISK' ? 'danger' : 'reviewed');
-                const subClass = c.subscription_status === 'ACTIVE' ? 'verified' : (c.subscription_status === 'CANCELLED' ? 'danger' : 'reviewed');
+                const subClass = (c.subscription_status === 'ACTIVE' || c.subscription_status === 'TRIALING') ? 'verified' : (c.subscription_status === 'SUSPENDED' ? 'reviewed' : 'danger');
+                const isActive = (c.subscription_status === 'ACTIVE' || c.subscription_status === 'TRIALING');
 
                 tr.innerHTML = `
                     <td>
                         <strong style="color: #fff;">${c.name}</strong>
-                        <div style="font-size: 0.75rem; color: var(--text-muted);">${c.legal_name || ''}</div>
+                        <div style="font-size: 0.75rem; color: var(--text-muted);">${c.legal_name || ''} (#${c.id})</div>
                     </td>
                     <td><span class="nav-badge" style="background: rgba(96,165,250,0.15); color: #60A5FA;">${c.plan_tier}</span></td>
                     <td style="color: #34D399; font-weight: 700;">฿${c.mrr.toLocaleString()}</td>
@@ -10842,16 +11027,49 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     </td>
                     <td><span class="status-badge ${healthClass}">${c.health_score} &bull; ${c.health_status}</span></td>
                     <td style="color: var(--text-secondary); font-size: 0.8rem;">${c.renewal_date}</td>
-                    <td><span class="status-badge ${subClass}">${c.subscription_status}</span></td>
+                    <td>
+                        <span class="status-badge ${subClass}">
+                            <i class="fa-solid ${isActive ? 'fa-circle-check' : 'fa-circle-pause'}"></i> ${c.subscription_status}
+                        </span>
+                    </td>
                     <td style="text-align: right; white-space: nowrap;">
                         <button class="btn btn-secondary btn-sm" onclick="openCustomer360Modal(${c.id})" title="ดูภาพรวม 360"><i class="fa-solid fa-address-card"></i> 360</button>
                         <button class="btn btn-secondary btn-sm" onclick="openEditCustomerModal(${c.id})" title="แก้ไขข้อมูลลูกค้า"><i class="fa-solid fa-pen-to-square"></i> แก้ไข</button>
                         <button class="btn btn-secondary btn-sm" onclick="openChangeCustomerPlanModal(${c.id})" title="ปรับเปลี่ยนแพ็กเกจ"><i class="fa-solid fa-arrows-rotate"></i> ปรับแพ็กเกจ</button>
-                        ${c.id !== 1 ? `<button class="btn btn-danger btn-sm" onclick="confirmDeleteCustomer(${c.id}, '${(c.name || '').replace(/'/g, "\\'")}')" title="ลบข้อมูลลูกค้า"><i class="fa-solid fa-trash"></i></button>` : ''}
+                        ${c.id !== 1 ? `
+                            <button class="btn ${isActive ? 'btn-warning' : 'btn-success'} btn-sm" onclick="toggleOwnerCustomerStatus(${c.id}, '${c.subscription_status}')" title="${isActive ? 'ระงับการใช้งาน (Suspend)' : 'เปิดการใช้งาน (Activate)'}">
+                                <i class="fa-solid ${isActive ? 'fa-pause' : 'fa-play'}"></i> ${isActive ? 'พักใช้' : 'เปิดใช้'}
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="confirmDeleteCustomer(${c.id}, '${(c.name || '').replace(/'/g, "\\'")}')" title="ลบข้อมูลลูกค้า"><i class="fa-solid fa-trash"></i></button>
+                        ` : ''}
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        async function toggleOwnerCustomerStatus(orgId, currStatus) {
+            try {
+                const isActive = (currStatus === 'ACTIVE' || currStatus === 'TRIALING');
+                const actionLabel = isActive ? 'ระงับการใช้งานองค์กร (Suspend)' : 'เปิดการใช้งานองค์กร (Activate)';
+                if (!confirm(`ยืนยันการ${actionLabel} ขององค์กรลูกค้ารหัส #${orgId} หรือไม่?`)) return;
+
+                showToast("กำลังเปลี่ยนสถานะองค์กรลูกค้า...", "info");
+                const res = await fetch(`/api/owner/customers/${orgId}/toggle-active`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`✅ ${data.message || 'เปลี่ยนสถานะองค์กรเรียบร้อยแล้ว'}`, "success");
+                    loadOwnerCustomersTab();
+                } else {
+                    showToast(data.detail || data.error || "เกิดข้อผิดพลาดในการเปลี่ยนสถานะ", "danger");
+                }
+            } catch (err) {
+                console.error("Error toggling customer status:", err);
+                showToast("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้", "danger");
+            }
         }
 
         async function openCustomer360Modal(orgId) {
@@ -10885,12 +11103,23 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
                     // Team
                     const teamEl = document.getElementById('c360-team-list');
-                    teamEl.innerHTML = c.members.map(m => `
-                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.2rem;">
-                            <strong style="color: #fff;">${m.username}</strong>
-                            <span style="color: #60A5FA;">${m.org_role}</span>
+                    teamEl.innerHTML = c.members.length > 0 ? c.members.map(m => `
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding: 0.35rem 0;">
+                            <div>
+                                <strong style="color: #fff;">${m.username}</strong>
+                                <span style="font-size: 0.75rem; color: #60A5FA; margin-left: 0.5rem;">${m.org_role}</span>
+                                <span class="status-badge ${m.status === 'ACTIVE' ? 'verified' : 'danger'}" style="margin-left: 0.35rem; font-size: 0.7rem;">${m.status || 'ACTIVE'}</span>
+                            </div>
+                            <div style="display: flex; gap: 0.25rem;">
+                                <button class="btn btn-sm ${m.status === 'ACTIVE' ? 'btn-warning' : 'btn-success'}" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;" onclick="toggleOwnerMemberStatus(${m.user_id}, ${m.status === 'ACTIVE' ? 1 : 0}); setTimeout(() => openCustomer360Modal(${org.id}), 600);" title="เปิด/ปิดการใช้งาน">
+                                    ${m.status === 'ACTIVE' ? 'พักใช้' : 'เปิดใช้'}
+                                </button>
+                                <button class="btn btn-sm btn-danger" style="font-size: 0.7rem; padding: 0.15rem 0.4rem;" onclick="confirmDeleteOwnerMember(${m.user_id}, '${(m.username || '').replace(/'/g, "\\'")}'); setTimeout(() => openCustomer360Modal(${org.id}), 600);" title="ลบสมาชิก">
+                                    <i class="fa-solid fa-trash"></i>
+                                </button>
+                            </div>
                         </div>
-                    `).join('');
+                    `).join('') : '<span style="color: var(--text-muted); font-size: 0.8rem;">ไม่มีสมาชิกในองค์กรนี้</span>';
 
                     // Invoices
                     const invEl = document.getElementById('c360-invoices-list');
@@ -10954,23 +11183,290 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     const tbody = document.getElementById('owner-renewals-table-body');
                     if (tbody) {
                         tbody.innerHTML = '';
-                        s.renewal_pipeline.renewals_list.forEach(r => {
-                            const tr = document.createElement('tr');
-                            tr.innerHTML = `
-                                <td><strong style="color: #fff;">${r.org_name}</strong></td>
-                                <td><span class="nav-badge" style="background: rgba(96,165,250,0.15); color: #60A5FA;">${r.plan_name}</span></td>
-                                <td>${r.billing_interval}</td>
-                                <td style="color: #F59E0B; font-weight: 600;">${r.current_period_end ? r.current_period_end.split(' ')[0] : 'N/A'}</td>
-                                <td style="color: #34D399;">฿${r.base_price.toLocaleString()}</td>
-                                <td><span class="status-badge verified">${r.status}</span></td>
-                                <td style="text-align: right;"><button class="btn btn-secondary btn-sm" onclick="openCustomer360Modal(${r.org_id})">View 360</button></td>
-                            `;
-                            tbody.appendChild(tr);
-                        });
+                        if (!s.renewal_pipeline.renewals_list || s.renewal_pipeline.renewals_list.length === 0) {
+                            tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 1.5rem; color: var(--text-muted);"><i class="fa-solid fa-circle-info"></i> ไม่มีรายการต่ออายุในรอบ 30 วันข้างหน้า</td></tr>';
+                        } else {
+                            s.renewal_pipeline.renewals_list.forEach(r => {
+                                const tr = document.createElement('tr');
+                                tr.innerHTML = `
+                                    <td><strong style="color: #fff;">${r.org_name}</strong></td>
+                                    <td><span class="nav-badge" style="background: rgba(96,165,250,0.15); color: #60A5FA;">${r.plan_name}</span></td>
+                                    <td>${r.billing_interval}</td>
+                                    <td style="color: #F59E0B; font-weight: 600;">${r.current_period_end ? r.current_period_end.split(' ')[0] : 'N/A'}</td>
+                                    <td style="color: #34D399;">฿${r.base_price.toLocaleString()}</td>
+                                    <td><span class="status-badge verified">${r.status}</span></td>
+                                    <td style="text-align: right;"><button class="btn btn-secondary btn-sm" onclick="openCustomer360Modal(${r.org_id})">View 360</button></td>
+                                `;
+                                tbody.appendChild(tr);
+                            });
+                        }
                     }
+
+                    // Always load the system members table
+                    loadOwnerMembersTable();
                 }
             } catch (err) {
                 console.error("Error loading subscriptions tab:", err);
+            }
+        }
+
+        // ================= OWNER MEMBER MANAGEMENT CONTROLLER =================
+        let cachedOwnerMembers = [];
+
+        async function loadOwnerMembersTable() {
+            const tbody = document.getElementById('owner-members-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 1.5rem;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลดข้อมูลสมาชิก...</td></tr>';
+
+            try {
+                const res = await fetch('/api/owner/members', { headers: getAuthHeaders() });
+                const data = await res.json();
+                if (data.success) {
+                    cachedOwnerMembers = data.members || [];
+                    renderOwnerMembersTable(cachedOwnerMembers);
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="8" style="text-align: center; color: var(--danger); padding: 1.5rem;">${data.detail || data.error || 'ไม่สามารถโหลดข้อมูลสมาชิกได้'}</td></tr>`;
+                }
+            } catch (err) {
+                console.error("Error loading members:", err);
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--danger); padding: 1.5rem;">เกิดข้อผิดพลาดในการโหลดข้อมูลสมาชิก</td></tr>';
+            }
+        }
+
+        function filterOwnerMembersTable() {
+            const q = (document.getElementById('owner-member-search-input').value || '').toLowerCase().trim();
+            const filtered = cachedOwnerMembers.filter(m => {
+                return (m.username && m.username.toLowerCase().includes(q)) ||
+                       (m.email && m.email.toLowerCase().includes(q)) ||
+                       (m.org_name && m.org_name.toLowerCase().includes(q)) ||
+                       (m.role && m.role.toLowerCase().includes(q));
+            });
+            renderOwnerMembersTable(filtered);
+        }
+
+        function renderOwnerMembersTable(members) {
+            const tbody = document.getElementById('owner-members-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            if (members.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; color: var(--text-muted); padding: 2rem;">ไม่พบบัญชีสมาชิกตามเงื่อนไขที่ค้นหา</td></tr>';
+                return;
+            }
+
+            members.forEach(m => {
+                const tr = document.createElement('tr');
+                const isActive = (m.is_active === 1 || m.is_active === true || m.member_status === 'ACTIVE');
+                const isMasterOwner = (m.id === 1 || m.username === 'owner');
+
+                tr.innerHTML = `
+                    <td>
+                        <strong style="color: #fff;">${m.username}</strong>
+                        ${isMasterOwner ? '<span class="nav-badge" style="background: rgba(245,158,11,0.2); color: #F59E0B; margin-left: 0.35rem;">Primary Owner</span>' : ''}
+                        <div style="font-size: 0.72rem; color: var(--text-muted);">UID: #${m.id}</div>
+                    </td>
+                    <td><span style="color: var(--text-secondary); font-size: 0.85rem;">${m.email || '-'}</span></td>
+                    <td><strong style="color: #60A5FA;">${m.org_name || 'System Headquarters'}</strong></td>
+                    <td><span class="status-badge" style="background: rgba(59,130,246,0.15); color: #60A5FA;">${m.role}</span></td>
+                    <td><span style="font-size: 0.8rem; color: var(--text-muted);">${m.org_role || '-'}</span></td>
+                    <td>
+                        <span class="status-badge ${isActive ? 'verified' : 'danger'}">
+                            <i class="fa-solid ${isActive ? 'fa-circle-check' : 'fa-circle-pause'}"></i> ${isActive ? 'ACTIVE' : 'SUSPENDED'}
+                        </span>
+                    </td>
+                    <td style="color: var(--text-secondary); font-size: 0.8rem;">${m.created_at || '-'}</td>
+                    <td style="text-align: right; white-space: nowrap;">
+                        <button class="btn btn-secondary btn-sm" onclick="openEditMemberModal(${m.id})" title="แก้ไขข้อมูลสมาชิก"><i class="fa-solid fa-pen-to-square"></i> แก้ไข</button>
+                        ${!isMasterOwner ? `
+                            <button class="btn ${isActive ? 'btn-warning' : 'btn-success'} btn-sm" onclick="toggleOwnerMemberStatus(${m.id}, ${isActive ? 1 : 0})" title="${isActive ? 'ระงับการใช้งาน (Suspend)' : 'เปิดการใช้งาน (Activate)'}">
+                                <i class="fa-solid ${isActive ? 'fa-pause' : 'fa-play'}"></i> ${isActive ? 'พักใช้' : 'เปิดใช้'}
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="confirmDeleteOwnerMember(${m.id}, '${(m.username || '').replace(/'/g, "\\'")}')" title="ลบบัญชีสมาชิก"><i class="fa-solid fa-trash"></i></button>
+                        ` : ''}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function openCreateMemberModal() {
+            const orgSelect = document.getElementById('create-member-org-id');
+            if (orgSelect) {
+                orgSelect.innerHTML = '<option value="">-- ไม่สังกัดองค์กร (Platform Admin/HQ) --</option>';
+                (cachedOwnerCustomers || []).forEach(c => {
+                    orgSelect.innerHTML += `<option value="${c.id}">${c.name} (#${c.id})</option>`;
+                });
+            }
+            document.getElementById('create-member-username').value = '';
+            document.getElementById('create-member-email').value = '';
+            document.getElementById('create-member-password').value = '123456';
+            const modal = document.getElementById('modal-owner-create-member');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeCreateMemberModal() {
+            const modal = document.getElementById('modal-owner-create-member');
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function submitCreateMember(event) {
+            if (event) event.preventDefault();
+            const username = document.getElementById('create-member-username').value.trim();
+            if (!username) {
+                showToast("กรุณากรอก Username", "warning");
+                return;
+            }
+            const email = document.getElementById('create-member-email').value.trim();
+            const password = document.getElementById('create-member-password').value.trim() || '123456';
+            const role = document.getElementById('create-member-system-role').value;
+            const orgIdVal = document.getElementById('create-member-org-id').value;
+
+            const payload = {
+                username: username,
+                email: email,
+                password: password,
+                role: role,
+                org_id: orgIdVal ? parseInt(orgIdVal, 10) : null,
+                org_role: role === 'ADMIN' ? 'ADMIN' : 'STAFF'
+            };
+
+            try {
+                const btn = document.getElementById('btn-save-new-member');
+                if (btn) btn.disabled = true;
+                showToast("กำลังสร้างบัญชีสมาชิก...", "info");
+
+                const res = await fetch('/api/owner/members', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`✅ ${data.message || 'สร้างสมาชิกเรียบร้อยแล้ว'}`, "success");
+                    closeCreateMemberModal();
+                    loadOwnerMembersTable();
+                } else {
+                    showToast(data.detail || data.error || "ไม่สามารถสร้างสมาชิกได้", "danger");
+                }
+            } catch (err) {
+                console.error("Error creating member:", err);
+                showToast("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้", "danger");
+            } finally {
+                const btn = document.getElementById('btn-save-new-member');
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        function openEditMemberModal(userId) {
+            const member = (cachedOwnerMembers || []).find(m => m.id === userId);
+            if (!member) {
+                showToast("ไม่พบข้อมูลสมาชิก", "warning");
+                return;
+            }
+
+            document.getElementById('edit-member-id').value = member.id;
+            document.getElementById('edit-member-username').value = member.username || '';
+            document.getElementById('edit-member-email').value = member.email || '';
+            document.getElementById('edit-member-system-role').value = member.role || 'STAFF';
+            document.getElementById('edit-member-status').value = (member.is_active === 1 || member.is_active === true) ? '1' : '0';
+
+            const modal = document.getElementById('modal-owner-edit-member');
+            if (modal) modal.style.display = 'flex';
+        }
+
+        function closeEditMemberModal() {
+            const modal = document.getElementById('modal-owner-edit-member');
+            if (modal) modal.style.display = 'none';
+        }
+
+        async function submitEditMember(event) {
+            if (event) event.preventDefault();
+            const userId = document.getElementById('edit-member-id').value;
+            if (!userId) return;
+
+            const payload = {
+                username: document.getElementById('edit-member-username').value.trim(),
+                email: document.getElementById('edit-member-email').value.trim(),
+                role: document.getElementById('edit-member-system-role').value,
+                is_active: parseInt(document.getElementById('edit-member-status').value, 10)
+            };
+
+            try {
+                const btn = document.getElementById('btn-save-member-profile');
+                if (btn) btn.disabled = true;
+                showToast("กำลังบันทึกข้อมูลสมาชิก...", "info");
+
+                const res = await fetch(`/api/owner/members/${userId}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`✅ ${data.message || 'บันทึกข้อมูลสมาชิกสำเร็จ'}`, "success");
+                    closeEditMemberModal();
+                    loadOwnerMembersTable();
+                } else {
+                    showToast(data.detail || data.error || "เกิดข้อผิดพลาดในการบันทึก", "danger");
+                }
+            } catch (err) {
+                console.error("Error updating member:", err);
+                showToast("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้", "danger");
+            } finally {
+                const btn = document.getElementById('btn-save-member-profile');
+                if (btn) btn.disabled = false;
+            }
+        }
+
+        async function toggleOwnerMemberStatus(userId, currActive) {
+            try {
+                const isActive = (currActive === 1 || currActive === true);
+                const actionLabel = isActive ? 'ระงับการใช้งาน (Suspend)' : 'เปิดการใช้งาน (Activate)';
+                if (!confirm(`ยืนยันการ${actionLabel}ของสมาชิกรายนี้หรือไม่?`)) return;
+
+                showToast("กำลังเปลี่ยนสถานะสมาชิก...", "info");
+                const res = await fetch(`/api/owner/members/${userId}/toggle-active`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`✅ ${data.message || 'เปลี่ยนสถานะเรียบร้อยแล้ว'}`, "success");
+                    loadOwnerMembersTable();
+                } else {
+                    showToast(data.detail || data.error || "ไม่สามารถเปลี่ยนสถานะได้", "danger");
+                }
+            } catch (err) {
+                console.error("Error toggling member status:", err);
+                showToast("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้", "danger");
+            }
+        }
+
+        async function confirmDeleteOwnerMember(userId, username) {
+            if (userId === 1) {
+                showToast("ไม่อนุญาตให้ลบบัญชีผู้ดูแลระบบหลัก (Platform Owner)", "warning");
+                return;
+            }
+
+            if (!confirm(`⚠️ ยืนยันการลบบัญชีสมาชิก "${username}" (ID: #${userId}) หรือไม่?\nข้อมูลที่เกี่ยวข้องกับผู้ใช้นี้จะถูกลบออกจากระบบ`)) {
+                return;
+            }
+
+            try {
+                showToast("กำลังลบบัญชีสมาชิก...", "info");
+                const res = await fetch(`/api/owner/members/${userId}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`✅ ${data.message || 'ลบบัญชีสมาชิกเรียบร้อยแล้ว'}`, "success");
+                    loadOwnerMembersTable();
+                } else {
+                    showToast(data.detail || data.error || "ไม่สามารถลบบัญชีสมาชิกได้", "danger");
+                }
+            } catch (err) {
+                console.error("Error deleting member:", err);
+                showToast("ไม่สามารถเชื่อมต่อเซิร์ฟเวอร์ได้", "danger");
             }
         }
 
@@ -11413,6 +11909,10 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             document.getElementById('edit-cust-taxid').value = customer.tax_id || '';
             document.getElementById('edit-cust-legal-name').value = customer.legal_name || '';
             document.getElementById('edit-cust-address').value = customer.billing_address || '';
+            const statusSelect = document.getElementById('edit-cust-status');
+            if (statusSelect) {
+                statusSelect.value = (customer.subscription_status === 'ACTIVE' || customer.subscription_status === 'TRIALING') ? 'ACTIVE' : (customer.subscription_status || 'SUSPENDED');
+            }
 
             const modal = document.getElementById('modal-owner-edit-customer');
             if (modal) modal.style.display = 'flex';
@@ -11427,6 +11927,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             if (event) event.preventDefault();
             const orgId = document.getElementById('edit-cust-org-id').value;
             if (!orgId) return;
+            const customer = (window.cachedOwnerCustomers || []).find(c => c.id === parseInt(orgId, 10)) || {};
 
             const payload = {
                 name: document.getElementById('edit-cust-name').value.trim(),
@@ -11451,6 +11952,19 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 });
                 const data = await res.json();
                 if (data.success) {
+                    // Update subscription status if altered in modal
+                    const chosenStatus = document.getElementById('edit-cust-status') ? document.getElementById('edit-cust-status').value : null;
+                    if (chosenStatus && chosenStatus !== customer.subscription_status) {
+                        await fetch(`/api/owner/customers/${orgId}/subscription`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                            body: JSON.stringify({
+                                plan_id: (customer.plan_tier || 'starter').toLowerCase(),
+                                status: chosenStatus
+                            })
+                        });
+                    }
+
                     showToast("✅ บันทึกข้อมูลลูกค้าสำเร็จ", "success");
                     closeEditCustomerModal();
                     loadOwnerCustomersTab();

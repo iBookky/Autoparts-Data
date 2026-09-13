@@ -94,8 +94,8 @@ class PGCursorWrapper:
             flags=re.IGNORECASE
         )
         converted_sql = re.sub(
-            r"datetime\s*\(\s*'now'\s*,\s*'\+(\d+)\s*days?'\s*\)",
-            r"(CURRENT_TIMESTAMP + INTERVAL '\1 days')",
+            r"datetime\s*\(\s*'now'\s*,\s*'([+-]?\d+)\s*(days?|hours?|months?|years?|minutes?)'\s*\)",
+            r"(CURRENT_TIMESTAMP + INTERVAL '\1 \2')",
             converted_sql,
             flags=re.IGNORECASE
         )

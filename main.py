@@ -118,6 +118,12 @@ from backend.database import (
     delete_organization_db,
     update_organization_db,
     update_customer_subscription_package_db,
+    toggle_customer_org_active_db,
+    get_owner_all_members_db,
+    create_owner_member_db,
+    update_owner_member_db,
+    toggle_owner_member_active_db,
+    delete_owner_member_db,
     clean_demo_and_test_data_db,
     confirm_invoice_payment_db,
     invite_organization_member,
@@ -3106,6 +3112,58 @@ async def update_owner_customer_subscription(org_id: int, data: Dict[str, Any], 
         raise HTTPException(status_code=400, detail=res.get("error", "ไม่สามารถปรับเปลี่ยนแพ็กเกจได้"))
     log_audit_action(user.get("id", 1), user["username"], user["role"], "CHANGE_CUSTOMER_PLAN", "subscriptions", org_id, None, f"Changed organization {org_id} plan to {plan_id} ({status})")
     return res
+
+@app.post("/api/owner/customers/{org_id}/toggle-active")
+async def toggle_owner_customer_active(org_id: int, user = Depends(require_owner)):
+    res = toggle_customer_org_active_db(org_id)
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("error", "ไม่สามารถเปลี่ยนสถานะองค์กรได้"))
+    log_audit_action(user.get("id", 1), user["username"], user["role"], "TOGGLE_CUSTOMER_STATUS", "organizations", org_id, None, f"Toggled organization {org_id} status to {res.get('new_status')}")
+    return res
+
+# ================= OWNER MEMBERS / USERS MANAGEMENT =================
+@app.get("/api/owner/members")
+async def get_owner_members(user = Depends(require_owner)):
+    members = get_owner_all_members_db()
+    return {"success": True, "members": members, "total": len(members)}
+
+@app.post("/api/owner/members")
+async def create_owner_member(data: Dict[str, Any], user = Depends(require_owner)):
+    res = create_owner_member_db(data)
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("error", "ไม่สามารถสร้างบัญชีสมาชิกได้"))
+    log_audit_action(user.get("id", 1), user["username"], user["role"], "CREATE_MEMBER", "users", res.get("user_id"), None, f"Created member {data.get('username')}")
+    return res
+
+@app.put("/api/owner/members/{user_id}")
+async def update_owner_member(user_id: int, data: Dict[str, Any], user = Depends(require_owner)):
+    res = update_owner_member_db(user_id, data)
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("error", "ไม่สามารถแก้ไขข้อมูลสมาชิกได้"))
+    log_audit_action(user.get("id", 1), user["username"], user["role"], "UPDATE_MEMBER", "users", user_id, None, f"Updated member #{user_id}")
+    return res
+
+@app.post("/api/owner/members/{user_id}/toggle-active")
+async def toggle_owner_member_active(user_id: int, user = Depends(require_owner)):
+    res = toggle_owner_member_active_db(user_id)
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("error", "ไม่สามารถเปลี่ยนสถานะสมาชิกได้"))
+    log_audit_action(user.get("id", 1), user["username"], user["role"], "TOGGLE_MEMBER_STATUS", "users", user_id, None, f"Toggled member #{user_id} active status to {res.get('status')}")
+    return res
+
+@app.delete("/api/owner/members/{user_id}")
+async def delete_owner_member(user_id: int, user = Depends(require_owner)):
+    res = delete_owner_member_db(user_id)
+    if not res.get("success"):
+        raise HTTPException(status_code=400, detail=res.get("error", "ไม่สามารถลบบัญชีสมาชิกได้"))
+    log_audit_action(user.get("id", 1), user["username"], user["role"], "DELETE_MEMBER", "users", user_id, None, f"Deleted member #{user_id}")
+    return res
+
+# Alias for owner audit logs
+@app.get("/api/owner/audit-logs")
+async def get_owner_audit_logs_alias(limit: int = 50, user = Depends(require_owner)):
+    logs = get_platform_audit_logs(limit=limit)
+    return {"success": True, "logs": logs}
 
 # ================= OWNER REVENUE & FINANCIAL SUMMARY =================
 @app.get("/api/owner/financial-summary")
