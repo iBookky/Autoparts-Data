@@ -152,7 +152,7 @@ class TestOwnerMembersAndVinSearch(unittest.TestCase):
             self.assertIn("role_display", members[0])
 
     def test_vin_decoding_and_search(self):
-        """Test that VIN MR0ZZ69G803102002 decodes and searches real matching automotive parts."""
+        """Test that VIN MR0ZZ69G803102002 decodes exactly as Fortuner and searches matching automotive parts."""
         # 1. Decode VIN
         vin = "MR0ZZ69G803102002"
         res_dec = self.client.get(f"/api/parts/decode-vin?vin={vin}", headers=self.owner_headers)
@@ -161,7 +161,8 @@ class TestOwnerMembersAndVinSearch(unittest.TestCase):
         self.assertTrue(data_dec["success"])
         specs = data_dec["results"]
         self.assertEqual(specs["brand"].upper(), "TOYOTA")
-        self.assertIn("FORTUNER", specs["model"].upper())
+        self.assertEqual(specs["model"], "Fortuner")
+        self.assertNotIn("/", specs["model"])
 
         # 2. Search parts by VIN
         res_search = self.client.get(f"/api/parts/search?vin={vin}", headers=self.owner_headers)
@@ -174,6 +175,32 @@ class TestOwnerMembersAndVinSearch(unittest.TestCase):
         # Check that parts match Toyota vehicle fitment
         for r in results:
             self.assertEqual(r["car_brand"].upper(), "TOYOTA")
+
+    def test_exact_single_models_for_popular_thai_vins(self):
+        """Verify that popular Thai automotive VINs decode to exact registered models without slashes."""
+        test_cases = [
+            ("MR0ZZ69G803102002", "Toyota", "Fortuner"),
+            ("MR0ER22G550012345", "Toyota", "Hilux Vigo"),
+            ("MR0HA8CD8J0012345", "Toyota", "Hilux Revo"),
+            ("MRHFC1640JT001234", "Honda", "Civic"),
+            ("MRHGM6640ET001234", "Honda", "City"),
+            ("MRHGK5850ET001234", "Honda", "Jazz"),
+            ("MP1TFR87JHT001234", "ISUZU", "D-Max"),
+            ("MP1RF87JHT001234", "ISUZU", "MU-X"),
+            ("MNB2B3750HT001234", "Ford", "Ranger"),
+            ("MNBU63750HT001234", "Ford", "Everest"),
+            ("MMAKL1T80NT001234", "Mitsubishi", "Triton"),
+            ("MMAGN0W80NT001234", "Mitsubishi", "Pajero Sport"),
+            ("MNTD23800NT001234", "Nissan", "Navara"),
+            ("MNTN18800NT001234", "Nissan", "Almera")
+        ]
+        for vin, exp_brand, exp_model in test_cases:
+            res = self.client.get(f"/api/parts/decode-vin?vin={vin}", headers=self.owner_headers)
+            self.assertEqual(res.status_code, 200, f"Failed decoding {vin}")
+            data = res.json()["results"]
+            self.assertEqual(data["brand"].upper(), exp_brand.upper(), f"Brand mismatch for {vin}")
+            self.assertEqual(data["model"], exp_model, f"Model mismatch for {vin}")
+            self.assertNotIn("/", data["model"], f"Compound slash detected in model for {vin}")
 
     def test_bmw_vin_decoding_and_search(self):
         """Test BMW 3 Series VIN decoding (WBA3A5C50LAH00856) and fitment parts lookup."""

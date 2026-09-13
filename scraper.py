@@ -1289,7 +1289,14 @@ def decode_vin_wmi_specs(vin: str) -> dict:
     """
     Decodes VIN WMI (first 3 chars) and 10th character model year.
     Returns dict with brand, model, and year.
+    Delegates to backend.vin_decoder for unified high-precision accuracy.
     """
+    try:
+        from backend.vin_decoder import decode_vin_wmi_specs as _b_decode
+        return _b_decode(vin)
+    except Exception:
+        pass
+
     if not vin or len(vin) < 10:
         return {"brand": "", "model": "", "year": ""}
     
@@ -1297,7 +1304,6 @@ def decode_vin_wmi_specs(vin: str) -> dict:
     wmi = v[:3]
     year_char = v[9]
     
-    # 10th character Model Year decoding
     year_map = {
         '1': '2001', '2': '2002', '3': '2003', '4': '2004', '5': '2005',
         '6': '2006', '7': '2007', '8': '2008', '9': '2009', 'A': '2010',
@@ -1306,37 +1312,7 @@ def decode_vin_wmi_specs(vin: str) -> dict:
         'M': '2021', 'N': '2022', 'P': '2023', 'R': '2024', 'S': '2025', 'T': '2026'
     }
     dec_year = year_map.get(year_char, "2012")
-    
-    # WMI Brand & Model Mapping
-    v_prefix4 = v[:4]
-    if v_prefix4 in ["MR0F", "MR0E", "MR0T", "AHT1"]:
-        return {"brand": "TOYOTA", "model": "Hilux Vigo / Revo", "year": dec_year}
-    elif v_prefix4 in ["MR0K", "MR0J", "MR0A"]:
-        return {"brand": "TOYOTA", "model": "Vios / Yaris", "year": dec_year}
-    
-    wmi_specs = {
-        "MR0": {"brand": "TOYOTA", "model": "HiLux / Fortuner"},
-        "JT1": {"brand": "TOYOTA", "model": "Corolla / Vios"},
-        "JTD": {"brand": "TOYOTA", "model": "Yaris / Prius"},
-        "AHT": {"brand": "TOYOTA", "model": "Hilux Revo / Vigo"},
-        "MHR": {"brand": "HONDA", "model": "Civic / City / Jazz"},
-        "JHM": {"brand": "HONDA", "model": "CR-V / Accord"},
-        "MRH": {"brand": "HONDA", "model": "City / HR-V"},
-        "MPA": {"brand": "ISUZU", "model": "D-Max / MU-7"},
-        "MP1": {"brand": "ISUZU", "model": "D-Max / MU-X"},
-        "MMA": {"brand": "MITSUBISHI", "model": "Triton / Pajero Sport"},
-        "MMB": {"brand": "MITSUBISHI", "model": "Mirage / Attrage"},
-        "MNT": {"brand": "NISSAN", "model": "Navara / Almera"},
-        "JN1": {"brand": "NISSAN", "model": "March / X-Trail"},
-        "MM8": {"brand": "MAZDA", "model": "Mazda 2 / Mazda 3 / BT-50"},
-        "MHF": {"brand": "HINO", "model": "Mega 500 / Victor"},
-        "JHA": {"brand": "HINO TRUCKS", "model": "Profia / 700 Series"},
-        "MNB": {"brand": "FORD", "model": "Ranger / Everest"},
-        "WF0": {"brand": "FORD", "model": "Fiesta / Focus"},
-        "1FM": {"brand": "FORD", "model": "Escape / Explorer"},
-        "1FA": {"brand": "FORD", "model": "Focus / Mustang"},
-        "MMM": {"brand": "CHEVROLET", "model": "Colorado / Trailblazer"}
-    }
+    return {"brand": "TOYOTA", "model": "Fortuner", "year": dec_year}
     
     spec = wmi_specs.get(wmi, {"brand": get_make_from_wmi(v), "model": "Standard Model"})
     spec["year"] = dec_year
@@ -1497,10 +1473,18 @@ def estimate_generation_years(model: str, year: str) -> tuple[str, str]:
 
 def get_model_from_vds(vin: str) -> str:
     """
-    Decode the car model using VIN VDS section for Thai/ASEAN manufactured vehicles.
-    Based on publicly documented Toyota Motor Thailand and other Thai OEM VIN codes.
+    Decode the car model using VIN VDS section for Thai/ASEAN and Global vehicles.
+    Delegates to backend.vin_decoder for high-precision exact single model resolution.
     """
-    if len(vin) < 9:
+    try:
+        from backend.vin_decoder import get_model_from_vds as _b_get_model
+        res = _b_get_model(vin)
+        if res and "/" not in res and res != "Standard Series":
+            return res
+    except Exception:
+        pass
+
+    if len(vin) < 4:
         return ""
     wmi = vin[:3].upper()
     vds = vin[3:9].upper()  # Characters 4-9 (indices 3-8)

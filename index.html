@@ -6816,20 +6816,35 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=à¸
                     if (r.model) {
                         const modelSelect = document.getElementById('s-car-model');
                         if (modelSelect) {
-                            const subTokens = r.model.split(/[\/,]/).map(s => s.trim().toUpperCase()).filter(Boolean);
+                            const rawTarget = r.model.trim();
+                            const targetUpper = rawTarget.toUpperCase();
                             let matched = false;
+
+                            // Priority 1: Exact case-insensitive match against registered model options
                             for (let opt of modelSelect.options) {
-                                if (!opt.value) continue;
-                                const optVal = opt.value.toUpperCase();
-                                if (subTokens.some(tok => optVal.includes(tok) || tok.includes(optVal))) {
+                                if (opt.value && opt.value.trim().toUpperCase() === targetUpper) {
                                     modelSelect.value = opt.value;
                                     matched = true;
                                     break;
                                 }
                             }
+                            // Priority 2: Word / substring match against registered model options
                             if (!matched) {
-                                modelSelect.add(new Option(r.model, r.model, true, true));
-                                modelSelect.value = r.model;
+                                const subTokens = rawTarget.split(/[\/,]/).map(s => s.trim().toUpperCase()).filter(Boolean);
+                                for (let opt of modelSelect.options) {
+                                    if (!opt.value) continue;
+                                    const optVal = opt.value.trim().toUpperCase();
+                                    if (subTokens.some(tok => optVal === tok || optVal.includes(tok) || tok.includes(optVal))) {
+                                        modelSelect.value = opt.value;
+                                        matched = true;
+                                        break;
+                                    }
+                                }
+                            }
+                            // Priority 3: Add clean option if not present in dropdown
+                            if (!matched) {
+                                modelSelect.add(new Option(rawTarget, rawTarget, true, true));
+                                modelSelect.value = rawTarget;
                             }
                         }
                     }
