@@ -1279,22 +1279,50 @@ class AgentSkillToggleRequest(BaseModel):
 
 @app.get("/api/parts/decode-vin")
 async def decode_vin_endpoint(vin: str):
-    vin_cleaned = vin.strip().upper()
-    if not vin_cleaned or len(vin_cleaned) != 17:
-        raise HTTPException(status_code=400, detail="รูปแบบเลข VIN ไม่ถูกต้อง ต้องมีความยาว 17 หลัก")
+    import re
+    vin_cleaned = re.sub(r'[^A-Za-z0-9]', '', vin).strip().upper() if vin else ""
+    if not vin_cleaned or len(vin_cleaned) < 10 or len(vin_cleaned) > 17:
+        raise HTTPException(status_code=400, detail="รูปแบบเลข VIN ไม่ถูกต้อง ต้องมีความยาวระหว่าง 10 ถึง 17 หลัก")
     try:
-        from scraper import decode_vin_wmi_specs, get_model_from_vds
-        specs = decode_vin_wmi_specs(vin_cleaned)
-        vds_model = get_model_from_vds(vin_cleaned)
-        
-        brand = specs.get("brand", "").title()
-        model = vds_model or specs.get("model", "")
-        year = specs.get("year", "")
+        brand = ""
+        model = ""
+        year = ""
+        country = ""
+        engine = "Standard Powertrain"
+        fuel_type = "Gasoline/Diesel"
 
-        # Fallback to standard decoding if needed
-        if not brand:
-            from scraper import get_make_from_wmi
-            brand = get_make_from_wmi(vin_cleaned) or "Toyota"
+        # 1. Primary Standalone High-Speed VIN Decoder (No external dependencies)
+        try:
+            from backend.vin_decoder import decode_full_vin
+            res = decode_full_vin(vin_cleaned)
+            brand = res.get("brand", "")
+            model = res.get("model", "")
+            year = res.get("year", "")
+            country = res.get("country", "")
+        except Exception as ex:
+            print(f"vin_decoder failed, attempting fallback: {ex}")
+
+        # 2. Fallback to Scraper VIN helper if primary was inconclusive
+        if not brand or not model:
+            try:
+                from scraper import decode_vin_wmi_specs, get_model_from_vds, get_make_from_wmi
+                specs = decode_vin_wmi_specs(vin_cleaned)
+                vds_model = get_model_from_vds(vin_cleaned)
+                if not brand:
+                    brand = specs.get("brand") or get_make_from_wmi(vin_cleaned)
+                if not model:
+                    model = vds_model or specs.get("model")
+                if not year:
+                    year = specs.get("year")
+            except Exception as ex_sc:
+                print(f"Scraper VIN helper fallback exception: {ex_sc}")
+
+        # Brand normalization
+        brand = brand or "Toyota"
+        if brand.upper() in ("BMW", "MG", "BYD", "GWM", "ISUZU"):
+            brand = brand.upper()
+        else:
+            brand = brand.title()
 
         return {
             "success": True, 
@@ -1304,8 +1332,9 @@ async def decode_vin_endpoint(vin: str):
                 "make": brand,
                 "model": model or "Standard Series",
                 "year": year or "2015",
-                "engine": "Standard Powertrain",
-                "fuel_type": "Gasoline/Diesel"
+                "country": country or "Global",
+                "engine": engine,
+                "fuel_type": fuel_type
             }
         }
     except Exception as e:

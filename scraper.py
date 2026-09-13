@@ -2893,7 +2893,17 @@ async def discover_car_parts(vin: str, brand: str, product_name: str) -> dict:
 
 # ----------------- Full-Data AI Processing & Sheets Integration -----------------
 
-from sheets_helper import SheetsHelper
+try:
+    from sheets_helper import SheetsHelper
+except Exception:
+    try:
+        import sys, os
+        _dir = os.path.dirname(os.path.abspath(__file__))
+        if _dir not in sys.path:
+            sys.path.insert(0, _dir)
+        from sheets_helper import SheetsHelper
+    except Exception:
+        SheetsHelper = None
 
 async def call_gemini_json(prompt: str) -> dict:
     """Helper to query Gemini API with a JSON-producing prompt."""

@@ -6759,11 +6759,15 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
         // ================= VIN DECODER & DIRECT SEARCH =================
         async function decodeVinInput() {
-            const vin = document.getElementById('s-vin').value.trim();
-            if (!vin || vin.length !== 17) {
-                showToast("กรุณากรอกเลข VIN 17 หลักให้ถูกต้อง", "warning");
+            const rawVin = (document.getElementById('s-vin')?.value || '').trim();
+            const vin = rawVin.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+            if (!vin || vin.length < 10 || vin.length > 17) {
+                showToast("กรุณากรอกเลข VIN 10 ถึง 17 หลักให้ถูกต้อง", "warning");
                 return;
             }
+            // Normalize field value
+            document.getElementById('s-vin').value = vin;
+
             try {
                 showToast("กำลังถอดรหัส VIN และค้นหาอะไหล่ที่ตรงรุ่น...", "info");
                 const res = await fetch(`/api/parts/decode-vin?vin=${encodeURIComponent(vin)}`, { headers: getAuthHeaders() });
@@ -6791,6 +6795,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                         }
                         if (!brandMatched) {
                             brandSelect.add(new Option(r.make || r.brand, r.make || r.brand, true, true));
+                            brandSelect.value = r.make || r.brand;
                             onSalesCarBrandChanged();
                         }
                     }
@@ -6802,6 +6807,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             yearSelect.value = r.year;
                             if (yearSelect.value !== r.year) {
                                 yearSelect.add(new Option(r.year, r.year, true, true));
+                                yearSelect.value = r.year;
                             }
                         }
                     }
@@ -6823,6 +6829,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             }
                             if (!matched) {
                                 modelSelect.add(new Option(r.model, r.model, true, true));
+                                modelSelect.value = r.model;
                             }
                         }
                     }

@@ -363,20 +363,30 @@ def advanced_search_parts(
     # If VIN is provided but car_brand / car_model / car_year are missing, VIN is used as a helper to decode vehicle specs
     if vin and (not car_brand or not car_model or not car_year):
         try:
-            from scraper import decode_vin_wmi_specs, get_model_from_vds
-            wmi_dec = decode_vin_wmi_specs(vin)
-            if not car_brand and wmi_dec.get("brand"):
-                car_brand = wmi_dec["brand"]
-            if not car_model:
-                vds_model = get_model_from_vds(vin)
-                if vds_model:
-                    car_model = vds_model
-                elif wmi_dec.get("model") and wmi_dec.get("model") != "Standard Model":
-                    car_model = wmi_dec["model"]
-            if not car_year and wmi_dec.get("year"):
-                car_year = str(wmi_dec["year"])
-        except Exception as e:
-            print(f"Error decoding vehicle info from VIN helper: {e}")
+            from backend.vin_decoder import decode_full_vin
+            v_spec = decode_full_vin(vin)
+            if not car_brand and v_spec.get("brand"):
+                car_brand = v_spec["brand"]
+            if not car_model and v_spec.get("model"):
+                car_model = v_spec["model"]
+            if not car_year and v_spec.get("year"):
+                car_year = str(v_spec["year"])
+        except Exception:
+            try:
+                from scraper import decode_vin_wmi_specs, get_model_from_vds
+                wmi_dec = decode_vin_wmi_specs(vin)
+                if not car_brand and wmi_dec.get("brand"):
+                    car_brand = wmi_dec["brand"]
+                if not car_model:
+                    vds_model = get_model_from_vds(vin)
+                    if vds_model:
+                        car_model = vds_model
+                    elif wmi_dec.get("model") and wmi_dec.get("model") != "Standard Model":
+                        car_model = wmi_dec["model"]
+                if not car_year and wmi_dec.get("year"):
+                    car_year = str(wmi_dec["year"])
+            except Exception as e:
+                print(f"Error decoding vehicle info from VIN helper: {e}")
         
     # 2. Car Info
     if car_brand:

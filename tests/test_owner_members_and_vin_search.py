@@ -175,6 +175,29 @@ class TestOwnerMembersAndVinSearch(unittest.TestCase):
         for r in results:
             self.assertEqual(r["car_brand"].upper(), "TOYOTA")
 
+    def test_bmw_vin_decoding_and_search(self):
+        """Test BMW 3 Series VIN decoding (WBA3A5C50LAH00856) and fitment parts lookup."""
+        vin = "WBA3A5C50LAH00856"
+        res_dec = self.client.get(f"/api/parts/decode-vin?vin={vin}", headers=self.owner_headers)
+        self.assertEqual(res_dec.status_code, 200)
+        data_dec = res_dec.json()
+        self.assertTrue(data_dec["success"])
+        specs = data_dec["results"]
+        self.assertEqual(specs["brand"].upper(), "BMW")
+        self.assertEqual(specs["model"].upper(), "3 SERIES")
+        self.assertEqual(specs["year"], "2020")
+
+        # Search parts by BMW VIN
+        res_search = self.client.get(f"/api/parts/search?vin={vin}", headers=self.owner_headers)
+        self.assertEqual(res_search.status_code, 200)
+        data_search = res_search.json()
+        self.assertTrue(data_search["success"])
+        results = data_search.get("results", [])
+        self.assertTrue(len(results) > 0, "BMW VIN search should return matching parts")
+        for r in results:
+            self.assertEqual(r["car_brand"].upper(), "BMW")
+
+
     def test_oem_and_sku_parts_lookup(self):
         """Test searching with OEM 04465-0K360 and SKU GDB3534UT returns matching cross-reference parts."""
         res_oem = self.client.get("/api/parts/search?oem_code=04465-0K360", headers=self.owner_headers)
