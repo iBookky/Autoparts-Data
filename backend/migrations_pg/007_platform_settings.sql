@@ -61,6 +61,9 @@ CREATE TABLE IF NOT EXISTS platform_settings (
     invoice_terms_conditions TEXT DEFAULT 'กรุณาชำระเงินภายในระยะเวลาที่กำหนด หากเกินกำหนดระบบจะระงับการเข้าถึงบริการชั่วคราว',
     invoice_theme_color VARCHAR(50) DEFAULT '#2563EB',
     
+    -- Commercial Add-ons Sale Configuration
+    addons_sale_enabled SMALLINT DEFAULT 1,
+    
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

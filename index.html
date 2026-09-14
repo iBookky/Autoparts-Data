@@ -1023,6 +1023,39 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                 <p style="font-size: 0.85rem; color: var(--text-secondary);" data-i18n="subscription.addonsSubtitle">Expand your search quota, user limits, API access, or AI neural search capability on top of any plan.</p>
                             </div>
                         </div>
+
+                        <!-- Owner Control Bar (Visible to OWNER / SUPER_ADMIN) -->
+                        <div id="owner-addons-control-bar" style="display: none; background: rgba(30, 58, 138, 0.25); border: 1px solid rgba(59, 130, 246, 0.4); border-radius: var(--radius-sm); padding: 1rem 1.25rem; margin-bottom: 1.5rem; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 0.85rem;">
+                                <div style="width: 38px; height: 38px; border-radius: 8px; background: rgba(59, 130, 246, 0.2); display: flex; align-items: center; justify-content: center; color: #60A5FA; font-size: 1.15rem;">
+                                    <i class="fa-solid fa-crown"></i>
+                                </div>
+                                <div>
+                                    <div style="font-weight: 600; font-size: 0.95rem; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
+                                        <span data-i18n="subscription.ownerAddonsControl">แผงควบคุมเจ้าของระบบ: สิทธิ์การขายแพ็กเกจเสริม</span>
+                                        <span id="owner-global-addon-status-pill" class="badge" style="background: rgba(16, 185, 129, 0.2); color: #34D399; font-size: 0.75rem; padding: 2px 8px; border-radius: 9999px;">เปิดขายให้สมาชิก</span>
+                                    </div>
+                                    <div style="font-size: 0.8rem; color: var(--text-secondary);" data-i18n="subscription.ownerAddonsDesc">
+                                        กำหนดว่าจะเปิดระบบขายแพ็กเกจเสริมให้สมาชิกกดซื้อเพิ่มได้หรือไม่ หรือเปิด/ปิดขายรายแพ็กเกจ
+                                    </div>
+                                </div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; user-select: none; margin: 0; font-size: 0.85rem; font-weight: 600; color: #fff;">
+                                    <span data-i18n="subscription.globalSaleLabel">เปิดขายให้สมาชิก:</span>
+                                    <input type="checkbox" id="toggle-global-addons-sale-switch" onchange="toggleOwnerGlobalAddonSale(this.checked)" style="width: 1.2rem; height: 1.2rem; cursor: pointer; accent-color: #3B82F6;">
+                                </label>
+                                <button type="button" class="btn btn-primary btn-sm" onclick="openCreateAddonModal()">
+                                    <i class="fa-solid fa-plus"></i> เพิ่มแพ็กเกจเสริมใหม่
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Customer Notice if Add-ons closed -->
+                        <div id="customer-addons-closed-notice" style="display: none; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: var(--radius-sm); padding: 0.85rem 1rem; margin-bottom: 1.25rem; color: #FBBF24; font-size: 0.85rem; display: flex; align-items: center; gap: 0.6rem;">
+                            <i class="fa-solid fa-circle-info" style="font-size: 1.1rem; flex-shrink: 0;"></i>
+                            <span data-i18n="subscription.addonsClosedNotice">ขณะนี้ระบบยังไม่เปิดจำหน่ายแพ็กเกจเสริมเพิ่มเติม หากต้องการขยายโควตาการใช้งานหรือสิทธิ์ผู้ใช้ กรุณาติดต่อเจ้าหน้าที่ดูแลระบบ</span>
+                        </div>
                         
                         <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr)); gap: 1.25rem;" id="addons-grid-container">
                             <!-- Populated dynamically from GET /api/saas/add-ons -->
@@ -7003,6 +7036,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 if (plansData.success) {
                     cachedPlansList = plansData.plans || [];
                     cachedAddonsList = plansData.addons || [];
+                    window._addonsGlobalSaleEnabled = plansData.addons_sale_enabled !== undefined ? plansData.addons_sale_enabled : true;
                 }
 
                 if (subData.success && subData.subscription) {
@@ -7122,30 +7156,163 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             if (!container) return;
             container.innerHTML = '';
 
+            const isOwner = currentUser && (currentUser.role === 'OWNER' || currentUser.role === 'SUPER_ADMIN');
+            const globalSaleEnabled = window._addonsGlobalSaleEnabled !== undefined ? window._addonsGlobalSaleEnabled : true;
+
+            // 1. Sync Owner Control Bar visibility & switch state
+            const ownerBar = document.getElementById('owner-addons-control-bar');
+            if (ownerBar) {
+                ownerBar.style.display = isOwner ? 'flex' : 'none';
+                const sw = document.getElementById('toggle-global-addons-sale-switch');
+                if (sw) sw.checked = globalSaleEnabled;
+                const pill = document.getElementById('owner-global-addon-status-pill');
+                if (pill) {
+                    pill.textContent = globalSaleEnabled ? (t('subscription.globalSaleEnabled', 'เปิดขายให้สมาชิก')) : (t('subscription.globalSaleDisabled', 'ปิดรับการซื้อ'));
+                    pill.style.background = globalSaleEnabled ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)';
+                    pill.style.color = globalSaleEnabled ? '#34D399' : '#F87171';
+                }
+            }
+
+            // 2. Sync Customer Closed Notice
+            const custNotice = document.getElementById('customer-addons-closed-notice');
+            if (custNotice) {
+                custNotice.style.display = (!isOwner && !globalSaleEnabled) ? 'flex' : 'none';
+            }
+
+            // 3. Render Cards
             cachedAddonsList.forEach(a => {
+                const isActive = (a.status || 'ACTIVE').toUpperCase() === 'ACTIVE';
+                const isForSale = a.is_for_sale !== undefined ? a.is_for_sale : (isActive && globalSaleEnabled);
+
+                // If non-owner and add-on is archived/hidden, don't show
+                if (!isOwner && a.status === 'ARCHIVED') return;
+
                 const div = document.createElement('div');
                 div.style.background = 'var(--bg-surface)';
-                div.style.border = '1px solid var(--border-color)';
+                div.style.border = isForSale ? '1px solid var(--border-color)' : (isOwner ? '1px dashed rgba(239, 68, 68, 0.5)' : '1px solid rgba(255,255,255,0.06)');
                 div.style.padding = '1.25rem';
                 div.style.borderRadius = 'var(--radius-sm)';
                 div.style.display = 'flex';
                 div.style.flexDirection = 'column';
                 div.style.justifyContent = 'space-between';
+                div.style.position = 'relative';
+                div.style.opacity = (!isForSale && !isOwner) ? '0.75' : '1';
+
+                // Owner Header Controls on card
+                let ownerControlsHtml = '';
+                if (isOwner) {
+                    ownerControlsHtml = `
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem; padding-bottom: 0.5rem; border-bottom: 1px solid rgba(255,255,255,0.08);">
+                            <span class="badge" style="font-size: 0.7rem; padding: 2px 7px; border-radius: 4px; background: ${isActive ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'}; color: ${isActive ? '#34D399' : '#F87171'}; border: 1px solid ${isActive ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)'};">
+                                <i class="fa-solid ${isActive ? 'fa-check-circle' : 'fa-ban'}"></i> ${isActive ? t('subscription.forSale', 'เปิดขาย') : t('subscription.notForSale', 'ปิดขาย')}
+                            </span>
+                            <div style="display: flex; gap: 0.35rem;">
+                                <button type="button" class="btn btn-sm ${isActive ? 'btn-danger' : 'btn-success'}" style="font-size: 0.7rem; padding: 2px 8px; height: auto;" onclick="toggleAddonCardSale('${a.id}', this)" title="${isActive ? 'คลิกเพื่อปิดขาย' : 'คลิกเพื่อเปิดขาย'}">
+                                    ${isActive ? '<i class="fa-solid fa-ban"></i> ' + t('subscription.notForSale', 'ปิดขาย') : '<i class="fa-solid fa-check"></i> ' + t('subscription.forSale', 'เปิดขาย')}
+                                </button>
+                                <button type="button" class="btn btn-secondary btn-sm" style="font-size: 0.7rem; padding: 2px 7px; height: auto;" onclick="openEditAddonModal('${a.id}')" title="แก้ไขราคาและสิทธิ์">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                // Action button depending on role and sale status
+                let actionBtnHtml = '';
+                if (isOwner) {
+                    actionBtnHtml = `
+                        <button class="btn btn-secondary btn-sm" style="width: 100%;" onclick="openUpgradeModal('professional', '${currentSelectedInterval}', ['${a.id}'])">
+                            <i class="fa-solid fa-plus"></i> ${t('subscription.addToSub', 'Add to Subscription')}
+                        </button>
+                    `;
+                } else if (!globalSaleEnabled) {
+                    actionBtnHtml = `
+                        <button class="btn btn-secondary btn-sm" style="width: 100%; opacity: 0.55; cursor: not-allowed;" disabled title="ระบบยังไม่เปิดจำหน่ายแพ็กเกจเสริมในขณะนี้">
+                            <i class="fa-solid fa-lock"></i> ${t('subscription.saleDisabled', 'ระบบยังไม่เปิดขาย')}
+                        </button>
+                    `;
+                } else if (!isForSale || !isActive) {
+                    actionBtnHtml = `
+                        <button class="btn btn-secondary btn-sm" style="width: 100%; opacity: 0.55; cursor: not-allowed;" disabled title="แพ็กเกจเสริมนี้ไม่เปิดจำหน่ายชั่วคราว">
+                            <i class="fa-solid fa-ban"></i> ${t('subscription.notForSaleTemp', 'ไม่เปิดจำหน่ายชั่วคราว')}
+                        </button>
+                    `;
+                } else {
+                    actionBtnHtml = `
+                        <button class="btn btn-secondary btn-sm" style="width: 100%;" onclick="openUpgradeModal('professional', '${currentSelectedInterval}', ['${a.id}'])">
+                            <i class="fa-solid fa-plus"></i> ${t('subscription.addToSub', 'Add to Subscription')}
+                        </button>
+                    `;
+                }
 
                 div.innerHTML = `
+                    ${ownerControlsHtml}
                     <div>
-                        <div style="font-weight: 600; color: #fff; font-size: 0.95rem; margin-bottom: 0.35rem;">${a.name}</div>
+                        <div style="font-weight: 600; color: #fff; font-size: 0.95rem; margin-bottom: 0.35rem; display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
+                            <span>${a.name}</span>
+                            ${(!isOwner && (!isForSale || !isActive)) ? `<span class="badge" style="background: rgba(239,68,68,0.2); color: #F87171; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; white-space: nowrap;">${t('subscription.notForSaleBadge', 'ไม่เปิดขาย')}</span>` : ''}
+                        </div>
                         <p style="font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 0.75rem; line-height: 1.4;">${a.description || ''}</p>
                     </div>
                     <div>
                         <div style="font-size: 1.25rem; font-weight: 700; color: #60A5FA; margin-bottom: 0.75rem;">+฿${a.price_monthly.toLocaleString()} <span style="font-size: 0.75rem; color: var(--text-muted);">${t('plan.month', '/month')}</span></div>
-                        <button class="btn btn-secondary btn-sm" style="width: 100%;" onclick="openUpgradeModal('professional', '${currentSelectedInterval}', ['${a.id}'])">
-                            <i class="fa-solid fa-plus"></i> ${t('subscription.addToSub', 'Add to Subscription')}
-                        </button>
+                        ${actionBtnHtml}
                     </div>
                 `;
                 container.appendChild(div);
             });
+        }
+
+        async function toggleOwnerGlobalAddonSale(enabled) {
+            try {
+                showToast("กำลังอัปเดตสิทธิ์การขายแพ็กเกจเสริม...", "info");
+                const res = await fetch('/api/owner/addons/toggle-global-sale', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json', ...getAuthHeaders()},
+                    body: JSON.stringify({ enabled: enabled })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    window._addonsGlobalSaleEnabled = data.addons_sale_enabled;
+                    showToast(`✅ ${data.message}`, "success");
+                    renderAddonsCatalog();
+                } else {
+                    showToast(`⚠️ ${data.error || 'ไม่สามารถอัปเดตได้'}`, "danger");
+                    const sw = document.getElementById('toggle-global-addons-sale-switch');
+                    if (sw) sw.checked = !enabled;
+                }
+            } catch (err) {
+                console.error("Error toggling global addons sale:", err);
+                showToast("เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย", "danger");
+            }
+        }
+
+        async function toggleAddonCardSale(addonId, btnEl) {
+            try {
+                if (btnEl) btnEl.disabled = true;
+                const res = await fetch(`/api/owner/addons/${encodeURIComponent(addonId)}/toggle-sale`, {
+                    method: 'POST',
+                    headers: getAuthHeaders()
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`✅ ${data.message}`, "success");
+                    const target = cachedAddonsList.find(a => a.id === addonId || a.code === addonId);
+                    if (target) {
+                        target.status = data.status;
+                        target.is_for_sale = data.is_for_sale;
+                    }
+                    renderAddonsCatalog();
+                } else {
+                    showToast(`⚠️ ${data.error || 'ไม่สามารถเปลี่ยนสถานะได้'}`, "danger");
+                    if (btnEl) btnEl.disabled = false;
+                }
+            } catch (err) {
+                console.error("Error toggling addon sale status:", err);
+                showToast("เกิดข้อผิดพลาดในการเชื่อมต่อเครือข่าย", "danger");
+                if (btnEl) btnEl.disabled = false;
+            }
         }
 
         let currentModalPlanMaxCats = -1;
@@ -7294,20 +7461,38 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             // Render add-on checklist
             const addonsListEl = document.getElementById('checkout-addons-list');
             addonsListEl.innerHTML = '';
+            const isOwner = currentUser && (currentUser.role === 'OWNER' || currentUser.role === 'SUPER_ADMIN');
+            const globalSaleEnabled = (window._addonsGlobalSaleEnabled !== undefined) ? window._addonsGlobalSaleEnabled : true;
+
             cachedAddonsList.forEach(a => {
                 const price = (interval === 'YEARLY') ? a.price_yearly : a.price_monthly;
-                const isChecked = preselectedAddons.includes(a.id);
+                const isActive = (a.status === 'ACTIVE');
+                const isForSale = (a.is_for_sale !== undefined) ? a.is_for_sale : (isActive && globalSaleEnabled);
+                const canPurchase = isOwner || (isActive && isForSale && globalSaleEnabled);
+
+                const isChecked = preselectedAddons.includes(a.id) && canPurchase;
                 const label = document.createElement('label');
                 label.style.display = 'flex';
                 label.style.alignItems = 'center';
+                label.style.justifyContent = 'space-between';
                 label.style.gap = '0.5rem';
                 label.style.fontSize = '0.85rem';
-                label.style.color = '#fff';
-                label.style.cursor = 'pointer';
+                label.style.color = canPurchase ? '#fff' : 'var(--text-muted)';
+                label.style.cursor = canPurchase ? 'pointer' : 'not-allowed';
+                label.style.opacity = canPurchase ? '1' : '0.6';
+
+                let statusBadge = '';
+                if (!canPurchase) {
+                    const reason = !globalSaleEnabled ? 'ปิดระบบขายเสริม' : 'ไม่เปิดจำหน่าย';
+                    statusBadge = `<span class="badge" style="background: rgba(239,68,68,0.2); color: #F87171; font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; margin-left: 0.5rem;">${reason}</span>`;
+                }
 
                 label.innerHTML = `
-                    <input type="checkbox" value="${a.id}" class="checkout-addon-checkbox" ${isChecked ? 'checked' : ''} onchange="calculateCheckoutPreview()">
-                    <span>${a.name} (+฿${price.toLocaleString()})</span>
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="checkbox" value="${a.id}" class="checkout-addon-checkbox" ${isChecked ? 'checked' : ''} ${canPurchase ? '' : 'disabled'} onchange="calculateCheckoutPreview()">
+                        <span>${a.name} ${statusBadge}</span>
+                    </div>
+                    <span style="color: ${canPurchase ? '#60A5FA' : 'var(--text-muted)'}; font-size: 0.8rem;">+฿${price.toLocaleString()}</span>
                 `;
                 addonsListEl.appendChild(label);
             });

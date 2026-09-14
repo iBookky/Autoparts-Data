@@ -3249,14 +3249,29 @@ def get_plan_details(plan_id: str, interval: str = 'MONTHLY') -> Optional[Dict[s
     conn.close()
     return res
 
-def get_all_add_ons(plan_id: Optional[str] = None) -> List[Dict[str, Any]]:
+def get_all_add_ons(plan_id: Optional[str] = None, include_inactive: bool = False) -> List[Dict[str, Any]]:
     """
     Returns add-on catalog, optionally decorated with compatibility/inclusion status for a specific plan.
+    Includes 'is_for_sale' and 'global_addons_sale_enabled' flags.
     """
     conn = get_db_connection()
     cursor = conn.cursor()
     
-    cursor.execute("SELECT * FROM add_ons WHERE status = 'ACTIVE' ORDER BY price_monthly ASC")
+    # Check global addons sale setting from platform_settings
+    addons_sale_enabled = 1
+    try:
+        cursor.execute("SELECT addons_sale_enabled FROM platform_settings WHERE id = 1")
+        row = cursor.fetchone()
+        if row is not None:
+            val = row["addons_sale_enabled"] if hasattr(row, 'keys') and "addons_sale_enabled" in row else row[0]
+            addons_sale_enabled = int(val) if val is not None else 1
+    except Exception:
+        addons_sale_enabled = 1
+
+    if include_inactive:
+        cursor.execute("SELECT * FROM add_ons ORDER BY price_monthly ASC")
+    else:
+        cursor.execute("SELECT * FROM add_ons WHERE status = 'ACTIVE' ORDER BY price_monthly ASC")
     addons = [dict(r) for r in cursor.fetchall()]
     
     if plan_id:
@@ -3268,6 +3283,11 @@ def get_all_add_ons(plan_id: Optional[str] = None) -> List[Dict[str, Any]]:
         for a in addons:
             a["availability"] = "AVAILABLE"
             
+    for a in addons:
+        is_active = (a.get("status") or "ACTIVE").upper() == "ACTIVE"
+        a["is_for_sale"] = bool(is_active and (addons_sale_enabled == 1))
+        a["global_addons_sale_enabled"] = bool(addons_sale_enabled == 1)
+
     conn.close()
     return addons
 
@@ -4058,7 +4078,7 @@ def update_platform_settings(data: Dict[str, Any]) -> bool:
             "owner_bank_account_name", "owner_bank_account_number", "owner_promptpay_id",
             "invoice_prefix", "tax_invoice_prefix", "receipt_prefix", "invoice_due_days",
             "vat_percentage", "vat_included", "wht_percentage", "invoice_footer_notes",
-            "invoice_terms_conditions", "invoice_theme_color"
+            "invoice_terms_conditions", "invoice_theme_color", "addons_sale_enabled"
         ]
         updates = []
         params = []
@@ -4662,7 +4682,43 @@ def create_add_on_db(data: Dict[str, Any]) -> Dict[str, Any]:
         conn.close()
 
 def get_all_addons_db() -> List[Dict[str, Any]]:
-    return get_all_add_ons()
+    return get_all_add_ons(include_inactive=True)
+
+def set_addons_global_sale(enabled: bool) -> bool:
+    """Sets global platform setting for whether commercial add-ons are open for sale to members."""
+    val = 1 if enabled else 0
+    return update_platform_settings({"addons_sale_enabled": val})
+
+def toggle_addon_sale_status(addon_id: str, target_status: Optional[str] = None) -> Dict[str, Any]:
+    """Toggles individual add-on status between ACTIVE (for sale) and DISABLED (not for sale), or sets to target_status."""
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute("SELECT id, name, status FROM add_ons WHERE id = ? OR code = ? LIMIT 1", (addon_id, addon_id))
+        row = cursor.fetchone()
+        if not row:
+            return {"success": False, "error": f"Addon '{addon_id}' not found"}
+        curr_status = (row["status"] or "ACTIVE").upper()
+        if target_status:
+            new_status = target_status.upper()
+        else:
+            new_status = "DISABLED" if curr_status == "ACTIVE" else "ACTIVE"
+        
+        cursor.execute("UPDATE add_ons SET status = ? WHERE id = ? OR code = ?", (new_status, row["id"], row["id"]))
+        conn.commit()
+        return {
+            "success": True,
+            "id": row["id"],
+            "name": row["name"],
+            "status": new_status,
+            "new_status": new_status,
+            "is_for_sale": (new_status == "ACTIVE")
+        }
+    except Exception as e:
+        conn.rollback()
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
 
 def update_add_on_db(addon_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
     conn = get_db_connection()

@@ -163,6 +163,8 @@ from backend.database import (
     get_all_addons_db,
     update_add_on_db,
     delete_add_on_db,
+    set_addons_global_sale,
+    toggle_addon_sale_status,
     init_db
 )
 from backend.services.entitlement_service import EntitlementService
@@ -1589,11 +1591,28 @@ async def get_saas_context(x_username: Optional[str] = Header("admin")):
     return {"success": True, "context": ctx}
 
 @app.get("/api/saas/plans")
-async def get_saas_plans(status: Optional[str] = "ACTIVE"):
+async def get_saas_plans(
+    status: Optional[str] = "ACTIVE",
+    x_user_role: Optional[str] = Header(None),
+    x_username: Optional[str] = Header(None),
+    authorization: Optional[str] = Header(None)
+):
+    is_owner = False
+    try:
+        u = get_current_user(x_user_role, x_username, authorization)
+        if u and u.get("role") in ("OWNER", "SUPER_ADMIN"):
+            is_owner = True
+    except Exception:
+        pass
+
+    settings = get_platform_settings()
+    addons_sale_enabled = bool(settings.get("addons_sale_enabled", 1) == 1)
+
     return {
         "success": True,
         "plans": get_all_plans_with_versions(status),
-        "addons": get_all_add_ons()
+        "addons": get_all_add_ons(include_inactive=is_owner),
+        "addons_sale_enabled": addons_sale_enabled
     }
 
 @app.get("/api/saas/plans/{plan_id}")
@@ -1604,9 +1623,28 @@ async def get_saas_plan_by_id(plan_id: str, interval: str = "MONTHLY"):
     return {"success": True, "plan": plan}
 
 @app.get("/api/saas/add-ons")
-async def get_saas_addons(plan_id: Optional[str] = None):
-    addons = get_all_add_ons(plan_id)
-    return {"success": True, "add_ons": addons}
+async def get_saas_addons(
+    plan_id: Optional[str] = None,
+    x_user_role: Optional[str] = Header(None),
+    x_username: Optional[str] = Header(None),
+    authorization: Optional[str] = Header(None)
+):
+    is_owner = False
+    try:
+        u = get_current_user(x_user_role, x_username, authorization)
+        if u and u.get("role") in ("OWNER", "SUPER_ADMIN"):
+            is_owner = True
+    except Exception:
+        pass
+
+    settings = get_platform_settings()
+    addons_sale_enabled = bool(settings.get("addons_sale_enabled", 1) == 1)
+
+    return {
+        "success": True,
+        "add_ons": get_all_add_ons(plan_id, include_inactive=is_owner),
+        "addons_sale_enabled": addons_sale_enabled
+    }
 
 @app.post("/api/saas/billing/calculate")
 async def calculate_saas_billing(req: CalculateBillingRequest, x_username: Optional[str] = Header("admin")):
@@ -2586,10 +2624,48 @@ class AddOnUpdateRequest(BaseModel):
     user_increase: Optional[int] = None
     status: Optional[str] = None
 
+class ToggleGlobalSaleRequest(BaseModel):
+    enabled: Optional[bool] = None
+
 @app.get("/api/owner/addons")
 async def get_owner_addons_list(user = Depends(require_owner)):
     addons = get_all_addons_db()
-    return {"success": True, "addons": addons}
+    settings = get_platform_settings()
+    addons_sale_enabled = bool(settings.get("addons_sale_enabled", 1) == 1)
+    return {"success": True, "addons": addons, "addons_sale_enabled": addons_sale_enabled}
+
+@app.post("/api/owner/addons/toggle-global-sale")
+async def toggle_owner_addons_global_sale(req: Optional[ToggleGlobalSaleRequest] = None, user = Depends(require_owner)):
+    settings = get_platform_settings()
+    curr = bool(settings.get("addons_sale_enabled", 1) == 1)
+    new_state = req.enabled if (req and req.enabled is not None) else not curr
+    success = set_addons_global_sale(new_state)
+    if success:
+        action = "ENABLE_ADDONS_GLOBAL_SALE" if new_state else "DISABLE_ADDONS_GLOBAL_SALE"
+        log_audit_action(user.get("id", 1), user["username"], user["role"], action, "platform_settings", 1, str(curr), str(new_state))
+        return {
+            "success": True,
+            "addons_sale_enabled": new_state,
+            "message": "เปิดขายแพ็กเกจเสริมให้สมาชิกซื้อเพิ่มเรียบร้อย" if new_state else "ปิดรับการซื้อแพ็กเกจเสริมเรียบร้อย สมาชิกจะไม่สามารถซื้อเพิ่มได้"
+        }
+    return {"success": False, "error": "Failed to update global add-ons sale status"}
+
+@app.post("/api/owner/addons/{addon_id}/toggle-sale")
+async def toggle_owner_addon_sale_endpoint(addon_id: str, payload: Optional[Dict[str, Any]] = None, user = Depends(require_owner)):
+    target_status = payload.get("status") if payload else None
+    res = toggle_addon_sale_status(addon_id, target_status)
+    if res.get("success"):
+        action = "ENABLE_ADDON_SALE" if res.get("status") == "ACTIVE" else "DISABLE_ADDON_SALE"
+        log_audit_action(user.get("id", 1), user["username"], user["role"], action, "add_ons", addon_id, None, res.get("status"))
+        msg = f"เปิดขายแพ็กเกจเสริม '{res.get('name')}' เรียบร้อย" if res.get("status") == "ACTIVE" else f"ปิดขายแพ็กเกจเสริม '{res.get('name')}' เรียบร้อย"
+        return {
+            "success": True,
+            "message": msg,
+            "id": res.get("id"),
+            "status": res.get("status"),
+            "is_for_sale": res.get("is_for_sale")
+        }
+    return {"success": False, "error": res.get("error", "Failed to toggle add-on sale status")}
 
 @app.post("/api/owner/addons")
 async def create_owner_addon(req: AddOnCreateRequest, user = Depends(require_owner)):

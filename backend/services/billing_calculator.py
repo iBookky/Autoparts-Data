@@ -24,11 +24,22 @@ class BillingCalculator:
 
     @staticmethod
     def calculate_add_ons(add_on_ids: List[str], interval: str = 'MONTHLY') -> Tuple[int, List[Dict[str, Any]]]:
+        if not add_on_ids:
+            return 0, []
+
+        try:
+            from backend.database import get_platform_settings
+            settings = get_platform_settings()
+            if settings.get("addons_sale_enabled") == 0:
+                return 0, []
+        except Exception:
+            pass
+
         total_addons = 0
         items = []
         for aid in add_on_ids:
             addon = get_add_on_details(aid)
-            if addon and addon["status"] == "ACTIVE":
+            if addon and (addon.get("status") or "ACTIVE").upper() == "ACTIVE":
                 price = addon["price_yearly"] if interval.upper() == "YEARLY" else addon["price_monthly"]
                 total_addons += price
                 items.append({

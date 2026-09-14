@@ -18,8 +18,8 @@ class TestLocalFirstSearchAndRegistration(unittest.TestCase):
 
     def test_live_search_local_db_first_priority(self):
         """Verify /api/parts/live-search checks local DB first before external scraping."""
-        # 04465-0K090 is in temp_parts
-        res = self.client.post("/api/parts/live-search", data={"q": "04465-0K090"})
+        # GDB3534UT is in master_parts
+        res = self.client.post("/api/parts/live-search", data={"q": "GDB3534UT"})
         self.assertEqual(res.status_code, 200)
         data = res.json()
         self.assertTrue(data.get("success"))
