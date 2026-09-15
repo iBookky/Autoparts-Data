@@ -952,7 +952,9 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             </div>
                             <h2 style="font-size: 1.5rem; margin-bottom: 0.25rem; color: #fff;" id="current-sub-title">Siam Auto Supply Organization Subscription</h2>
                             <p style="font-size: 0.88rem; color: var(--text-secondary);" id="current-sub-details">
-                                <span data-i18n="subscription.billingInterval">Billing Interval:</span> <strong id="current-sub-interval" style="color: #fff;">MONTHLY</strong> &bull; <span data-i18n="subscription.nextRenewal">Next Renewal Date:</span> <strong id="current-sub-renewal" style="color: #fff;">-</strong>
+                                <i class="fa-regular fa-calendar-check" style="color: #60A5FA; margin-right: 4px;"></i> <span>รอบการใช้งาน:</span> <strong id="current-sub-period-range" style="color: #60A5FA;">-</strong> &bull; 
+                                <span data-i18n="subscription.billingInterval">Billing Interval:</span> <strong id="current-sub-interval" style="color: #fff;">MONTHLY</strong> &bull; 
+                                <span data-i18n="subscription.nextRenewal">Next Renewal Date:</span> <strong id="current-sub-renewal" style="color: #fff;">-</strong>
                             </p>
                         </div>
                         <div style="display: flex; gap: 0.75rem; align-items: center;">
@@ -4557,7 +4559,20 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
                     <div class="form-group">
                         <label class="form-label" style="font-weight: 600;">อีเมลสำหรับเข้าสู่ระบบ (Work Email) <span style="color: var(--danger);">*</span></label>
-                        <input type="email" id="trial-email" class="form-control" placeholder="owner@company.com" required>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <input type="email" id="trial-email" class="form-control" placeholder="owner@company.com" required style="flex: 1;">
+                            <button type="button" class="btn btn-secondary btn-sm" id="btn-request-otp" onclick="requestRegistrationOtp()" style="white-space: nowrap; font-weight: 600; background: rgba(59,130,246,0.15); color: #60A5FA; border: 1px solid rgba(59,130,246,0.3);">
+                                <i class="fa-solid fa-paper-plane"></i> ขอรหัส OTP
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" style="font-weight: 600;">รหัสยืนยันตัวตนอีเมล (OTP 6 หลัก) <span style="color: var(--danger);">*</span></label>
+                        <input type="text" id="trial-otp-code" class="form-control" placeholder="กรอกรหัส OTP 6 หลัก" required maxlength="6" style="font-family: var(--font-mono); letter-spacing: 2px; font-weight: 700; background: rgba(255,255,255,0.04);">
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
+                            <i class="fa-solid fa-shield-halved" style="color: #34D399; margin-right: 3px;"></i> ระบบจะส่งรหัส OTP 6 หลักไปยังอีเมลของคุณเพื่อยืนยันตัวตนความปลอดภัยสูงสุด
+                        </div>
                     </div>
 
                     <div class="form-grid-2">
@@ -5524,6 +5539,48 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             document.getElementById('modal-trial-register').style.display = 'none';
         }
 
+        async function requestRegistrationOtp() {
+            const email = (document.getElementById('trial-email').value || '').trim().toLowerCase();
+            if (!email || !email.includes('@') || email.length < 5) {
+                showToast("กรุณาระบุอีเมลที่ถูกต้องสำหรับส่งรหัส OTP", "warning");
+                document.getElementById('trial-email').focus();
+                return;
+            }
+            const btn = document.getElementById('btn-request-otp');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังส่ง...';
+            }
+            try {
+                const res = await fetch('/api/auth/send-verification-code', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: email })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`📧 ${data.message || 'ส่งรหัส OTP 6 หลักเรียบร้อยแล้ว'}`, "success");
+                    const otpInput = document.getElementById('trial-otp-code');
+                    if (otpInput) {
+                        if (data.demo_code && !otpInput.value) {
+                            otpInput.value = data.demo_code;
+                        }
+                        otpInput.focus();
+                    }
+                } else {
+                    showToast(data.detail || data.error || "ไม่สามารถส่งรหัส OTP ได้", "danger");
+                }
+            } catch(err) {
+                console.error("Error sending OTP:", err);
+                showToast("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์", "danger");
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ส่งใหม่';
+                }
+            }
+        }
+
         async function handleTrialRegister(e) {
             e.preventDefault();
             const btn = document.getElementById('btn-submit-trial');
@@ -5534,6 +5591,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             const email = (document.getElementById('trial-email').value || '').trim().toLowerCase();
             const phone = (document.getElementById('trial-phone').value || '').trim();
             const password = (document.getElementById('trial-password').value || '').trim();
+            const otpCode = (document.getElementById('trial-otp-code') ? document.getElementById('trial-otp-code').value : '').trim();
             const planId = document.getElementById('trial-plan-id').value;
 
             // Strict Pre-Submit Form Validation
@@ -5546,6 +5604,12 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             if (!email || !email.includes('@') || email.length < 5) {
                 showToast("กรุณาระบุอีเมลที่ถูกต้องสำหรับเข้าสู่ระบบ", "warning");
                 document.getElementById('trial-email').focus();
+                return;
+            }
+
+            if (!otpCode) {
+                showToast("กรุณากรอกรหัสยืนยันตัวตนอีเมล (OTP 6 หลัก)", "warning");
+                if (document.getElementById('trial-otp-code')) document.getElementById('trial-otp-code').focus();
                 return;
             }
 
@@ -5581,7 +5645,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 password: password,
                 plan_id: planId,
                 signup_type: signupMode,
-                verification_code: "999999",
+                verification_code: otpCode,
                 selected_categories: checkedCats,
                 selected_aftermarket_brands: checkedAftermarket
             };
@@ -7055,8 +7119,13 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     statusBadge.textContent = sub.status || 'ACTIVE';
                     statusBadge.className = 'status-badge ' + (sub.status === 'ACTIVE' ? 'verified' : (sub.status === 'CANCELLED' ? 'danger' : 'reviewed'));
                     
+                    const pStart = sub.current_period_start ? sub.current_period_start.substring(0, 10) : 'เริ่มต้น';
+                    const pEnd = sub.current_period_end ? sub.current_period_end.substring(0, 10) : 'N/A';
+                    const periodElem = document.getElementById('current-sub-period-range');
+                    if (periodElem) periodElem.textContent = `${pStart} ถึง ${pEnd}`;
+                    
                     document.getElementById('current-sub-interval').textContent = (sub.billing_interval || sub.billing_cycle || 'MONTHLY').toUpperCase();
-                    document.getElementById('current-sub-renewal').textContent = sub.current_period_end ? sub.current_period_end.substring(0, 10) : 'N/A';
+                    document.getElementById('current-sub-renewal').textContent = pEnd;
                 }
 
                 // Render Purchased Categories
@@ -8017,8 +8086,24 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             // Start 15-minute countdown
             startCheckoutTimer(15 * 60);
 
-            // Default tab: PROMPTPAY
-            switchCheckoutMethod('PROMPTPAY');
+            // Dynamically show/hide payment tabs according to Owner active gateway toggles
+            const hasPromptPay = !!promptpayGw;
+            const hasCard = (methods || []).some(m => ['STRIPE', 'OMISE', 'GB_PRIME_PAY'].includes(m.provider || m.gateway_provider));
+            const hasBank = !!bankGw;
+
+            const tabPromptPay = document.getElementById('chk-tab-promptpay');
+            const tabCard = document.getElementById('chk-tab-card');
+            const tabTransfer = document.getElementById('chk-tab-transfer');
+
+            if (tabPromptPay) tabPromptPay.style.display = hasPromptPay ? 'inline-flex' : 'none';
+            if (tabCard) tabCard.style.display = hasCard ? 'inline-flex' : 'none';
+            if (tabTransfer) tabTransfer.style.display = hasBank ? 'inline-flex' : 'none';
+
+            let defaultMethod = 'PROMPTPAY';
+            if (!hasPromptPay && hasCard) defaultMethod = 'CREDIT_CARD';
+            else if (!hasPromptPay && !hasCard && hasBank) defaultMethod = 'BANK_TRANSFER';
+
+            switchCheckoutMethod(defaultMethod);
 
             // Show Modal
             modal.classList.add('open');
@@ -8632,14 +8717,14 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                         <div class="user-avatar" style="width: 32px; height: 32px; font-size: 0.8rem;">${(m.full_name || m.username || 'U').charAt(0).toUpperCase()}</div>
                                         <div>
                                             <strong style="color: #fff;">${m.full_name || m.username}</strong>
-                                            <div style="font-size: 0.75rem; color: var(--text-muted);">User ID: #${m.user_id}</div>
+                                            <div style="font-size: 0.75rem; color: var(--text-muted);">User ID: #${m.user_id} ${m.platform_role ? '• ' + m.platform_role : ''}</div>
                                         </div>
                                     </div>
                                 </td>
-                                <td><span style="font-family: var(--font-mono); font-size: 0.85rem;">${m.email || m.username}</span></td>
+                                <td><span style="font-family: var(--font-mono); font-size: 0.85rem; color: #93C5FD;">${m.email || m.username}</span></td>
                                 <td><span class="status-badge ${roleBadgeClass}">${m.org_role}</span></td>
                                 <td><span class="status-badge ${statusBadgeClass}">${m.status || 'ACTIVE'}</span></td>
-                                <td><span style="font-size: 0.8rem; color: var(--text-secondary);">${m.created_at ? m.created_at.substring(0, 10) : '-'}</span></td>
+                                <td><span style="font-size: 0.8rem; color: var(--text-secondary);">${m.joined_at || m.created_at ? (m.joined_at || m.created_at).substring(0, 10) : '-'}</span></td>
                                 <td style="text-align: right; white-space: nowrap;">
                                     <button class="btn btn-secondary btn-sm" onclick="openChangeRoleModal(${m.user_id}, '${m.username}', '${m.org_role}')" title="Change Role">
                                         <i class="fa-solid fa-user-gear"></i> Role
@@ -11971,7 +12056,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             const isPaid = (inv.status || '').toUpperCase() === 'PAID';
                             const tr = document.createElement('tr');
                             tr.innerHTML = `
-                                <td><strong style="color: #60A5FA;">${inv.invoice_number || 'INV-' + inv.id}</strong></td>
+                                <td>
+                                    <a href="javascript:void(0)" onclick="viewInvoiceReceipt('${inv.invoice_number || 'INV-' + inv.id}')" style="color: #60A5FA; font-weight: 700; text-decoration: underline;" title="คลิกเพื่อกดดูรายละเอียดใบแจ้งหนี้ / ใบเสร็จ">
+                                        <i class="fa-solid fa-receipt"></i> ${inv.invoice_number || 'INV-' + inv.id}
+                                    </a>
+                                </td>
                                 <td>
                                     <strong style="color: #fff;">${inv.org_name || 'Organization #' + (inv.org_id || '')}</strong>
                                     <div style="font-size: 0.75rem; color: var(--text-muted);">${inv.billing_email || ''}</div>
@@ -11982,13 +12071,16 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                 <td>
                                     <span class="status-badge ${isPaid ? 'verified' : 'reviewed'}">${inv.status}</span>
                                 </td>
-                                <td style="text-align: right; white-space: nowrap;">
+                                <td style="text-align: right; white-space: nowrap; display: flex; justify-content: flex-end; gap: 0.35rem; align-items: center;">
+                                    <button class="btn btn-secondary btn-sm" onclick="viewInvoiceReceipt('${inv.invoice_number || 'INV-' + inv.id}')" title="กดดูรายละเอียดใบเสร็จและใบแจ้งหนี้">
+                                        <i class="fa-solid fa-file-invoice-dollar"></i> ดูใบแจ้งหนี้
+                                    </button>
                                     ${!isPaid ? `
                                         <button class="btn btn-primary btn-sm" onclick="confirmOwnerInvoicePayment(${inv.id})" title="ยืนยันการรับชำระเงินและเปิดใช้งานแพ็กเกจทันที">
                                             <i class="fa-solid fa-check"></i> ยืนยันรับเงิน
                                         </button>
                                     ` : `
-                                        <span style="color: #34D399; font-size: 0.82rem; font-weight: 600;"><i class="fa-solid fa-circle-check"></i> ชำระเรียบร้อย</span>
+                                        <span style="color: #34D399; font-size: 0.82rem; font-weight: 600; margin-left: 0.35rem;"><i class="fa-solid fa-circle-check"></i> ชำระเรียบร้อย</span>
                                     `}
                                 </td>
                             `;

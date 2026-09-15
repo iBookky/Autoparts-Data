@@ -2903,7 +2903,7 @@ def get_organization_members(org_id: int) -> List[Dict[str, Any]]:
     cursor = conn.cursor()
     cursor.execute("""
         SELECT om.id as membership_id, om.org_id, om.user_id, om.org_role, om.status, om.created_at,
-               u.username, u.role as platform_role
+               u.username, u.email, u.role as platform_role, COALESCE(u.is_active, 1) as is_user_active, u.created_at as joined_at
         FROM organization_members om
         JOIN users u ON u.id = om.user_id
         WHERE om.org_id = ?

@@ -49,12 +49,28 @@ class TestOwnerMembersAndVinSearch(unittest.TestCase):
 
     def test_owner_customer_toggle_active(self):
         """Test toggling customer active/suspended status."""
+        import uuid
+        # Register a non-primary customer tenant to toggle safely
+        otp_res = self.client.post("/api/auth/send-verification-code", json={"email": f"tenant_{uuid.uuid4().hex[:6]}@example.com"})
+        otp_code = otp_res.json().get("demo_code", "999999")
+        
+        reg_res = self.client.post("/api/auth/register-trial", json={
+            "company_name": f"Test Toggle Garage {uuid.uuid4().hex[:6]}",
+            "email": f"tenant_{uuid.uuid4().hex[:6]}@example.com",
+            "password": "Password123!",
+            "plan_id": "starter",
+            "verification_code": otp_code,
+            "selected_categories": ["*"],
+            "selected_aftermarket_brands": ["*"]
+        })
+        self.assertEqual(reg_res.status_code, 200)
+
         cust_res = self.client.get("/api/owner/customers", headers=self.owner_headers)
         self.assertEqual(cust_res.status_code, 200)
         customers = cust_res.json().get("customers", [])
-        self.assertTrue(len(customers) > 0)
         
-        target_cust = next((c for c in customers if c["id"] != 1), customers[0])
+        target_cust = next((c for c in customers if c["id"] != 1), None)
+        self.assertIsNotNone(target_cust)
         org_id = target_cust["id"]
 
         # Toggle to suspended
@@ -69,14 +85,15 @@ class TestOwnerMembersAndVinSearch(unittest.TestCase):
 
     def test_owner_member_crud(self):
         """Test full CRUD operations for members in Owner Cockpit."""
+        import uuid
         # 1. List members
         res = self.client.get("/api/owner/members", headers=self.owner_headers)
         self.assertEqual(res.status_code, 200)
         members = res.json().get("members", [])
         self.assertTrue(len(members) >= 1)
 
-        # 2. Create member
-        test_username = "member_test_crud@example.com"
+        # 2. Create member with unique username
+        test_username = f"member_{uuid.uuid4().hex[:8]}@example.com"
         create_payload = {
             "username": test_username,
             "email": test_username,
