@@ -8575,15 +8575,35 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             document.getElementById('receipt-inv-no').textContent = inv.invoice_number;
             document.getElementById('receipt-inv-date').textContent = inv.created_at ? new Date(inv.created_at).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' }) : new Date().toLocaleDateString('th-TH');
             
+            let startDate = inv.period_start;
+            let endDate = inv.period_end;
+
+            if (!startDate || startDate === '-') {
+                startDate = inv.created_at ? inv.created_at.substring(0, 10) : new Date().toISOString().substring(0, 10);
+            }
+            if (!endDate || endDate === '-') {
+                try {
+                    const d = new Date(startDate);
+                    d.setDate(d.getDate() + 30);
+                    endDate = d.toISOString().substring(0, 10);
+                } catch(e) {
+                    endDate = startDate;
+                }
+            }
+
             const formatInvDate = (dStr) => {
-                if (!dStr) return '-';
-                // If it's already in DD/MM/YYYY, return it (for sample invoice)
+                if (!dStr || dStr === '-') return '-';
                 if (dStr.includes('/')) return dStr;
-                return new Date(dStr).toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                try {
+                    return new Date(dStr).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' });
+                } catch(e) {
+                    return dStr;
+                }
             };
-            const pStart = formatInvDate(inv.period_start);
-            const pEnd = formatInvDate(inv.period_end);
-            
+
+            const pStart = formatInvDate(startDate);
+            const pEnd = formatInvDate(endDate);
+
             document.getElementById('receipt-inv-period').textContent = `${pStart} ถึง ${pEnd}`;
 
             // Fetch latest org details for accurate billing info

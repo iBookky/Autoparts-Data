@@ -3449,6 +3449,8 @@ def create_invoice_with_items(
             cursor.execute("SELECT COUNT(*) FROM invoices WHERE invoice_number LIKE ?", (f"INV-{now_str}-%",))
             seq = cursor.fetchone()[0] + 1
             inv_num = f"INV-{now_str}-{seq:04d}"
+            p_start = invoice_dict.get("period_start") or datetime.datetime.now().strftime("%Y-%m-%d")
+            p_end = invoice_dict.get("period_end") or (datetime.datetime.now() + datetime.timedelta(days=30)).strftime("%Y-%m-%d")
             
         cursor.execute("""
             INSERT INTO invoices (
@@ -3463,8 +3465,8 @@ def create_invoice_with_items(
             invoice_dict.get("total_amount", 0),
             invoice_dict.get("status", "OPEN"),
             invoice_dict.get("payment_method", "CREDIT_CARD"),
-            invoice_dict.get("period_start"),
-            invoice_dict.get("period_end")
+            p_start,
+            p_end
         ))
         invoice_id = cursor.lastrowid
         
@@ -4865,9 +4867,12 @@ def generate_invoice_db(data: Dict[str, Any]) -> Dict[str, Any]:
         amount = int(data.get("amount") or data.get("subtotal") or 0)
         vat_amount = int(data.get("vat_amount") or data.get("tax_amount") or 0)
         total_amount = int(data.get("total_amount") or (amount + vat_amount))
+        p_start = data.get("period_start") or datetime.now().strftime("%Y-%m-%d")
+        p_end = data.get("period_end") or (datetime.now() + timedelta(days=30)).strftime("%Y-%m-%d")
+
         cursor.execute("""
-            INSERT INTO invoices (invoice_number, org_id, subscription_id, amount, vat_amount, total_amount, currency, status, payment_method)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO invoices (invoice_number, org_id, subscription_id, amount, vat_amount, total_amount, currency, status, payment_method, period_start, period_end)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
             inv_num,
             data.get("org_id", 1),
@@ -4877,7 +4882,9 @@ def generate_invoice_db(data: Dict[str, Any]) -> Dict[str, Any]:
             total_amount,
             data.get("currency", "THB"),
             data.get("status", "PAID"),
-            data.get("payment_method", "CREDIT_CARD")
+            data.get("payment_method", "CREDIT_CARD"),
+            p_start,
+            p_end
         ))
         inv_id = cursor.lastrowid
         conn.commit()
