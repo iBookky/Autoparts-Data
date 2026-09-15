@@ -4624,28 +4624,9 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
                     <div class="form-group">
                         <label class="form-label" style="font-weight: 600;">อีเมลสำหรับเข้าสู่ระบบ (Work Email) <span style="color: var(--danger);">*</span></label>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <input type="email" id="trial-email" class="form-control" placeholder="owner@company.com" required style="flex: 1;">
-                            <button type="button" class="btn btn-secondary btn-sm" id="btn-request-otp" onclick="requestRegistrationOtp()" style="white-space: nowrap; font-weight: 600; background: rgba(59,130,246,0.15); color: #60A5FA; border: 1px solid rgba(59,130,246,0.3);">
-                                <i class="fa-solid fa-paper-plane"></i> ส่งลิงก์ยืนยันไปยังอีเมล
-                            </button>
-                        </div>
-                    </div>
-
-                    <div id="trial-email-link-status" style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); border-radius: var(--radius-sm); padding: 0.85rem 1rem; display: none;">
-                        <div style="display: flex; align-items: flex-start; gap: 0.65rem;">
-                            <i class="fa-solid fa-envelope-circle-check" style="color: #10B981; font-size: 1.25rem; margin-top: 2px;"></i>
-                            <div>
-                                <div style="font-weight: 600; color: #fff; font-size: 0.88rem;" id="trial-email-sent-title">ส่งลิงก์ยืนยันตัวตนเรียบร้อยแล้ว</div>
-                                <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px;" id="trial-email-sent-desc">
-                                    กรุณาเปิดกล่องจดหมายของคุณ และคลิกลิงก์ยืนยันตัวตนเพื่อเปิดใช้งานบัญชี
-                                </div>
-                                <div id="trial-email-quick-verify-container" style="margin-top: 6px; display: none;">
-                                    <a href="#" id="trial-email-quick-link" target="_blank" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 0.2rem 0.55rem; background: rgba(59,130,246,0.2); color: #60A5FA; border-color: rgba(59,130,246,0.4);">
-                                        <i class="fa-solid fa-arrow-up-right-from-square"></i> [คลิกทดสอบยืนยันอีเมลทันที]
-                                    </a>
-                                </div>
-                            </div>
+                        <input type="email" id="trial-email" class="form-control" placeholder="owner@company.com" required>
+                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
+                            <i class="fa-solid fa-paper-plane" style="color: #60A5FA; margin-right: 3px;"></i> เมื่อกดสร้างบัญชี ระบบจะส่งลิงก์ยืนยันตัวตนไปยังอีเมลนี้เพื่อเปิดใช้งานทันที
                         </div>
                     </div>
 
@@ -4718,6 +4699,24 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     </button>
                 </div>
             </form>
+        </div>
+    </div>
+
+    <!-- Registration Success Modal -->
+    <div class="modal-overlay" id="modal-register-success" style="display: none; z-index: 10000;">
+        <div class="modal-card" style="max-width: 480px; text-align: center; padding: 2.25rem 1.75rem;">
+            <div style="width: 68px; height: 68px; background: rgba(59,130,246,0.15); border: 2px solid #3B82F6; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.25rem; color: #60A5FA; font-size: 2.2rem;">
+                <i class="fa-solid fa-paper-plane"></i>
+            </div>
+            <h3 style="color: #fff; font-size: 1.35rem; font-weight: 700; margin-bottom: 0.5rem;">
+                สร้างบัญชีเรียบร้อยแล้ว!
+            </h3>
+            <p style="color: var(--text-secondary); font-size: 0.92rem; line-height: 1.6; margin-bottom: 1.25rem;" id="reg-success-msg">
+                ระบบได้ส่งลิงก์ยืนยันตัวตนไปยังอีเมลของคุณเรียบร้อยแล้ว กรุณาเปิดกล่องจดหมายอีเมลของคุณ และคลิกลิงก์ยืนยันตัวตนเพื่อเปิดใช้งานบัญชี
+            </p>
+            <button class="btn btn-primary" onclick="document.getElementById('modal-register-success').style.display='none';" style="width: 100%; padding: 0.75rem; font-weight: 700; font-size: 1rem;">
+                <i class="fa-solid fa-circle-check"></i> ตกลง (รับทราบ)
+            </button>
         </div>
     </div>
 
@@ -5543,7 +5542,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
         function onTrialPlanSelected(planId) {
             const plan = (window._publicPlans || []).find(p => p.id === planId) || (window._allPlansDetailed || []).find(p => p.id === planId);
-            const tDays = plan ? parseInt(plan.trial_days || 0) : 0;
+            const tDays = plan ? (parseInt(plan.trial_days) || 0) : (planId === 'enterprise' ? 0 : 14);
             
             const modeContainer = document.getElementById('trial-mode-switch-container');
             const trialRadio = document.getElementById('signup-mode-trial');
@@ -5553,10 +5552,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             if (tDays > 0) {
                 if (modeContainer) modeContainer.style.display = 'flex';
                 if (trialLabel) trialLabel.innerHTML = `<i class="fa-solid fa-gift" style="color: #10B981;"></i> ทดลองใช้ฟรี ${tDays} วัน`;
-                if (trialRadio) {
-                    trialRadio.disabled = false;
-                    trialRadio.checked = true;
-                }
+                if (trialRadio) trialRadio.disabled = false;
             } else {
                 // No trial available for this plan -> direct signup only
                 if (modeContainer) modeContainer.style.display = 'none';
@@ -5572,8 +5568,21 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             const planSelect = document.getElementById('trial-plan-id');
             const planId = planSelect ? planSelect.value : 'professional';
             const plan = (window._publicPlans || []).find(p => p.id === planId) || (window._allPlansDetailed || []).find(p => p.id === planId);
-            const tDays = plan ? parseInt(plan.trial_days || 0) : 0;
-            const isTrialChecked = document.getElementById('signup-mode-trial') && document.getElementById('signup-mode-trial').checked && (tDays > 0);
+            
+            const rawTrialDays = plan ? (parseInt(plan.trial_days) || 0) : (planId === 'enterprise' ? 0 : 14);
+            const directRadio = document.getElementById('signup-mode-direct');
+            const trialRadio = document.getElementById('signup-mode-trial');
+            
+            const modeContainer = document.getElementById('trial-mode-switch-container');
+            if (rawTrialDays <= 0) {
+                if (modeContainer) modeContainer.style.display = 'none';
+                if (directRadio) directRadio.checked = true;
+            } else {
+                if (modeContainer) modeContainer.style.display = 'flex';
+            }
+
+            const isTrialChecked = (rawTrialDays > 0) && trialRadio && trialRadio.checked;
+            const tDays = isTrialChecked ? rawTrialDays : 0;
             
             const modalTitle = document.getElementById('trial-modal-title');
             const modalSub = document.getElementById('trial-modal-subtitle');
@@ -5588,7 +5597,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
             const planName = plan ? plan.name : planId.toUpperCase();
             
-            if (isTrialChecked) {
+            if (isTrialChecked && tDays > 0) {
                 if (modalTitle) modalTitle.innerHTML = `<i class="fa-solid fa-gift" style="color: #10B981; margin-right: 6px;"></i> สมัครทดลองใช้งานฟรี ${tDays} วัน`;
                 if (modalSub) modalSub.textContent = `ทดลองใช้งานแพ็กเกจ ${planName} ฟรี ${tDays} วัน • ไม่มีข้อผูกมัด • ไม่ต้องใช้บัตรเครดิต`;
                 if (bannerText) bannerText.textContent = `✨ คุณจะได้รับสิทธิ์ทดลองใช้งานฟรี ${tDays} วัน เมื่อสิ้นสุดระยะเวลาสามารถเลือกต่ออายุหรือปรับแพ็กเกจได้ตามต้องการ`;
@@ -5742,8 +5751,14 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     localStorage.setItem('autoparts_saas_user', JSON.stringify(currentUser));
                     await initSaaSSession();
                     
+                    const msgEl = document.getElementById('reg-success-msg');
+                    if (msgEl) {
+                        msgEl.innerHTML = `ระบบได้ส่งลิงก์ยืนยันตัวตนไปยังอีเมล <strong style="color: #60A5FA;">${email}</strong> เรียบร้อยแล้ว<br>กรุณาเปิดกล่องจดหมายอีเมลของคุณ และคลิกลิงก์ยืนยันตัวตนเพื่อเปิดใช้งานบัญชีองค์กร`;
+                    }
+                    const succModal = document.getElementById('modal-register-success');
+                    if (succModal) succModal.style.display = 'flex';
+
                     if ((signupMode === 'DIRECT' || !res.is_trial) && res.invoice_id) {
-                        showToast("🎉 เปิดบัญชีเรียบร้อย! กำลังนำท่านเข้าสู่หน้าชำระเงิน...", "info");
                         openPaymentCheckoutModal({
                             invoice_id: res.invoice_id,
                             invoice_number: res.invoice_number,
@@ -5759,11 +5774,6 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                 if (ftuxModal) ftuxModal.style.display = 'flex';
                             }
                         });
-                    } else {
-                        showToast(res.message || "🎉 สมัครสมาชิกและเปิดใช้งานบัญชีสำเร็จ!", "success");
-                        // Open FTUX Onboarding Tour
-                        const ftuxModal = document.getElementById('modal-ftux-onboarding');
-                        if (ftuxModal) ftuxModal.style.display = 'flex';
                     }
                 } else {
                     showToast(res.error || "ไม่สามารถลงทะเบียนได้", "danger");

@@ -495,9 +495,52 @@ class PublicContactLeadRequest(BaseModel):
     interested_plan: Optional[str] = "enterprise"
 
 @app.post("/api/auth/register-trial")
-async def register_trial(req: TrialRegisterRequest):
-    """Self-service free trial & account registration endpoint with identity OTP verification."""
+async def register_trial(req: TrialRegisterRequest, request: Request):
+    """Self-service free trial & account registration endpoint with verification email link."""
     res = register_trial_tenant_db(req.dict())
+    if res.get("success"):
+        try:
+            email = req.email.strip().lower()
+            token_info = create_verification_token(email)
+            token = token_info["token"]
+            base_host = str(request.base_url).rstrip('/')
+            verify_url = f"{base_host}/api/auth/verify-email-link?token={token}"
+            
+            subject = "🔑 กรุณายืนยันตัวตนอีเมลของคุณ - Siam Auto Parts"
+            html_body = f"""
+            <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #0F172A; color: #F8FAFC; border-radius: 12px; border: 1px solid #1E293B;">
+                <div style="text-align: center; padding-bottom: 20px; border-bottom: 1px solid #1E293B;">
+                    <h2 style="color: #60A5FA; margin: 0; font-size: 24px;">⚙️ Siam Auto Parts AI Cloud</h2>
+                    <p style="color: #94A3B8; font-size: 14px; margin-top: 5px;">ระบบเปรียบเทียบรหัสอะไหล่แท้-ทดแทนระดับองค์กร</p>
+                </div>
+                <div style="padding: 30px 20px; text-align: center;">
+                    <h3 style="color: #FFFFFF; font-size: 20px; margin-bottom: 15px;">ยืนยันการเปิดใช้งานบัญชีสมาชิก</h3>
+                    <p style="color: #CBD5E1; font-size: 15px; line-height: 1.6; margin-bottom: 25px;">
+                        ยินดีต้อนรับสู่แพลตฟอร์ม! กรุณากดปุ่มด้านล่างเพื่อยืนยันตัวตนอีเมล <strong>{email}</strong> และเปิดใช้งานบัญชีองค์กรของคุณ
+                    </p>
+                    <div style="margin: 30px 0;">
+                        <a href="{verify_url}" target="_blank" style="background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%); color: #FFFFFF; text-decoration: none; font-weight: bold; font-size: 16px; padding: 14px 32px; border-radius: 8px; display: inline-block; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);">
+                            ✅ คลิกยืนยันตัวตนอีเมล (Verify Email Address)
+                        </a>
+                    </div>
+                    <p style="color: #64748B; font-size: 13px; margin-top: 25px;">
+                        หากปุ่มด้านบนไม่ทำงาน สามารถคัดลอกลิงก์ด้านล่างไปวางในเบราว์เซอร์ของท่าน:<br>
+                        <a href="{verify_url}" target="_blank" style="color: #60A5FA; word-break: break-all;">{verify_url}</a>
+                    </p>
+                    <p style="color: #64748B; font-size: 12px; margin-top: 20px;">
+                        * ลิงก์ยืนยันตัวตนนี้จะมีอายุการใช้งาน 60 นาทีเพื่อความปลอดภัยสูงสุด
+                    </p>
+                </div>
+                <div style="border-top: 1px solid #1E293B; padding-top: 15px; text-align: center; color: #64748B; font-size: 12px;">
+                    © 2026 Siam Auto Parts Platform. All rights reserved.
+                </div>
+            </div>
+            """
+            send_system_email(email, subject, html_body)
+            res["email_sent"] = True
+            res["message"] = f"สร้างบัญชีเรียบร้อยแล้ว! ระบบได้ส่งลิงก์ยืนยันตัวตนไปยัง {email} แล้ว กรุณาเปิดกล่องจดหมายอีเมลของคุณเพื่อเปิดใช้งานบัญชี"
+        except Exception as mail_err:
+            print(f"Error sending verification email: {mail_err}")
     return res
 
 @app.post("/api/public/leads/contact")
