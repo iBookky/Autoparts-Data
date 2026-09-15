@@ -7959,6 +7959,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
         // ================= INVOICES & TAX RECEIPTS =================
         let currentInvoicesList = [];
+        let ownerInvoicesList = [];
 
         function thaiBahtText(num) {
             if (isNaN(num) || num === null || num === undefined) return '';
@@ -8501,26 +8502,72 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             if (typeof invoiceParam === 'object' && invoiceParam !== null) {
                 inv = invoiceParam;
             } else {
-                const invoiceNumber = invoiceParam;
-                inv = (currentInvoicesList || []).find(i => i.invoice_number === invoiceNumber || i.id === invoiceNumber);
+                const query = invoiceParam;
                 
-                // If not found in current list, try fetching fresh
+                // 1. Search in current customer invoices & owner financial invoices
+                inv = (currentInvoicesList || []).find(i => i.invoice_number === query || i.id === query || String(i.id) === String(query)) ||
+                      (ownerInvoicesList || []).find(i => i.invoice_number === query || i.id === query || String(i.id) === String(query));
+
+                // 2. Extract numeric ID if possible
+                let numericId = null;
+                if (typeof query === 'number') {
+                    numericId = query;
+                } else if (typeof query === 'string') {
+                    if (/^\d+$/.test(query)) {
+                        numericId = parseInt(query, 10);
+                    } else if (query.includes('-')) {
+                        const parts = query.split('-');
+                        const lastPart = parts[parts.length - 1];
+                        if (/^\d+$/.test(lastPart)) {
+                            numericId = parseInt(lastPart, 10);
+                        }
+                    }
+                }
+
+                // 3. Try fetching single invoice directly by ID
+                if (!inv && numericId) {
+                    try {
+                        const res = await fetch(`/api/saas/invoices/${numericId}`, { headers: getAuthHeaders() });
+                        const data = await res.json();
+                        if (data.success && data.invoice) {
+                            inv = data.invoice;
+                        }
+                    } catch (e) {
+                        console.error("Error fetching single invoice:", e);
+                    }
+                }
+
+                // 4. Try fetching fresh owner financial summary invoices if owner
+                if (!inv) {
+                    try {
+                        const res = await fetch('/api/owner/financial-summary', { headers: getAuthHeaders() });
+                        const data = await res.json();
+                        if (data.success && data.summary && data.summary.invoices) {
+                            ownerInvoicesList = data.summary.invoices;
+                            inv = ownerInvoicesList.find(i => i.invoice_number === query || i.id === query || String(i.id) === String(query));
+                        }
+                    } catch (e) {
+                        console.error("Error fetching owner financial summary:", e);
+                    }
+                }
+
+                // 5. Try fetching fresh customer invoices
                 if (!inv) {
                     try {
                         const res = await fetch('/api/saas/invoices', { headers: getAuthHeaders() });
                         const data = await res.json();
                         if (data.success && data.invoices) {
                             currentInvoicesList = data.invoices;
-                            inv = currentInvoicesList.find(i => i.invoice_number === invoiceNumber || i.id === invoiceNumber) || currentInvoicesList[0];
+                            inv = currentInvoicesList.find(i => i.invoice_number === query || i.id === query || String(i.id) === String(query));
                         }
                     } catch (e) {
-                        console.error("Error fetching invoice:", e);
+                        console.error("Error fetching customer invoices:", e);
                     }
                 }
             }
 
             if (!inv) {
-                showToast("Invoice record not found.", "warning");
+                showToast("ไม่พบข้อมูลใบแจ้งหนี้ในระบบ", "warning");
                 return;
             }
 
@@ -12049,6 +12096,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 if (invBody) {
                     invBody.innerHTML = '';
                     const invoices = fin.invoices || [];
+                    ownerInvoicesList = invoices;
                     if (invoices.length === 0) {
                         invBody.innerHTML = '<tr><td colspan="7" style="text-align: center; padding: 1.5rem; color: var(--text-muted);">ไม่พบรายการใบแจ้งหนี้</td></tr>';
                     } else {
