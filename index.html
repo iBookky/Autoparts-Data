@@ -6423,7 +6423,14 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             document.getElementById('results-count-badge').textContent = `${items.length} items`;
             
             if (!items || items.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-muted);"><i class="fa-solid fa-triangle-exclamation" style="font-size: 1.8rem; margin-bottom: 0.75rem; opacity: 0.5;"></i><div>No direct parts matched in database. Click <b>"Live Global Search"</b> above to scrape global EPC catalogs.</div></td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 3.5rem 1.5rem; color: var(--text-muted);">
+                    <i class="fa-solid fa-triangle-exclamation" style="font-size: 2.2rem; color: #F59E0B; margin-bottom: 0.75rem; opacity: 0.8;"></i>
+                    <div style="font-size: 1.05rem; color: #fff; font-weight: 600; margin-bottom: 0.4rem;">ไม่พบข้อมูลอะไหล่ที่ตรงกันในฐานข้อมูลภายใน (0 Items)</div>
+                    <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1.25rem;">คุณสามารถค้นหาข้อมูลจากแคตตาล็อกอะไหล่ระดับโลก (Global EPC Catalogs) ด้วย AI ได้ทันที</div>
+                    <button type="button" class="btn btn-primary" onclick="triggerWorldwideSearch()" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.65rem 1.4rem; font-weight: 600; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);">
+                        <i class="fa-solid fa-globe" style="color: #67E8F9;"></i> <span>ค้นหาด้วย Live Global Search</span>
+                    </button>
+                </td></tr>`;
                 return;
             }
 
@@ -10693,26 +10700,41 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
         // ================= GLOBAL LIVE SEARCH =================
         async function triggerWorldwideSearch() {
-            const brand = document.getElementById('s-car-brand').value.trim();
-            const model = document.getElementById('s-car-model').value.trim();
-            const year = document.getElementById('s-car-year').value.trim();
-            const oem = document.getElementById('s-oem-code').value.trim();
-            const name = document.getElementById('s-oem-name').value.trim();
+            const brand = (document.getElementById('s-car-brand')?.value || '').trim();
+            const model = (document.getElementById('s-car-model')?.value || '').trim();
+            let year = (document.getElementById('s-car-year')?.value || '').trim();
+            const oem = (document.getElementById('s-oem-code')?.value || '').trim();
+            const name = (document.getElementById('s-oem-name')?.value || '').trim();
+            const aftermarketBrand = (document.getElementById('s-aftermarket-brand')?.value || '').trim();
+            const sku = (document.getElementById('s-aftermarket-part')?.value || '').trim();
+            const category = (document.getElementById('s-category')?.value || '').trim();
 
-            const q = oem || name || `${brand} ${model} parts`;
+            // Extract year from decoded VIN badge if year dropdown is not explicitly selected
+            if (!year || year === 'Year' || year.toLowerCase() === 'all') {
+                const vinBadge = document.getElementById('vin-badge-text')?.textContent || '';
+                const matchYear = vinBadge.match(/\b(19\d\d|20\d\d)\b/);
+                if (matchYear) year = matchYear[1];
+            }
+
+            const q = oem || sku || name || (aftermarketBrand ? `${brand} ${model} ${aftermarketBrand} parts` : `${brand} ${model} parts`);
             if (!q || q.trim() === 'parts') {
                 showToast("Please enter a search query, vehicle model, or OEM number", "warning");
                 return;
             }
 
+            const displayTarget = aftermarketBrand ? `${q} [Brand: ${aftermarketBrand}]` : q;
             const tbody = document.getElementById('sales-results-body');
-            tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 3rem;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: #38BDF8; margin-bottom: 0.75rem;"></i><div style="color: #fff; font-weight: 600;">Scraping global EPC catalogs & parts databases...</div><div style="font-size: 0.8rem; color: var(--text-muted); margin-top: 0.25rem;">Query: ${q}</div></td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 3rem;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 2.2rem; color: #38BDF8; margin-bottom: 0.75rem;"></i><div style="color: #fff; font-weight: 600; font-size: 1.05rem;">กำลังค้นหาข้อมูลจากแคตตาล็อกอะไหล่ทั่วโลกด้วย AI...</div><div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.35rem;">Query: ${displayTarget}</div></td></tr>`;
 
             const formData = new FormData();
             formData.append('q', q);
-            if (brand) formData.append('car_brand', brand);
-            if (model) formData.append('car_model', model);
-            if (year) formData.append('car_year', year);
+            if (brand && brand.toLowerCase() !== 'all') formData.append('car_brand', brand);
+            if (model && model.toLowerCase() !== 'all') formData.append('car_model', model);
+            if (year && year !== 'Year') formData.append('car_year', year);
+            if (aftermarketBrand && aftermarketBrand.toLowerCase() !== 'all') formData.append('brand', aftermarketBrand);
+            if (name) formData.append('product_name', name);
+            if (sku) formData.append('sku', sku);
+            if (category && category.toLowerCase() !== 'all') formData.append('category', category);
 
             try {
                 const res = await fetch('/api/parts/live-search', {
@@ -10722,11 +10744,16 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 });
                 const data = await res.json();
                 if (data.success) {
-                    renderSearchResults(data.results);
-                    showToast(`Found ${data.total} global parts!`, "success");
+                    lastSearchResults = data.results || [];
+                    renderSearchResults(data.results || []);
+                    showToast(`พบข้อมูลอะไหล่ทั่วโลกจำนวน ${data.total} รายการ!`, "success");
+                } else {
+                    tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-muted);"><i class="fa-solid fa-circle-exclamation" style="font-size: 2rem; color: var(--warning); margin-bottom: 0.75rem;"></i><div>${data.message || 'ไม่พบข้อมูลในเครือข่ายแคตตาล็อกระดับโลก'}</div></td></tr>`;
+                    showToast(data.message || "Global search returned no items", "warning");
                 }
             } catch (err) {
                 console.error(err);
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 3rem; color: var(--danger);"><i class="fa-solid fa-triangle-exclamation" style="font-size: 2rem; margin-bottom: 0.75rem;"></i><div>การเชื่อมต่อระบบค้นหาทั่วโลกขัดข้อง กรุณาลองใหม่อีกครั้ง</div></td></tr>`;
                 showToast("Global search failed", "danger");
             }
         }

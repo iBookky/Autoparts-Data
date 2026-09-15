@@ -2904,22 +2904,24 @@ async def call_gemini_json(prompt: str) -> dict:
     # Sequence models prioritizing the user's active configurations
     models_to_try = []
     for model_name, key in active_keys.items():
+        # Only route Google Gemini models to the generativelanguage endpoint
+        if "deepseek" in model_name.lower() or "gpt" in model_name.lower() or "claude" in model_name.lower():
+            continue
         use_key = key.strip() if (key and key.strip()) else GEMINI_API_KEY
         if use_key:
             models_to_try.append((model_name, use_key))
 
+    # Reliable default models known to work with the current Gemini API
     default_models = [
-        "gemini-flash-latest",
-        "gemini-3.5-flash-lite",
         "gemini-3.6-flash",
         "gemini-3.5-flash",
-        "gemini-3.7-flash",
-        "gemini-3.1-pro-preview",
+        "gemini-flash-latest",
+        "gemini-2.5-pro",
         "gemini-pro-latest"
     ]
-    if not models_to_try and GEMINI_API_KEY:
+    if GEMINI_API_KEY:
         for dm in default_models:
-            if dm not in active_keys:
+            if not any(m == dm for m, _ in models_to_try):
                 models_to_try.append((dm, GEMINI_API_KEY))
 
     # Intercept alias: gemini-3.1-pro might not exist yet, map to preview
@@ -2936,20 +2938,27 @@ async def call_gemini_json(prompt: str) -> dict:
         headers = {"Content-Type": "application/json"}
         if model_api_key.startswith("ya29."):
             headers["Authorization"] = f"Bearer {model_api_key}"
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
         else:
             headers["x-goog-api-key"] = model_api_key
+            url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={model_api_key}"
+
+        gen_config = {
+            "temperature": 0,
+            "responseMimeType": "application/json",
+        }
+        if "3.6" in model_name or "3.7" in model_name:
+            gen_config["thinkingConfig"] = {"thinkingBudget": 0}
 
         payload = {
             "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"temperature": 0, "responseMimeType": "application/json"},
+            "generationConfig": gen_config,
         }
-
-        url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent"
         
         max_retries = 3
         for attempt in range(max_retries):
             try:
-                async with httpx.AsyncClient(timeout=30.0) as client:
+                async with httpx.AsyncClient(timeout=45.0) as client:
                     response = await client.post(url, json=payload, headers=headers)
                 
                 if response.status_code == 429:

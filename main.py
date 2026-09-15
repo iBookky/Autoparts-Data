@@ -730,7 +730,9 @@ async def live_search(
     product_name: Optional[str] = Form(None),
     car_brand: Optional[str] = Form(None),
     car_model: Optional[str] = Form(None),
-    car_year: Optional[str] = Form(None)
+    car_year: Optional[str] = Form(None),
+    sku: Optional[str] = Form(None),
+    category: Optional[str] = Form(None)
 ):
     if not q or not q.strip():
         raise HTTPException(status_code=400, detail="Search query is required")
@@ -741,6 +743,8 @@ async def live_search(
         cy = car_year.strip() if car_year and car_year.strip() else None
         pn = product_name.strip() if product_name and product_name.strip() else None
         tb = brand.strip() if brand and brand.strip() else None
+        target_sku = sku.strip() if sku and sku.strip() else None
+        target_cat = category.strip() if category and category.strip() else None
 
         # =========================================================================
         # PRIORITY 1: Local Database Search First (Master & Temp Parts)
@@ -798,11 +802,12 @@ async def live_search(
         # =========================================================================
         # PRIORITY 2: External Live Scraping (Global EPC) - Only if Local DB is empty
         # =========================================================================
+        target_pn = pn or (clean_q if not is_code_like else None) or target_cat
         scraped_items = await scrape_external_parts(
             clean_q, 
             source_type='ON_DEMAND',
             target_brand=tb,
-            target_product_name=pn,
+            target_product_name=target_pn,
             car_brand=cb,
             car_model=cm,
             car_year=cy

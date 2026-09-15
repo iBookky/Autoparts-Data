@@ -127,9 +127,18 @@ async def scrape_external_parts(query: str, source_type: str = 'ON_DEMAND', cust
             print(f"Error gathering parallel web search: {e}")
             
         search_text = "\n\n".join(search_results_list)
-        print(f"Global web search completed. Combined text length: {len(search_text)} chars")
-            
-        brand_instruction = f"Search ONLY for the specified target aftermarket brand: '{target_brand}'. Ignore other aftermarket brands." if target_brand else f"Search and retrieve equivalent parts from ALL popular aftermarket brands in the system dropdown: {brand_list_str}."
+        BRAND_NORM_MAP = {
+            "KYB": "KAYABA",
+            "KAYABA": "KAYABA",
+            "555": "555",
+            "THREE FIVE": "555",
+            "SANKEI 555": "555",
+        }
+        target_brand_norm = BRAND_NORM_MAP.get(target_brand.strip().upper(), target_brand.strip().upper()) if target_brand else None
+        if target_brand:
+            brand_instruction = f"Search ONLY for the specified target aftermarket brand: '{target_brand}' (also known as KYB if KAYABA, or 555 if Three Five). In the returned JSON, format the 'brand' attribute as '{target_brand_norm or target_brand.strip().upper()}'. Ignore other aftermarket brands."
+        else:
+            brand_instruction = f"Search and retrieve equivalent parts from ALL popular aftermarket brands in the system dropdown: {brand_list_str}."
 
         STRICT_VEHICLE_INSTRUCTION = ""
         if car_brand or car_model:
@@ -237,8 +246,16 @@ async def scrape_external_parts(query: str, source_type: str = 'ON_DEMAND', cust
 
         if insert_to_db:
             try:
-                # Strictly filter out brands not in the dropdown list
+                # Strictly filter out brands not in the dropdown list (with alias normalization)
                 part_brand = part.get("brand", "").strip().upper()
+                norm_brand = BRAND_NORM_MAP.get(part_brand, part_brand) if 'BRAND_NORM_MAP' in locals() else part_brand
+                if norm_brand in allowed_brands_upper:
+                    part["brand"] = norm_brand
+                    part_brand = norm_brand
+                elif 'target_brand_norm' in locals() and target_brand_norm and (part_brand == target_brand_norm or norm_brand == target_brand_norm):
+                    part["brand"] = target_brand_norm
+                    part_brand = target_brand_norm
+
                 if allowed_brands_upper and part_brand not in allowed_brands_upper:
                     print(f"Skipping brand {part.get('brand')} because it is not in the system dropdown!")
                     continue
