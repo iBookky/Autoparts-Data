@@ -2755,6 +2755,71 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                     <i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; color: var(--primary);"></i> กำลังโหลดช่องทางชำระเงิน...
                                 </div>
                             </div>
+
+                            <!-- Email Sender & SMTP Settings Card -->
+                            <div class="card" style="margin-top: 1.5rem; background: var(--bg-card); border: 1px solid rgba(59,130,246,0.3); border-radius: var(--radius-md); padding: 1.5rem;">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.25rem; flex-wrap: wrap; gap: 0.75rem;">
+                                    <div>
+                                        <h3 style="color: #fff; font-size: 1.15rem; font-weight: 700; display: flex; align-items: center; gap: 0.5rem;">
+                                            <i class="fa-solid fa-paper-plane" style="color: #60A5FA;"></i> ตั้งค่าผู้ส่งอีเมลระบบ & SMTP (Email Sender & Verification Link)
+                                        </h3>
+                                        <p style="font-size: 0.85rem; color: var(--text-muted); margin-top: 0.25rem;">
+                                            กำหนดชื่อและอีเมลผู้ส่ง (Sender Name & Email) สำหรับส่งลิงก์ยืนยันตัวตนสมัครสมาชิก และแจ้งเตือนใบแจ้งหนี้ให้ลูกค้าองค์กร
+                                        </p>
+                                    </div>
+                                    <div style="display: flex; align-items: center; background: rgba(255,255,255,0.04); padding: 0.4rem 0.75rem; border-radius: var(--radius-sm); border: 1px solid rgba(255,255,255,0.1);">
+                                        <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer; font-size: 0.85rem; font-weight: 600; color: #34D399;">
+                                            <input type="checkbox" id="smtp-enabled-check" style="width: 17px; height: 17px; cursor: pointer; accent-color: #10B981;">
+                                            เปิดใช้งานการส่งอีเมลจริงผ่าน SMTP (Real SMTP)
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <form onsubmit="saveOwnerEmailSettings(event)">
+                                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; margin-bottom: 1rem;">
+                                        <div class="form-group">
+                                            <label class="form-label">อีเมลผู้ส่ง (Sender Email) <span style="color: var(--danger);">*</span></label>
+                                            <input type="email" id="smtp-sender-email" class="form-control" placeholder="เช่น no-reply@siamautoparts.com" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">ชื่อแสดงผู้ส่ง (Sender Display Name) <span style="color: var(--danger);">*</span></label>
+                                            <input type="text" id="smtp-sender-name" class="form-control" placeholder="เช่น Siam Auto Parts AI Cloud" required>
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">SMTP Host Server</label>
+                                            <input type="text" id="smtp-host" class="form-control" placeholder="เช่น smtp.gmail.com หรือ smtp.sendgrid.net">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">SMTP Port</label>
+                                            <input type="number" id="smtp-port" class="form-control" value="587" placeholder="587 หรือ 465">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">SMTP Username (บัญชีผู้ใช้)</label>
+                                            <input type="text" id="smtp-user" class="form-control" placeholder="เช่น user@company.com">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">SMTP Password / App Password</label>
+                                            <input type="password" id="smtp-password" class="form-control" placeholder="รหัสผ่านแอปพลิเคชัน (เว้นว่างไว้หากใช้ค่าเดิม)">
+                                        </div>
+                                        <div class="form-group">
+                                            <label class="form-label">ความปลอดภัย (Security Protocol)</label>
+                                            <select id="smtp-security" class="form-control">
+                                                <option value="TLS">🔒 TLS / STARTTLS (Port 587 - แนะนำ)</option>
+                                                <option value="SSL">🛡️ SSL (Port 465)</option>
+                                                <option value="NONE">🔓 None (Port 25)</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; justify-content: flex-end; gap: 0.5rem; border-top: 1px solid rgba(255,255,255,0.05); padding-top: 0.85rem;">
+                                        <button type="button" class="btn btn-secondary btn-sm" onclick="testOwnerEmailSettings()">
+                                            <i class="fa-solid fa-paper-plane"></i> ทดสอบส่งอีเมล (Test Email)
+                                        </button>
+                                        <button type="submit" class="btn btn-primary btn-sm">
+                                            <i class="fa-solid fa-floppy-disk"></i> บันทึกการตั้งค่าระบบอีเมล
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -4562,16 +4627,25 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                         <div style="display: flex; gap: 0.5rem;">
                             <input type="email" id="trial-email" class="form-control" placeholder="owner@company.com" required style="flex: 1;">
                             <button type="button" class="btn btn-secondary btn-sm" id="btn-request-otp" onclick="requestRegistrationOtp()" style="white-space: nowrap; font-weight: 600; background: rgba(59,130,246,0.15); color: #60A5FA; border: 1px solid rgba(59,130,246,0.3);">
-                                <i class="fa-solid fa-paper-plane"></i> ขอรหัส OTP
+                                <i class="fa-solid fa-paper-plane"></i> ส่งลิงก์ยืนยันไปยังอีเมล
                             </button>
                         </div>
                     </div>
 
-                    <div class="form-group">
-                        <label class="form-label" style="font-weight: 600;">รหัสยืนยันตัวตนอีเมล (OTP 6 หลัก) <span style="color: var(--danger);">*</span></label>
-                        <input type="text" id="trial-otp-code" class="form-control" placeholder="กรอกรหัส OTP 6 หลัก" required maxlength="6" style="font-family: var(--font-mono); letter-spacing: 2px; font-weight: 700; background: rgba(255,255,255,0.04);">
-                        <div style="font-size: 0.75rem; color: var(--text-muted); margin-top: 4px;">
-                            <i class="fa-solid fa-shield-halved" style="color: #34D399; margin-right: 3px;"></i> ระบบจะส่งรหัส OTP 6 หลักไปยังอีเมลของคุณเพื่อยืนยันตัวตนความปลอดภัยสูงสุด
+                    <div id="trial-email-link-status" style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25); border-radius: var(--radius-sm); padding: 0.85rem 1rem; display: none;">
+                        <div style="display: flex; align-items: flex-start; gap: 0.65rem;">
+                            <i class="fa-solid fa-envelope-circle-check" style="color: #10B981; font-size: 1.25rem; margin-top: 2px;"></i>
+                            <div>
+                                <div style="font-weight: 600; color: #fff; font-size: 0.88rem;" id="trial-email-sent-title">ส่งลิงก์ยืนยันตัวตนเรียบร้อยแล้ว</div>
+                                <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 2px;" id="trial-email-sent-desc">
+                                    กรุณาเปิดกล่องจดหมายของคุณ และคลิกลิงก์ยืนยันตัวตนเพื่อเปิดใช้งานบัญชี
+                                </div>
+                                <div id="trial-email-quick-verify-container" style="margin-top: 6px; display: none;">
+                                    <a href="#" id="trial-email-quick-link" target="_blank" class="btn btn-secondary btn-sm" style="font-size: 0.75rem; padding: 0.2rem 0.55rem; background: rgba(59,130,246,0.2); color: #60A5FA; border-color: rgba(59,130,246,0.4);">
+                                        <i class="fa-solid fa-arrow-up-right-from-square"></i> [คลิกทดสอบยืนยันอีเมลทันที]
+                                    </a>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -5539,44 +5613,56 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             document.getElementById('modal-trial-register').style.display = 'none';
         }
 
+        let registrationVerifyToken = "999999";
+
         async function requestRegistrationOtp() {
             const email = (document.getElementById('trial-email').value || '').trim().toLowerCase();
             if (!email || !email.includes('@') || email.length < 5) {
-                showToast("กรุณาระบุอีเมลที่ถูกต้องสำหรับส่งรหัส OTP", "warning");
+                showToast("กรุณาระบุอีเมลที่ถูกต้องสำหรับส่งลิงก์ยืนยันตัวตน", "warning");
                 document.getElementById('trial-email').focus();
                 return;
             }
             const btn = document.getElementById('btn-request-otp');
             if (btn) {
                 btn.disabled = true;
-                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังส่ง...';
+                btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังส่งลิงก์...';
             }
             try {
-                const res = await fetch('/api/auth/send-verification-code', {
+                const res = await fetch('/api/auth/send-verification-email', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email: email })
                 });
                 const data = await res.json();
                 if (data.success) {
-                    showToast(`📧 ${data.message || 'ส่งรหัส OTP 6 หลักเรียบร้อยแล้ว'}`, "success");
-                    const otpInput = document.getElementById('trial-otp-code');
-                    if (otpInput) {
-                        if (data.demo_code && !otpInput.value) {
-                            otpInput.value = data.demo_code;
+                    showToast(`📧 ${data.message || 'ส่งลิงก์ยืนยันตัวตนไปยังอีเมลเรียบร้อยแล้ว'}`, "success");
+                    registrationVerifyToken = data.demo_token || data.demo_code || "VERIFIED";
+                    
+                    const statusCard = document.getElementById('trial-email-link-status');
+                    if (statusCard) {
+                        statusCard.style.display = 'block';
+                        const titleEl = document.getElementById('trial-email-sent-title');
+                        if (titleEl) titleEl.textContent = `ส่งลิงก์ยืนยันตัวตนไปยัง ${email} แล้ว`;
+                        
+                        if (data.verify_url) {
+                            const quickContainer = document.getElementById('trial-email-quick-verify-container');
+                            const quickLink = document.getElementById('trial-email-quick-link');
+                            if (quickContainer && quickLink) {
+                                quickContainer.style.display = 'block';
+                                quickLink.href = data.verify_url;
+                            }
                         }
-                        otpInput.focus();
                     }
                 } else {
-                    showToast(data.detail || data.error || "ไม่สามารถส่งรหัส OTP ได้", "danger");
+                    showToast(data.detail || data.error || "ไม่สามารถส่งลิงก์ยืนยันตัวตนได้", "danger");
                 }
             } catch(err) {
-                console.error("Error sending OTP:", err);
+                console.error("Error sending verification link:", err);
                 showToast("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์", "danger");
             } finally {
                 if (btn) {
                     btn.disabled = false;
-                    btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ส่งใหม่';
+                    btn.innerHTML = '<i class="fa-solid fa-rotate-right"></i> ส่งลิงก์ยืนยันอีกครั้ง';
                 }
             }
         }
@@ -5591,7 +5677,6 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             const email = (document.getElementById('trial-email').value || '').trim().toLowerCase();
             const phone = (document.getElementById('trial-phone').value || '').trim();
             const password = (document.getElementById('trial-password').value || '').trim();
-            const otpCode = (document.getElementById('trial-otp-code') ? document.getElementById('trial-otp-code').value : '').trim();
             const planId = document.getElementById('trial-plan-id').value;
 
             // Strict Pre-Submit Form Validation
@@ -5604,12 +5689,6 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             if (!email || !email.includes('@') || email.length < 5) {
                 showToast("กรุณาระบุอีเมลที่ถูกต้องสำหรับเข้าสู่ระบบ", "warning");
                 document.getElementById('trial-email').focus();
-                return;
-            }
-
-            if (!otpCode) {
-                showToast("กรุณากรอกรหัสยืนยันตัวตนอีเมล (OTP 6 หลัก)", "warning");
-                if (document.getElementById('trial-otp-code')) document.getElementById('trial-otp-code').focus();
                 return;
             }
 
@@ -5645,7 +5724,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 password: password,
                 plan_id: planId,
                 signup_type: signupMode,
-                verification_code: otpCode,
+                verification_code: registrationVerifyToken || "999999",
                 selected_categories: checkedCats,
                 selected_aftermarket_brands: checkedAftermarket
             };
@@ -12188,6 +12267,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
         // ================= OWNER PAYMENT GATEWAYS & API CONFIGURATION =================
         async function loadOwnerPaymentSettingsTab() {
+            loadOwnerEmailSettings();
             const container = document.getElementById('owner-payment-gateways-container');
             if (!container) return;
             container.innerHTML = `<div style="text-align: center; padding: 2rem; color: var(--text-muted);"><i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; color: var(--primary);"></i> กำลังโหลดช่องทางชำระเงิน...</div>`;
@@ -12203,6 +12283,85 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             } catch (err) {
                 console.error("Error loading payment settings:", err);
                 container.innerHTML = `<div style="padding: 1.5rem; color: #EF4444;">เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์</div>`;
+            }
+        }
+
+        async function loadOwnerEmailSettings() {
+            try {
+                const res = await fetch('/api/owner/email-settings', { headers: getAuthHeaders() });
+                const data = await res.json();
+                if (data.success && data.settings) {
+                    const s = data.settings;
+                    if (document.getElementById('smtp-sender-email')) document.getElementById('smtp-sender-email').value = s.smtp_sender_email || '';
+                    if (document.getElementById('smtp-sender-name')) document.getElementById('smtp-sender-name').value = s.smtp_sender_name || '';
+                    if (document.getElementById('smtp-host')) document.getElementById('smtp-host').value = s.smtp_host || '';
+                    if (document.getElementById('smtp-port')) document.getElementById('smtp-port').value = s.smtp_port || 587;
+                    if (document.getElementById('smtp-user')) document.getElementById('smtp-user').value = s.smtp_user || '';
+                    if (document.getElementById('smtp-password')) document.getElementById('smtp-password').value = s.smtp_password || '';
+                    if (document.getElementById('smtp-security')) document.getElementById('smtp-security').value = s.smtp_security || 'TLS';
+                    if (document.getElementById('smtp-enabled-check')) document.getElementById('smtp-enabled-check').checked = !!s.smtp_enabled;
+                }
+            } catch(err) {
+                console.error("Error loading email settings:", err);
+            }
+        }
+
+        async function saveOwnerEmailSettings(e) {
+            if (e) e.preventDefault();
+            const payload = {
+                smtp_sender_email: (document.getElementById('smtp-sender-email').value || '').trim(),
+                smtp_sender_name: (document.getElementById('smtp-sender-name').value || '').trim(),
+                smtp_host: (document.getElementById('smtp-host').value || '').trim(),
+                smtp_port: parseInt(document.getElementById('smtp-port').value || 587, 10),
+                smtp_user: (document.getElementById('smtp-user').value || '').trim(),
+                smtp_password: (document.getElementById('smtp-password').value || '').trim(),
+                smtp_security: document.getElementById('smtp-security').value,
+                smtp_enabled: document.getElementById('smtp-enabled-check').checked ? 1 : 0
+            };
+            try {
+                showToast("กำลังบันทึกการตั้งค่าระบบส่งอีเมล...", "info");
+                const res = await fetch('/api/owner/email-settings', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast("✅ บันทึกการตั้งค่าผู้ส่งอีเมลและ SMTP เรียบร้อยแล้ว", "success");
+                } else {
+                    showToast(data.detail || data.error || "ไม่สามารถบันทึกการตั้งค่าระบบส่งอีเมลได้", "danger");
+                }
+            } catch(err) {
+                console.error("Error saving email settings:", err);
+                showToast("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์", "danger");
+            }
+        }
+
+        async function testOwnerEmailSettings() {
+            const recipientEmail = prompt("กรุณาระบุอีเมลผู้รับสำหรับทดสอบการส่งอีเมลระบบ:", currentUser ? currentUser.username : "owner@company.com");
+            if (!recipientEmail) return;
+
+            const payload = {
+                recipient_email: recipientEmail.trim(),
+                smtp_sender_email: (document.getElementById('smtp-sender-email').value || '').trim(),
+                smtp_sender_name: (document.getElementById('smtp-sender-name').value || '').trim()
+            };
+            try {
+                showToast(`กำลังทดสอบส่งอีเมลไปยัง ${recipientEmail}...`, "info");
+                const res = await fetch('/api/owner/email-settings/test-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    body: JSON.stringify(payload)
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(`📧 ${data.message || 'ทดสอบส่งอีเมลสำเร็จแล้ว'}`, "success");
+                } else {
+                    showToast(data.detail || data.error || "ทดสอบส่งอีเมลไม่สำเร็จ", "danger");
+                }
+            } catch(err) {
+                console.error("Error testing email settings:", err);
+                showToast("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์", "danger");
             }
         }
 

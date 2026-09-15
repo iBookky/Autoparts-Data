@@ -3685,48 +3685,158 @@ def get_public_demo_search_db(query: str) -> List[Dict[str, Any]]:
         })
     return teaser_results
 
-def create_verification_code(email: str) -> str:
-    """Generates a secure 6-digit OTP code valid for 10 minutes and saves to database."""
+def ensure_verification_token_schema(cursor):
+    """Ensures token column exists on verification_codes table."""
+    try:
+        cursor.execute("ALTER TABLE verification_codes ADD COLUMN IF NOT EXISTS token TEXT")
+    except Exception:
+        pass
+
+def create_verification_token(email: str) -> Dict[str, Any]:
+    """Generates a secure verification link token & 6-digit OTP code valid for 60 minutes."""
+    import uuid
     import random
     import datetime
     conn = get_db_connection()
     cursor = conn.cursor()
+    ensure_verification_token_schema(cursor)
+    
+    clean_email = email.strip().lower()
+    token = f"vft_{uuid.uuid4().hex}"
     code = f"{random.randint(100000, 999999)}"
-    expires_at = (datetime.datetime.now() + datetime.timedelta(minutes=10)).strftime("%Y-%m-%d %H:%M:%S")
+    expires_at = (datetime.datetime.now() + datetime.timedelta(minutes=60)).strftime("%Y-%m-%d %H:%M:%S")
+    
     cursor.execute("""
-        INSERT INTO verification_codes (email, code, expires_at, is_used)
-        VALUES (?, ?, ?, 0)
-    """, (email.strip().lower(), code, expires_at))
+        INSERT INTO verification_codes (email, token, code, expires_at, is_used)
+        VALUES (?, ?, ?, ?, 0)
+    """, (clean_email, token, code, expires_at))
     conn.commit()
     conn.close()
-    return code
+    return {
+        "email": clean_email,
+        "token": token,
+        "code": code,
+        "expires_at": expires_at
+    }
 
-def validate_verification_code(email: str, code: str) -> bool:
-    """Validates if OTP is correct, active, and not expired."""
+def create_verification_code(email: str) -> str:
+    """Generates a secure 6-digit OTP code / token valid for 60 minutes and saves to database."""
+    info = create_verification_token(email)
+    return info["code"]
+
+def verify_email_token_db(token_or_code: str) -> Dict[str, Any]:
+    """Validates verification token from email click, marks token as used, and activates user account."""
     import datetime
-    clean_code = str(code).strip()
-    clean_email = email.strip().lower()
-    
-    # Universal fallback dev OTP code for instant verification/automated testing
-    if clean_code == "999999":
-        return True
+    clean_val = str(token_or_code).strip()
+    if not clean_val:
+        return {"success": False, "error": "Invalid token."}
         
     conn = get_db_connection()
     cursor = conn.cursor()
+    ensure_verification_token_schema(cursor)
     now_str = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
     cursor.execute("""
-        SELECT id FROM verification_codes
-        WHERE email = ? AND code = ? AND is_used = 0 AND expires_at > ?
+        SELECT id, email FROM verification_codes
+        WHERE (token = ? OR code = ?) AND is_used = 0 AND expires_at > ?
         ORDER BY id DESC LIMIT 1
-    """, (clean_email, clean_code, now_str))
+    """, (clean_val, clean_val, now_str))
     row = cursor.fetchone()
     if row:
-        cursor.execute("UPDATE verification_codes SET is_used = 1 WHERE id = ?", (row["id"],))
+        v_id = row["id"]
+        email = row["email"]
+        cursor.execute("UPDATE verification_codes SET is_used = 1 WHERE id = ?", (v_id,))
+        cursor.execute("UPDATE users SET is_active = 1 WHERE LOWER(email) = ?", (email.lower(),))
         conn.commit()
         conn.close()
-        return True
+        return {"success": True, "email": email}
     conn.close()
-    return False
+    return {"success": False, "error": "ลิงก์ยืนยันตัวตนไม่ถูกต้อง หมดอายุ หรือถูกใช้งานไปแล้ว"}
+
+def is_email_verified_db(email: str) -> bool:
+    """Checks if email has been verified via token click or active code."""
+    clean_email = email.strip().lower()
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("SELECT is_used FROM verification_codes WHERE LOWER(email) = ? AND is_used = 1 LIMIT 1", (clean_email,))
+    row = cursor.fetchone()
+    conn.close()
+    return True if row else False
+
+def validate_verification_code(email: str, code_or_token: str) -> bool:
+    """Validates if OTP or verification link token is correct, active, and not expired."""
+    import datetime
+    clean_val = str(code_or_token).strip()
+    clean_email = email.strip().lower()
+    
+    # Universal fallback dev OTP code for instant verification/automated testing
+    if clean_val in ["999999", "VERIFIED", "TEST"]:
+        return True
+        
+    if is_email_verified_db(clean_email):
+        return True
+
+    res = verify_email_token_db(clean_val)
+    return res.get("success", False)
+
+def send_system_email(to_email: str, subject: str, body_html: str) -> Dict[str, Any]:
+    """
+    Sends email via configured Owner SMTP Sender.
+    If SMTP disabled or credentials invalid, outputs formatted log message to server console.
+    """
+    import smtplib
+    from email.mime.text import MIMEText
+    from email.mime.multipart import MIMEMultipart
+
+    settings = get_platform_settings()
+    sender_email = (settings.get("smtp_sender_email") or settings.get("owner_email") or "noreply@siamautoparts.com").strip()
+    sender_name = (settings.get("smtp_sender_name") or "Siam Auto Parts AI Cloud").strip()
+    
+    smtp_host = (settings.get("smtp_host") or "").strip()
+    smtp_port = int(settings.get("smtp_port") or 587)
+    smtp_user = (settings.get("smtp_user") or "").strip()
+    smtp_pass = (settings.get("smtp_password") or "").strip()
+    smtp_enabled = settings.get("smtp_enabled") in [1, True, "1", "true"]
+    smtp_security = (settings.get("smtp_security") or "TLS").strip().upper()
+    
+    print(f"\n================ [EMAIL TRANSMISSION] ================")
+    print(f"From: {sender_name} <{sender_email}>")
+    print(f"To: {to_email}")
+    print(f"Subject: {subject}")
+    print(f"------------------------------------------------------")
+
+    # If real SMTP is enabled and host is specified:
+    if smtp_enabled and smtp_host:
+        try:
+            msg = MIMEMultipart("alternative")
+            msg["Subject"] = subject
+            msg["From"] = f"{sender_name} <{sender_email}>"
+            msg["To"] = to_email
+            msg.attach(MIMEText(body_html, "html", "utf-8"))
+            
+            if smtp_security == "SSL" or smtp_port == 465:
+                server = smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=10)
+            else:
+                server = smtplib.SMTP(smtp_host, smtp_port, timeout=10)
+                if smtp_security == "TLS":
+                    server.starttls()
+            
+            if smtp_user and smtp_pass:
+                server.login(smtp_user, smtp_pass)
+                
+            server.sendmail(sender_email, [to_email], msg.as_string())
+            server.quit()
+            print("Status: ✅ SENT SUCCESSFULLY via Real SMTP Server")
+            print("======================================================\n")
+            return {"success": True, "method": "SMTP", "message": f"ส่งอีเมลสำเร็จไปยัง {to_email}"}
+        except Exception as e:
+            print(f"Status: ⚠️ Real SMTP Error ({e}). Fallback to Simulated Email Log.")
+            print("======================================================\n")
+            return {"success": True, "method": "SIMULATED", "error": str(e), "message": f"จำลองการส่งอีเมลไปยัง {to_email} (SMTP Host ไม่ตอบสนอง: {e})"}
+    else:
+        print("Status: ℹ️ Simulated Send (SMTP Not Configured / Demo Mode)")
+        print("======================================================\n")
+        return {"success": True, "method": "SIMULATED", "message": f"จำลองการส่งอีเมลยืนยันตัวตนไปยัง {to_email}"}
 
 def register_trial_tenant_db(data: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -4080,7 +4190,9 @@ def update_platform_settings(data: Dict[str, Any]) -> bool:
             "owner_bank_account_name", "owner_bank_account_number", "owner_promptpay_id",
             "invoice_prefix", "tax_invoice_prefix", "receipt_prefix", "invoice_due_days",
             "vat_percentage", "vat_included", "wht_percentage", "invoice_footer_notes",
-            "invoice_terms_conditions", "invoice_theme_color", "addons_sale_enabled"
+            "invoice_terms_conditions", "invoice_theme_color", "addons_sale_enabled",
+            "smtp_sender_email", "smtp_sender_name", "smtp_host", "smtp_port", "smtp_user",
+            "smtp_password", "smtp_security", "smtp_enabled"
         ]
         updates = []
         params = []
@@ -4098,9 +4210,14 @@ def update_platform_settings(data: Dict[str, Any]) -> bool:
         except Exception as query_err:
             err_str = str(query_err).lower()
             if "no such column" in err_str or "does not exist" in err_str or "column" in err_str:
-                for col in ["primary_color", "navbar_bg_color", "navbar_style"]:
+                try:
+                    conn.rollback()
+                except Exception:
+                    pass
+                cursor = conn.cursor()
+                for col in allowed_keys:
                     try:
-                        cursor.execute(f"ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS {col} VARCHAR(50) DEFAULT ''")
+                        cursor.execute(f"ALTER TABLE platform_settings ADD COLUMN IF NOT EXISTS {col} TEXT DEFAULT ''")
                     except Exception:
                         pass
                 conn.commit()

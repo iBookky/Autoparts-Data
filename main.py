@@ -155,7 +155,10 @@ from backend.database import (
     get_public_demo_search_db,
     register_trial_tenant_db,
     create_verification_code,
+    create_verification_token,
+    verify_email_token_db,
     validate_verification_code,
+    send_system_email,
     get_platform_settings,
     update_platform_settings,
     clean_production_database,
@@ -334,29 +337,140 @@ async def login(req: LoginRequest):
 class SendVerificationCodeRequest(BaseModel):
     email: str
 
+class SendVerificationCodeRequest(BaseModel):
+    email: str
+    base_url: Optional[str] = None
+
 class VerifyCodeRequest(BaseModel):
     email: str
     code: str
 
 @app.post("/api/auth/send-verification-code")
-async def send_verification_code_endpoint(req: SendVerificationCodeRequest):
+@app.post("/api/auth/send-verification-email")
+async def send_verification_code_endpoint(req: SendVerificationCodeRequest, request: Request):
     email = req.email.strip().lower()
     if not email or "@" not in email:
         raise HTTPException(status_code=400, detail="กรุณาระบุอีเมลที่ถูกต้อง")
-    code = create_verification_code(email)
-    print(f"📧 [Email Verification OTP] 6-digit Code for {email}: {code}")
+        
+    token_info = create_verification_token(email)
+    token = token_info["token"]
+    code = token_info["code"]
+    
+    # Construct absolute verification link URL
+    base_host = (req.base_url or str(request.base_url)).rstrip('/')
+    verify_url = f"{base_host}/api/auth/verify-email-link?token={token}"
+    
+    # HTML Email template with modern design
+    subject = "🔑 กรุณายืนยันตัวตนอีเมลของคุณ - Siam Auto Parts"
+    html_body = f"""
+    <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background-color: #0F172A; color: #F8FAFC; border-radius: 12px; border: 1px solid #1E293B;">
+        <div style="text-align: center; padding-bottom: 20px; border-bottom: 1px solid #1E293B;">
+            <h2 style="color: #60A5FA; margin: 0; font-size: 24px;">⚙️ Siam Auto Parts AI Cloud</h2>
+            <p style="color: #94A3B8; font-size: 14px; margin-top: 5px;">ระบบเปรียบเทียบรหัสอะไหล่แท้-ทดแทนระดับองค์กร</p>
+        </div>
+        <div style="padding: 30px 20px; text-align: center;">
+            <h3 style="color: #FFFFFF; font-size: 20px; margin-bottom: 15px;">ยืนยันการเปิดใช้งานบัญชีสมาชิก</h3>
+            <p style="color: #CBD5E1; font-size: 15px; line-height: 1.6; margin-bottom: 25px;">
+                ยินดีต้อนรับสู่แพลตฟอร์ม! กรุณากดปุ่มด้านล่างเพื่อยืนยันตัวตนอีเมล <strong>{email}</strong> และเปิดใช้งานบัญชีองค์กรของคุณ
+            </p>
+            <div style="margin: 30px 0;">
+                <a href="{verify_url}" target="_blank" style="background: linear-gradient(135deg, #2563EB 0%, #1D4ED8 100%); color: #FFFFFF; text-decoration: none; font-weight: bold; font-size: 16px; padding: 14px 32px; border-radius: 8px; display: inline-block; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);">
+                    ✅ คลิกยืนยันตัวตนอีเมล (Verify Email Address)
+                </a>
+            </div>
+            <p style="color: #64748B; font-size: 13px; margin-top: 25px;">
+                หากปุ่มด้านบนไม่ทำงาน สามารถคัดลอกลิงก์ด้านล่างไปวางในเบราว์เซอร์ของท่าน:<br>
+                <a href="{verify_url}" target="_blank" style="color: #60A5FA; word-break: break-all;">{verify_url}</a>
+            </p>
+            <p style="color: #64748B; font-size: 12px; margin-top: 20px;">
+                * ลิงก์ยืนยันตัวตนนี้จะมีอายุการใช้งาน 60 นาทีเพื่อความปลอดภัยสูงสุด
+            </p>
+        </div>
+        <div style="border-top: 1px solid #1E293B; padding-top: 15px; text-align: center; color: #64748B; font-size: 12px;">
+            © 2026 Siam Auto Parts Platform. All rights reserved.
+        </div>
+    </div>
+    """
+    
+    send_res = send_system_email(email, subject, html_body)
+    
+    print(f"📧 [Email Verification Link] Link for {email}: {verify_url}")
     return {
         "success": True, 
-        "message": f"รหัสยืนยันตัวตน (OTP 6 หลัก) ถูกส่งไปยัง {email} แล้ว กรุณาตรวจสอบอีเมลของท่าน",
-        "demo_code": code
+        "message": f"ระบบได้ส่งลิงก์ยืนยันตัวตนไปยัง {email} แล้ว กรุณาตรวจสอบอีเมลและคลิกลิงก์เพื่อยืนยันตัวตน",
+        "verify_url": verify_url,
+        "demo_token": token,
+        "demo_code": code,
+        "send_details": send_res
     }
+
+@app.get("/api/auth/verify-email-link", response_class=HTMLResponse)
+async def verify_email_link_endpoint(token: str):
+    res = verify_email_token_db(token)
+    if res.get("success"):
+        email = res.get("email", "")
+        return f"""
+        <!DOCTYPE html>
+        <html lang="th">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>ยืนยันอีเมลสำเร็จ - Siam Auto Parts</title>
+            <style>
+                body {{ font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #0B0F19; color: #F3F4F6; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }}
+                .card {{ background: #111827; border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 16px; padding: 2.5rem; max-width: 480px; text-align: center; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5); }}
+                .icon {{ width: 72px; height: 72px; background: rgba(16, 185, 129, 0.15); border: 2px solid #10B981; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: #10B981; font-size: 2.2rem; font-weight: bold; line-height: 72px; }}
+                h1 {{ font-size: 1.5rem; margin-bottom: 0.5rem; color: #FFFFFF; }}
+                p {{ color: #9CA3AF; font-size: 0.95rem; line-height: 1.6; margin-bottom: 2rem; }}
+                .btn {{ background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%); color: #FFFFFF; text-decoration: none; padding: 0.85rem 2rem; border-radius: 8px; font-weight: 600; display: inline-block; transition: all 0.2s; }}
+                .btn:hover {{ opacity: 0.9; transform: translateY(-1px); }}
+            </style>
+        </head>
+        <body>
+            <div class="card">
+                <div class="icon">✓</div>
+                <h1>ยืนยันอีเมลสำเร็จเรียบร้อยแล้ว!</h1>
+                <p>อีเมล <strong style="color: #60A5FA;">{email}</strong> ของคุณได้รับการยืนยันตัวตนเรียบร้อยแล้ว บัญชีองค์กรของคุณพร้อมใช้งานแล้ว สามารถกลับไปหน้าหลักเพื่อเข้าสู่ระบบได้ทันที</p>
+                <a href="/" class="btn">🚀 เข้าสู่ระบบแพลตฟอร์ม</a>
+            </div>
+        </body>
+        </html>
+        """
+    else:
+        err_msg = res.get("error", "ลิงก์ยืนยันตัวตนไม่ถูกต้องหรือหมดอายุแล้ว")
+        return f"""
+        <!DOCTYPE html>
+        <html lang="th">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>ยืนยันอีเมลไม่สำเร็จ - Siam Auto Parts</title>
+            <style>
+                body {{ font-family: 'Inter', system-ui, -apple-system, sans-serif; background: #0B0F19; color: #F3F4F6; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; }}
+                .card {{ background: #111827; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 16px; padding: 2.5rem; max-width: 480px; text-align: center; }}
+                .icon {{ width: 72px; height: 72px; background: rgba(239, 68, 68, 0.15); border: 2px solid #EF4444; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; color: #EF4444; font-size: 2.2rem; font-weight: bold; line-height: 72px; }}
+                h1 {{ font-size: 1.5rem; margin-bottom: 0.5rem; color: #FFFFFF; }}
+                p {{ color: #9CA3AF; font-size: 0.95rem; line-height: 1.6; margin-bottom: 2rem; }}
+                .btn {{ background: #374151; color: #FFFFFF; text-decoration: none; padding: 0.85rem 2rem; border-radius: 8px; font-weight: 600; display: inline-block; }}
+            </style>
+        </head>
+        <body>
+            <div class="card">
+                <div class="icon">✕</div>
+                <h1>ไม่สามารถยืนยันอีเมลได้</h1>
+                <p>{err_msg}</p>
+                <a href="/" class="btn">กลับสู่หน้าหลัก</a>
+            </div>
+        </body>
+        </html>
+        """
 
 @app.post("/api/auth/verify-code")
 async def verify_code_endpoint(req: VerifyCodeRequest):
     valid = validate_verification_code(req.email, req.code)
     if valid:
-        return {"success": True, "message": "ยืนยันรหัส OTP ถูกต้องเรียบร้อยแล้ว"}
-    return {"success": False, "error": "รหัสยืนยัน (OTP) ไม่ถูกต้องหรือหมดอายุแล้ว"}
+        return {"success": True, "message": "ยืนยันอีเมลถูกต้องเรียบร้อยแล้ว"}
+    return {"success": False, "error": "รหัสหรือลิงก์ยืนยันไม่ถูกต้องหรือหมดอายุแล้ว"}
 
 class TrialRegisterRequest(BaseModel):
     company_name: str
@@ -3187,6 +3301,66 @@ async def test_payment_gateway_connection(data: Dict[str, Any], user = Depends(r
         "latency_ms": 12,
         "message": f"การเชื่อมต่อ API ของ {provider} สำเร็จ! สถานะ: พร้อมรับการชำระเงิน (Online)"
     }
+
+# ================= EMAIL SENDER & SMTP SETTINGS ENDPOINTS =================
+@app.get("/api/owner/email-settings")
+async def get_owner_email_settings(user = Depends(require_owner)):
+    settings = get_platform_settings()
+    smtp_pass = settings.get("smtp_password", "")
+    masked_pass = ("••••••••") if smtp_pass else ""
+    return {
+        "success": True,
+        "settings": {
+            "smtp_sender_email": settings.get("smtp_sender_email") or settings.get("owner_email") or "noreply@siamautoparts.com",
+            "smtp_sender_name": settings.get("smtp_sender_name") or "Siam Auto Parts AI Cloud",
+            "smtp_host": settings.get("smtp_host") or "",
+            "smtp_port": settings.get("smtp_port") or 587,
+            "smtp_user": settings.get("smtp_user") or "",
+            "smtp_password": masked_pass,
+            "smtp_security": settings.get("smtp_security") or "TLS",
+            "smtp_enabled": settings.get("smtp_enabled") in [1, True, "1", "true"]
+        }
+    }
+
+@app.post("/api/owner/email-settings")
+async def save_owner_email_settings(data: Dict[str, Any], user = Depends(require_owner)):
+    smtp_pass = str(data.get("smtp_password") or "").strip()
+    if "••••" in smtp_pass or not smtp_pass:
+        current = get_platform_settings()
+        data["smtp_password"] = current.get("smtp_password", "")
+    
+    res = update_platform_settings(data)
+    if res:
+        log_audit_action(user.get("id", 1), user["username"], user["role"], "UPDATE_EMAIL_SETTINGS", "platform_settings", 1, None, f"Updated SMTP sender settings: {data.get('smtp_sender_email')}")
+        return {"success": True, "message": "บันทึกการตั้งค่าระบบส่งอีเมลเรียบร้อยแล้ว"}
+    raise HTTPException(status_code=400, detail="ไม่สามารถบันทึกการตั้งค่าระบบส่งอีเมลได้")
+
+@app.post("/api/owner/email-settings/test-email")
+async def test_owner_email_settings(data: Dict[str, Any], user = Depends(require_owner)):
+    to_email = (data.get("recipient_email") or user.get("username") or "owner@company.com").strip()
+    sender_email = (data.get("smtp_sender_email") or "noreply@siamautoparts.com").strip()
+    sender_name = (data.get("smtp_sender_name") or "Siam Auto Parts AI Cloud").strip()
+    
+    subject = "🧪 [Test Email] ทดสอบการส่งอีเมลระบบ Siam Auto Parts Sender"
+    body_html = f"""
+    <div style="font-family: sans-serif; padding: 25px; background: #0F172A; color: #F8FAFC; border-radius: 12px; border: 1px solid #1E293B; max-width: 500px; margin: 0 auto;">
+        <h3 style="color: #60A5FA; margin-top: 0;">✅ ทดสอบระบบผู้ส่งอีเมลสำเร็จ!</h3>
+        <p style="color: #CBD5E1; font-size: 14px; line-height: 1.6;">
+            อีเมลฉบับนี้ถูกส่งมาจากระบบตั้งค่าผู้ส่ง (SMTP Sender Configuration) ของ Siam Auto Parts Platform
+        </p>
+        <div style="background: rgba(255,255,255,0.05); padding: 12px 15px; border-radius: 6px; font-size: 13px; color: #94A3B8; margin: 15px 0;">
+            <div><strong>ชื่อผู้ส่ง:</strong> {sender_name}</div>
+            <div><strong>อีเมลผู้ส่ง:</strong> {sender_email}</div>
+            <div><strong>ผู้รับ:</strong> {to_email}</div>
+            <div><strong>เวลาที่ทดสอบ:</strong> {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}</div>
+        </div>
+        <p style="color: #64748B; font-size: 12px; margin-bottom: 0;">
+            ระบบส่งอีเมลของคุณพร้อมสำหรับการส่งลิงก์ยืนยันตัวตนและการแจ้งเตือนอัตโนมัติแล้ว
+        </p>
+    </div>
+    """
+    res = send_system_email(to_email, subject, body_html)
+    return res
 
 # ================= CUSTOMER MANAGEMENT (EDIT, DELETE, PLAN CHANGE) =================
 @app.put("/api/owner/customers/{org_id}")
