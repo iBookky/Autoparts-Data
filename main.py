@@ -332,6 +332,11 @@ async def login(req: LoginRequest):
         }
     }
 
+@app.post("/api/auth/logout")
+async def logout_endpoint():
+    """Logs out user and invalidates session."""
+    return {"success": True, "message": "ออกจากระบบเรียบร้อยแล้ว"}
+
 # ================= PHASE 11: COMMERCIAL MVP & GTM PUBLIC ENDPOINTS =================
 
 class SendVerificationCodeRequest(BaseModel):

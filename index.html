@@ -5258,11 +5258,15 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
         window.addEventListener('DOMContentLoaded', async () => {
             loadPlatformSettingsPublic();
-            const saved = localStorage.getItem('autoparts_saas_user');
+            // Purge legacy persistent localStorage session to prevent lingering auth across browser restarts
+            localStorage.removeItem('autoparts_saas_user');
+            localStorage.removeItem('autoparts_user_token');
+
+            const saved = sessionStorage.getItem('autoparts_saas_user');
             if (saved) {
                 try {
                     currentUser = normalizeUserRole(JSON.parse(saved));
-                    localStorage.setItem('autoparts_saas_user', JSON.stringify(currentUser));
+                    sessionStorage.setItem('autoparts_saas_user', JSON.stringify(currentUser));
                     await initSaaSSession();
                 } catch (err) {
                     console.error("Error restoring session:", err);
@@ -5748,7 +5752,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 if (res.success) {
                     closeTrialModal();
                     currentUser = { username: res.username, role: res.role || 'CUSTOMER_OWNER', org_role: res.org_role || 'OWNER' };
-                    localStorage.setItem('autoparts_saas_user', JSON.stringify(currentUser));
+                    sessionStorage.setItem('autoparts_saas_user', JSON.stringify(currentUser));
+                    localStorage.removeItem('autoparts_saas_user');
                     await initSaaSSession();
                     
                     const msgEl = document.getElementById('reg-success-msg');
@@ -5951,7 +5956,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 const res = await response.json();
                 if (res.success) {
                     currentUser = { username: res.username, role: res.role };
-                    localStorage.setItem('autoparts_saas_user', JSON.stringify(currentUser));
+                    sessionStorage.setItem('autoparts_saas_user', JSON.stringify(currentUser));
+                    localStorage.removeItem('autoparts_saas_user');
                     await initSaaSSession();
                     showToast(`เข้าสู่ระบบสำเร็จในบทบาท ${res.role}`, "success");
                 } else {
@@ -5975,7 +5981,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 const res = await response.json();
                 if (res.success) {
                     currentUser = { username: res.username, role: res.role };
-                    localStorage.setItem('autoparts_saas_user', JSON.stringify(currentUser));
+                    sessionStorage.setItem('autoparts_saas_user', JSON.stringify(currentUser));
+                    localStorage.removeItem('autoparts_saas_user');
                     await initSaaSSession();
                     showToast(`⚡ ล็อกอินทันที: ${res.username} (${res.role})`, "success");
                 } else {
@@ -5987,16 +5994,19 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             }
         }
 
-        function handleLogout() {
+        async function handleLogout() {
+            try {
+                await fetch('/api/auth/logout', { method: 'POST', headers: getAuthHeaders() });
+            } catch (e) {}
             currentUser = null;
             window.currentUser = null;
             window.cachedOwnerCustomers = null;
             window.cachedPlatformSettings = null;
             window.cachedOverviewData = null;
+            sessionStorage.clear();
             localStorage.removeItem('autoparts_saas_user');
             localStorage.removeItem('autoparts_active_tab');
             localStorage.removeItem('autoparts_user_token');
-            sessionStorage.clear();
             showToast("ออกจากระบบเรียบร้อยแล้ว", "info");
             showLandingPage();
         }
@@ -6044,7 +6054,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 showAuthScreen();
                 return;
             }
-            localStorage.setItem('autoparts_saas_user', JSON.stringify(currentUser));
+            sessionStorage.setItem('autoparts_saas_user', JSON.stringify(currentUser));
+            localStorage.removeItem('autoparts_saas_user');
 
             document.getElementById('public-landing-view').style.display = 'none';
             document.getElementById('auth-screen').style.display = 'none';

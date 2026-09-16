@@ -4294,9 +4294,8 @@ def clean_production_database() -> Dict[str, Any]:
         try: cursor.execute("DELETE FROM organization_audit_logs")
         except Exception: pass
         
-        # 5. Clean Temp / Pending Parts (Keep Master Parts Catalog intact)
-        try: cursor.execute("DELETE FROM temp_parts")
-        except Exception: pass
+        # 5. Do NOT touch master_parts or temp_parts tables under any circumstances
+        pass
         
         # 6. Clean Staff, Admin, Customer Users (Keep ONLY Owner & SuperAdmin)
         try: cursor.execute("DELETE FROM users WHERE LOWER(username) NOT IN ('owner', 'superadmin')")
