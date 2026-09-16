@@ -6920,17 +6920,22 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         // ================= METADATA DROPDOWNS =================
         async function loadMetadataDropdowns() {
             try {
+                window.cachedAdminMetaData = window.cachedAdminMetaData || {
+                    aftermarketBrands: [], carBrands: [], carModels: [], carYears: [], categories: [], aiModels: []
+                };
+
                 // 1. Aftermarket Brands
                 const resBrands = await fetch('/api/metadata/aftermarket-brands');
                 const brandsData = await resBrands.json();
                 const sBrandSelect = document.getElementById('s-aftermarket-brand');
                 const editBrandSelect = document.getElementById('edit-brand');
                 if (brandsData.success) {
-                    sBrandSelect.innerHTML = `<option value="">${t('search.allBrands', 'All Aftermarket Brands')}</option>`;
-                    editBrandSelect.innerHTML = `<option value="">${t('common.selectBrand', '-- Select Brand --')}</option>`;
+                    window.cachedAdminMetaData.aftermarketBrands = brandsData.results || [];
+                    if (sBrandSelect) sBrandSelect.innerHTML = `<option value="">${t('search.allBrands', 'All Aftermarket Brands')}</option>`;
+                    if (editBrandSelect) editBrandSelect.innerHTML = `<option value="">${t('common.selectBrand', '-- Select Brand --')}</option>`;
                     brandsData.results.forEach(b => {
-                        sBrandSelect.innerHTML += `<option value="${b.name}">${b.name}</option>`;
-                        editBrandSelect.innerHTML += `<option value="${b.name}">${b.name}</option>`;
+                        if (sBrandSelect) sBrandSelect.innerHTML += `<option value="${b.name}">${b.name}</option>`;
+                        if (editBrandSelect) editBrandSelect.innerHTML += `<option value="${b.name}">${b.name}</option>`;
                     });
                 }
 
@@ -6940,11 +6945,12 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 const sCarBrandSelect = document.getElementById('s-car-brand');
                 const editCarBrandSelect = document.getElementById('edit-car-brand');
                 if (carBrandsData.success) {
-                    sCarBrandSelect.innerHTML = `<option value="">${t('search.allCarBrands', 'All Brands')}</option>`;
-                    editCarBrandSelect.innerHTML = `<option value="">${t('common.selectCarBrand', '-- Select Car Brand --')}</option>`;
+                    window.cachedAdminMetaData.carBrands = carBrandsData.results || [];
+                    if (sCarBrandSelect) sCarBrandSelect.innerHTML = `<option value="">${t('search.allCarBrands', 'All Brands')}</option>`;
+                    if (editCarBrandSelect) editCarBrandSelect.innerHTML = `<option value="">${t('common.selectCarBrand', '-- Select Car Brand --')}</option>`;
                     carBrandsData.results.forEach(cb => {
-                        sCarBrandSelect.innerHTML += `<option value="${cb.name}">${cb.name}</option>`;
-                        editCarBrandSelect.innerHTML += `<option value="${cb.name}">${cb.name}</option>`;
+                        if (sCarBrandSelect) sCarBrandSelect.innerHTML += `<option value="${cb.name}">${cb.name}</option>`;
+                        if (editCarBrandSelect) editCarBrandSelect.innerHTML += `<option value="${cb.name}">${cb.name}</option>`;
                     });
                 }
 
@@ -6953,6 +6959,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 const modelsData = await resModels.json();
                 if (modelsData.success) {
                     allCarModelsList = modelsData.results;
+                    window.cachedAdminMetaData.carModels = modelsData.results || [];
                     onSalesCarBrandChanged();
                 }
 
@@ -6963,13 +6970,14 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 const editYearStart = document.getElementById('edit-year-start');
                 const editYearEnd = document.getElementById('edit-year-end');
                 if (yearsData.success) {
-                    sYearSelect.innerHTML = `<option value="">${t('search.year', 'Year')}</option>`;
-                    editYearStart.innerHTML = `<option value="">${t('modal.editPart.yearStart', 'Year Start')}</option>`;
-                    editYearEnd.innerHTML = `<option value="">${t('modal.editPart.yearEnd', 'Year End')}</option>`;
+                    window.cachedAdminMetaData.carYears = yearsData.results || [];
+                    if (sYearSelect) sYearSelect.innerHTML = `<option value="">${t('search.year', 'Year')}</option>`;
+                    if (editYearStart) editYearStart.innerHTML = `<option value="">${t('modal.editPart.yearStart', 'Year Start')}</option>`;
+                    if (editYearEnd) editYearEnd.innerHTML = `<option value="">${t('modal.editPart.yearEnd', 'Year End')}</option>`;
                     yearsData.results.forEach(y => {
-                        sYearSelect.innerHTML += `<option value="${y.year}">${y.year}</option>`;
-                        editYearStart.innerHTML += `<option value="${y.year}">${y.year}</option>`;
-                        editYearEnd.innerHTML += `<option value="${y.year}">${y.year}</option>`;
+                        if (sYearSelect) sYearSelect.innerHTML += `<option value="${y.year}">${y.year}</option>`;
+                        if (editYearStart) editYearStart.innerHTML += `<option value="${y.year}">${y.year}</option>`;
+                        if (editYearEnd) editYearEnd.innerHTML += `<option value="${y.year}">${y.year}</option>`;
                     });
                 }
 
@@ -6979,13 +6987,16 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 const sCategorySelect = document.getElementById('s-category');
                 const editCatSelect = document.getElementById('edit-category');
                 if (catsData.success) {
-                    sCategorySelect.innerHTML = `<option value="">${t('search.allCategories', 'All Categories')}</option>`;
-                    editCatSelect.innerHTML = `<option value="">${t('common.selectCategory', '-- Select Category --')}</option>`;
+                    window.cachedAdminMetaData.categories = catsData.results || [];
+                    if (sCategorySelect) sCategorySelect.innerHTML = `<option value="">${t('search.allCategories', 'All Categories')}</option>`;
+                    if (editCatSelect) editCatSelect.innerHTML = `<option value="">${t('common.selectCategory', '-- Select Category --')}</option>`;
                     catsData.results.forEach(c => {
-                        sCategorySelect.innerHTML += `<option value="${c.name}">${c.name}</option>`;
-                        editCatSelect.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+                        if (sCategorySelect) sCategorySelect.innerHTML += `<option value="${c.name}">${c.name}</option>`;
+                        if (editCatSelect) editCatSelect.innerHTML += `<option value="${c.name}">${c.name}</option>`;
                     });
                 }
+
+                populateMasterFilterDropdowns();
             } catch (err) {
                 console.error("Error loading metadata dropdowns:", err);
             }
@@ -10094,6 +10105,9 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
         async function loadAdminMasterParts() {
             try {
+                if (!window.cachedAdminMetaData || !window.cachedAdminMetaData.categories || window.cachedAdminMetaData.categories.length === 0) {
+                    await loadMetadataDropdowns();
+                }
                 const res = await fetch('/api/admin/all-parts', { headers: getAuthHeaders() });
                 const data = await res.json();
                 if (data.success) {
@@ -10125,13 +10139,32 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             const brands = new Set();
             const categories = new Set();
 
-            window.allMasterPartsList.forEach(m => {
-                if (m.brand && m.brand.trim()) brands.add(m.brand.trim());
-                if (m.category && m.category.trim()) categories.add(m.category.trim());
-            });
+            // 1. Add official categories from metadata
+            if (window.cachedAdminMetaData && Array.isArray(window.cachedAdminMetaData.categories)) {
+                window.cachedAdminMetaData.categories.forEach(c => {
+                    const cName = typeof c === 'string' ? c : (c.name || c.category);
+                    if (cName && cName.trim()) categories.add(cName.trim());
+                });
+            }
+
+            // 2. Add official brands from metadata
+            if (window.cachedAdminMetaData && Array.isArray(window.cachedAdminMetaData.aftermarketBrands)) {
+                window.cachedAdminMetaData.aftermarketBrands.forEach(b => {
+                    const bName = typeof b === 'string' ? b : (b.name || b.brand);
+                    if (bName && bName.trim()) brands.add(bName.trim());
+                });
+            }
+
+            // 3. Merge any additional brands & categories from part items
+            if (Array.isArray(window.allMasterPartsList)) {
+                window.allMasterPartsList.forEach(m => {
+                    if (m.brand && m.brand.trim()) brands.add(m.brand.trim());
+                    if (m.category && m.category.trim()) categories.add(m.category.trim());
+                });
+            }
 
             brandSelect.innerHTML = '<option value="">-- ทุกแบรนด์ --</option>';
-            Array.from(brands).sort().forEach(b => {
+            Array.from(brands).sort((a, b) => a.localeCompare(b, 'th')).forEach(b => {
                 const opt = document.createElement('option');
                 opt.value = b;
                 opt.textContent = b;
@@ -10140,7 +10173,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             });
 
             categorySelect.innerHTML = '<option value="">-- ทุกหมวดหมู่ --</option>';
-            Array.from(categories).sort().forEach(c => {
+            Array.from(categories).sort((a, b) => a.localeCompare(b, 'th')).forEach(c => {
                 const opt = document.createElement('option');
                 opt.value = c;
                 opt.textContent = c;
