@@ -10100,7 +10100,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     window.allMasterPartsList = data.results || [];
                     window.cachedMasterPartsMap = {};
                     window.allMasterPartsList.forEach(m => {
-                        window.cachedMasterPartsMap[m.id] = m;
+                        const key = `${m.source || 'MASTER'}_${m.id}`;
+                        window.cachedMasterPartsMap[key] = m;
+                        if (!window.cachedMasterPartsMap[m.id]) {
+                            window.cachedMasterPartsMap[m.id] = m;
+                        }
                     });
                     populateMasterFilterDropdowns();
                     applyMasterCatalogFiltersAndRender();
@@ -10230,10 +10234,10 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                         <td>${escapeHtml(m.category || '-')}</td>
                         <td>${escapeHtml(((m.car_brand || '') + ' ' + (m.car_model || '')).trim() || '-')}</td>
                         <td style="text-align: right; white-space: nowrap;">
-                            <button type="button" class="btn btn-secondary btn-sm" onclick="openEditMasterPart(${m.id})" title="แก้ไขรายการ" style="padding: 0.25rem 0.5rem;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="openEditMasterPart('${m.source || 'MASTER'}', ${m.id})" title="แก้ไขรายการ" style="padding: 0.25rem 0.5rem;">
                                 <i class="fa-solid fa-pen"></i>
                             </button>
-                            <button type="button" class="btn btn-danger btn-sm" onclick="deleteMasterPart(${m.id}, '${escapeHtml(m.part_number || m.product_name_th || '')}')" title="ลบรายการ" style="padding: 0.25rem 0.5rem; margin-left: 0.3rem; background: rgba(239, 68, 68, 0.2); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.3);">
+                            <button type="button" class="btn btn-danger btn-sm" onclick="deleteMasterPart('${m.source || 'MASTER'}', ${m.id}, '${escapeHtml(m.part_number || m.product_name_th || '')}')" title="ลบรายการ" style="padding: 0.25rem 0.5rem; margin-left: 0.3rem; background: rgba(239, 68, 68, 0.2); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.3);">
                                 <i class="fa-solid fa-trash"></i>
                             </button>
                         </td>
@@ -10313,20 +10317,34 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             renderMasterCatalogTablePage();
         }
 
-        async function deleteMasterPart(id, partName) {
-            if (!confirm(`คุณต้องการลบรายการอะไหล่ "${partName || id}" ออกจาก Master Catalog ใช่หรือไม่?`)) {
+        async function deleteMasterPart(sourceOrId, idOrPartName, partNameOpt) {
+            let src = 'MASTER';
+            let id = sourceOrId;
+            let partName = idOrPartName;
+
+            if (typeof sourceOrId === 'string' && idOrPartName !== undefined && typeof idOrPartName === 'number') {
+                src = sourceOrId;
+                id = idOrPartName;
+                partName = partNameOpt;
+            }
+
+            if (!confirm(`คุณต้องการลบรายการอะไหล่ "${partName || id}" ออกจาก Catalog ใช่หรือไม่?`)) {
                 return;
             }
             try {
-                const res = await fetch(`/api/admin/master-parts/${id}`, {
+                const endpoint = src === 'TEMP' ? `/api/admin/temp-parts/${id}` : `/api/admin/master-parts/${id}`;
+                const res = await fetch(endpoint, {
                     method: 'DELETE',
                     headers: getAuthHeaders()
                 });
                 const data = await res.json();
                 if (data.success) {
                     showToast(data.message || "ลบรายการเรียบร้อยแล้ว", "success");
-                    window.allMasterPartsList = window.allMasterPartsList.filter(m => m.id !== id);
-                    if (window.cachedMasterPartsMap) delete window.cachedMasterPartsMap[id];
+                    window.allMasterPartsList = window.allMasterPartsList.filter(m => !(m.id === id && (m.source || 'MASTER') === src));
+                    if (window.cachedMasterPartsMap) {
+                        delete window.cachedMasterPartsMap[`${src}_${id}`];
+                        delete window.cachedMasterPartsMap[id];
+                    }
                     populateMasterFilterDropdowns();
                     applyMasterCatalogFiltersAndRender();
                 } else {
@@ -10338,9 +10356,15 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             }
         }
 
-        function openEditMasterPart(id) {
+        function openEditMasterPart(sourceOrId, id) {
             if (!window.cachedMasterPartsMap) return;
-            const item = window.cachedMasterPartsMap[id];
+            let item = null;
+            if (id !== undefined) {
+                const key = `${sourceOrId}_${id}`;
+                item = window.cachedMasterPartsMap[key] || window.cachedMasterPartsMap[id];
+            } else {
+                item = window.cachedMasterPartsMap[sourceOrId];
+            }
             if (item) openEditModalDirect(item);
         }
 
@@ -11161,17 +11185,35 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             document.getElementById('edit-part-id').value = item.id;
             document.getElementById('edit-source-type').value = item.source || 'MASTER';
             
-            document.getElementById('edit-brand').value = item.brand || '';
+            const setSelectValue = (selectId, value) => {
+                const selectEl = document.getElementById(selectId);
+                if (!selectEl) return;
+                if (value !== undefined && value !== null && value !== '') {
+                    const strVal = String(value);
+                    let optExists = Array.from(selectEl.options).some(opt => opt.value === strVal);
+                    if (!optExists) {
+                        const opt = document.createElement('option');
+                        opt.value = strVal;
+                        opt.textContent = strVal;
+                        selectEl.appendChild(opt);
+                    }
+                    selectEl.value = strVal;
+                } else {
+                    selectEl.value = '';
+                }
+            };
+
+            setSelectValue('edit-brand', item.brand);
             document.getElementById('edit-part-number').value = item.part_number || '';
             document.getElementById('edit-oem-number').value = item.oem_number || '';
-            document.getElementById('edit-category').value = item.category || '';
+            setSelectValue('edit-category', item.category);
             document.getElementById('edit-product-name-th').value = item.product_name_th || '';
             
-            document.getElementById('edit-car-brand').value = item.car_brand || '';
+            setSelectValue('edit-car-brand', item.car_brand);
             onEditCarBrandChanged();
-            document.getElementById('edit-car-model').value = item.car_model || '';
-            document.getElementById('edit-year-start').value = item.year_start || '';
-            document.getElementById('edit-year-end').value = item.year_end || '';
+            setSelectValue('edit-car-model', item.car_model);
+            setSelectValue('edit-year-start', item.year_start);
+            setSelectValue('edit-year-end', item.year_end);
         }
 
         function closeEditModal() {
