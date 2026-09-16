@@ -10139,7 +10139,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=à¸
             const brands = new Set();
             const categories = new Set();
 
-            // 1. Add official categories from metadata
+            // 1. Add official categories from database metadata (meta_categories)
             if (window.cachedAdminMetaData && Array.isArray(window.cachedAdminMetaData.categories)) {
                 window.cachedAdminMetaData.categories.forEach(c => {
                     const cName = typeof c === 'string' ? c : (c.name || c.category);
@@ -10147,19 +10147,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=à¸
                 });
             }
 
-            // 2. Add official brands from metadata
+            // 2. Add official brands from database metadata (meta_aftermarket_brands)
             if (window.cachedAdminMetaData && Array.isArray(window.cachedAdminMetaData.aftermarketBrands)) {
                 window.cachedAdminMetaData.aftermarketBrands.forEach(b => {
                     const bName = typeof b === 'string' ? b : (b.name || b.brand);
                     if (bName && bName.trim()) brands.add(bName.trim());
-                });
-            }
-
-            // 3. Merge any additional brands & categories from part items
-            if (Array.isArray(window.allMasterPartsList)) {
-                window.allMasterPartsList.forEach(m => {
-                    if (m.brand && m.brand.trim()) brands.add(m.brand.trim());
-                    if (m.category && m.category.trim()) categories.add(m.category.trim());
                 });
             }
 
