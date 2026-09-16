@@ -1421,6 +1421,17 @@ async def admin_master_review_action(id: int, action: str = Form(...), updated_d
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+@app.delete("/api/admin/master-parts/{id}")
+async def admin_delete_master_part(id: int, admin = Depends(require_admin)):
+    try:
+        success = delete_master_part(id)
+        if not success:
+            raise HTTPException(status_code=400, detail="ไม่สามารถลบรายการอะไหล่ได้")
+        return {"success": True, "message": "ลบรายการอะไหล่สำเร็จ"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 # Metadata Pydantic Schemas
 class MetaBrandRequest(BaseModel):
     name: str

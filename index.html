@@ -1385,6 +1385,29 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             </div>
                         </div>
 
+                        <!-- Master Catalog Filter Bar -->
+                        <div id="admin-master-filter-bar" style="background: var(--bg-surface, #111827); border: 1px solid var(--border-color, rgba(255,255,255,0.1)); border-radius: var(--radius-md, 8px); padding: 0.85rem 1rem; margin-bottom: 1rem; display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center;">
+                            <div style="flex: 2; min-width: 220px; position: relative;">
+                                <i class="fa-solid fa-search" style="position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.85rem;"></i>
+                                <input type="text" id="admin-master-search" class="form-control" placeholder="ค้นหา (แบรนด์, รหัสสินค้า, OE, ชื่ออะไหล่, รุ่นรถ...)" oninput="onMasterCatalogFilterChange()" style="padding-left: 2.2rem; font-size: 0.85rem; width: 100%;">
+                            </div>
+                            <div style="flex: 1; min-width: 140px;">
+                                <select id="admin-master-brand-filter" class="form-control" onchange="onMasterCatalogFilterChange()" style="font-size: 0.85rem;">
+                                    <option value="">-- ทุกแบรนด์ --</option>
+                                </select>
+                            </div>
+                            <div style="flex: 1; min-width: 140px;">
+                                <select id="admin-master-category-filter" class="form-control" onchange="onMasterCatalogFilterChange()" style="font-size: 0.85rem;">
+                                    <option value="">-- ทุกหมวดหมู่ --</option>
+                                </select>
+                            </div>
+                            <div>
+                                <button class="btn btn-secondary btn-sm" onclick="resetMasterCatalogFilters()" title="ล้างตัวกรอง" style="font-size: 0.82rem; padding: 0.45rem 0.75rem;">
+                                    <i class="fa-solid fa-rotate-left"></i> ล้างตัวกรอง
+                                </button>
+                            </div>
+                        </div>
+
                         <div class="data-table-container">
                             <table class="data-table">
                                 <thead>
@@ -1402,6 +1425,25 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                     <!-- Populated dynamically -->
                                 </tbody>
                             </table>
+                        </div>
+
+                        <!-- Master Catalog Pagination Bar -->
+                        <div id="admin-master-pagination" style="display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; flex-wrap: wrap; gap: 0.75rem; background: var(--bg-surface, #111827); border: 1px solid var(--border-color, rgba(255,255,255,0.08)); border-radius: var(--radius-md, 8px); padding: 0.75rem 1rem;">
+                            <div style="font-size: 0.82rem; color: var(--text-muted, #94a3b8);">
+                                แสดง <strong id="admin-master-page-start" style="color: #fff;">0</strong> - <strong id="admin-master-page-end" style="color: #fff;">0</strong> จากทั้งหมด <strong id="admin-master-total-filtered" style="color: #60A5FA;">0</strong> รายการ
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap;">
+                                <span style="font-size: 0.82rem; color: var(--text-muted, #94a3b8);">แสดงหน้าละ:</span>
+                                <select id="admin-master-page-size" class="form-control" style="width: auto; padding: 0.25rem 0.5rem; font-size: 0.82rem;" onchange="onMasterPageSizeChange(this.value)">
+                                    <option value="10">10</option>
+                                    <option value="25" selected>25</option>
+                                    <option value="50">50</option>
+                                    <option value="100">100</option>
+                                </select>
+                                <div id="admin-master-pagination-buttons" style="display: flex; gap: 0.3rem;">
+                                    <!-- Page buttons populated dynamically -->
+                                </div>
+                            </div>
                         </div>
                     </div>
 
@@ -10044,38 +10086,255 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             }
         }
 
+        // ================= MASTER CATALOG FILTER, PAGINATION & DELETE =================
+        window.allMasterPartsList = window.allMasterPartsList || [];
+        window.filteredMasterPartsList = window.filteredMasterPartsList || [];
+        window.masterPartsCurrentPage = 1;
+        window.masterPartsPageSize = 25;
+
         async function loadAdminMasterParts() {
             try {
                 const res = await fetch('/api/admin/all-parts', { headers: getAuthHeaders() });
                 const data = await res.json();
                 if (data.success) {
-                    const badge = document.getElementById('admin-master-count-badge');
-                    if (badge) badge.textContent = `${data.total || data.results.length} parts`;
-
-                    const tbody = document.getElementById('master-parts-table-body');
-                    tbody.innerHTML = '';
-                    window.cachedMasterPartsMap = window.cachedMasterPartsMap || {};
-                    data.results.slice(0, 50).forEach(m => {
+                    window.allMasterPartsList = data.results || [];
+                    window.cachedMasterPartsMap = {};
+                    window.allMasterPartsList.forEach(m => {
                         window.cachedMasterPartsMap[m.id] = m;
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td><strong>${escapeHtml(m.brand || '-')}</strong></td>
-                            <td><span class="code-badge">${escapeHtml(m.part_number || '-')}</span></td>
-                            <td><span class="oem-badge">${escapeHtml(m.oem_number || '-')}</span></td>
-                            <td>${escapeHtml(m.product_name_th || '-')}</td>
-                            <td>${escapeHtml(m.category || '-')}</td>
-                            <td>${escapeHtml(((m.car_brand || '') + ' ' + (m.car_model || '')).trim() || '-')}</td>
-                            <td style="text-align: right;">
-                                <button type="button" class="btn btn-secondary btn-sm" onclick="openEditMasterPart(${m.id})" title="แก้ไขรายการ">
-                                    <i class="fa-solid fa-pen"></i>
-                                </button>
-                            </td>
-                        `;
-                        tbody.appendChild(tr);
                     });
+                    populateMasterFilterDropdowns();
+                    applyMasterCatalogFiltersAndRender();
+                }
+            } catch (err) {
+                console.error('Error loading master parts:', err);
+            }
+        }
+
+        function populateMasterFilterDropdowns() {
+            const brandSelect = document.getElementById('admin-master-brand-filter');
+            const categorySelect = document.getElementById('admin-master-category-filter');
+            if (!brandSelect || !categorySelect) return;
+
+            const currBrand = brandSelect.value;
+            const currCat = categorySelect.value;
+
+            const brands = new Set();
+            const categories = new Set();
+
+            window.allMasterPartsList.forEach(m => {
+                if (m.brand && m.brand.trim()) brands.add(m.brand.trim());
+                if (m.category && m.category.trim()) categories.add(m.category.trim());
+            });
+
+            brandSelect.innerHTML = '<option value="">-- ทุกแบรนด์ --</option>';
+            Array.from(brands).sort().forEach(b => {
+                const opt = document.createElement('option');
+                opt.value = b;
+                opt.textContent = b;
+                if (b === currBrand) opt.selected = true;
+                brandSelect.appendChild(opt);
+            });
+
+            categorySelect.innerHTML = '<option value="">-- ทุกหมวดหมู่ --</option>';
+            Array.from(categories).sort().forEach(c => {
+                const opt = document.createElement('option');
+                opt.value = c;
+                opt.textContent = c;
+                if (c === currCat) opt.selected = true;
+                categorySelect.appendChild(opt);
+            });
+        }
+
+        function onMasterCatalogFilterChange() {
+            window.masterPartsCurrentPage = 1;
+            applyMasterCatalogFiltersAndRender();
+        }
+
+        function resetMasterCatalogFilters() {
+            const searchInput = document.getElementById('admin-master-search');
+            const brandSelect = document.getElementById('admin-master-brand-filter');
+            const categorySelect = document.getElementById('admin-master-category-filter');
+            if (searchInput) searchInput.value = '';
+            if (brandSelect) brandSelect.value = '';
+            if (categorySelect) categorySelect.value = '';
+            window.masterPartsCurrentPage = 1;
+            applyMasterCatalogFiltersAndRender();
+        }
+
+        function onMasterPageSizeChange(newSize) {
+            window.masterPartsPageSize = parseInt(newSize) || 25;
+            window.masterPartsCurrentPage = 1;
+            renderMasterCatalogTablePage();
+        }
+
+        function applyMasterCatalogFiltersAndRender() {
+            const searchVal = (document.getElementById('admin-master-search')?.value || '').trim().toLowerCase();
+            const brandVal = (document.getElementById('admin-master-brand-filter')?.value || '').trim().toLowerCase();
+            const catVal = (document.getElementById('admin-master-category-filter')?.value || '').trim().toLowerCase();
+
+            window.filteredMasterPartsList = window.allMasterPartsList.filter(m => {
+                if (brandVal && (m.brand || '').toLowerCase() !== brandVal) return false;
+                if (catVal && (m.category || '').toLowerCase() !== catVal) return false;
+                if (searchVal) {
+                    const matchText = [
+                        m.brand, m.part_number, m.oem_number, m.product_name_th,
+                        m.product_name_en, m.car_brand, m.car_model, m.category
+                    ].map(v => (v || '').toLowerCase()).join(' ');
+                    if (!matchText.includes(searchVal)) return false;
+                }
+                return true;
+            });
+
+            const badge = document.getElementById('admin-master-count-badge');
+            if (badge) badge.textContent = `${window.allMasterPartsList.length} parts`;
+
+            const totalFilteredEl = document.getElementById('admin-master-total-filtered');
+            if (totalFilteredEl) totalFilteredEl.textContent = window.filteredMasterPartsList.length;
+
+            renderMasterCatalogTablePage();
+        }
+
+        function renderMasterCatalogTablePage() {
+            const totalItems = window.filteredMasterPartsList.length;
+            const pageSize = window.masterPartsPageSize;
+            const totalPages = Math.max(1, Math.ceil(totalItems / pageSize));
+
+            if (window.masterPartsCurrentPage > totalPages) {
+                window.masterPartsCurrentPage = totalPages;
+            }
+
+            const startIdx = totalItems === 0 ? 0 : (window.masterPartsCurrentPage - 1) * pageSize;
+            const endIdx = Math.min(startIdx + pageSize, totalItems);
+
+            const pageStartEl = document.getElementById('admin-master-page-start');
+            const pageEndEl = document.getElementById('admin-master-page-end');
+            if (pageStartEl) pageStartEl.textContent = totalItems === 0 ? 0 : startIdx + 1;
+            if (pageEndEl) pageEndEl.textContent = endIdx;
+
+            const tbody = document.getElementById('master-parts-table-body');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+
+            if (totalItems === 0) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `<td colspan="7" style="text-align: center; color: var(--text-muted); padding: 2rem;">ไม่พบรายการสินค้าที่ตรงกับเงื่อนไขการค้นหา</td>`;
+                tbody.appendChild(tr);
+            } else {
+                window.filteredMasterPartsList.slice(startIdx, endIdx).forEach(m => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><strong>${escapeHtml(m.brand || '-')}</strong></td>
+                        <td><span class="code-badge">${escapeHtml(m.part_number || '-')}</span></td>
+                        <td><span class="oem-badge">${escapeHtml(m.oem_number || '-')}</span></td>
+                        <td>${escapeHtml(m.product_name_th || '-')}</td>
+                        <td>${escapeHtml(m.category || '-')}</td>
+                        <td>${escapeHtml(((m.car_brand || '') + ' ' + (m.car_model || '')).trim() || '-')}</td>
+                        <td style="text-align: right; white-space: nowrap;">
+                            <button type="button" class="btn btn-secondary btn-sm" onclick="openEditMasterPart(${m.id})" title="แก้ไขรายการ" style="padding: 0.25rem 0.5rem;">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                            <button type="button" class="btn btn-danger btn-sm" onclick="deleteMasterPart(${m.id}, '${escapeHtml(m.part_number || m.product_name_th || '')}')" title="ลบรายการ" style="padding: 0.25rem 0.5rem; margin-left: 0.3rem; background: rgba(239, 68, 68, 0.2); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.3);">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            renderMasterPaginationButtons(totalPages);
+        }
+
+        function renderMasterPaginationButtons(totalPages) {
+            const container = document.getElementById('admin-master-pagination-buttons');
+            if (!container) return;
+            container.innerHTML = '';
+
+            if (totalPages <= 1) return;
+
+            const currPage = window.masterPartsCurrentPage;
+
+            // Prev Button
+            const prevBtn = document.createElement('button');
+            prevBtn.className = 'btn btn-secondary btn-sm';
+            prevBtn.style.padding = '0.2rem 0.6rem';
+            prevBtn.style.fontSize = '0.8rem';
+            prevBtn.disabled = currPage === 1;
+            prevBtn.innerHTML = '<i class="fa-solid fa-chevron-left"></i>';
+            prevBtn.onclick = () => goToMasterPage(currPage - 1);
+            container.appendChild(prevBtn);
+
+            // Page Number Buttons
+            let pagesToShow = [];
+            if (totalPages <= 7) {
+                for (let i = 1; i <= totalPages; i++) pagesToShow.push(i);
+            } else {
+                pagesToShow.push(1);
+                if (currPage > 3) pagesToShow.push('...');
+                let start = Math.max(2, currPage - 1);
+                let end = Math.min(totalPages - 1, currPage + 1);
+                for (let i = start; i <= end; i++) pagesToShow.push(i);
+                if (currPage < totalPages - 2) pagesToShow.push('...');
+                pagesToShow.push(totalPages);
+            }
+
+            pagesToShow.forEach(p => {
+                if (p === '...') {
+                    const span = document.createElement('span');
+                    span.style.padding = '0.2rem 0.4rem';
+                    span.style.color = 'var(--text-muted)';
+                    span.style.fontSize = '0.8rem';
+                    span.textContent = '...';
+                    container.appendChild(span);
+                } else {
+                    const pBtn = document.createElement('button');
+                    pBtn.className = p === currPage ? 'btn btn-primary btn-sm' : 'btn btn-secondary btn-sm';
+                    pBtn.style.padding = '0.2rem 0.6rem';
+                    pBtn.style.fontSize = '0.8rem';
+                    pBtn.textContent = p;
+                    pBtn.onclick = () => goToMasterPage(p);
+                    container.appendChild(pBtn);
+                }
+            });
+
+            // Next Button
+            const nextBtn = document.createElement('button');
+            nextBtn.className = 'btn btn-secondary btn-sm';
+            nextBtn.style.padding = '0.2rem 0.6rem';
+            nextBtn.style.fontSize = '0.8rem';
+            nextBtn.disabled = currPage === totalPages;
+            nextBtn.innerHTML = '<i class="fa-solid fa-chevron-right"></i>';
+            nextBtn.onclick = () => goToMasterPage(currPage + 1);
+            container.appendChild(nextBtn);
+        }
+
+        function goToMasterPage(page) {
+            window.masterPartsCurrentPage = page;
+            renderMasterCatalogTablePage();
+        }
+
+        async function deleteMasterPart(id, partName) {
+            if (!confirm(`คุณต้องการลบรายการอะไหล่ "${partName || id}" ออกจาก Master Catalog ใช่หรือไม่?`)) {
+                return;
+            }
+            try {
+                const res = await fetch(`/api/admin/master-parts/${id}`, {
+                    method: 'DELETE',
+                    headers: getAuthHeaders()
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showToast(data.message || "ลบรายการเรียบร้อยแล้ว", "success");
+                    window.allMasterPartsList = window.allMasterPartsList.filter(m => m.id !== id);
+                    if (window.cachedMasterPartsMap) delete window.cachedMasterPartsMap[id];
+                    populateMasterFilterDropdowns();
+                    applyMasterCatalogFiltersAndRender();
+                } else {
+                    showToast(data.detail || "ไม่สามารถลบรายการได้", "error");
                 }
             } catch (err) {
                 console.error(err);
+                showToast("เกิดข้อผิดพลาดในการเชื่อมต่อเซิร์ฟเวอร์", "error");
             }
         }
 
