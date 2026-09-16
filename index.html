@@ -397,14 +397,14 @@
             <h2 style="font-size: 1.25rem; margin-bottom: 0.4rem; color: #fff;" data-i18n="auth.title">เข้าสู่ระบบแพลตฟอร์ม</h2>
             <p style="font-size: 0.85rem; margin-bottom: 1.5rem; color: var(--text-secondary);" data-i18n="auth.subtitle">ระบบสืบค้นและจับคู่รหัสอะไหล่รถยนต์ระดับองค์กร</p>
 
-            <form onsubmit="handleLogin(event)" style="display: flex; flex-direction: column; gap: 1rem; text-align: left;">
+            <form onsubmit="handleLogin(event)" autocomplete="off" style="display: flex; flex-direction: column; gap: 1rem; text-align: left;">
                 <div class="form-group">
                     <label class="form-label" data-i18n="auth.username">ชื่อผู้ใช้งาน (Username / Email)</label>
-                    <input type="text" id="login-username" class="form-control" placeholder="ระบุชื่อผู้ใช้งาน หรือ อีเมล" required autocomplete="username">
+                    <input type="text" id="login-username" class="form-control" placeholder="ระบุชื่อผู้ใช้งาน หรือ อีเมล" required autocomplete="off">
                 </div>
                 <div class="form-group">
                     <label class="form-label" data-i18n="auth.password">รหัสผ่าน (Password)</label>
-                    <input type="password" id="login-password" class="form-control" placeholder="ระบุรหัสผ่านของคุณ" required autocomplete="current-password">
+                    <input type="password" id="login-password" class="form-control" placeholder="ระบุรหัสผ่านของคุณ" required autocomplete="new-password">
                 </div>
                 <button type="submit" class="btn btn-primary" style="width: 100%; padding: 0.75rem; margin-top: 0.5rem; font-weight: 600;">
                     <i class="fa-solid fa-arrow-right-to-bracket"></i> <span data-i18n="auth.submit">ลงชื่อเข้าใช้งานแพลตฟอร์ม</span>
@@ -5277,7 +5277,15 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             }
         });
 
+        function clearLoginFormFields() {
+            const u = document.getElementById('login-username');
+            const p = document.getElementById('login-password');
+            if (u) u.value = '';
+            if (p) p.value = '';
+        }
+
         function showLandingPage() {
+            clearLoginFormFields();
             document.getElementById('public-landing-view').style.display = 'block';
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('main-app').style.display = 'none';
@@ -5287,6 +5295,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         }
 
         function showAuthScreen() {
+            clearLoginFormFields();
             document.getElementById('public-landing-view').style.display = 'none';
             document.getElementById('auth-screen').style.display = 'flex';
             document.getElementById('main-app').style.display = 'none';
@@ -5955,6 +5964,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 });
                 const res = await response.json();
                 if (res.success) {
+                    clearLoginFormFields();
                     currentUser = { username: res.username, role: res.role };
                     sessionStorage.setItem('autoparts_saas_user', JSON.stringify(currentUser));
                     localStorage.removeItem('autoparts_saas_user');
@@ -5980,6 +5990,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 });
                 const res = await response.json();
                 if (res.success) {
+                    clearLoginFormFields();
                     currentUser = { username: res.username, role: res.role };
                     sessionStorage.setItem('autoparts_saas_user', JSON.stringify(currentUser));
                     localStorage.removeItem('autoparts_saas_user');
@@ -6007,6 +6018,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             localStorage.removeItem('autoparts_saas_user');
             localStorage.removeItem('autoparts_active_tab');
             localStorage.removeItem('autoparts_user_token');
+            clearLoginFormFields();
             showToast("ออกจากระบบเรียบร้อยแล้ว", "info");
             showLandingPage();
         }
