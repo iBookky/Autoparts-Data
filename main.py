@@ -550,6 +550,9 @@ class TrialRegisterRequest(BaseModel):
     segment: Optional[str] = "GARAGE"
     plan_id: Optional[str] = "free_trial"
     signup_type: Optional[str] = "TRIAL" # TRIAL or DIRECT
+    tax_id: Optional[str] = ""
+    tax_branch: Optional[str] = "สำนักงานใหญ่"
+    tax_address: Optional[str] = ""
     verification_code: Optional[str] = "999999"
     selected_categories: Optional[List[str]] = None
     selected_brands: Optional[List[str]] = None
@@ -730,12 +733,35 @@ async def search_parts(
         allowed_c = whitelist.get("allowed_categories") if not is_platform_admin else None
         allowed_ab = whitelist.get("allowed_aftermarket_brands") if not is_platform_admin else None
 
-        # 3. Server-Side Pagination Clamping & Enumeration Protection
+        # 3. Validate Strict Search Criteria (Prevent empty dumping of all catalog items)
+        clean_oem_code = (oem_code or "").strip()
+        clean_oem_name = (oem_name or "").strip()
+        clean_brand = (car_brand or "").strip()
+        clean_model = (car_model or "").strip()
+        clean_af_brand = (aftermarket_brand or "").strip()
+        clean_af_part = (aftermarket_part or "").strip()
+        clean_vin = (vin or "").strip()
+
+        has_vehicle_part = bool(clean_oem_name and clean_brand and clean_model)
+        has_oem = bool(clean_oem_code and len(clean_oem_code) >= 3)
+        has_aftermarket = bool(clean_af_part and clean_af_brand)
+        has_vin = bool(clean_vin and len(clean_vin) == 17)
+        has_specific_part_code = bool(clean_af_part and len(clean_af_part) >= 3)
+
+        if not (has_vehicle_part or has_oem or has_aftermarket or has_vin or has_specific_part_code):
+            return {
+                "success": True,
+                "total": 0,
+                "results": [],
+                "message": "กรุณาระบุเงื่อนไขการค้นหา: (1) ชื่ออะไหล่ + ยี่ห้อรถ + รุ่นรถ หรือ (2) เบอร์แท้ OEM หรือ (3) รหัส Aftermarket + แบรนด์ผู้ผลิต หรือ (4) เลขตัวถัง VIN"
+            }
+
+        # 4. Server-Side Pagination Clamping & Enumeration Protection
         safe_limit = min(max(1, limit or 50), 1000) if is_platform_admin else min(max(1, limit or 50), 50)
         safe_page = max(1, page or 1)
         safe_offset = max(0, offset if offset is not None and offset > 0 else ((safe_page - 1) * safe_limit))
 
-        # 4. Execute Entitlement-Aware SQL Query with Normalization and Scoring
+        # 5. Execute Entitlement-Aware SQL Query with Normalization and Scoring
         results = advanced_search_parts(
             vin=vin,
             car_brand=car_brand,

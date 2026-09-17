@@ -436,7 +436,17 @@ def advanced_search_parts(
         params.append(f"%{aftermarket_part.strip()}%")
         params.append(f"%{clean_sku}%")
 
-    if not where_clauses:
+    # Require actual user search criteria to prevent dumping entire catalog on entitlement whitelists alone
+    user_criteria_present = any([
+        bool(vin and len(str(vin).strip()) == 17),
+        bool(oem_code and len(str(oem_code).strip()) >= 3),
+        bool(oem_name and car_brand and car_model),
+        bool(aftermarket_brand and aftermarket_part),
+        bool(aftermarket_part and len(str(aftermarket_part).strip()) >= 3),
+        bool(car_brand and car_model and (oem_name or category)),
+        bool(oem_name and (oem_code or car_brand or aftermarket_part))
+    ])
+    if not user_criteria_present or not where_clauses:
         conn.close()
         return []
         
@@ -2253,6 +2263,10 @@ def record_search_usage(org_id: int, user_id: int, query: str, search_type: str 
         
         conn.commit()
     except Exception as e:
+        try:
+            conn.rollback()
+        except Exception:
+            pass
         print(f"Error recording search usage: {e}")
     finally:
         conn.close()

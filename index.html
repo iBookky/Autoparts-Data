@@ -5878,6 +5878,9 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             const phone = (document.getElementById('trial-phone').value || '').trim();
             const password = (document.getElementById('trial-password').value || '').trim();
             const planId = document.getElementById('trial-plan-id').value;
+            const taxId = (document.getElementById('trial-tax-id') ? document.getElementById('trial-tax-id').value : '').trim();
+            const taxBranch = (document.getElementById('trial-tax-branch') ? document.getElementById('trial-tax-branch').value : '').trim() || 'สำนักงานใหญ่';
+            const taxAddress = (document.getElementById('trial-tax-address') ? document.getElementById('trial-tax-address').value : '').trim();
 
             // Strict Pre-Submit Form Validation
             if (!companyName) {
@@ -5924,6 +5927,9 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 password: password,
                 plan_id: planId,
                 signup_type: signupMode,
+                tax_id: taxId,
+                tax_branch: taxBranch,
+                tax_address: taxAddress,
                 verification_code: registrationVerifyToken || "999999",
                 selected_categories: checkedCats,
                 selected_aftermarket_brands: checkedAftermarket
@@ -6747,7 +6753,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             const omni = document.getElementById('omni-search-input');
             const query = omni ? omni.value.trim() : '';
             if (!query) {
-                performAdvancedSearch();
+                showToast("กรุณาระบุข้อความค้นหา (เบอร์แท้ OEM, รหัส Aftermarket, ชื่ออะไหล่พร้อมยี่ห้อรุ่น, หรือเลข VIN 17 หลัก)", "warning");
                 return;
             }
             // Auto detect VIN (17 chars) only if package includes VIN feature
@@ -6786,6 +6792,45 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             const oem_name = document.getElementById('s-oem-name').value.trim();
             const aftermarket_brand = document.getElementById('s-aftermarket-brand').value.trim();
             const aftermarket_part = document.getElementById('s-aftermarket-part').value.trim();
+
+            // Strict Search Criteria Validation (Prevent empty dumping of all catalog items)
+            const hasVehiclePart = !!(oem_name && car_brand && car_model);
+            const hasOem = !!(oem_code && oem_code.length >= 3);
+            const hasAftermarket = !!(aftermarket_part && aftermarket_brand);
+            const hasVin = !!(vin && vin.length === 17);
+            const hasSpecificPartCode = !!(aftermarket_part && aftermarket_part.length >= 3);
+
+            const hasValidCriteria = hasVehiclePart || hasOem || hasAftermarket || hasVin || hasSpecificPartCode;
+
+            if (!hasValidCriteria) {
+                showToast("กรุณาระบุเงื่อนไขการค้นหา: (1) ชื่ออะไหล่ + ยี่ห้อรถ + รุ่นรถ หรือ (2) เบอร์แท้ OEM หรือ (3) รหัส Aftermarket + แบรนด์ผู้ผลิต", "warning");
+                const tbody = document.getElementById('sales-results-body');
+                if (tbody) {
+                    tbody.innerHTML = `
+                        <tr>
+                            <td colspan="9" style="text-align: center; padding: 3.5rem 1.5rem; color: var(--text-muted);">
+                                <div style="font-size: 2.5rem; margin-bottom: 0.85rem; color: #60A5FA; opacity: 0.85;">
+                                    <i class="fa-solid fa-magnifying-glass"></i>
+                                </div>
+                                <div style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem;">
+                                    กรุณาระบุเงื่อนไขการค้นหาอะไหล่
+                                </div>
+                                <div style="font-size: 0.86rem; color: var(--text-secondary); max-width: 540px; margin: 0 auto; line-height: 1.6;">
+                                    ระบบไม่อนุญาตให้ค้นหาหรือแสดงผลรายการทั้งหมดโดยไม่มีเงื่อนไข กรุณาระบุอย่างน้อย 1 เงื่อนไขต่อไปนี้:<br>
+                                    &bull; <strong>ชื่ออะไหล่</strong> พร้อม <strong>ยี่ห้อรถ</strong> และ <strong>รุ่นรถ</strong><br>
+                                    &bull; หรือระบุ <strong>เบอร์แท้ OEM</strong> (สามารถระบุพร้อมชื่ออะไหล่ได้)<br>
+                                    &bull; หรือระบุ <strong>รหัสสินค้า Aftermarket</strong> พร้อม <strong>แบรนด์ผู้ผลิตอะไหล่</strong><br>
+                                    &bull; หรือระบุ <strong>เลขตัวถัง VIN 17 หลัก</strong>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                }
+                const countBadge = document.getElementById('results-count-badge');
+                if (countBadge) countBadge.textContent = '0 items';
+                lastSearchResults = [];
+                return;
+            }
 
             const params = new URLSearchParams();
             if (vin) params.append('vin', vin);
@@ -8935,7 +8980,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             <td>${statusHtml}</td>
                             <td style="text-align: right; white-space: nowrap;">
                                 ${payBtn}
-                                <button class="btn btn-primary btn-sm" onclick="viewInvoiceReceipt('${inv.invoice_number}')" title="${t('invoice.viewReceipt', 'Tax Invoice')}">
+                                <button class="btn btn-primary btn-sm" onclick="viewInvoiceReceipt('${inv.invoice_number || inv.id}')" title="${t('invoice.viewReceipt', 'Tax Invoice')}">
                                     <i class="fa-solid fa-file-invoice-dollar"></i> <span>${t('invoice.viewReceipt', 'Tax Invoice')}</span>
                                 </button>
                             </td>
@@ -8950,26 +8995,30 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
         async function viewInvoiceReceipt(invoiceParam) {
             let inv = null;
-            if (typeof invoiceParam === 'object' && invoiceParam !== null) {
-                inv = invoiceParam;
-            } else {
-                const query = String(invoiceParam).trim();
-                
-                // 1. Search in current customer invoices & owner financial invoices
-                inv = (window.ownerInvoicesList || []).find(i => i.invoice_number === query || String(i.id) === query) ||
-                      (currentInvoicesList || []).find(i => i.invoice_number === query || String(i.id) === query);
+            const query = (typeof invoiceParam === 'object' && invoiceParam !== null) 
+                ? (invoiceParam.invoice_number || invoiceParam.id) 
+                : String(invoiceParam || '').trim();
 
-                // 2. Fetch single invoice directly by identifier (supports ID or invoice_number)
-                if (!inv && query) {
-                    try {
-                        const res = await fetch(`/api/saas/invoices/${encodeURIComponent(query)}`, { headers: getAuthHeaders() });
-                        const data = await res.json();
-                        if (data.success && data.invoice) {
-                            inv = data.invoice;
-                        }
-                    } catch (e) {
-                        console.error("Error fetching invoice:", e);
+            // 1. Fetch single invoice directly by identifier (supports ID or invoice_number) to get full items and tax info
+            if (query) {
+                try {
+                    const res = await fetch(`/api/saas/invoices/${encodeURIComponent(query)}`, { headers: getAuthHeaders() });
+                    const data = await res.json();
+                    if (data.success && data.invoice) {
+                        inv = data.invoice;
                     }
+                } catch (e) {
+                    console.error("Error fetching invoice from API:", e);
+                }
+            }
+
+            // 2. Fallback to cached invoice list if API unavailable
+            if (!inv) {
+                if (typeof invoiceParam === 'object' && invoiceParam !== null) {
+                    inv = invoiceParam;
+                } else if (query) {
+                    inv = (window.ownerInvoicesList || []).find(i => i.invoice_number === query || String(i.id) === query) ||
+                          (currentInvoicesList || []).find(i => i.invoice_number === query || String(i.id) === query);
                 }
             }
 
@@ -12480,12 +12529,24 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
                     // Invoices
                     const invEl = document.getElementById('c360-invoices-list');
-                    invEl.innerHTML = c.invoices.length > 0 ? c.invoices.map(i => `
-                        <div style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border-color); padding-bottom: 0.2rem;">
-                            <span>${i.invoice_number}</span>
-                            <span style="color: #10B981; font-weight: 600;">฿${i.total_amount.toLocaleString()} (${i.status})</span>
+                    invEl.innerHTML = c.invoices.length > 0 ? c.invoices.map(i => {
+                        const invId = i.invoice_number || i.id;
+                        return `
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding: 0.45rem 0;">
+                            <div>
+                                <a href="javascript:void(0)" onclick="viewInvoiceReceipt('${invId}')" style="color: #60A5FA; font-weight: 700; text-decoration: underline;" title="คลิกเพื่อดูใบแจ้งหนี้ / ใบกำกับภาษี">
+                                    <i class="fa-solid fa-file-invoice-dollar" style="margin-right: 4px;"></i>${i.invoice_number || 'INV-' + i.id}
+                                </a>
+                                <div style="font-size: 0.75rem; color: var(--text-muted);">${i.created_at ? i.created_at.substring(0, 10) : ''} &bull; ${i.payment_method || 'BANK_TRANSFER'}</div>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                <span style="color: #10B981; font-weight: 600; font-size: 0.88rem;">฿${Number(i.total_amount || 0).toLocaleString()} (${i.status})</span>
+                                <button class="btn btn-secondary btn-sm" onclick="viewInvoiceReceipt('${invId}')" title="กดดูรายละเอียดใบแจ้งหนี้ / ใบเสร็จรับเงิน">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i> ดูใบแจ้งหนี้
+                                </button>
+                            </div>
                         </div>
-                    `).join('') : '<span style="color: var(--text-muted);">No billing invoices issued yet.</span>';
+                    `;}).join('') : '<span style="color: var(--text-muted);">No billing invoices issued yet.</span>';
 
                     // Searches
                     const sEl = document.getElementById('c360-searches-list');
@@ -13050,10 +13111,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             };
                             const pmDisplay = methodBadges[(inv.payment_method || '').toUpperCase()] || `<span class="nav-badge" style="background: rgba(168,85,247,0.15); color: #C084FC; font-weight: 600;"><i class="fa-solid fa-building-columns" style="margin-right: 4px;"></i> โอนเงินผ่านธนาคาร</span>`;
 
+                            const invId = inv.invoice_number || inv.id;
                             const tr = document.createElement('tr');
                             tr.innerHTML = `
                                 <td>
-                                    <a href="javascript:void(0)" onclick='viewInvoiceReceipt(${JSON.stringify(inv).replace(/'/g, "&apos;")})' style="color: #60A5FA; font-weight: 700; text-decoration: underline;" title="คลิกเพื่อกดดูรายละเอียดใบแจ้งหนี้ / ใบเสร็จ">
+                                    <a href="javascript:void(0)" onclick="viewInvoiceReceipt('${invId}')" style="color: #60A5FA; font-weight: 700; text-decoration: underline;" title="คลิกเพื่อกดดูรายละเอียดใบแจ้งหนี้ / ใบเสร็จ">
                                         <i class="fa-solid fa-receipt"></i> ${inv.invoice_number || 'INV-' + inv.id}
                                     </a>
                                 </td>
@@ -13068,7 +13130,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                     <span class="status-badge ${isPaid ? 'verified' : 'reviewed'}">${inv.status}</span>
                                 </td>
                                 <td style="text-align: right; white-space: nowrap; display: flex; justify-content: flex-end; gap: 0.35rem; align-items: center;">
-                                    <button class="btn btn-secondary btn-sm" onclick='viewInvoiceReceipt(${JSON.stringify(inv).replace(/'/g, "&apos;")})' title="กดดูรายละเอียดใบเสร็จและใบแจ้งหนี้">
+                                    <button class="btn btn-secondary btn-sm" onclick="viewInvoiceReceipt('${invId}')" title="กดดูรายละเอียดใบเสร็จและใบแจ้งหนี้">
                                         <i class="fa-solid fa-file-invoice-dollar"></i> ดูใบแจ้งหนี้
                                     </button>
                                     ${!isPaid ? `
@@ -13491,13 +13553,13 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             if (typeof param === 'object' && param !== null) {
                 customer = param;
             } else {
-                const orgId = param;
+                const orgId = typeof param === 'object' && param !== null ? (param.id || param.org_id) : param;
                 const pool = (window.cachedOwnerCustomers && window.cachedOwnerCustomers.length > 0) 
                     ? window.cachedOwnerCustomers 
                     : ((typeof cachedOwnerCustomers !== 'undefined' && cachedOwnerCustomers) ? cachedOwnerCustomers : []);
-                customer = pool.find(c => String(c.id) === String(orgId));
+                customer = pool.find(c => String(c.id) === String(orgId)) || (typeof param === 'object' && param !== null ? param : null);
 
-                if (!customer && orgId) {
+                if (orgId) {
                     try {
                         const res = await fetch(`/api/owner/customers/${orgId}/360`, { headers: getAuthHeaders() });
                         const data = await res.json();
@@ -13506,20 +13568,20 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             const s = data.customer.subscription || {};
                             customer = {
                                 id: o.id || orgId,
-                                name: o.name || '',
-                                legal_name: o.legal_name || '',
-                                contact_name: o.contact_person || '',
-                                industry_type: o.industry || o.business_type || 'GARAGE',
-                                email: o.billing_email || o.email || '',
-                                phone: o.phone || '',
-                                tax_id: o.tax_id || '',
-                                billing_address: o.address || '',
-                                subscription_status: s.status || 'ACTIVE',
-                                plan_tier: s.plan_id || s.plan_name || o.plan_tier || 'STARTER'
+                                name: o.name || (customer && customer.name) || '',
+                                legal_name: o.legal_name || o.name || (customer && customer.legal_name) || '',
+                                contact_name: o.contact_person || (customer && (customer.contact_name || customer.contact_person)) || '',
+                                industry_type: o.industry || o.business_type || (customer && (customer.industry_type || customer.industry)) || 'GARAGE',
+                                email: o.billing_email || o.email || (customer && (customer.email || customer.billing_email)) || '',
+                                phone: o.phone || (customer && customer.phone) || '',
+                                tax_id: o.tax_id || (customer && customer.tax_id) || '',
+                                billing_address: o.address || (customer && (customer.billing_address || customer.address)) || '',
+                                subscription_status: s.status || (customer && customer.subscription_status) || 'ACTIVE',
+                                plan_tier: s.plan_id || s.plan_name || o.plan_tier || (customer && customer.plan_tier) || 'STARTER'
                             };
                         }
                     } catch (e) {
-                        console.error("Error fetching customer fallback:", e);
+                        console.error("Error fetching full customer details for edit modal:", e);
                     }
                 }
             }
