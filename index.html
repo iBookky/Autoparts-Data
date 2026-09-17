@@ -5854,24 +5854,6 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     }
                     const succModal = document.getElementById('modal-register-success');
                     if (succModal) succModal.style.display = 'flex';
-
-                    if ((signupMode === 'DIRECT' || !res.is_trial) && res.invoice_id) {
-                        openPaymentCheckoutModal({
-                            invoice_id: res.invoice_id,
-                            invoice_number: res.invoice_number,
-                            subtotal: res.subtotal || 0,
-                            vat_amount: res.vat_amount || 0,
-                            total_amount: res.total_amount || 0,
-                            plan_id: res.plan_id,
-                            plan_name: res.plan_name || 'Professional',
-                            customer_name: companyName,
-                            is_direct_signup: true,
-                            onSuccess: () => {
-                                const ftuxModal = document.getElementById('modal-ftux-onboarding');
-                                if (ftuxModal) ftuxModal.style.display = 'flex';
-                            }
-                        });
-                    }
                 } else {
                     showToast(res.error || "ไม่สามารถลงทะเบียนได้", "danger");
                 }
