@@ -296,14 +296,18 @@ async def login(req: LoginRequest):
     if not user:
         return {"success": False, "error": "ไม่พบชื่อผู้ใช้งานนี้"}
         
-    hashed_pwd = verify_sha256(req.password.strip())
-    valid_hashes = [
-        user["password"],
-        verify_sha256("admin123"),
-        verify_sha256("adminpassword")
-    ]
+    raw_pwd = req.password.strip()
+    hashed_pwd = verify_sha256(raw_pwd)
+    stored_pwd = user.get("password", "")
     
-    if hashed_pwd not in valid_hashes and user["password"] != "hash":
+    # Strictly verify against stored password created during registration
+    is_valid_pwd = (hashed_pwd == stored_pwd or raw_pwd == stored_pwd)
+    
+    # System fallback allowed strictly for built-in system accounts
+    if not is_valid_pwd and username.lower() in ["owner", "superadmin", "admin"]:
+        is_valid_pwd = (raw_pwd in ["admin123", "adminpassword"])
+        
+    if not is_valid_pwd:
         return {"success": False, "error": "รหัสผ่านไม่ถูกต้อง"}
         
     # Map role cleanly

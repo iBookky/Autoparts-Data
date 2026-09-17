@@ -11649,6 +11649,15 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=à¸
         function showToast(msg, type = 'info') {
             const box = document.getElementById('toast-box');
             if (!box) return;
+
+            // Deduplicate toast messages: Do not append if an identical message is already visible
+            const existingMsgs = box.querySelectorAll('.toast-msg');
+            for (let el of existingMsgs) {
+                if (el.textContent.trim() === msg.trim()) {
+                    return;
+                }
+            }
+
             const normalizedType = (type === 'error') ? 'danger' : type;
             const toast = document.createElement('div');
             toast.className = `toast-item toast-${normalizedType}`;
