@@ -886,13 +886,13 @@ async def get_product_detail(
 # AI Search to discover options in other brands
 @app.post("/api/parts/ai-search")
 async def ai_search(
-    brand: str = Form(...),
-    part_number: str = Form(...),
-    oem_number: str = Form(...),
-    car_brand: str = Form(...),
-    car_model: str = Form(...),
-    category: str = Form(""),
-    product_name: str = Form(...),
+    brand: Optional[str] = Form(None),
+    part_number: Optional[str] = Form(None),
+    oem_number: Optional[str] = Form(None),
+    car_brand: Optional[str] = Form(None),
+    car_model: Optional[str] = Form(None),
+    category: Optional[str] = Form(None),
+    product_name: Optional[str] = Form(None),
     x_username: Optional[str] = Header("admin"),
     x_user_role: Optional[str] = Header("ADMIN")
 ):
@@ -907,37 +907,87 @@ async def ai_search(
         category=category
     )
     if not is_allowed:
-        raise HTTPException(
-            status_code=403,
-            detail=locked_payload.get("message", "Access denied. Category or brand not included in your subscription.")
-        )
+        return {
+            "success": True,
+            "locked": True,
+            **locked_payload,
+            "total": 0,
+            "results": []
+        }
         
     try:
-        ai_alternatives = await run_ai_parts_search(
-            brand=brand,
-            part_number=part_number,
-            oem_number=oem_number,
-            car_brand=car_brand,
-            car_model=car_model,
-            category=category,
-            product_name=product_name
-        )
-        # Filter alternatives by allowed categories if customer
+        combined_results = []
+        seen_keys = set()
+        
+        # 1. Internal Database Cross-Reference Matching (Immediate high-confidence results)
+        clean_oem = (oem_number or "").strip()
+        clean_part = (part_number or "").strip()
+        clean_brand = (brand or "").strip()
+        
+        if clean_oem or clean_part:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            # Match by OEM number across all aftermarket brands
+            if clean_oem:
+                cursor.execute("""
+                    SELECT id, brand, part_number, oem_number, product_name_th, product_name_en,
+                           category, car_brand, car_model, year_start, year_end, price_thb
+                    FROM master_parts
+                    WHERE oem_number ILIKE ? AND (part_number NOT ILIKE ? OR brand NOT ILIKE ?)
+                    LIMIT 10
+                """, (f"%{clean_oem}%", clean_part or "---", clean_brand or "---"))
+                db_rows = cursor.fetchall()
+                for r in db_rows:
+                    row_dict = dict(r)
+                    key = (row_dict.get("brand", "").upper(), row_dict.get("part_number", "").upper())
+                    if key not in seen_keys:
+                        seen_keys.add(key)
+                        row_dict["match_type"] = "AI Matched (OEM Interchange)"
+                        row_dict["verification_status"] = "AI_MATCHED"
+                        row_dict["notes"] = f"AI matched via OEM equivalent ({clean_oem})"
+                        combined_results.append(row_dict)
+            conn.close()
+
+        # 2. Deep Generative AI Cross-Reference Discovery
+        try:
+            ai_alternatives = await run_ai_parts_search(
+                brand=clean_brand,
+                part_number=clean_part,
+                oem_number=clean_oem,
+                car_brand=car_brand or "",
+                car_model=car_model or "",
+                category=category or "",
+                product_name=product_name or ""
+            )
+            for item in ai_alternatives:
+                key = (item.get("brand", "").upper(), item.get("part_number", "").upper())
+                if key not in seen_keys:
+                    seen_keys.add(key)
+                    item["match_type"] = "AI Matched"
+                    item["verification_status"] = "AI_MATCHED"
+                    combined_results.append(item)
+        except Exception as ai_err:
+            print(f"AI search external generator note: {ai_err}")
+
+        # 3. Filter alternatives by allowed categories if customer
         if role not in ["OWNER", "SUPER_ADMIN", "ADMIN"] and user_name not in ["superadmin", "owner", "admin", "staff"]:
             org_id = ctx["organization"]["id"] if ctx and "organization" in ctx else 1
             whitelist = EntitlementService.get_organization_whitelist(org_id)
             allowed_c = whitelist.get("allowed_categories", [])
             if '*' not in allowed_c:
-                ai_alternatives = [
-                    a for a in ai_alternatives
+                combined_results = [
+                    a for a in combined_results
                     if not a.get("category") or any(c.lower() in (a.get("category") or "").lower() for c in allowed_c)
                 ]
-        # Cap AI alternatives at max 5 items to protect catalog data
-        ai_alternatives = ai_alternatives[:5]
+
+        # Cap at 10 items for optimal UX
+        final_results = combined_results[:10]
         return {
             "success": True,
-            "total": len(ai_alternatives),
-            "results": ai_alternatives
+            "locked": False,
+            "total": len(final_results),
+            "results": final_results
         }
     except Exception as e:
         print(f"Graceful fallback on AI search error: {e}")

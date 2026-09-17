@@ -6818,15 +6818,49 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         function renderLockedSearchResults(data) {
             const tbody = document.getElementById('sales-results-body');
             document.getElementById('results-count-badge').textContent = `0 items (Locked)`;
+            const msg = (data && data.message) ? data.message : 'บัญชีของคุณอยู่ในสถานะรอชำระเงิน หรือแพ็กเกจหมดอายุ กรุณาชำระเงินค่าบริการเพื่อเปิดใช้งานระบบ';
             tbody.innerHTML = `
                 <tr>
                     <td colspan="9" style="text-align: center; padding: 3.5rem 2rem; background: rgba(245, 158, 11, 0.04); border: 1px dashed rgba(245, 158, 11, 0.3); border-radius: 8px;">
-                        <div style="font-size: 2.2rem; color: #F59E0B; margin-bottom: 0.75rem;"><i class="fa-solid fa-lock"></i></div>
-                        <h3 style="color: #fff; margin-bottom: 0.5rem; font-size: 1.15rem;">${data.locked_entity_name ? `🔒 ${data.locked_entity_name} Data is Locked` : '🔒 Commercial Access Required'}</h3>
-                        <p style="color: var(--text-muted); font-size: 0.85rem; max-width: 500px; margin: 0 auto 1.5rem auto;">${data.message}</p>
-                        <div style="display: flex; gap: 0.75rem; justify-content: center;">
-                            <button class="btn btn-primary" onclick="switchSaaSView('subscription-view')"><i class="fa-solid fa-bolt"></i> Upgrade Plan</button>
-                            <button class="btn btn-secondary" onclick="switchSaaSView('coverage-view')"><i class="fa-solid fa-layer-group"></i> View Data Coverage</button>
+                        <div style="font-size: 2.5rem; color: #F59E0B; margin-bottom: 0.85rem;"><i class="fa-solid fa-lock"></i></div>
+                        <h3 style="color: #fff; margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: 700;">${data.locked_entity_name ? `🔒 ${data.locked_entity_name} Data is Locked` : '🔒 Commercial Access Required'}</h3>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 550px; margin: 0 auto 1.5rem auto; line-height: 1.6;">${msg}</p>
+                        <div style="display: flex; gap: 0.85rem; justify-content: center; flex-wrap: wrap;">
+                            <button class="btn btn-primary" onclick="triggerDirectPaymentCheckout(window._currentSubscription)" style="padding: 0.6rem 1.4rem; font-weight: 600; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);">
+                                <i class="fa-solid fa-credit-card" style="margin-right: 6px;"></i> ชำระเงินทันที (Pay Now)
+                            </button>
+                            <button class="btn btn-secondary" onclick="switchSaaSView('subscription-view')" style="padding: 0.6rem 1.4rem;">
+                                <i class="fa-solid fa-bolt" style="margin-right: 6px;"></i> ดูแพ็กเกจและอัปเกรด
+                            </button>
+                            <button class="btn btn-secondary" onclick="switchSaaSView('coverage-view')" style="padding: 0.6rem 1.4rem;">
+                                <i class="fa-solid fa-layer-group" style="margin-right: 6px;"></i> View Data Coverage
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        function renderLockedCrossRefResults(lockedData) {
+            const tbody = document.getElementById('crossref-results-body');
+            if (!tbody) return;
+            const sub = window._currentSubscription || {};
+            const subStatus = (sub.status || 'PAST_DUE').toUpperCase();
+            const msg = (lockedData && lockedData.message) ? lockedData.message : `บัญชีของคุณอยู่ในสถานะรอชำระเงิน หรือแพ็กเกจหมดอายุ (สถานะปัจจุบัน: ${subStatus}) กรุณาชำระเงินค่าบริการเพื่อเปิดใช้งานระบบ`;
+
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="7" style="text-align: center; padding: 3.5rem 2rem; background: rgba(245, 158, 11, 0.04); border: 1px dashed rgba(245, 158, 11, 0.3); border-radius: 8px;">
+                        <div style="font-size: 2.5rem; color: #F59E0B; margin-bottom: 0.85rem;"><i class="fa-solid fa-lock"></i></div>
+                        <h3 style="color: #fff; margin-bottom: 0.5rem; font-size: 1.25rem; font-weight: 700;">🔒 Commercial Access Required</h3>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; max-width: 550px; margin: 0 auto 1.5rem auto; line-height: 1.6;">${msg}</p>
+                        <div style="display: flex; gap: 0.85rem; justify-content: center; flex-wrap: wrap;">
+                            <button class="btn btn-primary" onclick="triggerDirectPaymentCheckout(window._currentSubscription)" style="padding: 0.6rem 1.4rem; font-weight: 600; box-shadow: 0 4px 14px rgba(59, 130, 246, 0.4);">
+                                <i class="fa-solid fa-credit-card" style="margin-right: 6px;"></i> ชำระเงินทันที (Pay Now)
+                            </button>
+                            <button class="btn btn-secondary" onclick="switchSaaSView('subscription-view')" style="padding: 0.6rem 1.4rem;">
+                                <i class="fa-solid fa-bolt" style="margin-right: 6px;"></i> ดูแพ็กเกจและอัปเกรด
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -9547,6 +9581,21 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 showToast("Please enter an OEM or SKU part number", "warning");
                 return;
             }
+
+            // Check inactive/unpaid subscription status upfront
+            const sub = window._currentSubscription;
+            const subStatus = (sub ? (sub.status || '') : '').toUpperCase();
+            const role = currentUser ? (currentUser.role || '').toUpperCase() : 'CUSTOMER';
+            const isOwnerOrSuper = ['OWNER', 'SUPER_ADMIN'].includes(role);
+            const isInactiveSub = !isOwnerOrSuper && ['PAST_DUE', 'PENDING_PAYMENT', 'UNPAID', 'SUSPENDED', 'CANCELLED', 'EXPIRED', 'INACTIVE'].includes(subStatus);
+
+            if (isInactiveSub) {
+                renderLockedCrossRefResults({
+                    message: `บัญชีของคุณอยู่ในสถานะรอชำระเงิน หรือแพ็กเกจหมดอายุ (สถานะปัจจุบัน: ${subStatus || 'PAST_DUE'}) กรุณาชำระเงินค่าบริการเพื่อเปิดใช้งานระบบ`
+                });
+                return;
+            }
+
             const tbody = document.getElementById('crossref-results-body');
             tbody.innerHTML = `<tr><td colspan="7" style="text-align: center; padding: 2.5rem;"><i class="fa-solid fa-spinner fa-spin" style="font-size: 1.5rem; color: var(--purple);"></i><div style="margin-top: 0.5rem;">Analyzing OEM Interchange & Cross-Reference Matrix...</div></td></tr>`;
 
@@ -9556,8 +9605,19 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     fetch(`/api/parts/search?oem_code=${encodeURIComponent(code)}`, { headers: getAuthHeaders() }),
                     fetch(`/api/parts/cross-reference-matrix?part_number=${encodeURIComponent(code)}`, { headers: getAuthHeaders() })
                 ]);
-                const partsData = await partsRes.json();
-                const matrixData = await matrixRes.json();
+                const partsData = await partsRes.json().catch(() => ({}));
+                const matrixData = await matrixRes.json().catch(() => ({}));
+
+                if (partsData && partsData.locked) {
+                    renderLockedCrossRefResults(partsData);
+                    return;
+                }
+                if (partsRes.status === 403 || matrixRes.status === 403) {
+                    renderLockedCrossRefResults({
+                        message: `บัญชีของคุณอยู่ในสถานะรอชำระเงิน หรือแพ็กเกจหมดอายุ (สถานะปัจจุบัน: ${subStatus || 'PAST_DUE'}) กรุณาชำระเงินค่าบริการเพื่อเปิดใช้งานระบบ`
+                    });
+                    return;
+                }
 
                 tbody.innerHTML = '';
                 const results = partsData.results || [];
@@ -11763,8 +11823,26 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
         async function triggerAISearchDirect(item) {
             closeProductDrawer();
+            switchSaaSView('search-view');
+
             const tbody = document.getElementById('sales-results-body');
-            tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 3rem;"><i class="fa-solid fa-brain fa-bounce" style="font-size: 2rem; color: var(--purple); margin-bottom: 0.75rem;"></i><div style="color: #fff; font-weight: 600;">AI Cross-Reference Specialist Engine is matching equivalent parts...</div></td></tr>`;
+            if (tbody) {
+                tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 3rem;"><i class="fa-solid fa-wand-magic-sparkles fa-bounce" style="font-size: 2.2rem; color: var(--purple); margin-bottom: 0.85rem;"></i><div style="color: #fff; font-weight: 600; font-size: 1.1rem;">AI Cross-Reference Specialist Engine</div><div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 0.35rem;">กำลังวิเคราะห์ค้นหาเบอร์เทียบเคียงข้ามแบรนด์ (TRW, 555, AISIN, BOSCH ฯลฯ) สำหรับ '${item.part_number || item.oem_number || item.brand}'...</div></td></tr>`;
+            }
+
+            // Upfront check for unpaid/past_due
+            const sub = window._currentSubscription;
+            const subStatus = (sub ? (sub.status || '') : '').toUpperCase();
+            const role = currentUser ? (currentUser.role || '').toUpperCase() : 'CUSTOMER';
+            const isOwnerOrSuper = ['OWNER', 'SUPER_ADMIN'].includes(role);
+            const isInactiveSub = !isOwnerOrSuper && ['PAST_DUE', 'PENDING_PAYMENT', 'UNPAID', 'SUSPENDED', 'CANCELLED', 'EXPIRED', 'INACTIVE'].includes(subStatus);
+
+            if (isInactiveSub) {
+                renderLockedSearchResults({
+                    message: `บัญชีของคุณอยู่ในสถานะรอชำระเงิน หรือแพ็กเกจหมดอายุ (สถานะปัจจุบัน: ${subStatus || 'PAST_DUE'}) กรุณาชำระเงินค่าบริการเพื่อเปิดใช้งานระบบ`
+                });
+                return;
+            }
 
             const formData = new FormData();
             formData.append('brand', item.brand || '');
@@ -11772,7 +11850,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             formData.append('oem_number', item.oem_number || '');
             formData.append('car_brand', item.car_brand || '');
             formData.append('car_model', item.car_model || '');
-            formData.append('product_name', item.product_name_th || item.product_name_en || '');
+            formData.append('category', item.category || '');
+            formData.append('product_name', item.product_name_th || item.product_name_en || item.product_name || '');
 
             try {
                 const res = await fetch('/api/parts/ai-search', {
@@ -11781,12 +11860,29 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     body: formData
                 });
                 const data = await res.json();
-                if (data.success) {
+                if (data.locked) {
+                    renderLockedSearchResults(data);
+                    return;
+                }
+                if (data.success && data.results && data.results.length > 0) {
+                    lastSearchResults = data.results;
                     renderSearchResults(data.results);
-                    showToast(`Discovered ${data.total} AI matched cross-references!`, "success");
+                    showToast(`✨ ค้นพบเบอร์เทียบเคียงด้วยระบบ AI จำนวน ${data.total} รายการ!`, "success");
+                } else {
+                    if (tbody) {
+                        tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                            <i class="fa-solid fa-wand-magic-sparkles" style="font-size: 2rem; color: var(--purple); margin-bottom: 0.75rem; opacity: 0.6;"></i>
+                            <div style="font-size: 1.05rem; color: #fff; font-weight: 600; margin-bottom: 0.4rem;">ไม่พบอะไหล่เทียบเคียงเพิ่มเติมในระบบสำหรับ '${item.part_number || item.oem_number}'</div>
+                            <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">คุณสามารถค้นหาข้อมูลผ่าน Global EPC Live Search ได้ทันที</div>
+                            <button type="button" class="btn btn-primary btn-sm" onclick="triggerWorldwideSearch()"><i class="fa-solid fa-globe"></i> ค้นหาด้วย Live Global Search</button>
+                        </td></tr>`;
+                    }
                 }
             } catch (err) {
-                console.error(err);
+                console.error("AI Search Error:", err);
+                if (tbody) {
+                    tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 2rem; color: var(--danger);">เกิดข้อผิดพลาดในการเชื่อมต่อระบบ AI กรุณาลองใหม่อีกครั้ง</td></tr>`;
+                }
             }
         }
 
@@ -16125,9 +16221,33 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         async function loadCrossReferenceMatrix() {
             const tbody = document.getElementById('crossref-results-body');
             if (!tbody) return;
+
+            const sub = window._currentSubscription;
+            const subStatus = (sub ? (sub.status || '') : '').toUpperCase();
+            const role = currentUser ? (currentUser.role || '').toUpperCase() : 'CUSTOMER';
+            const isOwnerOrSuper = ['OWNER', 'SUPER_ADMIN'].includes(role);
+            const isInactiveSub = !isOwnerOrSuper && ['PAST_DUE', 'PENDING_PAYMENT', 'UNPAID', 'SUSPENDED', 'CANCELLED', 'EXPIRED', 'INACTIVE'].includes(subStatus);
+
+            if (isInactiveSub) {
+                renderLockedCrossRefResults({
+                    message: `บัญชีของคุณอยู่ในสถานะรอชำระเงิน หรือแพ็กเกจหมดอายุ (สถานะปัจจุบัน: ${subStatus || 'PAST_DUE'}) กรุณาชำระเงินค่าบริการเพื่อเปิดใช้งานระบบ`
+                });
+                return;
+            }
+
             try {
                 const res = await fetch('/api/parts/cross-reference-matrix', { headers: getAuthHeaders() });
+                if (res.status === 403) {
+                    renderLockedCrossRefResults({
+                        message: `บัญชีของคุณอยู่ในสถานะรอชำระเงิน หรือแพ็กเกจหมดอายุ (สถานะปัจจุบัน: ${subStatus || 'PAST_DUE'}) กรุณาชำระเงินค่าบริการเพื่อเปิดใช้งานระบบ`
+                    });
+                    return;
+                }
                 const data = await res.json();
+                if (data.locked) {
+                    renderLockedCrossRefResults(data);
+                    return;
+                }
                 if (data.success && data.matrix && data.matrix.length > 0) {
                     tbody.innerHTML = '';
                     data.matrix.forEach(rel => {
