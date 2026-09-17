@@ -4470,6 +4470,47 @@ select.form-control option {
     box-shadow: 0 12px 28px rgba(56, 189, 248, 0.3);
 }
 
+/* ================= UNPAID ACCOUNT LOCK OVERLAY MASK ================= */
+.unpaid-view-lock-overlay {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0;
+    min-height: 450px;
+    background: rgba(11, 15, 25, 0.92);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    border-radius: var(--radius-md, 12px);
+}
+.unpaid-lock-card {
+    background: var(--bg-surface, #111827);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    border-radius: 16px;
+    padding: 2.5rem 2rem;
+    max-width: 500px;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.7);
+}
+.unpaid-lock-icon {
+    font-size: 2.8rem;
+    margin-bottom: 0.75rem;
+}
+.unpaid-lock-title {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #FFFFFF;
+    margin-bottom: 0.5rem;
+}
+.unpaid-lock-text {
+    color: #9CA3AF;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
 
 
 

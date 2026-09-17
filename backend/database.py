@@ -1950,10 +1950,18 @@ def get_user_tenant_context(username: str):
         "organization": {
             "id": org_dict["id"],
             "name": org_dict["name"],
+            "legal_name": org_dict.get("legal_name") or org_dict["name"],
             "slug": org_dict["slug"],
             "plan_tier": org_dict.get("plan_tier", "PROFESSIONAL"),
             "org_role": org_dict.get("org_role", "MEMBER"),
-            "status": org_dict.get("member_status", "ACTIVE")
+            "status": org_dict.get("member_status", "ACTIVE"),
+            "tax_id": org_dict.get("tax_id") or "",
+            "tax_branch": org_dict.get("branch") or org_dict.get("tax_branch") or "สำนักงานใหญ่",
+            "address": org_dict.get("address") or "",
+            "contact_person": org_dict.get("contact_person") or "",
+            "billing_email": org_dict.get("billing_email") or "",
+            "phone": org_dict.get("phone") or "",
+            "business_type": org_dict.get("business_type") or "GARAGE"
         },
         "membership": {
             "org_role": org_dict.get("org_role", "MEMBER"),
@@ -3896,15 +3904,19 @@ def register_trial_tenant_db(data: Dict[str, Any]) -> Dict[str, Any]:
             """, (email, pwd_hash))
         user_id = cursor.lastrowid
         
-        # 2. Insert Organization
+        tax_id = data.get("tax_id", "").strip()
+        tax_branch = data.get("tax_branch", "สำนักงานใหญ่").strip()
+        tax_address = data.get("tax_address", "").strip()
+
+        # 2. Insert Organization with Tax Invoice & Contact Details
         import re
         slug = re.sub(r'[^a-zA-Z0-9]', '-', company_name.lower()).strip('-') or f"org-{user_id}"
         slug = f"{slug}-{user_id}"
         
         cursor.execute("""
-            INSERT INTO organizations (name, slug, plan_tier)
-            VALUES (?, ?, ?)
-        """, (company_name, slug, plan_id.upper()))
+            INSERT INTO organizations (name, slug, plan_tier, legal_name, tax_id, business_type, billing_email, phone, address, contact_person)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (company_name, slug, plan_id.upper(), company_name, tax_id, segment, email, phone, tax_address, contact_name))
         org_id = cursor.lastrowid
         
         # 3. Link Membership as OWNER

@@ -622,7 +622,21 @@
             <main class="content-area">
 
                 <!-- ================= 1. SEARCH FIRST DASHBOARD ================= -->
-                <section id="search-view" class="view-section active">
+                <section id="search-view" class="view-section active" style="position: relative;">
+                    
+                    <div id="unpaid-overlay-search" class="unpaid-view-lock-overlay" style="display: none;">
+                        <div class="unpaid-lock-card">
+                            <div class="unpaid-lock-icon">🔒</div>
+                            <div class="unpaid-lock-title">ปลดล็อกการใช้งานระบบ (Unlock Full Access)</div>
+                            <div class="unpaid-lock-text">
+                                บัญชีของคุณอยู่ในสถานะรอชำระเงิน (PENDING PAYMENT)<br>
+                                กรุณาชำระเงินค่าแพ็กเกจเพื่อปลดล็อกฟังก์ชันค้นหาอะไหล่, เทียบเบอร์อะไหล่ และรายการบันทึกไว้
+                            </div>
+                            <button class="btn btn-primary" onclick="triggerDirectPaymentCheckout()" style="margin-top: 1.25rem; font-weight: 700; padding: 0.85rem 1.75rem; border-radius: 8px;">
+                                <i class="fa-solid fa-credit-card" style="margin-right: 8px;"></i> ชำระเงินเพื่อปลดล็อกใช้งานทันที
+                            </button>
+                        </div>
+                    </div>
                     
                     <!-- Search Hero & Direct Structured Parameters Form -->
                     <div class="search-hero" style="margin-bottom: 1.25rem;">
@@ -781,7 +795,21 @@
                 </section>
 
                 <!-- ================= 3. CROSS REFERENCE VIEW ================= -->
-                <section id="crossref-view" class="view-section">
+                <section id="crossref-view" class="view-section" style="position: relative;">
+                    
+                    <div id="unpaid-overlay-crossref" class="unpaid-view-lock-overlay" style="display: none;">
+                        <div class="unpaid-lock-card">
+                            <div class="unpaid-lock-icon">🔒</div>
+                            <div class="unpaid-lock-title">ปลดล็อกการใช้งานระบบ (Unlock Full Access)</div>
+                            <div class="unpaid-lock-text">
+                                บัญชีของคุณอยู่ในสถานะรอชำระเงิน (PENDING PAYMENT)<br>
+                                กรุณาชำระเงินค่าแพ็กเกจเพื่อปลดล็อกฟังก์ชันเทียบเบอร์อะไหล่และค้นหาเชิงลึก
+                            </div>
+                            <button class="btn btn-primary" onclick="triggerDirectPaymentCheckout()" style="margin-top: 1.25rem; font-weight: 700; padding: 0.85rem 1.75rem; border-radius: 8px;">
+                                <i class="fa-solid fa-credit-card" style="margin-right: 8px;"></i> ชำระเงินเพื่อปลดล็อกใช้งานทันที
+                            </button>
+                        </div>
+                    </div>
                     <div style="margin-bottom: 1.5rem;">
                         <h2 data-i18n="crossref.heroTitle">OEM ↔ Aftermarket Cross Reference Engine</h2>
                         <p data-i18n="crossref.heroSubtitle">Direct interchange matrix matching genuine manufacturer numbers with world-class aftermarket alternatives.</p>
@@ -825,7 +853,21 @@
                 </section>
 
                 <!-- ================= 4. FAVORITES VIEW ================= -->
-                <section id="favorites-view" class="view-section">
+                <section id="favorites-view" class="view-section" style="position: relative;">
+                    
+                    <div id="unpaid-overlay-favorites" class="unpaid-view-lock-overlay" style="display: none;">
+                        <div class="unpaid-lock-card">
+                            <div class="unpaid-lock-icon">🔒</div>
+                            <div class="unpaid-lock-title">ปลดล็อกการใช้งานระบบ (Unlock Full Access)</div>
+                            <div class="unpaid-lock-text">
+                                บัญชีของคุณอยู่ในสถานะรอชำระเงิน (PENDING PAYMENT)<br>
+                                กรุณาชำระเงินค่าแพ็กเกจเพื่อปลดล็อกรายการที่บันทึกไว้
+                            </div>
+                            <button class="btn btn-primary" onclick="triggerDirectPaymentCheckout()" style="margin-top: 1.25rem; font-weight: 700; padding: 0.85rem 1.75rem; border-radius: 8px;">
+                                <i class="fa-solid fa-credit-card" style="margin-right: 8px;"></i> ชำระเงินเพื่อปลดล็อกใช้งานทันที
+                            </button>
+                        </div>
+                    </div>
                     <div style="margin-bottom: 1.5rem;">
                         <h2 data-i18n="fav.title">Saved Favorites & Bookmarks</h2>
                         <p data-i18n="fav.subtitle">Quick access to bookmarked automotive parts, high-frequency SKUs, and vehicle fitment pairs.</p>
@@ -1136,20 +1178,14 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                             <input type="text" id="org-edit-legal" class="form-control" placeholder="e.g. Siam Auto Supply Co., Ltd.">
                                         </div>
                                     </div>
-                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                                    <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 1rem; margin-bottom: 1rem;">
                                         <div class="form-group">
                                             <label class="form-label" data-i18n="settings.taxIdLabel">Tax ID (13 Digits)</label>
                                             <input type="text" id="org-edit-taxid" class="form-control" placeholder="0105558012345">
                                         </div>
                                         <div class="form-group">
-                                            <label class="form-label">Business Type</label>
-                                            <select id="org-edit-biztype" class="form-control">
-                                                <option value="Auto Parts Distributor">Auto Parts Distributor / Wholesaler</option>
-                                                <option value="Garage / Service Center">Garage / Service Center Chain</option>
-                                                <option value="Fleet Operator">Fleet & Logistics Operator</option>
-                                                <option value="Insurance / Assessor">Insurance / Claims Assessor</option>
-                                                <option value="E-Commerce Retailer">E-Commerce Retailer</option>
-                                            </select>
+                                            <label class="form-label">สาขา (Branch)</label>
+                                            <input type="text" id="org-edit-branch" class="form-control" placeholder="สำนักงานใหญ่ หรือ สาขาที่ 00001">
                                         </div>
                                     </div>
                                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
@@ -4716,6 +4752,27 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                         </div>
                     </div>
 
+                    <!-- Tax Invoice Information Section -->
+                    <div style="background: rgba(59, 130, 246, 0.05); border: 1px solid rgba(59, 130, 246, 0.2); padding: 0.85rem; border-radius: var(--radius-sm); margin-top: 0.25rem;">
+                        <div style="font-size: 0.82rem; font-weight: 700; color: #60A5FA; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 0.35rem;">
+                            <i class="fa-solid fa-file-invoice-dollar"></i> ข้อมูลสำหรับออกใบกำกับภาษี (Tax Invoice Info)
+                        </div>
+                        <div class="form-grid-2">
+                            <div class="form-group" style="margin-bottom: 0.5rem;">
+                                <label class="form-label" style="font-size: 0.78rem;">เลขประจำตัวผู้เสียภาษี / เลขนิติบุคคล</label>
+                                <input type="text" id="trial-tax-id" class="form-control" placeholder="เช่น 010555xxxxxxx" style="font-size: 0.82rem;">
+                            </div>
+                            <div class="form-group" style="margin-bottom: 0.5rem;">
+                                <label class="form-label" style="font-size: 0.78rem;">สาขา (Branch)</label>
+                                <input type="text" id="trial-tax-branch" class="form-control" placeholder="สำนักงานใหญ่" value="สำนักงานใหญ่" style="font-size: 0.82rem;">
+                            </div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label class="form-label" style="font-size: 0.78rem;">ที่อยู่สำหรับออกใบกำกับภาษี (Tax Billing Address)</label>
+                            <input type="text" id="trial-tax-address" class="form-control" placeholder="เลขที่ อาคาร ถนน แขวง/ตำบล เขต/อำเภอ จังหวัด รหัสไปรษณีย์" style="font-size: 0.82rem;">
+                        </div>
+                    </div>
+
                     <div class="form-group">
                         <label class="form-label" style="font-weight: 600;">แพ็กเกจที่ต้องการสมัคร</label>
                         <select id="trial-plan-id" class="form-control" style="border-color: var(--primary);" onchange="onTrialPlanSelected(this.value)">
@@ -5717,11 +5774,14 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         }
 
         function resetTrialForm() {
-            const fields = ['trial-company-name', 'trial-contact-name', 'trial-email', 'trial-phone', 'trial-password'];
+            const fields = ['trial-company-name', 'trial-contact-name', 'trial-email', 'trial-phone', 'trial-password', 'trial-tax-id', 'trial-tax-address'];
             fields.forEach(id => {
                 const el = document.getElementById(id);
                 if (el) el.value = '';
             });
+            const branchEl = document.getElementById('trial-tax-branch');
+            if (branchEl) branchEl.value = 'สำนักงานใหญ่';
+
             const segmentEl = document.getElementById('trial-segment');
             if (segmentEl) segmentEl.selectedIndex = 0;
             
@@ -6480,14 +6540,20 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 viewId = 'search-view';
             }
 
-            // Enforce Payment Gate for Unpaid / Past-Due Accounts
+            // Enforce Payment Gate & Lock Overlays for Unpaid / Past-Due Accounts
             const subStatus = (window._currentSubscription ? (window._currentSubscription.status || '') : '').toUpperCase();
             const isInactiveSub = ['PAST_DUE', 'PENDING_PAYMENT', 'UNPAID', 'SUSPENDED', 'CANCELLED', 'EXPIRED', 'INACTIVE'].includes(subStatus);
             const isPrivilegedUser = ['OWNER', 'SUPER_ADMIN'].includes(role);
+            const showLockOverlay = (!isPrivilegedUser && isInactiveSub);
 
-            if (!isPrivilegedUser && isInactiveSub && !['subscription-view', 'invoices-view', 'settings-view'].includes(viewId)) {
-                viewId = 'subscription-view';
-                setTimeout(() => triggerDirectPaymentCheckout(window._currentSubscription), 200);
+            // Toggle Dark Grey Translucent Lock Overlay Masks on Views
+            ['unpaid-overlay-search', 'unpaid-overlay-crossref', 'unpaid-overlay-favorites'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = showLockOverlay ? 'flex' : 'none';
+            });
+
+            if (showLockOverlay && !window._hasShownPendingPaymentNotice) {
+                notifyPendingPaymentOnce();
             }
 
             // Sync URL Bar seamlessly without page reload
@@ -8990,9 +9056,10 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 if (data.success && data.organization) {
                     const org = data.organization;
                     document.getElementById('org-edit-name').value = org.name || '';
-                    document.getElementById('org-edit-legal').value = org.legal_name || '';
+                    document.getElementById('org-edit-legal').value = org.legal_name || org.name || '';
                     document.getElementById('org-edit-taxid').value = org.tax_id || '';
-                    document.getElementById('org-edit-biztype').value = org.business_type || 'Auto Parts Distributor';
+                    const branchEl = document.getElementById('org-edit-branch');
+                    if (branchEl) branchEl.value = org.tax_branch || org.branch || 'สำนักงานใหญ่';
                     document.getElementById('org-edit-email').value = org.billing_email || '';
                     document.getElementById('org-edit-phone').value = org.phone || '';
                     document.getElementById('org-edit-address').value = org.address || '';
@@ -9011,7 +9078,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 name: document.getElementById('org-edit-name').value.trim(),
                 legal_name: document.getElementById('org-edit-legal').value.trim(),
                 tax_id: document.getElementById('org-edit-taxid').value.trim(),
-                business_type: document.getElementById('org-edit-biztype').value,
+                branch: (document.getElementById('org-edit-branch')?.value || 'สำนักงานใหญ่').trim(),
                 billing_email: document.getElementById('org-edit-email').value.trim(),
                 phone: document.getElementById('org-edit-phone').value.trim(),
                 address: document.getElementById('org-edit-address').value.trim(),
