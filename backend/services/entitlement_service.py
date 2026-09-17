@@ -46,6 +46,7 @@ class EntitlementService:
             FROM subscriptions s
             JOIN plans p ON p.id = s.plan_id
             WHERE s.org_id = ?
+            ORDER BY s.id DESC
             LIMIT 1
         """, (org_id,))
         sub_row = cursor.fetchone()
@@ -53,16 +54,16 @@ class EntitlementService:
         if not sub_row:
             conn.close()
             return {
-                "status": "ACTIVE",
+                "status": "UNPAID",
                 "plan_id": "professional",
-                "allowed_brands": ["Toyota", "Honda", "Isuzu", "Mitsubishi", "Ford"],
-                "allowed_categories": ["ระบบเบรก", "ระบบกรอง", "ระบบช่วงล่าง"],
-                "max_brands": 5,
-                "max_categories": 3,
-                "vin_search_enabled": True,
+                "allowed_brands": [],
+                "allowed_categories": [],
+                "max_brands": 0,
+                "max_categories": 0,
+                "vin_search_enabled": False,
                 "api_access_enabled": False,
                 "export_enabled": False,
-                "ai_search_enabled": True
+                "ai_search_enabled": False
             }
 
         sub = dict(sub_row)
@@ -202,14 +203,14 @@ class EntitlementService:
             return False, locked, ctx
 
         # 1. Subscription Status Check
-        status = whitelist["status"]
-        if status in ["SUSPENDED", "CANCELLED", "CANCELED", "PAST_DUE", "EXPIRED"]:
+        status = (whitelist.get("status") or "").upper()
+        if status in ["SUSPENDED", "CANCELLED", "CANCELED", "PAST_DUE", "EXPIRED", "UNPAID", "PENDING_PAYMENT", "INACTIVE"]:
             locked = {
                 "locked": True,
                 "reason": "SUBSCRIPTION_INACTIVE",
-                "message": f"Your subscription is currently {status}. Please reactivate your account to search automotive parts data.",
+                "message": f"บัญชีของคุณอยู่ในสถานะรอชำระเงิน หรือแพ็กเกจหมดอายุ (สถานะปัจจุบัน: {status}) กรุณาชำระเงินค่าบริการเพื่อเปิดใช้งานระบบ",
                 "action": "RENEW_SUBSCRIPTION",
-                "plan_id": whitelist["plan_id"]
+                "plan_id": whitelist.get("plan_id", "professional")
             }
             return False, locked, ctx
 

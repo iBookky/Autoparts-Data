@@ -1870,37 +1870,38 @@ def get_user_tenant_context(username: str):
         
     org_id = org_dict["id"]
     
-    # Get active subscription and plan details
+    # Get subscription and plan details (ordered by latest subscription record)
     cursor.execute("""
         SELECT s.*, p.name as plan_name, p.price_monthly, p.max_brands, p.max_categories,
                p.max_users, p.monthly_search_quota, p.vin_search_enabled, p.api_access_enabled,
                p.export_enabled, p.ai_search_enabled
         FROM subscriptions s
         JOIN plans p ON p.id = s.plan_id
-        WHERE s.org_id = ? AND s.status = 'ACTIVE'
+        WHERE s.org_id = ?
+        ORDER BY s.id DESC
         LIMIT 1
     """, (org_id,))
     sub_row = cursor.fetchone()
     
     if not sub_row:
-        # Fallback default professional plan (or enterprise for Owner)
+        # Fallback for system owners vs unpaid customer accounts
         is_owner_role = user_dict["role"] in ["OWNER", "SUPER_ADMIN", "ADMIN"]
         sub_dict = {
             "plan_id": "enterprise" if is_owner_role else "professional",
-            "plan_name": "SYSTEM OWNER (UNLIMITED)" if is_owner_role else "PROFESSIONAL",
-            "status": "ACTIVE",
+            "plan_name": "SYSTEM OWNER (UNLIMITED)" if is_owner_role else "UNPAID (PENDING PAYMENT)",
+            "status": "ACTIVE" if is_owner_role else "UNPAID",
             "billing_cycle": "MONTHLY",
-            "monthly_search_quota": 999999999 if is_owner_role else 5000,
-            "ai_power_pack": 1,
+            "monthly_search_quota": 999999999 if is_owner_role else 0,
+            "ai_power_pack": 1 if is_owner_role else 0,
             "extra_searches": 0,
             "extra_users": 0,
-            "max_brands": -1 if is_owner_role else 5,
-            "max_categories": -1 if is_owner_role else 5,
-            "max_users": -1 if is_owner_role else 3,
-            "vin_search_enabled": 1,
+            "max_brands": -1 if is_owner_role else 0,
+            "max_categories": -1 if is_owner_role else 0,
+            "max_users": -1 if is_owner_role else 1,
+            "vin_search_enabled": 1 if is_owner_role else 0,
             "api_access_enabled": 1 if is_owner_role else 0,
             "export_enabled": 1 if is_owner_role else 0,
-            "ai_search_enabled": 1,
+            "ai_search_enabled": 1 if is_owner_role else 0,
             "current_period_end": datetime.now().strftime("%Y-%m-%d")
         }
     else:
@@ -3882,16 +3883,16 @@ def register_trial_tenant_db(data: Dict[str, Any]) -> Dict[str, Any]:
         import hashlib
         pwd_hash = hashlib.sha256(password.encode("utf-8")).hexdigest()
         
-        # 1. Insert User (platform role 'STAFF', org_role 'OWNER', initially is_active = 0 pending email verification)
+        # 1. Insert User (platform role 'CUSTOMER', org_role 'OWNER', initially is_active = 0 pending email verification)
         try:
             cursor.execute("""
                 INSERT INTO users (username, email, password, role, is_active)
-                VALUES (?, ?, ?, 'STAFF', 0)
+                VALUES (?, ?, ?, 'CUSTOMER', 0)
             """, (email, email, pwd_hash))
         except Exception:
             cursor.execute("""
                 INSERT INTO users (username, password, role)
-                VALUES (?, ?, 'STAFF')
+                VALUES (?, ?, 'CUSTOMER')
             """, (email, pwd_hash))
         user_id = cursor.lastrowid
         

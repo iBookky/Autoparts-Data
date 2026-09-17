@@ -6472,10 +6472,20 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 'admin-view': ['ADMIN', 'SUPER_ADMIN', 'OWNER'],
                 'staff-view': ['STAFF', 'ADMIN', 'SUPER_ADMIN', 'OWNER']
             };
-            const role = currentUser ? currentUser.role : 'CUSTOMER_MEMBER';
+            const role = currentUser ? currentUser.role : 'CUSTOMER';
             if (privilegedViews[viewId] && !privilegedViews[viewId].includes(role)) {
                 showToast("Access Denied: You do not have permission to access this internal workspace.", "danger");
                 viewId = 'search-view';
+            }
+
+            // Enforce Payment Gate for Unpaid / Past-Due Accounts
+            const subStatus = (window._currentSubscription ? (window._currentSubscription.status || '') : '').toUpperCase();
+            const isInactiveSub = ['PAST_DUE', 'PENDING_PAYMENT', 'UNPAID', 'SUSPENDED', 'CANCELLED', 'EXPIRED', 'INACTIVE'].includes(subStatus);
+            const isPrivilegedUser = ['OWNER', 'SUPER_ADMIN'].includes(role);
+
+            if (!isPrivilegedUser && isInactiveSub && !['subscription-view', 'invoices-view', 'settings-view'].includes(viewId)) {
+                showToast("🔒 บัญชีของคุณอยู่ในสถานะรอชำระเงิน (PENDING PAYMENT) กรุณาเลือกวิธีชำระเงินเพื่อเปิดใช้งานระบบ", "warning");
+                viewId = 'subscription-view';
             }
 
             // Sync URL Bar seamlessly without page reload
@@ -7340,12 +7350,19 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
                 if (subData.success && subData.subscription) {
                     const sub = subData.subscription;
+                    window._currentSubscription = sub;
+                    
+                    const subStatus = (sub.status || '').toUpperCase();
+                    const isInactiveSub = ['PAST_DUE', 'PENDING_PAYMENT', 'UNPAID', 'SUSPENDED', 'CANCELLED', 'EXPIRED', 'INACTIVE'].includes(subStatus);
+                    const userRole = currentUser ? currentUser.role : 'CUSTOMER';
+                    const isPrivilegedUser = ['OWNER', 'SUPER_ADMIN'].includes(userRole);
+
                     document.getElementById('current-sub-plan-badge').textContent = (sub.plan_name || sub.plan_id || 'PROFESSIONAL').toUpperCase() + ' PLAN';
                     document.getElementById('current-sub-title').textContent = (sub.org_name || 'Organization') + ' Subscription';
                     
                     const statusBadge = document.getElementById('current-sub-status-badge');
                     statusBadge.textContent = sub.status || 'ACTIVE';
-                    statusBadge.className = 'status-badge ' + (sub.status === 'ACTIVE' ? 'verified' : (sub.status === 'CANCELLED' ? 'danger' : 'reviewed'));
+                    statusBadge.className = 'status-badge ' + (sub.status === 'ACTIVE' || sub.status === 'TRIALING' ? 'verified' : 'danger');
                     
                     const pStart = sub.current_period_start ? sub.current_period_start.substring(0, 10) : 'เริ่มต้น';
                     const pEnd = sub.current_period_end ? sub.current_period_end.substring(0, 10) : 'N/A';
@@ -7356,6 +7373,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     document.getElementById('current-sub-renewal').textContent = pEnd;
                     
                     applyPackageEntitlementsToUI(sub);
+
+                    if (!isPrivilegedUser && isInactiveSub) {
+                        showToast("🔒 บัญชีของคุณอยู่ในสถานะรอชำระเงิน (PENDING PAYMENT) กรุณาชำระเงินเพื่อเปิดใช้งานระบบ", "warning");
+                        switchSaaSView('subscription-view', null, false);
+                    }
                 }
 
                 // Render Purchased Categories
