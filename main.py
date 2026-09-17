@@ -238,19 +238,19 @@ _INACTIVE_SUB_STATUSES = frozenset([
     "EXPIRED", "INACTIVE", "GRACE_PERIOD"
 ])
 
-_UNRESTRICTED_ROLES = frozenset(["OWNER", "SUPER_ADMIN"])
+_UNRESTRICTED_ROLES = frozenset(["OWNER", "SUPER_ADMIN", "ADMIN"])
 
 def require_active_subscription(username: str, user_role: str) -> None:
     """
     Raises HTTP 403 if the user's organization subscription is not ACTIVE/TRIALING.
-    Privileged platform roles (OWNER, SUPER_ADMIN) are always allowed.
+    Privileged platform roles (OWNER, SUPER_ADMIN, ADMIN) are always allowed.
     Designed to be called at the top of any payment-gated API endpoint.
     """
     norm_role = (user_role or "").strip().upper()
     norm_user = (username or "").strip().lower()
 
-    # Platform owners and super admins always bypass payment gate
-    if norm_role in _UNRESTRICTED_ROLES or norm_user in ("owner", "superadmin"):
+    # Platform owners, super admins, and administrators always bypass payment gate
+    if norm_role in _UNRESTRICTED_ROLES or norm_user in ("owner", "superadmin", "admin"):
         return
 
     # Get subscription status directly from DB whitelist (authoritative source)
@@ -1013,7 +1013,7 @@ async def live_search(
     x_user_role: Optional[str] = Header(None)
 ):
     # Subscription gate — unpaid/inactive accounts cannot access live search
-    require_active_subscription(x_username or "admin", x_user_role or "CUSTOMER")
+    require_active_subscription(x_username or "admin", x_user_role or ("ADMIN" if (x_username or "").lower() == "admin" else "CUSTOMER"))
     if not q or not q.strip():
         raise HTTPException(status_code=400, detail="Search query is required")
     try:
@@ -1052,11 +1052,26 @@ async def live_search(
                 )
 
         if not local_results and (cb or cm or pn or not is_code_like):
+            # Extract meaningful product name: if clean_q is just "Brand Model parts", do not treat as oem_name
+            search_oem_name = pn
+            if not search_oem_name and not is_code_like:
+                normalized_q = clean_q.lower()
+                for token in ["auto parts", "autoparts", "parts", "part", "อะไหล่รถยนต์", "อะไหล่"]:
+                    normalized_q = normalized_q.replace(token, "")
+                if cb:
+                    normalized_q = normalized_q.replace(cb.lower(), "")
+                if cm:
+                    normalized_q = normalized_q.replace(cm.lower(), "")
+                normalized_q = normalized_q.strip()
+                if normalized_q:
+                    search_oem_name = normalized_q
+
             local_results = advanced_search_parts(
                 car_brand=cb,
                 car_model=cm,
                 car_year=cy,
-                oem_name=pn or (clean_q if not is_code_like else None),
+                category=target_cat,
+                oem_name=search_oem_name,
                 aftermarket_brand=tb,
                 limit=50
             )

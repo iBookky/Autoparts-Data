@@ -794,13 +794,13 @@ class OwnerAnalyticsService:
         cursor = conn.cursor()
 
         cursor.execute("""
-            SELECT p.id, p.name, p.price_monthly, 
+            SELECT p.*,
                    COALESCE(NULLIF(p.price_yearly, 0), p.price_monthly * 10) as price_yearly,
                    COUNT(s.id) as subscriber_count,
                    COALESCE(SUM(s.base_price), 0) as total_mrr
             FROM plans p
             LEFT JOIN subscriptions s ON s.plan_id = p.id AND s.status IN ('ACTIVE', 'GRACE_PERIOD', 'CANCELLED')
-            GROUP BY p.id, p.name, p.price_monthly, p.price_yearly
+            GROUP BY p.id
             ORDER BY total_mrr DESC
         """)
         plan_rows = [dict(r) for r in cursor.fetchall()]

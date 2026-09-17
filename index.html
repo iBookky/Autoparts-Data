@@ -11764,13 +11764,17 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     body: formData
                 });
                 const data = await res.json();
-                if (data.success) {
+                if (res.ok && data.success && data.results && data.results.length > 0) {
                     lastSearchResults = data.results || [];
                     renderSearchResults(data.results || []);
                     showToast(`พบข้อมูลอะไหล่ทั่วโลกจำนวน ${data.total} รายการ!`, "success");
-                } else {
+                } else if (res.ok && data.success) {
                     tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-muted);"><i class="fa-solid fa-circle-exclamation" style="font-size: 2rem; color: var(--warning); margin-bottom: 0.75rem;"></i><div>${data.message || 'ไม่พบข้อมูลในเครือข่ายแคตตาล็อกระดับโลก'}</div></td></tr>`;
                     showToast(data.message || "Global search returned no items", "warning");
+                } else {
+                    const errMsg = data.detail || data.error || data.message || "เกิดข้อผิดพลาดในการค้นหา";
+                    tbody.innerHTML = `<tr><td colspan="9" style="text-align: center; padding: 3rem; color: var(--danger);"><i class="fa-solid fa-triangle-exclamation" style="font-size: 2rem; margin-bottom: 0.75rem;"></i><div>${errMsg}</div></td></tr>`;
+                    showToast(errMsg, "danger");
                 }
             } catch (err) {
                 console.error(err);
@@ -14074,7 +14078,9 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 if (data.success) {
                     showToast(`🎉 เพิ่มแพ็กเกจ '${payload.name}' เรียบร้อยแล้ว!`, "success");
                     closeCreatePlanModal();
+                    await loadSaaSContext();
                     loadOwnerPlanPerformanceTab();
+                    loadOwnerCustomersTab();
                     loadPublicPlans();
                 } else {
                     showToast(`⚠️ ${data.error || 'ไม่สามารถสร้างแพ็กเกจได้'}`, "danger");
@@ -14162,7 +14168,9 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 if (data.success) {
                     showToast(`✅ บันทึกการแก้ไขแพ็กเกจ '${payload.name}' เรียบร้อยแล้ว!`, "success");
                     closeEditPlanModal();
+                    await loadSaaSContext();
                     loadOwnerPlanPerformanceTab();
+                    loadOwnerCustomersTab();
                     loadPublicPlans();
                 } else {
                     showToast(`⚠️ ${data.error || 'ไม่สามารถแก้ไขแพ็กเกจได้'}`, "danger");

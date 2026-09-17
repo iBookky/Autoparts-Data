@@ -2754,32 +2754,46 @@ def update_full_plan(plan_id: str, plan_data: Dict[str, Any]) -> Tuple[bool, str
                 WHERE plan_id = ? AND billing_interval = 'YEARLY'
             """, (price_yearly, max_brands, max_categories, max_users, monthly_search_quota, trial_days, plan_id))
 
-            # Sync plan_features table
-            cursor.execute("UPDATE plan_features SET limit_value = ? WHERE plan_id = ? AND feature_code = 'SEARCH'", (monthly_search_quota, plan_id))
-            cursor.execute("UPDATE plan_features SET is_included = ? WHERE plan_id = ? AND feature_code = 'VIN_SEARCH'", (vin_search_enabled, plan_id))
-            cursor.execute("UPDATE plan_features SET is_included = ? WHERE plan_id = ? AND feature_code = 'API'", (api_access_enabled, plan_id))
-            cursor.execute("UPDATE plan_features SET is_included = ? WHERE plan_id = ? AND feature_code = 'EXPORT'", (export_enabled, plan_id))
-            cursor.execute("UPDATE plan_features SET is_included = ? WHERE plan_id = ? AND feature_code = 'AI'", (ai_search_enabled, plan_id))
+            # Sync or insert plan_features table
+            feature_sync_items = [
+                ('SEARCH', monthly_search_quota, 1),
+                ('VIN_SEARCH', 0, vin_search_enabled),
+                ('API', 0, api_access_enabled),
+                ('EXPORT', 0, export_enabled),
+                ('AI', 0, ai_search_enabled)
+            ]
+            for f_code, limit_val, inc in feature_sync_items:
+                cursor.execute("SELECT id FROM plan_features WHERE plan_id = ? AND feature_code = ?", (plan_id, f_code))
+                if cursor.fetchone():
+                    cursor.execute("UPDATE plan_features SET limit_value = ?, is_included = ? WHERE plan_id = ? AND feature_code = ?", (limit_val, inc, plan_id, f_code))
+                else:
+                    cursor.execute("INSERT INTO plan_features (plan_id, feature_code, limit_value, is_included) VALUES (?, ?, ?, ?)", (plan_id, f_code, limit_val, inc))
 
-            # Automatically cascade & inherit updated plan features to all active customer subscriptions with this plan_id
-            cursor.execute("""
-                UPDATE subscriptions
-                SET search_quota = CASE WHEN search_quota < ? THEN ? ELSE search_quota END,
-                    updated_at = CURRENT_TIMESTAMP
-                WHERE LOWER(plan_id) = LOWER(?)
-            """, (monthly_search_quota, monthly_search_quota, plan_id))
-
-            # Sync snapshots for subscribers of this plan
+            # Sync snapshots for subscribers of this plan (UPSERT)
             cursor.execute("SELECT id FROM subscriptions WHERE LOWER(plan_id) = LOWER(?)", (plan_id,))
             sub_ids = [r[0] for r in cursor.fetchall()]
             for s_id in sub_ids:
-                cursor.execute("""
-                    UPDATE subscription_entitlements_snapshot
-                    SET vin_search_enabled = ?, api_access_enabled = ?, export_enabled = ?, ai_search_enabled = ?,
-                        monthly_search_quota = ?, max_brands = ?, max_categories = ?, max_users = ?,
-                        updated_at = CURRENT_TIMESTAMP
-                    WHERE subscription_id = ?
-                """, (vin_search_enabled, api_access_enabled, export_enabled, ai_search_enabled, monthly_search_quota, max_brands, max_categories, max_users, s_id))
+                cursor.execute("SELECT id FROM subscription_entitlements_snapshot WHERE subscription_id = ?", (s_id,))
+                existing_snap = cursor.fetchone()
+                if existing_snap:
+                    cursor.execute("""
+                        UPDATE subscription_entitlements_snapshot
+                        SET vin_search_enabled = ?, api_access_enabled = ?, export_enabled = ?, ai_search_enabled = ?,
+                            api_enabled = ?, ai_enabled = ?,
+                            monthly_search_quota = ?, max_brands = ?, max_categories = ?, max_users = ?
+                        WHERE subscription_id = ?
+                    """, (vin_search_enabled, api_access_enabled, export_enabled, ai_search_enabled, api_access_enabled, ai_search_enabled, monthly_search_quota, max_brands, max_categories, max_users, s_id))
+                else:
+                    cursor.execute("""
+                        INSERT INTO subscription_entitlements_snapshot
+                        (subscription_id, snapshot_date, max_brands, max_categories, max_users, monthly_search_quota,
+                         vin_search_enabled, api_access_enabled, export_enabled, ai_search_enabled, api_enabled, ai_enabled)
+                        VALUES (?, CURRENT_TIMESTAMP, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """, (s_id, max_brands, max_categories, max_users, monthly_search_quota,
+                          vin_search_enabled, api_access_enabled, export_enabled, ai_search_enabled, api_access_enabled, ai_search_enabled))
+                
+                # Ensure ai_power_pack in subscriptions stays aligned
+                cursor.execute("UPDATE subscriptions SET ai_power_pack = ? WHERE id = ?", (ai_search_enabled, s_id))
         except Exception as ex_sync:
             print(f"Warning syncing plan versions/features/subscriptions on update: {ex_sync}")
 
