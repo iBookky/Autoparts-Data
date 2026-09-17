@@ -5367,6 +5367,15 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=à¸
             return user;
         }
 
+        function escH(s) {
+            return s ? String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') : '';
+        }
+        function escQ(s) {
+            return s ? String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;') : '';
+        }
+        window.escH = escH;
+        window.escQ = escQ;
+
         function toggleRoleDropdown(e) {
             if (e) e.stopPropagation();
             const menu = document.getElementById('role-switcher-menu');
