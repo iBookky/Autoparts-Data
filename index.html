@@ -1449,9 +1449,36 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
                     <!-- Admin Meta Options Container -->
                     <div id="admin-meta-view" style="display: none;">
-                        <div style="margin-bottom: 1.25rem;">
-                            <h3 style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 0.35rem;" data-i18n="admin.meta.title">ตัวเลือกการตั้งค่าระบบ (System Options & Metadata Management)</h3>
-                            <p style="font-size: 0.85rem; color: var(--text-secondary);" data-i18n="admin.meta.subtitle">จัดการฐานข้อมูลเมทาดาต้าหลัก: แบรนด์อะไหล่ทดแทน, ยี่ห้อรถยนต์, หมวดหมู่อะไหล่, รุ่นรถยนต์, ปีที่รองรับ และโมเดล AI</p>
+                        <div style="margin-bottom: 1.25rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 0.75rem;">
+                            <div>
+                                <h3 style="font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 0.35rem;" data-i18n="admin.meta.title">ตัวเลือกการตั้งค่าระบบ (System Options & Metadata Management)</h3>
+                                <p style="font-size: 0.85rem; color: var(--text-secondary);" data-i18n="admin.meta.subtitle">จัดการฐานข้อมูลเมทาดาต้าหลัก: แบรนด์อะไหล่ทดแทน, ยี่ห้อรถยนต์, หมวดหมู่อะไหล่, รุ่นรถยนต์, ปีที่รองรับ และโมเดล AI</p>
+                            </div>
+                        </div>
+
+                        <!-- Tabbed Switcher Bar -->
+                        <div class="meta-tabs-nav" style="display: flex; gap: 0.5rem; flex-wrap: wrap; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+                            <button type="button" class="btn btn-sm meta-tab-btn active" onclick="switchAdminMetaTab('aftermarket')" id="tab-btn-aftermarket" style="background: rgba(96,165,250,0.15); color: #60A5FA; border: 1px solid rgba(96,165,250,0.4);">
+                                <i class="fa-solid fa-tag"></i> แบรนด์อะไหล่ทดแทน <span class="badge" id="tab-count-aftermarket" style="background: rgba(255,255,255,0.2); margin-left: 0.3rem;">0</span>
+                            </button>
+                            <button type="button" class="btn btn-sm meta-tab-btn" onclick="switchAdminMetaTab('car-brands')" id="tab-btn-car-brands" style="background: var(--bg-surface); color: var(--text-secondary); border: 1px solid var(--border-color);">
+                                <i class="fa-solid fa-car" style="color: #34D399;"></i> ยี่ห้อรถยนต์ <span class="badge" id="tab-count-car-brands" style="background: rgba(255,255,255,0.1); margin-left: 0.3rem;">0</span>
+                            </button>
+                            <button type="button" class="btn btn-sm meta-tab-btn" onclick="switchAdminMetaTab('categories')" id="tab-btn-categories" style="background: var(--bg-surface); color: var(--text-secondary); border: 1px solid var(--border-color);">
+                                <i class="fa-solid fa-folder-tree" style="color: #FBBF24;"></i> หมวดหมู่อะไหล่ <span class="badge" id="tab-count-categories" style="background: rgba(255,255,255,0.1); margin-left: 0.3rem;">0</span>
+                            </button>
+                            <button type="button" class="btn btn-sm meta-tab-btn" onclick="switchAdminMetaTab('car-models')" id="tab-btn-car-models" style="background: var(--bg-surface); color: var(--text-secondary); border: 1px solid var(--border-color);">
+                                <i class="fa-solid fa-car-side" style="color: #A78BFA;"></i> รุ่นรถยนต์ <span class="badge" id="tab-count-car-models" style="background: rgba(255,255,255,0.1); margin-left: 0.3rem;">0</span>
+                            </button>
+                            <button type="button" class="btn btn-sm meta-tab-btn" onclick="switchAdminMetaTab('years')" id="tab-btn-years" style="background: var(--bg-surface); color: var(--text-secondary); border: 1px solid var(--border-color);">
+                                <i class="fa-solid fa-calendar-days" style="color: #EC4899;"></i> ปีการผลิตรถ <span class="badge" id="tab-count-years" style="background: rgba(255,255,255,0.1); margin-left: 0.3rem;">0</span>
+                            </button>
+                            <button type="button" class="btn btn-sm meta-tab-btn" onclick="switchAdminMetaTab('ai')" id="tab-btn-ai" style="background: var(--bg-surface); color: var(--text-secondary); border: 1px solid var(--border-color);">
+                                <i class="fa-solid fa-wand-magic-sparkles" style="color: #C084FC;"></i> โมเดล AI <span class="badge" id="tab-count-ai" style="background: rgba(255,255,255,0.1); margin-left: 0.3rem;">0</span>
+                            </button>
+                            <button type="button" class="btn btn-sm meta-tab-btn" onclick="switchAdminMetaTab('all')" id="tab-btn-all" style="background: var(--bg-surface); color: var(--text-secondary); border: 1px solid var(--border-color); margin-left: auto;">
+                                <i class="fa-solid fa-table-cells"></i> แสดงทั้งหมด
+                            </button>
                         </div>
 
                         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 1.25rem;" id="admin-meta-container">
@@ -3036,21 +3063,27 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 <section id="staff-view" class="view-section">
                     <div style="margin-bottom: 1.5rem;">
                         <h2 style="font-size: 1.25rem; font-weight: 700; color: #fff; display: flex; align-items: center; gap: 0.5rem;">
-                            <i class="fa-solid fa-briefcase" style="color: #10B981;"></i> <span data-i18n="staff.title">Staff Task Workspace</span>
+                            <i class="fa-solid fa-briefcase" style="color: #10B981;"></i> <span data-i18n="staff.title">พื้นที่จัดการงานเจ้าหน้าที่ (Staff Task Workspace)</span>
                         </h2>
-                        <p style="font-size: 0.85rem; color: var(--text-secondary);" data-i18n="staff.subtitle">Task-oriented workspace tailored for Sales Specialists, Data Auditors, and Support Staff.</p>
+                        <p style="font-size: 0.85rem; color: var(--text-secondary);" data-i18n="staff.subtitle">พื้นที่ทำงานเฉพาะทางสำหรับทีมขาย (Sales Specialist), ผู้ตรวจสอบข้อมูล (Data Auditor) และฝ่ายดูแลลูกค้า (Support Staff)</p>
                     </div>
 
                     <div class="workspace-tabs">
                         <button class="workspace-tab-btn active" id="tab-staff-sales" onclick="switchStaffTab('sales')">
-                            <i class="fa-solid fa-user-plus"></i> <span data-i18n="staff.tabSales">Sales & Trial Tasks</span>
+                            <i class="fa-solid fa-user-plus"></i> <span data-i18n="staff.tabSales">งานขาย & บัญชีทดลอง (Sales & Trial Tasks)</span>
                         </button>
                         <button class="workspace-tab-btn" id="tab-staff-data" onclick="switchStaffTab('data')">
-                            <i class="fa-solid fa-list-check"></i> <span data-i18n="staff.tabData">Data Review Tasks</span>
+                            <i class="fa-solid fa-list-check"></i> <span data-i18n="staff.tabData">งานตรวจสอบข้อมูลอะไหล่ (Data Review Tasks)</span>
                         </button>
                         <button class="workspace-tab-btn" id="tab-staff-support" onclick="switchStaffTab('support')">
-                            <i class="fa-solid fa-headset"></i> <span data-i18n="staff.tabSupport">Customer Inquiries</span>
+                            <i class="fa-solid fa-headset"></i> <span data-i18n="staff.tabSupport">คำถามและข้อร้องเรียนลูกค้า (Customer Inquiries)</span>
                         </button>
+                    </div>
+
+                    <!-- Data Source Origin Info Banner -->
+                    <div id="staff-data-origin-banner" style="background: rgba(30, 41, 59, 0.6); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: var(--radius-sm); padding: 0.6rem 1rem; margin-bottom: 1rem; font-size: 0.82rem; color: #94A3B8; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fa-solid fa-circle-info" style="color: #60A5FA;"></i>
+                        <span id="staff-origin-text">📍 <strong>ที่มาของข้อมูล:</strong> รวบรวมโดยอัตโนมัติจากระบบสมัครสมาชิกบริการตนเอง (Self-Service Signups) และใบแจ้งหนี้รอชำระเงิน</span>
                     </div>
 
                     <div id="staff-sub-sales">
@@ -5304,6 +5337,18 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             localStorage.removeItem('autoparts_saas_user');
             localStorage.removeItem('autoparts_user_token');
 
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('verified') === '1' || urlParams.get('action') === 'payment') {
+                const email = urlParams.get('email') || '';
+                setTimeout(() => {
+                    showToast('✅ ยืนยันอีเมลสำเร็จเรียบร้อยแล้ว! กรุณาเลือกวิธีชำระเงินเพื่อเปิดใช้งานบัญชีองค์กร', 'success');
+                    openPaymentCheckoutModal({
+                        customer_name: email || 'ร้านค้าสมาชิกใหม่',
+                        is_direct_signup: true
+                    });
+                }, 400);
+            }
+
             const saved = sessionStorage.getItem('autoparts_saas_user');
             if (saved) {
                 try {
@@ -5802,14 +5847,10 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 const res = await response.json();
                 if (res.success) {
                     closeTrialModal();
-                    currentUser = { username: res.username, role: res.role || 'CUSTOMER_OWNER', org_role: res.org_role || 'OWNER' };
-                    sessionStorage.setItem('autoparts_saas_user', JSON.stringify(currentUser));
-                    localStorage.removeItem('autoparts_saas_user');
-                    await initSaaSSession();
                     
                     const msgEl = document.getElementById('reg-success-msg');
                     if (msgEl) {
-                        msgEl.innerHTML = `ระบบได้ส่งลิงก์ยืนยันตัวตนไปยังอีเมล <strong style="color: #60A5FA;">${email}</strong> เรียบร้อยแล้ว<br>กรุณาเปิดกล่องจดหมายอีเมลของคุณ และคลิกลิงก์ยืนยันตัวตนเพื่อเปิดใช้งานบัญชีองค์กร`;
+                        msgEl.innerHTML = `ระบบได้ส่งลิงก์ยืนยันตัวตนไปยังอีเมล <strong style="color: #60A5FA;">${email}</strong> เรียบร้อยแล้ว<br>กรุณาเปิดกล่องจดหมายอีเมลของคุณ และคลิกลิงก์ยืนยันตัวตนเพื่อเข้าสู่กระบวนการเลือกแพ็กเกจและชำระเงินเพื่อเปิดใช้งานบัญชี`;
                     }
                     const succModal = document.getElementById('modal-register-success');
                     if (succModal) succModal.style.display = 'flex';
@@ -6132,13 +6173,13 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 roleBadge.style.color = isOwner ? '#F59E0B' : (isSuperAdmin ? '#C084FC' : (isAdmin ? '#60A5FA' : (isStaff ? '#34D399' : '#38BDF8')));
             }
 
-            // Role-Aware Navigation Visibility & Setup
             document.getElementById('owner-nav-group').style.display = (isOwner || isSuperAdmin) ? 'block' : 'none';
             document.getElementById('superadmin-nav-group').style.display = (isSuperAdmin || isOwner) ? 'block' : 'none';
             document.getElementById('admin-nav-group').style.display = (isAdmin || isSuperAdmin || isOwner) ? 'block' : 'none';
             document.getElementById('staff-nav-group').style.display = (isStaff || isAdmin || isSuperAdmin || isOwner) ? 'block' : 'none';
-
-            // Distinct Platform Owner vs Customer Header & Sidebar Branding
+            // Apply package entitlements to UI (VIN search, API, export, AI, categories, brands)
+            applyPackageEntitlementsToUI(null);
+            loadSubscriptionPlans();
             const cockpitToggleBtn = document.getElementById('owner-cockpit-toggle-btn');
             const customerNavTitle = document.getElementById('customer-nav-title');
             
@@ -7291,6 +7332,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     
                     document.getElementById('current-sub-interval').textContent = (sub.billing_interval || sub.billing_cycle || 'MONTHLY').toUpperCase();
                     document.getElementById('current-sub-renewal').textContent = pEnd;
+                    
+                    applyPackageEntitlementsToUI(sub);
                 }
 
                 // Render Purchased Categories
@@ -8793,14 +8836,18 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             const vat = inv.vat_amount || 0;
             const total = inv.total_amount || (subtotal + vat);
 
-            // Item 1: Main SaaS Subscription
+            // Populate Line Items dynamically from invoice items or package plan name
+            const planTitleName = inv.plan_name || (inv.plan_id ? inv.plan_id.toUpperCase() : (inv.plan_tier || 'Professional'));
+            const firstItem = (inv.items && inv.items.length > 0) ? inv.items[0] : null;
+            const itemDesc = firstItem ? firstItem.description : `Siam Auto Parts AI Cloud — ${planTitleName} Package Subscription`;
+
             const itemRow = document.createElement('tr');
             itemRow.style.borderBottom = '1px solid var(--border-color)';
             itemRow.innerHTML = `
                 <td style="padding: 0.65rem 0.75rem; text-align: center; color: var(--text-muted);">1</td>
                 <td style="padding: 0.65rem 0.75rem;">
-                    <div style="font-weight: 600; color: var(--text-primary);">Siam Auto Parts AI Cloud - Enterprise Subscription</div>
-                    <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.2rem;">รอบการใช้งาน: ${pStart} ถึง ${pEnd} &bull; วิธีชำระ: ${inv.payment_method || 'CREDIT_CARD'}</div>
+                    <div style="font-weight: 600; color: var(--text-primary);">${escH(itemDesc)}</div>
+                    <div style="font-size: 0.78rem; color: var(--text-secondary); margin-top: 0.2rem;">รอบการใช้งาน: ${pStart} ถึง ${pEnd} &bull; วิธีชำระ: ${inv.payment_method || 'PROMPTPAY'}</div>
                 </td>
                 <td style="padding: 0.65rem 0.75rem; text-align: center;">1</td>
                 <td style="padding: 0.65rem 0.75rem; text-align: right; font-family: var(--font-mono);">฿${subtotal.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
@@ -10487,10 +10534,142 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             }
         }
 
+        let currentActiveMetaTab = 'aftermarket';
+
+        function switchAdminMetaTab(tabKey) {
+            currentActiveMetaTab = tabKey;
+            const btnIds = ['aftermarket', 'car-brands', 'categories', 'car-models', 'years', 'ai', 'all'];
+            btnIds.forEach(id => {
+                const btn = document.getElementById(`tab-btn-${id}`);
+                if (btn) {
+                    if (id === tabKey) {
+                        btn.style.background = 'rgba(96,165,250,0.2)';
+                        btn.style.color = '#60A5FA';
+                        btn.style.borderColor = 'rgba(96,165,250,0.5)';
+                        btn.classList.add('active');
+                    } else {
+                        btn.style.background = 'var(--bg-surface)';
+                        btn.style.color = 'var(--text-secondary)';
+                        btn.style.borderColor = 'var(--border-color)';
+                        btn.classList.remove('active');
+                    }
+                }
+            });
+
+            const cards = document.querySelectorAll('#admin-meta-container > .card');
+            cards.forEach((card, index) => {
+                const cardKeys = ['aftermarket', 'car-brands', 'categories', 'car-models', 'years', 'ai'];
+                if (tabKey === 'all' || cardKeys[index] === tabKey) {
+                    card.style.display = 'flex';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            if (cachedAdminMetaData) {
+                if (document.getElementById('tab-count-aftermarket')) document.getElementById('tab-count-aftermarket').textContent = (cachedAdminMetaData.aftermarketBrands || []).length;
+                if (document.getElementById('tab-count-car-brands')) document.getElementById('tab-count-car-brands').textContent = (cachedAdminMetaData.carBrands || []).length;
+                if (document.getElementById('tab-count-categories')) document.getElementById('tab-count-categories').textContent = (cachedAdminMetaData.categories || []).length;
+                if (document.getElementById('tab-count-car-models')) document.getElementById('tab-count-car-models').textContent = (cachedAdminMetaData.carModels || []).length;
+                if (document.getElementById('tab-count-years')) document.getElementById('tab-count-years').textContent = (cachedAdminMetaData.carYears || []).length;
+                if (document.getElementById('tab-count-ai')) document.getElementById('tab-count-ai').textContent = (cachedAdminMetaData.aiModels || []).length;
+            }
+        }
+
+        function applyPackageEntitlementsToUI(sub) {
+            if (!sub && currentUser && (currentUser.role === 'OWNER' || currentUser.role === 'SUPER_ADMIN')) {
+                sub = {
+                    vin_search_enabled: 1,
+                    api_access_enabled: 1,
+                    export_enabled: 1,
+                    ai_search_enabled: 1,
+                    granted_aftermarket_brands: null,
+                    granted_categories: null,
+                    granted_brands: null
+                };
+            }
+            
+            if (!sub) return;
+
+            // 1. VIN Search Input Box
+            const vinGroup = document.getElementById('s-vin')?.closest('.form-group');
+            if (vinGroup) {
+                const vinEnabled = !!(sub.vin_search_enabled === 1 || sub.vin_search_enabled === true || sub.vin_search_enabled === "1");
+                vinGroup.style.display = vinEnabled ? 'block' : 'none';
+            }
+
+            // 2. REST API Gateway Navigation & View
+            const apiNav = document.getElementById('nav-api-hub');
+            if (apiNav) {
+                const apiEnabled = !!(sub.api_access_enabled === 1 || sub.api_access_enabled === true || sub.api_access_enabled === "1");
+                apiNav.style.display = apiEnabled ? 'block' : 'none';
+            }
+
+            // 3. Data Export (CSV/Excel) Buttons
+            const exportEnabled = !!(sub.export_enabled === 1 || sub.export_enabled === true || sub.export_enabled === "1");
+            document.querySelectorAll('.btn-export-csv, .export-btn, #btn-export-master').forEach(el => {
+                el.style.display = exportEnabled ? 'inline-block' : 'none';
+            });
+
+            // 4. AI Cross-Reference Features
+            const aiEnabled = !!(sub.ai_search_enabled === 1 || sub.ai_search_enabled === true || sub.ai_search_enabled === "1");
+            document.querySelectorAll('#s-ai-toggle, .ai-feature-box, .btn-ai-resolve').forEach(el => {
+                el.style.display = aiEnabled ? 'inline-block' : 'none';
+            });
+
+            // 5. Aftermarket Brands Select Filter
+            const aftermarketGroup = document.getElementById('s-aftermarket-brand')?.closest('.form-group');
+            if (aftermarketGroup) {
+                const grantedAftermarket = sub.granted_aftermarket_brands || sub.user_aftermarket_brands || sub.aftermarket_brands;
+                if (Array.isArray(grantedAftermarket)) {
+                    if (grantedAftermarket.length === 0) {
+                        aftermarketGroup.style.display = 'none';
+                    } else {
+                        aftermarketGroup.style.display = 'block';
+                        const select = document.getElementById('s-aftermarket-brand');
+                        if (select) {
+                            Array.from(select.options).forEach(opt => {
+                                if (!opt.value) return;
+                                const match = grantedAftermarket.some(b => b.toLowerCase() === opt.value.toLowerCase());
+                                opt.style.display = match ? 'block' : 'none';
+                            });
+                        }
+                    }
+                } else {
+                    aftermarketGroup.style.display = 'block';
+                }
+            }
+
+            // 6. Parts Categories Select Filter
+            const catGroup = document.getElementById('s-category')?.closest('.form-group');
+            if (catGroup) {
+                const grantedCats = sub.granted_categories || sub.user_categories || sub.categories;
+                if (Array.isArray(grantedCats)) {
+                    if (grantedCats.length === 0) {
+                        catGroup.style.display = 'none';
+                    } else {
+                        catGroup.style.display = 'block';
+                        const select = document.getElementById('s-category');
+                        if (select) {
+                            Array.from(select.options).forEach(opt => {
+                                if (!opt.value) return;
+                                const match = grantedCats.some(c => c.toLowerCase() === opt.value.toLowerCase());
+                                opt.style.display = match ? 'block' : 'none';
+                            });
+                        }
+                    }
+                } else {
+                    catGroup.style.display = 'block';
+                }
+            }
+        }
+
         function renderAdminMetaOptions() {
             // Helper escape functions
             const escH = (s) => (s ? String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;') : '');
             const escQ = (s) => (s ? String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '&quot;') : '');
+
+            switchAdminMetaTab(currentActiveMetaTab);
 
             // 1. Aftermarket Brands
             const elAftermarketCount = document.getElementById('meta-aftermarket-count');
@@ -15611,7 +15790,18 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             const activeSub = document.getElementById(`staff-sub-${tab}`);
             if (activeSub) activeSub.style.display = 'block';
 
-            if (tab === 'sales' || tab === 'data') loadStaffWorkspaces();
+            const originEl = document.getElementById('staff-origin-text');
+            if (originEl) {
+                if (tab === 'sales') {
+                    originEl.innerHTML = '📍 <strong>ที่มาของข้อมูล (Sales & Trial Tasks):</strong> ดึงโดยตรงจากระบบสมัครสมาชิกบริการตนเอง (Self-Service Signups) และใบแจ้งหนี้ที่รอชำระเงิน';
+                } else if (tab === 'data') {
+                    originEl.innerHTML = '📍 <strong>ที่มาของข้อมูล (Data Review Tasks):</strong> ดึงโดยตรงจากตารางเสนอรายการอะไหล่ใหม่ (temp_parts) จากผู้ใช้งานและระบบ Scraper';
+                } else if (tab === 'support') {
+                    originEl.innerHTML = '📍 <strong>ที่มาของข้อมูล (Customer Inquiries):</strong> ดึงโดยตรงจากแบบฟอร์มติดต่อสอบถามหน้าเว็บไซต์ (Public Inbound Leads)';
+                }
+            }
+
+            if (tab === 'sales' || tab === 'data' || tab === 'support') loadStaffWorkspaces();
         }
 
         async function loadStaffWorkspaces() {
@@ -15621,39 +15811,67 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 if (data.success) {
                     // Sales Tasks
                     const salesTbody = document.getElementById('staff-sales-table-body');
-                    salesTbody.innerHTML = '';
-                    data.sales_tasks.forEach(l => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td><strong>${l.company_name}</strong></td>
-                            <td>${l.contact_person} (${l.phone || l.email})</td>
-                            <td><span class="status-badge" style="background: rgba(245, 158, 11, 0.15); color: #FBBF24;">${l.pipeline_stage}</span></td>
-                            <td><span class="code-badge">${(l.interested_plan_id || 'PRO').toUpperCase()}</span></td>
-                            <td>฿${(l.expected_mrr || 2990).toLocaleString()}</td>
-                            <td style="font-size: 0.75rem; color: var(--text-muted);">${l.notes || '-'}</td>
-                        `;
-                        salesTbody.appendChild(tr);
-                    });
+                    if (salesTbody) {
+                        salesTbody.innerHTML = '';
+                        if (!data.sales_tasks || data.sales_tasks.length === 0) {
+                            salesTbody.innerHTML = `
+                                <tr>
+                                    <td colspan="6" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                                        <i class="fa-solid fa-circle-check" style="font-size: 2rem; color: #10B981; margin-bottom: 0.5rem; display: block;"></i>
+                                        <strong>ไม่พบรายการงานขายหรือบัญชีทดลองค้างอยู่ในระบบ</strong><br>
+                                        <span style="font-size: 0.78rem;">📍 ข้อมูลจะปรากฏเมื่อมีผู้ใช้สมัครสมาชิกหรือขอใบเสนอราคาจากหน้าเว็บไซต์</span>
+                                    </td>
+                                </tr>
+                            `;
+                        } else {
+                            data.sales_tasks.forEach(l => {
+                                const tr = document.createElement('tr');
+                                tr.innerHTML = `
+                                    <td><strong>${l.company_name}</strong></td>
+                                    <td>${l.contact_person} (${l.phone || l.email})</td>
+                                    <td><span class="status-badge" style="background: rgba(245, 158, 11, 0.15); color: #FBBF24;">${l.pipeline_stage}</span></td>
+                                    <td><span class="code-badge">${(l.interested_plan_id || 'PRO').toUpperCase()}</span></td>
+                                    <td>฿${(l.expected_mrr || 2990).toLocaleString()}</td>
+                                    <td style="font-size: 0.75rem; color: var(--text-muted);">${l.notes || '-'}</td>
+                                `;
+                                salesTbody.appendChild(tr);
+                            });
+                        }
+                    }
 
                     // Data Tasks
                     const dataTbody = document.getElementById('staff-data-table-body');
-                    dataTbody.innerHTML = '';
-                    data.data_tasks.forEach(p => {
-                        const tr = document.createElement('tr');
-                        tr.innerHTML = `
-                            <td><strong>${p.brand || '-'}</strong></td>
-                            <td><span class="code-badge">${p.part_number || '-'}</span></td>
-                            <td><span class="oem-badge">${p.oem_number || '-'}</span></td>
-                            <td>${p.product_name_th || '-'}</td>
-                            <td>${p.car_brand || ''} ${p.car_model || ''}</td>
-                            <td><span class="status-badge unverified">${p.status}</span></td>
-                            <td style="text-align: right;">
-                                <button class="btn btn-primary btn-sm" onclick="confirmTempPart(${p.id})"><i class="fa-solid fa-check"></i></button>
-                                <button class="btn btn-secondary btn-sm" onclick="rejectTempPart(${p.id})"><i class="fa-solid fa-xmark"></i></button>
-                            </td>
-                        `;
-                        dataTbody.appendChild(tr);
-                    });
+                    if (dataTbody) {
+                        dataTbody.innerHTML = '';
+                        if (!data.data_tasks || data.data_tasks.length === 0) {
+                            dataTbody.innerHTML = `
+                                <tr>
+                                    <td colspan="7" style="text-align: center; padding: 2rem; color: var(--text-muted);">
+                                        <i class="fa-solid fa-circle-check" style="font-size: 2rem; color: #10B981; margin-bottom: 0.5rem; display: block;"></i>
+                                        <strong>ไม่พบรายการอะไหล่ใหม่อยู่ในคิวรอตรวจสอบ (temp_parts)</strong><br>
+                                        <span style="font-size: 0.78rem;">📍 ข้อมูลจะปรากฏเมื่อมีสมาชิกเสนอเพิ่มอะไหล่ใหม่ หรือจากระบบค้นหาภายนอก Scraper</span>
+                                    </td>
+                                </tr>
+                            `;
+                        } else {
+                            data.data_tasks.forEach(p => {
+                                const tr = document.createElement('tr');
+                                tr.innerHTML = `
+                                    <td><strong>${p.brand || '-'}</strong></td>
+                                    <td><span class="code-badge">${p.part_number || '-'}</span></td>
+                                    <td><span class="oem-badge">${p.oem_number || '-'}</span></td>
+                                    <td>${p.product_name_th || '-'}</td>
+                                    <td>${p.car_brand || ''} ${p.car_model || ''}</td>
+                                    <td><span class="status-badge unverified">${p.status}</span></td>
+                                    <td style="text-align: right;">
+                                        <button class="btn btn-primary btn-sm" onclick="confirmTempPart(${p.id})"><i class="fa-solid fa-check"></i></button>
+                                        <button class="btn btn-secondary btn-sm" onclick="rejectTempPart(${p.id})"><i class="fa-solid fa-xmark"></i></button>
+                                    </td>
+                                `;
+                                dataTbody.appendChild(tr);
+                            });
+                        }
+                    }
                 }
             } catch (err) {
                 console.error("Error loading staff tasks:", err);

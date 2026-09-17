@@ -11,7 +11,7 @@ from backend.web_scraper import scrape_external_parts
 async def run_daily_scrape():
     print(f"[{datetime.datetime.now().isoformat()}] Starting scheduled daily scraping task (04:00 AM job)...")
     # Sample queries to scrape daily to keep system updated
-    sample_queries = ["04465-52260", "8-98079-104-0", "52610-TR7-B03"]
+    sample_queries = ["04465-52260", "8-98079-104-0"]
     for q in sample_queries:
         try:
             print(f"Scraping for query: {q}")

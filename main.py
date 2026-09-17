@@ -318,6 +318,12 @@ async def login(req: LoginRequest):
         user_role = "STAFF"
     elif req.username.strip().lower() in ["user_starter", "customer"]:
         user_role = "CUSTOMER"
+
+    # Enforce active/verified email status for non-system accounts
+    if user_role not in ["OWNER", "SUPER_ADMIN"]:
+        is_act = user.get("is_active")
+        if is_act in [0, "0", False]:
+            return {"success": False, "error": "กรุณากดยืนยันตัวตนผ่านลิงก์ในอีเมลเพื่อเข้าสู่กระบวนการจ่ายเงินก่อนเข้าใช้งานระบบ"}
         
     return {
         "success": True,
@@ -414,11 +420,13 @@ async def verify_email_link_endpoint(token: str):
     res = verify_email_token_db(token)
     if res.get("success"):
         email = res.get("email", "")
+        redirect_url = f"/?verified=1&email={email}&action=payment"
         return f"""
         <!DOCTYPE html>
         <html lang="th">
         <head>
             <meta charset="UTF-8">
+            <meta http-equiv="refresh" content="2;url={redirect_url}">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>ยืนยันอีเมลสำเร็จ - Siam Auto Parts</title>
             <style>
@@ -435,8 +443,8 @@ async def verify_email_link_endpoint(token: str):
             <div class="card">
                 <div class="icon">✓</div>
                 <h1>ยืนยันอีเมลสำเร็จเรียบร้อยแล้ว!</h1>
-                <p>อีเมล <strong style="color: #60A5FA;">{email}</strong> ของคุณได้รับการยืนยันตัวตนเรียบร้อยแล้ว บัญชีองค์กรของคุณพร้อมใช้งานแล้ว สามารถกลับไปหน้าหลักเพื่อเข้าสู่ระบบได้ทันที</p>
-                <a href="/" class="btn">🚀 เข้าสู่ระบบแพลตฟอร์ม</a>
+                <p>อีเมล <strong style="color: #60A5FA;">{email}</strong> ของคุณได้รับการยืนยันเรียบร้อยแล้ว<br>ระบบกำลังนำท่านเข้าสู่กระบวนการเลือกแพ็กเกจและชำระเงิน...</p>
+                <a href="{redirect_url}" class="btn">💳 เข้าสู่กระบวนการชำระเงิน</a>
             </div>
         </body>
         </html>
@@ -1036,7 +1044,7 @@ async def admin_scrape_url(custom_url: str = Form(...), query: str = Form(""), a
             if not oem or oem == "NOT_FOUND" or oem == query:
                 try:
                     # Request Gemini to guess/resolve the OEM part number matching the aftermarket info
-                    prompt = f"Find the OEM part number matching aftermarket brand '{item.get('brand')}', part number '{item.get('part_number')}', for car '{item.get('car_brand')} {item.get('car_model')}'. Return ONLY the oem code (e.g. '04465-52260' or '52610-TR7-B03'). Do not explain. If not found, return a default OEM."
+                    prompt = f"Find the OEM part number matching aftermarket brand '{item.get('brand')}', part number '{item.get('part_number')}', for car '{item.get('car_brand')} {item.get('car_model')}'. Return ONLY the oem code. Do not explain."
                     res = await call_gemini_json(prompt)
                     # Handle response formats
                     if isinstance(res, dict) and "oem" in res:
@@ -1044,9 +1052,9 @@ async def admin_scrape_url(custom_url: str = Form(...), query: str = Form(""), a
                     elif isinstance(res, str) and len(res.strip()) < 30 and res.strip() != "":
                         item["oem_number"] = res.strip()
                     else:
-                        item["oem_number"] = "52610-TR7-B03"
+                        item["oem_number"] = item.get("part_number", "")
                 except:
-                    item["oem_number"] = "52610-TR7-B03"
+                    item["oem_number"] = item.get("part_number", "")
                     
         return {
             "success": True,

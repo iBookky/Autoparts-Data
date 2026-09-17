@@ -2361,13 +2361,23 @@ def get_org_invoices(org_id: int):
     conn = get_db_connection()
     cursor = conn.cursor()
     cursor.execute("""
-        SELECT * FROM invoices
-        WHERE org_id = ?
-        ORDER BY created_at DESC
+        SELECT i.*, o.name as org_name, s.plan_id, p.name as plan_name
+        FROM invoices i
+        LEFT JOIN organizations o ON o.id = i.org_id
+        LEFT JOIN subscriptions s ON s.org_id = i.org_id
+        LEFT JOIN plans p ON p.id = s.plan_id
+        WHERE i.org_id = ?
+        ORDER BY i.created_at DESC
     """, (org_id,))
     rows = cursor.fetchall()
+    result = []
+    for r in rows:
+        inv_dict = dict(r)
+        cursor.execute("SELECT * FROM invoice_items WHERE invoice_id = ?", (inv_dict["id"],))
+        inv_dict["items"] = [dict(item) for item in cursor.fetchall()]
+        result.append(inv_dict)
     conn.close()
-    return [dict(r) for r in rows]
+    return result
 
 def get_admin_saas_metrics():
     """
@@ -3746,7 +3756,7 @@ def verify_email_token_db(token_or_code: str) -> Dict[str, Any]:
         v_id = row["id"]
         email = row["email"]
         cursor.execute("UPDATE verification_codes SET is_used = 1 WHERE id = ?", (v_id,))
-        cursor.execute("UPDATE users SET is_active = 1 WHERE LOWER(email) = ?", (email.lower(),))
+        cursor.execute("UPDATE users SET is_active = 1 WHERE LOWER(email) = ? OR LOWER(username) = ?", (email.lower(), email.lower()))
         conn.commit()
         conn.close()
         return {"success": True, "email": email}
@@ -3764,15 +3774,11 @@ def is_email_verified_db(email: str) -> bool:
     return True if row else False
 
 def validate_verification_code(email: str, code_or_token: str) -> bool:
-    """Validates if OTP or verification link token is correct, active, and not expired."""
+    """Validates if verification link token or OTP code is correct, active, and not expired."""
     import datetime
     clean_val = str(code_or_token).strip()
     clean_email = email.strip().lower()
     
-    # Universal fallback dev OTP code for instant verification/automated testing
-    if clean_val in ["999999", "VERIFIED", "TEST"]:
-        return True
-        
     if is_email_verified_db(clean_email):
         return True
 
@@ -3860,7 +3866,6 @@ def register_trial_tenant_db(data: Dict[str, Any]) -> Dict[str, Any]:
         phone = data.get("phone", "").strip()
         segment = data.get("segment", "GARAGE").strip().upper()
         plan_id = data.get("plan_id", "free_trial").strip().lower()
-        verification_code = str(data.get("verification_code") or "999999").strip()
         
         if not email or not password or not company_name:
             return {"success": False, "error": "กรุณาระบุข้อมูลบริษัท, อีเมล และรหัสผ่านให้ครบถ้วน"}
@@ -3868,15 +3873,8 @@ def register_trial_tenant_db(data: Dict[str, Any]) -> Dict[str, Any]:
         if len(password) < 6:
             return {"success": False, "error": "รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร"}
             
-        # Validate Email Verification OTP
-        if not verification_code:
-            return {"success": False, "error": "กรุณากรอกรหัสยืนยันอีเมล (OTP 6 หลัก)"}
-            
-        if not validate_verification_code(email, verification_code):
-            return {"success": False, "error": "รหัสยืนยันอีเมล (OTP) ไม่ถูกต้องหรือหมดอายุแล้ว กรุณากดขอรหัสใหม่อีกครั้ง"}
-            
         # Check existing user
-        cursor.execute("SELECT id FROM users WHERE username = ?", (email,))
+        cursor.execute("SELECT id FROM users WHERE LOWER(username) = ? OR LOWER(email) = ?", (email, email))
         if cursor.fetchone():
             return {"success": False, "error": "อีเมลหรือชื่อผู้ใช้นี้มีอยู่ในระบบแล้ว กรุณาเข้าสู่ระบบ"}
             
@@ -3884,11 +3882,17 @@ def register_trial_tenant_db(data: Dict[str, Any]) -> Dict[str, Any]:
         import hashlib
         pwd_hash = hashlib.sha256(password.encode("utf-8")).hexdigest()
         
-        # 1. Insert User (platform role 'STAFF', org_role 'OWNER')
-        cursor.execute("""
-            INSERT INTO users (username, password, role)
-            VALUES (?, ?, 'STAFF')
-        """, (email, pwd_hash))
+        # 1. Insert User (platform role 'STAFF', org_role 'OWNER', initially is_active = 0 pending email verification)
+        try:
+            cursor.execute("""
+                INSERT INTO users (username, email, password, role, is_active)
+                VALUES (?, ?, ?, 'STAFF', 0)
+            """, (email, email, pwd_hash))
+        except Exception:
+            cursor.execute("""
+                INSERT INTO users (username, password, role)
+                VALUES (?, ?, 'STAFF')
+            """, (email, pwd_hash))
         user_id = cursor.lastrowid
         
         # 2. Insert Organization
@@ -4237,69 +4241,56 @@ def update_platform_settings(data: Dict[str, Any]) -> bool:
 def clean_production_database() -> Dict[str, Any]:
     conn = get_db_connection()
     cursor = conn.cursor()
+    
+    def safe_exec(sql, params=()):
+        try:
+            cursor.execute("SAVEPOINT sp_clean")
+            cursor.execute(sql, params)
+            cursor.execute("RELEASE SAVEPOINT sp_clean")
+        except Exception as e:
+            try:
+                cursor.execute("ROLLBACK TO SAVEPOINT sp_clean")
+            except Exception:
+                conn.rollback()
+
     try:
         # 1. Clean Revenue, Invoices, and Billing Transactions
-        try: cursor.execute("DELETE FROM invoice_items")
-        except Exception: pass
-        try: cursor.execute("DELETE FROM invoices")
-        except Exception: pass
-        try: cursor.execute("DELETE FROM payment_transactions")
-        except Exception: pass
-        try: cursor.execute("DELETE FROM subscription_items")
-        except Exception: pass
-        try: cursor.execute("DELETE FROM subscription_entitlements_snapshot")
-        except Exception: pass
-        try: cursor.execute("DELETE FROM customer_subscriptions")
-        except Exception: pass
-        try: cursor.execute("DELETE FROM subscriptions")
-        except Exception: pass
-        try: cursor.execute("DELETE FROM coupon_redemptions")
-        except Exception: pass
+        safe_exec("DELETE FROM invoice_items")
+        safe_exec("DELETE FROM invoices")
+        safe_exec("DELETE FROM payment_transactions")
+        safe_exec("DELETE FROM subscription_items")
+        safe_exec("DELETE FROM subscription_entitlements_snapshot")
+        safe_exec("DELETE FROM customer_subscriptions")
+        safe_exec("DELETE FROM subscriptions")
+        safe_exec("DELETE FROM coupon_redemptions")
         
         # 2. Clean Customers & Organizations
-        try: cursor.execute("DELETE FROM organization_invitations")
-        except Exception: pass
-        try: cursor.execute("DELETE FROM organization_members")
-        except Exception: pass
-        try: cursor.execute("DELETE FROM customer_organizations")
-        except Exception: pass
-        try: cursor.execute("DELETE FROM organizations")
-        except Exception: pass
-        try: cursor.execute("DELETE FROM crm_leads")
-        except Exception: pass
-        try: cursor.execute("DELETE FROM customer_leads")
-        except Exception: pass
+        safe_exec("DELETE FROM organization_invitations")
+        safe_exec("DELETE FROM organization_members")
+        safe_exec("DELETE FROM customer_organizations")
+        safe_exec("DELETE FROM organizations")
+        safe_exec("DELETE FROM crm_leads")
+        safe_exec("DELETE FROM customer_leads")
         
         # 3. Clean Usage Logs, Search Analytics, and AI Stats
-        try: cursor.execute("DELETE FROM usage_logs")
-        except Exception: pass
-        try: cursor.execute("DELETE FROM usage_records")
-        except Exception: pass
-        try: cursor.execute("DELETE FROM search_analytics")
-        except Exception: pass
-        try: cursor.execute("DELETE FROM search_logs")
-        except Exception: pass
-        try: cursor.execute("DELETE FROM user_favorites")
-        except Exception: pass
-        try: cursor.execute("DELETE FROM ai_usage_stats")
-        except Exception: pass
+        safe_exec("DELETE FROM usage_logs")
+        safe_exec("DELETE FROM usage_records")
+        safe_exec("DELETE FROM search_analytics")
+        safe_exec("DELETE FROM search_logs")
+        safe_exec("DELETE FROM user_favorites")
+        safe_exec("DELETE FROM ai_usage_stats")
         
         # 4. Clean Alerts & Audit Logs
-        try: cursor.execute("DELETE FROM owner_alerts")
-        except Exception: pass
-        try: cursor.execute("DELETE FROM platform_audit_logs")
-        except Exception: pass
-        try: cursor.execute("DELETE FROM commercial_audit_logs")
-        except Exception: pass
-        try: cursor.execute("DELETE FROM organization_audit_logs")
-        except Exception: pass
+        safe_exec("DELETE FROM owner_alerts")
+        safe_exec("DELETE FROM platform_audit_logs")
+        safe_exec("DELETE FROM commercial_audit_logs")
+        safe_exec("DELETE FROM organization_audit_logs")
         
         # 5. Do NOT touch master_parts or temp_parts tables under any circumstances
         pass
         
         # 6. Clean Staff, Admin, Customer Users (Keep ONLY Owner & SuperAdmin)
-        try: cursor.execute("DELETE FROM users WHERE LOWER(username) NOT IN ('owner', 'superadmin')")
-        except Exception: pass
+        safe_exec("DELETE FROM users WHERE LOWER(username) NOT IN ('owner', 'superadmin')")
         
         # Ensure Owner and SuperAdmin accounts exist with password admin123
         try:
@@ -4309,7 +4300,7 @@ def clean_production_database() -> Dict[str, Any]:
             if not cursor.fetchone():
                 try:
                     cursor.execute(
-                        "INSERT INTO users (username, password, role, email) VALUES (?, ?, ?, ?)",
+                        "INSERT INTO users (username, password, role, email, is_active) VALUES (?, ?, ?, ?, 1)",
                         ("owner", pwd_hash, "OWNER", "owner@autocentric.net")
                     )
                 except Exception:
@@ -4318,14 +4309,14 @@ def clean_production_database() -> Dict[str, Any]:
                         ("owner", pwd_hash, "OWNER")
                     )
             else:
-                cursor.execute("UPDATE users SET password = ?, role = 'OWNER' WHERE LOWER(username) = 'owner'", (pwd_hash,))
+                cursor.execute("UPDATE users SET password = ?, role = 'OWNER', is_active = 1 WHERE LOWER(username) = 'owner'", (pwd_hash,))
                 
             # Superadmin
             cursor.execute("SELECT id FROM users WHERE LOWER(username) = 'superadmin'")
             if not cursor.fetchone():
                 try:
                     cursor.execute(
-                        "INSERT INTO users (username, password, role, email) VALUES (?, ?, ?, ?)",
+                        "INSERT INTO users (username, password, role, email, is_active) VALUES (?, ?, ?, ?, 1)",
                         ("superadmin", pwd_hash, "SUPER_ADMIN", "superadmin@autocentric.net")
                     )
                 except Exception:
@@ -4334,7 +4325,9 @@ def clean_production_database() -> Dict[str, Any]:
                         ("superadmin", pwd_hash, "SUPER_ADMIN")
                     )
             else:
-                cursor.execute("UPDATE users SET password = ?, role = 'SUPER_ADMIN' WHERE LOWER(username) = 'superadmin'", (pwd_hash,))
+                cursor.execute("UPDATE users SET password = ?, role = 'SUPER_ADMIN', is_active = 1 WHERE LOWER(username) = 'superadmin'", (pwd_hash,))
+        except Exception as u_err:
+            print(f"Error ensuring owner/superadmin: {u_err}")
         except Exception as u_err:
             print(f"Error ensuring owner/superadmin: {u_err}")
         
