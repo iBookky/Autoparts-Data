@@ -5373,6 +5373,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
         function showLandingPage() {
             clearLoginFormFields();
+            if (typeof resetTrialForm === 'function') resetTrialForm();
+            if (typeof resetEnterpriseForm === 'function') resetEnterpriseForm();
             document.getElementById('public-landing-view').style.display = 'block';
             document.getElementById('auth-screen').style.display = 'none';
             document.getElementById('main-app').style.display = 'none';
@@ -5383,6 +5385,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
         function showAuthScreen() {
             clearLoginFormFields();
+            if (typeof resetTrialForm === 'function') resetTrialForm();
+            if (typeof resetEnterpriseForm === 'function') resetEnterpriseForm();
             document.getElementById('public-landing-view').style.display = 'none';
             document.getElementById('auth-screen').style.display = 'flex';
             document.getElementById('main-app').style.display = 'none';
@@ -5710,7 +5714,30 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             }
         }
 
+        function resetTrialForm() {
+            const fields = ['trial-company-name', 'trial-contact-name', 'trial-email', 'trial-phone', 'trial-password'];
+            fields.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            const segmentEl = document.getElementById('trial-segment');
+            if (segmentEl) segmentEl.selectedIndex = 0;
+            
+            const radioTrial = document.getElementById('signup-mode-trial');
+            if (radioTrial) radioTrial.checked = true;
+
+            const statusCard = document.getElementById('trial-email-link-status');
+            if (statusCard) statusCard.style.display = 'none';
+
+            const btnOtp = document.getElementById('btn-request-otp');
+            if (btnOtp) {
+                btnOtp.disabled = false;
+                btnOtp.innerHTML = '<i class="fa-solid fa-paper-plane"></i> ส่งลิงก์ยืนยันตัวตน';
+            }
+        }
+
         function openTrialModal(planId = 'professional') {
+            resetTrialForm();
             document.getElementById('modal-trial-register').style.display = 'flex';
             if (planId && document.getElementById('trial-plan-id')) {
                 document.getElementById('trial-plan-id').value = planId;
@@ -5720,6 +5747,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
         function closeTrialModal() {
             document.getElementById('modal-trial-register').style.display = 'none';
+            resetTrialForm();
         }
 
         let registrationVerifyToken = "999999";
@@ -5866,12 +5894,24 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             }
         }
 
+        function resetEnterpriseForm() {
+            const fields = ['contact-company-name', 'contact-name', 'contact-email', 'contact-phone', 'contact-message'];
+            fields.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.value = '';
+            });
+            const planEl = document.getElementById('contact-plan');
+            if (planEl) planEl.selectedIndex = 0;
+        }
+
         function openEnterpriseModal() {
+            resetEnterpriseForm();
             document.getElementById('modal-enterprise-contact').style.display = 'flex';
         }
 
         function closeEnterpriseModal() {
             document.getElementById('modal-enterprise-contact').style.display = 'none';
+            resetEnterpriseForm();
         }
 
         async function handlePublicContact(e) {
