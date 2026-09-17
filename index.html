@@ -12315,6 +12315,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 const data = await res.json();
                 if (data.success) {
                     cachedOwnerCustomers = data.customers || [];
+                    window.cachedOwnerCustomers = cachedOwnerCustomers;
                     renderOwnerCustomerTable(cachedOwnerCustomers);
                 }
             } catch (err) {
@@ -13481,8 +13482,44 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         }
 
         // ================= OWNER CUSTOMER & PACKAGE MANAGEMENT =================
-        function openEditCustomerModal(orgId) {
-            const customer = (window.cachedOwnerCustomers || []).find(c => c.id === orgId);
+        async function openEditCustomerModal(param) {
+            let customer = null;
+            if (typeof param === 'object' && param !== null) {
+                customer = param;
+            } else {
+                const orgId = param;
+                const pool = (window.cachedOwnerCustomers && window.cachedOwnerCustomers.length > 0) 
+                    ? window.cachedOwnerCustomers 
+                    : ((typeof cachedOwnerCustomers !== 'undefined' && cachedOwnerCustomers) ? cachedOwnerCustomers : []);
+                customer = pool.find(c => String(c.id) === String(orgId));
+
+                if (!customer && orgId) {
+                    try {
+                        const res = await fetch(`/api/owner/customers/${orgId}/360`, { headers: getAuthHeaders() });
+                        const data = await res.json();
+                        if (data.success && data.customer) {
+                            const o = data.customer.organization || {};
+                            const s = data.customer.subscription || {};
+                            customer = {
+                                id: o.id || orgId,
+                                name: o.name || '',
+                                legal_name: o.legal_name || '',
+                                contact_name: o.contact_person || '',
+                                industry_type: o.industry || o.business_type || 'GARAGE',
+                                email: o.billing_email || o.email || '',
+                                phone: o.phone || '',
+                                tax_id: o.tax_id || '',
+                                billing_address: o.address || '',
+                                subscription_status: s.status || 'ACTIVE',
+                                plan_tier: s.plan_id || s.plan_name || o.plan_tier || 'STARTER'
+                            };
+                        }
+                    } catch (e) {
+                        console.error("Error fetching customer fallback:", e);
+                    }
+                }
+            }
+
             if (!customer) {
                 showToast("ไม่พบข้อมูลองค์กรลูกค้า", "warning");
                 return;
@@ -13490,13 +13527,13 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
             document.getElementById('edit-cust-org-id').value = customer.id;
             document.getElementById('edit-cust-name').value = customer.name || '';
-            document.getElementById('edit-cust-contact').value = customer.contact_name || '';
-            document.getElementById('edit-cust-industry').value = customer.industry_type || 'GARAGE';
+            document.getElementById('edit-cust-contact').value = customer.contact_name || customer.contact_person || '';
+            document.getElementById('edit-cust-industry').value = customer.industry_type || customer.industry || 'GARAGE';
             document.getElementById('edit-cust-email').value = customer.email || customer.billing_email || '';
             document.getElementById('edit-cust-phone').value = customer.phone || '';
             document.getElementById('edit-cust-taxid').value = customer.tax_id || '';
             document.getElementById('edit-cust-legal-name').value = customer.legal_name || '';
-            document.getElementById('edit-cust-address').value = customer.billing_address || '';
+            document.getElementById('edit-cust-address').value = customer.billing_address || customer.address || '';
             const statusSelect = document.getElementById('edit-cust-status');
             if (statusSelect) {
                 statusSelect.value = (customer.subscription_status === 'ACTIVE' || customer.subscription_status === 'TRIALING') ? 'ACTIVE' : (customer.subscription_status || 'SUSPENDED');
@@ -13568,20 +13605,52 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             }
         }
 
-        function openChangeCustomerPlanModal(orgId) {
-            const customer = (window.cachedOwnerCustomers || []).find(c => c.id === orgId);
+        async function openChangeCustomerPlanModal(param) {
+            let customer = null;
+            if (typeof param === 'object' && param !== null) {
+                customer = param;
+            } else {
+                const orgId = param;
+                const pool = (window.cachedOwnerCustomers && window.cachedOwnerCustomers.length > 0) 
+                    ? window.cachedOwnerCustomers 
+                    : ((typeof cachedOwnerCustomers !== 'undefined' && cachedOwnerCustomers) ? cachedOwnerCustomers : []);
+                customer = pool.find(c => String(c.id) === String(orgId));
+
+                if (!customer && orgId) {
+                    try {
+                        const res = await fetch(`/api/owner/customers/${orgId}/360`, { headers: getAuthHeaders() });
+                        const data = await res.json();
+                        if (data.success && data.customer) {
+                            const o = data.customer.organization || {};
+                            const s = data.customer.subscription || {};
+                            customer = {
+                                id: o.id || orgId,
+                                name: o.name || '',
+                                plan_tier: s.plan_id || s.plan_name || o.plan_tier || 'STARTER',
+                                subscription_status: s.status || 'ACTIVE',
+                                billing_interval: s.billing_cycle || 'MONTHLY',
+                                search_quota: s.search_quota || 5000
+                            };
+                        }
+                    } catch (e) {
+                        console.error("Error fetching customer plan fallback:", e);
+                    }
+                }
+            }
+
             if (!customer) {
                 showToast("ไม่พบข้อมูลองค์กรลูกค้า", "warning");
                 return;
             }
 
             document.getElementById('change-plan-org-id').value = customer.id;
-            document.getElementById('change-plan-org-name').textContent = `${customer.name} (รหัส: ${customer.id})`;
+            document.getElementById('change-plan-org-name').textContent = `${customer.name} (รหัส: #${customer.id})`;
             
             const planSelect = document.getElementById('change-plan-select');
             if (planSelect) {
                 const planKey = (customer.plan_tier || 'starter').toLowerCase();
-                planSelect.value = ['starter', 'professional', 'business', 'enterprise'].includes(planKey) ? planKey : 'starter';
+                const validOptions = Array.from(planSelect.options).map(o => o.value);
+                planSelect.value = validOptions.includes(planKey) ? planKey : 'starter';
             }
 
             const statusSelect = document.getElementById('change-plan-status');
