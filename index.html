@@ -6263,7 +6263,12 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             document.getElementById('staff-nav-group').style.display = (isStaff || isAdmin || isSuperAdmin || isOwner) ? 'block' : 'none';
             // Apply package entitlements to UI (VIN search, API, export, AI, categories, brands)
             applyPackageEntitlementsToUI(null);
-            loadSubscriptionPlans();
+            // NOTE: loadSubscriptionPlans() is called per-role below:
+            // - For OWNER/SUPERADMIN/ADMIN/STAFF: fire-and-forget (non-awaited)
+            // - For CUSTOMER: awaited in the else branch to enforce payment gate before routing
+            if (isOwner || isSuperAdmin || isAdmin || isStaff) {
+                loadSubscriptionPlans(); // async, non-blocking for privileged roles
+            }
             const cockpitToggleBtn = document.getElementById('owner-cockpit-toggle-btn');
             const customerNavTitle = document.getElementById('customer-nav-title');
             
@@ -6360,11 +6365,23 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 if (cockpitToggleBtn) cockpitToggleBtn.style.display = 'none';
                 if (customerNavTitle) customerNavTitle.textContent = 'Main Menu';
                 
-                if (targetViewFromPath && !['owner-view', 'superadmin-view', 'admin-view', 'staff-view'].includes(targetViewFromPath)) {
-                    switchSaaSView(targetViewFromPath, null, false);
-                } else {
-                    switchSaaSView('search-view', null, false);
+                // For customers: load subscription FIRST to determine if account is active.
+                // This prevents unpaid customers from briefly seeing search-view before redirect.
+                await loadSubscriptionPlans();
+
+                // After subscription load, only navigate to requested view if account is active.
+                // If inactive, loadSubscriptionPlans() will have already redirected to subscription+checkout.
+                const subStatusNow = (window._currentSubscription ? (window._currentSubscription.status || '') : '').toUpperCase();
+                const isNowInactive = ['PAST_DUE', 'PENDING_PAYMENT', 'UNPAID', 'SUSPENDED', 'CANCELLED', 'EXPIRED', 'INACTIVE'].includes(subStatusNow);
+
+                if (!isNowInactive) {
+                    if (targetViewFromPath && !['owner-view', 'superadmin-view', 'admin-view', 'staff-view'].includes(targetViewFromPath)) {
+                        switchSaaSView(targetViewFromPath, null, false);
+                    } else {
+                        switchSaaSView('search-view', null, false);
+                    }
                 }
+                // If inactive, the redirect was already handled inside loadSubscriptionPlans()
             }
 
             await loadSaaSContext();
@@ -6526,6 +6543,27 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             switchSaaSView(viewId, null, false);
         });
 
+        // Update nav button visual state for locked views
+        function updateNavLockState() {
+            const subStatus = (window._currentSubscription ? (window._currentSubscription.status || '') : '').toUpperCase();
+            const isInactiveSub = ['PAST_DUE', 'PENDING_PAYMENT', 'UNPAID', 'SUSPENDED', 'CANCELLED', 'EXPIRED', 'INACTIVE'].includes(subStatus);
+            const role = currentUser ? currentUser.role : 'CUSTOMER';
+            const isPrivilegedUser = ['OWNER', 'SUPER_ADMIN'].includes(role);
+            const shouldLock = !isPrivilegedUser && isInactiveSub && !!window._currentSubscription;
+
+            ['nav-search', 'nav-crossref', 'nav-favorites'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (!btn) return;
+                if (shouldLock) {
+                    btn.classList.add('nav-item-locked');
+                    btn.title = 'กรุณาชำระเงินเพื่อปลดล็อกการใช้งาน';
+                } else {
+                    btn.classList.remove('nav-item-locked');
+                    btn.title = '';
+                }
+            });
+        }
+
         function switchSaaSView(viewId, element, updateUrl = true) {
             // Enforce Role Boundaries on View Switching
             const privilegedViews = {
@@ -6540,20 +6578,24 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 viewId = 'search-view';
             }
 
-            // Enforce Payment Gate & Lock Overlays for Unpaid / Past-Due Accounts
+            // === HARD BLOCK for Unpaid / Inactive Accounts ===
+            // For CUSTOMER role, if subscription is not active, completely block access
+            // to search/crossref/favorites and redirect to payment checkout.
             const subStatus = (window._currentSubscription ? (window._currentSubscription.status || '') : '').toUpperCase();
             const isInactiveSub = ['PAST_DUE', 'PENDING_PAYMENT', 'UNPAID', 'SUSPENDED', 'CANCELLED', 'EXPIRED', 'INACTIVE'].includes(subStatus);
             const isPrivilegedUser = ['OWNER', 'SUPER_ADMIN'].includes(role);
-            const showLockOverlay = (!isPrivilegedUser && isInactiveSub);
+            const lockedViews = ['search-view', 'crossref-view', 'favorites-view'];
 
-            // Toggle Dark Grey Translucent Lock Overlay Masks on Views
-            ['unpaid-overlay-search', 'unpaid-overlay-crossref', 'unpaid-overlay-favorites'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.style.display = showLockOverlay ? 'flex' : 'none';
-            });
-
-            if (showLockOverlay && !window._hasShownPendingPaymentNotice) {
-                notifyPendingPaymentOnce();
+            // Only enforce if we have already loaded the subscription (to avoid blocking on first load)
+            if (!isPrivilegedUser && isInactiveSub && lockedViews.includes(viewId) && window._currentSubscription) {
+                // Block navigation — redirect to subscription + open payment modal
+                if (!window._hasShownPendingPaymentNotice) {
+                    window._hasShownPendingPaymentNotice = true;
+                    showToast("🔒 บัญชีของคุณยังไม่ได้รับการเปิดใช้งาน กรุณาชำระเงินเพื่อปลดล็อกฟีเจอร์ทั้งหมด", "warning");
+                }
+                // Force redirect to subscription view and open checkout
+                viewId = 'subscription-view';
+                setTimeout(() => triggerDirectPaymentCheckout(window._currentSubscription), 300);
             }
 
             // Sync URL Bar seamlessly without page reload
@@ -7441,6 +7483,9 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     document.getElementById('current-sub-renewal').textContent = pEnd;
                     
                     applyPackageEntitlementsToUI(sub);
+
+                    // Update nav lock visual state immediately after subscription data is received
+                    updateNavLockState();
 
                     if (!isPrivilegedUser && isInactiveSub) {
                         switchSaaSView('subscription-view', null, false);

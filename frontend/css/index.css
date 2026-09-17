@@ -4470,6 +4470,34 @@ select.form-control option {
     box-shadow: 0 12px 28px rgba(56, 189, 248, 0.3);
 }
 
+/* ================= NAV ITEM LOCKED STATE (Unpaid Account) ================= */
+.nav-item.nav-item-locked {
+    opacity: 0.45;
+    cursor: not-allowed;
+    position: relative;
+    pointer-events: auto; /* keep clickable so switchSaaSView can intercept & redirect */
+    filter: grayscale(0.6);
+}
+.nav-item.nav-item-locked::after {
+    content: '\f023'; /* fa-lock */
+    font-family: 'Font Awesome 6 Free';
+    font-weight: 900;
+    font-size: 0.62rem;
+    position: absolute;
+    right: 0.6rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #F59E0B;
+    opacity: 0.9;
+}
+.nav-item.nav-item-locked:hover {
+    background-color: rgba(245, 158, 11, 0.06);
+    color: var(--text-secondary);
+}
+.nav-item.nav-item-locked:hover i {
+    color: #F59E0B;
+}
+
 /* ================= UNPAID ACCOUNT LOCK OVERLAY MASK ================= */
 .unpaid-view-lock-overlay {
     position: absolute;
