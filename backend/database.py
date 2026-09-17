@@ -2144,6 +2144,18 @@ def update_org_category_entitlements(org_id: int, selected_categories: List[str]
     
     clean_cats = [str(c).strip() for c in selected_categories if str(c).strip()]
     
+    # Check existing granted categories - cannot swap/remove once activated
+    cursor.execute(
+        "SELECT entitlement_value FROM entitlements WHERE org_id = ? AND entitlement_type = 'CATEGORY' AND is_granted = 1",
+        (org_id,)
+    )
+    existing_cats = set(r["entitlement_value"] for r in cursor.fetchall())
+    if existing_cats and '*' not in existing_cats:
+        for ec in existing_cats:
+            if ec not in clean_cats:
+                conn.close()
+                return False, "ไม่สามารถเปลี่ยนหรือสลับหมวดหมู่สินค้าที่สมัครใช้บริการแล้วได้ สิทธิ์เดิมจะถูกล็อคตามสัญญา", list(existing_cats)
+
     if not is_unlimited and len(clean_cats) > max_c:
         conn.close()
         return False, f"Selected categories count ({len(clean_cats)}) exceeds plan limit ({max_c}).", []
@@ -2207,12 +2219,39 @@ def get_org_aftermarket_brand_entitlements(org_id: int) -> Dict[str, Any]:
 def update_org_aftermarket_brand_entitlements(org_id: int, selected_brands: List[str]) -> Tuple[bool, str, List[str]]:
     """
     Activates specific aftermarket brand entitlements for an organization package.
+    Strictly forbids removing or swapping previously granted brands (they are locked upon subscription).
     """
     conn = get_db_connection()
     cursor = conn.cursor()
     
     clean_brands = [str(b).strip().upper() for b in selected_brands if str(b).strip()]
-    
+
+    # Fetch current granted brands
+    cursor.execute(
+        "SELECT entitlement_value FROM entitlements WHERE org_id = ? AND entitlement_type = 'AFTERMARKET_BRAND' AND is_granted = 1",
+        (org_id,)
+    )
+    existing_brands = set(str(r["entitlement_value"]).upper() for r in cursor.fetchall())
+
+    sub = get_org_subscription(org_id)
+    plan_id = (sub.get("plan_id") or "professional").lower() if sub else "professional"
+    is_unlimited = plan_id in ['business', 'enterprise']
+    max_b = sub.get("max_brands", 5) if sub else 5
+    if max_b is None:
+        max_b = 5
+
+    # 1. Enforce lock: previously granted brands cannot be removed or swapped for free
+    if existing_brands and '*' not in existing_brands:
+        for eb in existing_brands:
+            if eb not in clean_brands:
+                conn.close()
+                return False, "ไม่สามารถเปลี่ยนหรือสลับแบรนด์ Aftermarket ที่เปิดใช้งานแล้วได้ สิทธิ์เดิมจะถูกล็อคตามสัญญา หากต้องการเพิ่มแบรนด์กรุณาชำระเงินเพิ่ม", list(existing_brands)
+
+    # 2. Enforce quota: cannot exceed plan limit without purchasing extra brand add-on
+    if not is_unlimited and max_b != -1 and len(clean_brands) > max_b:
+        conn.close()
+        return False, f"จำนวนแบรนด์เกินโควตาของแพ็กเกจ ({len(clean_brands)}/{max_b} แบรนด์) หากต้องการเพิ่มแบรนด์ต้องชำระเงินเพิ่ม (฿500/แบรนด์/เดือน) หรืออัปเกรดแพ็กเกจ", list(existing_brands)
+
     try:
         # Delete previous aftermarket brand entitlements for org
         cursor.execute("DELETE FROM entitlements WHERE org_id = ? AND entitlement_type = 'AFTERMARKET_BRAND'", (org_id,))
@@ -5083,6 +5122,79 @@ def generate_invoice_db(data: Dict[str, Any]) -> Dict[str, Any]:
     finally:
         conn.close()
 
+def create_invoice_for_extra_brands(org_id: int, brands: List[str], payment_method: str = "PROMPTPAY") -> Dict[str, Any]:
+    """
+    Creates an official invoice for purchasing extra aftermarket brands at 500 THB/brand/month.
+    """
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    try:
+        clean_brands = [str(b).strip().upper() for b in brands if str(b).strip()]
+        if not clean_brands:
+            conn.close()
+            return {"success": False, "error": "กรุณาระบุแบรนด์ Aftermarket ที่ต้องการซื้อเพิ่มอย่างน้อย 1 แบรนด์"}
+
+        # Check existing granted brands to prevent charging for already owned brands
+        cursor.execute(
+            "SELECT entitlement_value FROM entitlements WHERE org_id = ? AND entitlement_type = 'AFTERMARKET_BRAND' AND is_granted = 1",
+            (org_id,)
+        )
+        existing_brands = set(str(r["entitlement_value"]).upper() for r in cursor.fetchall())
+        new_brands = [b for b in clean_brands if b not in existing_brands and b != '*']
+        
+        if not new_brands:
+            conn.close()
+            return {"success": False, "error": "แบรนด์ที่เลือกได้รับการเปิดใช้งานในระบบแล้ว"}
+
+        sub = get_org_subscription(org_id)
+        sub_id = sub.get("id") if sub else None
+        
+        # 500 THB per brand per month
+        price_per_brand = 500.0
+        subtotal = round(len(new_brands) * price_per_brand, 2)
+        vat_amount = round(subtotal * 0.07, 2)
+        total_amount = round(subtotal + vat_amount, 2)
+        
+        now = datetime.now()
+        cur_year_month = now.strftime("%Y%m")
+        cursor.execute("SELECT COUNT(*) FROM invoices WHERE invoice_number LIKE ?", (f"INV-{cur_year_month}-%",))
+        count = cursor.fetchone()[0]
+        inv_num = f"INV-{cur_year_month}-{(count + 1):04d}"
+        
+        p_start = now.strftime("%Y-%m-%d")
+        p_end = (now + timedelta(days=30)).strftime("%Y-%m-%d")
+
+        cursor.execute("""
+            INSERT INTO invoices (invoice_number, org_id, subscription_id, amount, vat_amount, total_amount, currency, status, payment_method, period_start, period_end)
+            VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING', ?, ?, ?)
+        """, (inv_num, org_id, sub_id, subtotal, vat_amount, total_amount, 'THB', payment_method, p_start, p_end))
+        
+        inv_id = cursor.lastrowid
+        
+        # Insert line items for each extra brand
+        for b in new_brands:
+            cursor.execute("""
+                INSERT INTO invoice_items (invoice_id, description, quantity, unit_price, total_price, item_type)
+                VALUES (?, ?, 1, ?, ?, 'AFTERMARKET_BRAND')
+            """, (inv_id, f"+1 แบรนด์ Aftermarket เพิ่มเติม: {b}", price_per_brand, price_per_brand))
+            
+        conn.commit()
+        return {
+            "success": True,
+            "invoice_id": inv_id,
+            "invoice_number": inv_num,
+            "subtotal": subtotal,
+            "vat_amount": vat_amount,
+            "total_amount": total_amount,
+            "brands": new_brands,
+            "items_count": len(new_brands)
+        }
+    except Exception as e:
+        conn.rollback()
+        return {"success": False, "error": str(e)}
+    finally:
+        conn.close()
+
 def record_payment_transaction_db(data: Dict[str, Any]) -> Dict[str, Any]:
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -5479,6 +5591,28 @@ def clean_demo_and_test_data_db() -> Dict[str, Any]:
     finally:
         conn.close()
 
+def grant_invoice_purchased_entitlements(cursor, invoice_id: int, org_id: int):
+    """
+    When an invoice is paid, scans line items and automatically provisions purchased entitlements
+    such as extra aftermarket brands into the entitlements table.
+    """
+    try:
+        cursor.execute("SELECT item_type, description FROM invoice_items WHERE invoice_id = ?", (invoice_id,))
+        items = cursor.fetchall()
+        for item in items:
+            desc = str(item["description"] or "")
+            itype = str(item["item_type"] or "")
+            if itype == 'AFTERMARKET_BRAND' or "แบรนด์ Aftermarket เพิ่มเติม:" in desc:
+                brand = desc.split(":")[-1].strip().upper()
+                if brand:
+                    cursor.execute("""
+                        INSERT INTO entitlements (org_id, entitlement_type, entitlement_value, is_granted)
+                        VALUES (?, 'AFTERMARKET_BRAND', ?, 1)
+                        ON CONFLICT DO NOTHING
+                    """, (org_id, brand))
+    except Exception as e:
+        print(f"Error provisioning purchased invoice entitlements: {e}")
+
 def confirm_invoice_payment_db(invoice_id: int) -> Dict[str, Any]:
     conn = get_db_connection()
     cursor = conn.cursor()
@@ -5490,10 +5624,14 @@ def confirm_invoice_payment_db(invoice_id: int) -> Dict[str, Any]:
             
         cursor.execute("UPDATE invoices SET status = 'PAID' WHERE id = ?", (invoice_id,))
         
+        org_id = inv.get("org_id") or 1
         if inv.get("subscription_id"):
             cursor.execute("UPDATE subscriptions SET status = 'ACTIVE' WHERE id = ?", (inv["subscription_id"],))
-        elif inv.get("org_id"):
-            cursor.execute("UPDATE subscriptions SET status = 'ACTIVE' WHERE org_id = ?", (inv["org_id"],))
+        elif org_id:
+            cursor.execute("UPDATE subscriptions SET status = 'ACTIVE' WHERE org_id = ?", (org_id,))
+
+        # Automatically grant any purchased entitlements (e.g. extra aftermarket brands)
+        grant_invoice_purchased_entitlements(cursor, invoice_id, org_id)
             
         conn.commit()
         return {"success": True, "message": f"ยืนยันยอดชำระเงิน Invoice {inv['invoice_number']} เรียบร้อยแล้ว (สถานะ: PAID)"}

@@ -5,7 +5,8 @@ from backend.database import (
     get_db_connection,
     create_payment_transaction,
     get_payment_transaction_by_ref,
-    log_commercial_audit
+    log_commercial_audit,
+    grant_invoice_purchased_entitlements
 )
 
 class PaymentGateway:
@@ -63,6 +64,7 @@ class PaymentGateway:
             cursor = conn.cursor()
             cursor.execute("UPDATE invoices SET status = 'PAID' WHERE id = ?", (invoice_id,))
             cursor.execute("UPDATE subscriptions SET status = 'ACTIVE' WHERE org_id = ? AND status IN ('PAST_DUE', 'PENDING_PAYMENT')", (org_id,))
+            grant_invoice_purchased_entitlements(cursor, invoice_id, org_id)
             conn.commit()
             conn.close()
 

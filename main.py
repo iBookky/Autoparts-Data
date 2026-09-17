@@ -85,6 +85,7 @@ from backend.database import (
     update_org_category_entitlements,
     get_org_aftermarket_brand_entitlements,
     update_org_aftermarket_brand_entitlements,
+    create_invoice_for_extra_brands,
     record_search_usage,
     get_org_search_history,
     get_user_favorites,
@@ -1874,6 +1875,10 @@ class UpdateCategoriesRequest(BaseModel):
 class UpdateAftermarketBrandsRequest(BaseModel):
     selected_brands: List[str]
 
+class BuyExtraBrandsRequest(BaseModel):
+    brands: List[str]
+    payment_method: Optional[str] = "PROMPTPAY"
+
 class CalculateBillingRequest(BaseModel):
     plan_id: str
     interval: Optional[str] = "MONTHLY"
@@ -2201,6 +2206,47 @@ async def update_saas_subscription_aftermarket_brands(req: UpdateAftermarketBran
     if not ok:
         raise HTTPException(status_code=400, detail=msg)
     return {"success": True, "message": msg, "aftermarket_brands": brands}
+
+@app.post("/api/saas/subscription/buy-extra-brands")
+async def buy_extra_aftermarket_brands(req: BuyExtraBrandsRequest, x_username: Optional[str] = Header("admin")):
+    """
+    Creates a pending invoice to purchase additional Aftermarket brands.
+    Returns invoice details so the frontend can open the payment checkout modal.
+    Brands are NOT granted until the invoice is paid.
+    """
+    ctx = get_user_tenant_context(x_username or "admin")
+    if not ctx:
+        raise HTTPException(status_code=401, detail="Unauthorized customer session")
+
+    org_id = ctx["organization"]["id"]
+    actor_role = ctx["organization"].get("org_role", "MEMBER")
+
+    if actor_role not in ["OWNER", "ADMIN"] and ctx["user"]["role"] not in ["ADMIN", "SUPER_ADMIN", "OWNER"]:
+        raise HTTPException(status_code=403, detail="Only Organization Owner or Admin can purchase additional brands.")
+
+    if not req.brands:
+        raise HTTPException(status_code=400, detail="กรุณาระบุแบรนด์ Aftermarket ที่ต้องการซื้อเพิ่มอย่างน้อย 1 แบรนด์")
+
+    result = create_invoice_for_extra_brands(
+        org_id=org_id,
+        brands=req.brands,
+        payment_method=req.payment_method or "PROMPTPAY"
+    )
+
+    if not result.get("success"):
+        raise HTTPException(status_code=400, detail=result.get("error", "ไม่สามารถสร้างใบแจ้งหนี้ได้"))
+
+    return {
+        "success": True,
+        "invoice_id": result["invoice_id"],
+        "invoice_number": result["invoice_number"],
+        "subtotal": result["subtotal"],
+        "vat_amount": result["vat_amount"],
+        "total_amount": result["total_amount"],
+        "brands": result["brands"],
+        "items_count": result["items_count"],
+        "message": f"สร้างใบแจ้งหนี้สำหรับ {result['items_count']} แบรนด์เรียบร้อยแล้ว (รวม VAT: {result['total_amount']:,.2f} บาท)"
+    }
 
 @app.post("/api/saas/subscription/downgrade")
 async def downgrade_saas_subscription(req: UpgradePlanRequest, x_username: Optional[str] = Header("admin")):

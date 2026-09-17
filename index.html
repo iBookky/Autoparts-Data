@@ -1030,8 +1030,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             </div>
                             <div style="display: flex; gap: 0.5rem; align-items: center;">
                                 <span id="sub-active-aftermarket-badge" class="badge" style="background: rgba(16,185,129,0.15); color: #34D399; font-size: 0.75rem;">Active</span>
-                                <button type="button" class="btn btn-secondary btn-sm" onclick="openAftermarketBrandsModal()" style="font-size: 0.78rem; padding: 0.25rem 0.65rem;">
-                                    <i class="fa-solid fa-pen-to-square"></i> <span data-i18n="subscription.manageAftermarketBrands">กำหนดแบรนด์</span>
+                                <button type="button" class="btn btn-primary btn-sm" onclick="openBuyExtraBrandsModal()" style="font-size: 0.78rem; padding: 0.25rem 0.75rem; background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none;">
+                                    <i class="fa-solid fa-cart-plus"></i> ซื้อแบรนด์เพิ่ม
                                 </button>
                             </div>
                         </div>
@@ -5167,6 +5167,39 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         </div>
     </div>
 
+    <!-- ================= BUY EXTRA AFTERMARKET BRANDS MODAL ================= -->
+    <div class="modal-overlay" id="modal-buy-extra-brands" style="display: none;">
+        <div class="modal-card" style="max-width: 580px;">
+            <div class="modal-header" style="background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.15));">
+                <div>
+                    <h3 style="color: #fff; margin: 0;"><i class="fa-solid fa-cart-plus" style="color: #a78bfa;"></i> ซื้อแบรนด์ Aftermarket เพิ่มเติม</h3>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem;">เลือกแบรนด์ที่ต้องการเพิ่ม • ราคา <strong style="color: #a78bfa;">500 บาท/แบรนด์/เดือน</strong> (รวม VAT 7%)</p>
+                </div>
+                <button type="button" class="btn btn-secondary btn-sm" onclick="closeBuyExtraBrandsModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="display: flex; flex-direction: column; gap: 1rem; padding: 1.25rem;">
+                <div style="background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.25); border-radius: var(--radius-sm); padding: 0.75rem; font-size: 0.82rem; color: var(--text-secondary);">
+                    <i class="fa-solid fa-circle-info" style="color: #818cf8;"></i>
+                    แบรนด์ที่ได้รับสิทธิ์แล้วจะแสดงเป็นสีเทา (ไม่ต้องซื้อซ้ำ) — ราคาจะคำนวณรวม VAT 7% ก่อนชำระ
+                </div>
+                <div id="buy-extra-brands-list" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 0.5rem; max-height: 260px; overflow-y: auto; padding: 0.75rem; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                    <div style="color: var(--text-muted); font-size: 0.8rem; grid-column: 1/-1; text-align: center; padding: 1rem;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลด...</div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: var(--bg-surface); border: 1px solid var(--border-color); border-radius: var(--radius-sm);">
+                    <span style="font-size: 0.85rem; color: var(--text-secondary);">แบรนด์ที่เลือก: <strong id="buy-extra-selected-count" style="color: #a78bfa;">0</strong> แบรนด์</span>
+                    <span style="font-size: 0.9rem; font-weight: 700; color: #fff;">ยอดชำระ: <span id="buy-extra-price-display" style="color: #a78bfa;">฿0.00</span></span>
+                </div>
+            </div>
+            <div class="modal-footer" style="display: flex; justify-content: flex-end; gap: 0.75rem; padding: 1rem 1.25rem; border-top: 1px solid var(--border-color);">
+                <button type="button" class="btn btn-secondary" onclick="closeBuyExtraBrandsModal()">ยกเลิก</button>
+                <button type="button" class="btn btn-primary" id="btn-proceed-buy-extra-brands" onclick="submitBuyExtraBrands()" disabled
+                    style="background: linear-gradient(135deg, #6366f1, #8b5cf6); border: none; min-width: 160px;">
+                    <i class="fa-solid fa-credit-card"></i> ดำเนินการชำระเงิน
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- ================= PHASE 11: FTUX ONBOARDING WIZARD MODAL ================= -->
     <div class="modal-overlay" id="modal-ftux-onboarding" style="display: none;">
         <div class="modal-card" style="max-width: 620px; border: 2px solid var(--primary);">
@@ -6756,7 +6789,22 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             if (document.getElementById('s-aftermarket-brand')) document.getElementById('s-aftermarket-brand').value = '';
             if (document.getElementById('s-aftermarket-part')) document.getElementById('s-aftermarket-part').value = '';
             if (document.getElementById('vin-decoded-badge')) document.getElementById('vin-decoded-badge').style.display = 'none';
+
+            // Clear search results
+            const tbody = document.getElementById('sales-results-body');
+            if (tbody) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="9" style="text-align: center; padding: 3rem; color: var(--text-muted);">
+                            <i class="fa-solid fa-magnifying-glass" style="font-size: 2rem; margin-bottom: 0.75rem; opacity: 0.4;"></i>
+                            <div data-i18n="search.noResults">Specify vehicle, OEM number, SKU or VIN above to explore automotive parts data.</div>
+                        </td>
+                    </tr>`;
+            }
+            const countBadge = document.getElementById('results-count-badge');
+            if (countBadge) countBadge.textContent = '0 items';
         }
+
 
         function executeOmniSearch() {
             const omni = document.getElementById('omni-search-input');
@@ -8279,6 +8327,116 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 listEl.innerHTML = '<div style="color: var(--danger); font-size: 0.8rem;">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>';
             }
         }
+
+        // ─── BUY EXTRA AFTERMARKET BRANDS ───────────────────────────────
+        async function openBuyExtraBrandsModal() {
+            const modal = document.getElementById('modal-buy-extra-brands');
+            const listEl = document.getElementById('buy-extra-brands-list');
+            if (!modal || !listEl) return;
+
+            listEl.innerHTML = '<div style="color: var(--text-muted); font-size: 0.8rem; grid-column: 1/-1; text-align: center; padding: 1rem;"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลด...</div>';
+            document.getElementById('buy-extra-selected-count').textContent = '0';
+            document.getElementById('buy-extra-price-display').textContent = '฿0.00';
+            document.getElementById('btn-proceed-buy-extra-brands').disabled = true;
+            modal.style.display = 'flex';
+
+            try {
+                const res = await fetch('/api/saas/subscription/aftermarket-brands', { headers: getAuthHeaders() });
+                const data = await res.json();
+                if (!data.success) {
+                    listEl.innerHTML = `<div style="color: var(--danger); grid-column: 1/-1;">${data.error || 'ไม่สามารถโหลดข้อมูลได้'}</div>`;
+                    return;
+                }
+
+                const brands = data.aftermarket_brands || [];
+                const grantedSet = new Set((data.granted_brands || []).map(b => b.toUpperCase()));
+                const isUnlimited = grantedSet.has('*');
+
+                listEl.innerHTML = '';
+                if (isUnlimited) {
+                    listEl.innerHTML = '<div style="color: #34D399; font-size: 0.85rem; grid-column: 1/-1; text-align: center; padding: 1rem;"><i class="fa-solid fa-circle-check"></i> คุณได้รับสิทธิ์ทุกแบรนด์แล้ว (ไม่จำกัด)</div>';
+                    return;
+                }
+
+                brands.forEach(b => {
+                    const isOwned = grantedSet.has(b.name.toUpperCase()) || b.is_granted;
+                    const card = document.createElement('label');
+                    card.style.cssText = `display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.65rem;
+                        background: ${isOwned ? 'rgba(16,185,129,0.08)' : 'rgba(99,102,241,0.08)'};
+                        border: 1px solid ${isOwned ? 'rgba(52,211,153,0.3)' : 'rgba(99,102,241,0.3)'};
+                        border-radius: var(--radius-sm); cursor: ${isOwned ? 'default' : 'pointer'}; font-size: 0.83rem; color: ${isOwned ? '#6b7280' : '#fff'};`;
+                    card.innerHTML = `
+                        <input type="checkbox" value="${b.name}" class="buy-extra-brand-cb" ${isOwned ? 'disabled checked' : ''}
+                            onchange="updateBuyExtraCount()" style="accent-color: #818cf8;">
+                        <span>${b.name}</span>
+                        ${isOwned ? '<i class="fa-solid fa-circle-check" style="color: #34D399; font-size: 0.7rem; margin-left: auto;"></i>' : ''}
+                    `;
+                    listEl.appendChild(card);
+                });
+            } catch (err) {
+                listEl.innerHTML = '<div style="color: var(--danger); grid-column: 1/-1;">เกิดข้อผิดพลาดในการโหลดข้อมูล</div>';
+            }
+        }
+
+        function closeBuyExtraBrandsModal() {
+            const modal = document.getElementById('modal-buy-extra-brands');
+            if (modal) modal.style.display = 'none';
+        }
+
+        function updateBuyExtraCount() {
+            const cbs = Array.from(document.querySelectorAll('.buy-extra-brand-cb:not(:disabled):checked'));
+            const count = cbs.length;
+            const pricePerBrand = 500;
+            const subtotal = count * pricePerBrand;
+            const vat = subtotal * 0.07;
+            const total = subtotal + vat;
+            document.getElementById('buy-extra-selected-count').textContent = count;
+            document.getElementById('buy-extra-price-display').textContent = `฿${total.toLocaleString('th-TH', {minimumFractionDigits: 2})} (รวม VAT)`;
+            document.getElementById('btn-proceed-buy-extra-brands').disabled = count === 0;
+        }
+
+        async function submitBuyExtraBrands() {
+            const newBrands = Array.from(document.querySelectorAll('.buy-extra-brand-cb:not(:disabled):checked')).map(cb => cb.value);
+            if (newBrands.length === 0) {
+                showToast('กรุณาเลือกแบรนด์ที่ต้องการซื้อเพิ่มอย่างน้อย 1 แบรนด์', 'warning');
+                return;
+            }
+
+            const btn = document.getElementById('btn-proceed-buy-extra-brands');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังสร้างใบแจ้งหนี้...';
+
+            try {
+                const res = await fetch('/api/saas/subscription/buy-extra-brands', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', ...getAuthHeaders() },
+                    body: JSON.stringify({ brands: newBrands, payment_method: 'PROMPTPAY' })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.success) {
+                    showToast(data.detail || data.error || 'ไม่สามารถสร้างใบแจ้งหนี้ได้', 'error');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-credit-card"></i> ดำเนินการชำระเงิน';
+                    return;
+                }
+
+                closeBuyExtraBrandsModal();
+                openPaymentCheckoutModal({
+                    invoice_id: data.invoice_id,
+                    invoice_number: data.invoice_number,
+                    plan_name: `เพิ่มแบรนด์ Aftermarket (${data.items_count} แบรนด์)`,
+                    subtotal: data.subtotal,
+                    vat_amount: data.vat_amount,
+                    total_amount: data.total_amount,
+                    customer_name: (currentUser ? currentUser.username : 'ลูกค้า'),
+                });
+            } catch (err) {
+                showToast('เกิดข้อผิดพลาดในการเชื่อมต่อ', 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-credit-card"></i> ดำเนินการชำระเงิน';
+            }
+        }
+        // ─────────────────────────────────────────────────────────────────
 
         function closeAftermarketBrandsModal() {
             const modal = document.getElementById('modal-aftermarket-brands');
