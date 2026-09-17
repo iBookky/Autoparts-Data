@@ -227,6 +227,58 @@ os.makedirs(LOGO_UPLOAD_DIR, exist_ok=True)
 app.mount("/frontend", StaticFiles(directory="frontend"), name="frontend")
 app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
+# ================= SUBSCRIPTION GATE — BACKEND ENFORCEMENT =================
+# This guard is the source-of-truth for all payment-gated API endpoints.
+# It is role-aware: OWNER / SUPER_ADMIN are always unrestricted.
+# CUSTOMER / STAFF accounts belonging to orgs with inactive subscription → 403.
+
+_INACTIVE_SUB_STATUSES = frozenset([
+    "PAST_DUE", "PENDING_PAYMENT", "UNPAID",
+    "SUSPENDED", "CANCELLED", "CANCELED",
+    "EXPIRED", "INACTIVE", "GRACE_PERIOD"
+])
+
+_UNRESTRICTED_ROLES = frozenset(["OWNER", "SUPER_ADMIN"])
+
+def require_active_subscription(username: str, user_role: str) -> None:
+    """
+    Raises HTTP 403 if the user's organization subscription is not ACTIVE/TRIALING.
+    Privileged platform roles (OWNER, SUPER_ADMIN) are always allowed.
+    Designed to be called at the top of any payment-gated API endpoint.
+    """
+    norm_role = (user_role or "").strip().upper()
+    norm_user = (username or "").strip().lower()
+
+    # Platform owners and super admins always bypass payment gate
+    if norm_role in _UNRESTRICTED_ROLES or norm_user in ("owner", "superadmin"):
+        return
+
+    # Get subscription status directly from DB whitelist (authoritative source)
+    try:
+        ctx = get_user_tenant_context(username)
+        if not ctx:
+            raise HTTPException(status_code=401, detail="Unauthorized — no tenant context found.")
+        org_id = ctx["organization"]["id"]
+        whitelist = EntitlementService.get_organization_whitelist(org_id)
+        status = (whitelist.get("status") or "").upper()
+        if status in _INACTIVE_SUB_STATUSES:
+            raise HTTPException(
+                status_code=403,
+                detail=(
+                    f"บัญชีของคุณยังไม่ได้ชำระเงิน หรือแพ็กเกจหมดอายุ (สถานะ: {status}) "
+                    "กรุณาชำระเงินเพื่อเข้าใช้งานระบบ"
+                )
+            )
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"[require_active_subscription] Error checking subscription for '{username}': {e}")
+        # Fail-open only for system errors — do NOT silently allow access
+        raise HTTPException(
+            status_code=503,
+            detail="ไม่สามารถตรวจสอบสถานะ subscription ได้ในขณะนี้ กรุณาลองใหม่"
+        )
+
 # ================= AUTHENTICATION HELPERS =================
 
 class LoginRequest(BaseModel):
@@ -906,8 +958,12 @@ async def live_search(
     car_model: Optional[str] = Form(None),
     car_year: Optional[str] = Form(None),
     sku: Optional[str] = Form(None),
-    category: Optional[str] = Form(None)
+    category: Optional[str] = Form(None),
+    x_username: Optional[str] = Header(None),
+    x_user_role: Optional[str] = Header(None)
 ):
+    # Subscription gate — unpaid/inactive accounts cannot access live search
+    require_active_subscription(x_username or "admin", x_user_role or "CUSTOMER")
     if not q or not q.strip():
         raise HTTPException(status_code=400, detail="Search query is required")
     try:
@@ -1470,7 +1526,13 @@ class AgentSkillToggleRequest(BaseModel):
     is_active: int
 
 @app.get("/api/parts/decode-vin")
-async def decode_vin_endpoint(vin: str):
+async def decode_vin_endpoint(
+    vin: str,
+    x_username: Optional[str] = Header(None),
+    x_user_role: Optional[str] = Header(None)
+):
+    # Subscription gate — unpaid/inactive accounts cannot use VIN decoding
+    require_active_subscription(x_username or "admin", x_user_role or "CUSTOMER")
     import re
     vin_cleaned = re.sub(r'[^A-Za-z0-9]', '', vin).strip().upper() if vin else ""
     if not vin_cleaned or len(vin_cleaned) < 10 or len(vin_cleaned) > 17:
@@ -2251,7 +2313,12 @@ async def get_saas_usage(x_username: Optional[str] = Header("admin")):
     return {"success": True, "usage": ctx["usage"], "subscription": ctx["subscription"]}
 
 @app.get("/api/saas/favorites")
-async def get_saas_favorites(x_username: Optional[str] = Header("admin")):
+async def get_saas_favorites(
+    x_username: Optional[str] = Header("admin"),
+    x_user_role: Optional[str] = Header(None)
+):
+    # Subscription gate — unpaid/inactive accounts cannot access saved favorites
+    require_active_subscription(x_username or "admin", x_user_role or "CUSTOMER")
     ctx = get_user_tenant_context(x_username or "admin")
     user_id = ctx["user"]["id"] if ctx else 1
     org_id = ctx["organization"]["id"] if ctx else 1
@@ -2264,6 +2331,8 @@ async def toggle_saas_favorite(
     x_username: Optional[str] = Header("admin"),
     x_user_role: Optional[str] = Header(None)
 ):
+    # Subscription gate — unpaid/inactive accounts cannot bookmark parts
+    require_active_subscription(x_username or "admin", x_user_role or "CUSTOMER")
     ctx = get_user_tenant_context(x_username or "admin")
     if not ctx:
         raise HTTPException(status_code=401, detail="Unauthorized")
@@ -3635,6 +3704,8 @@ async def get_cross_ref_matrix(
 ):
     role = x_user_role or "ADMIN"
     user_name = x_username or "admin"
+    # Subscription gate — unpaid/inactive accounts cannot access cross-reference data
+    require_active_subscription(user_name, role)
     matrix = get_cross_reference_matrix(part_number)
     
     if role not in ["OWNER", "SUPER_ADMIN", "ADMIN"] and user_name not in ["superadmin", "owner", "admin", "staff"]:
