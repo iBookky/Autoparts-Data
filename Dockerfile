@@ -39,7 +39,6 @@ COPY scraper.py ./
 COPY view_db.py ./
 COPY migrate_sqlite_to_pg.py ./
 COPY init_database.py ./
-COPY tests/ ./tests/
 COPY entrypoint.sh ./
 
 # Create uploads directory for persistence and grant read-write permissions
