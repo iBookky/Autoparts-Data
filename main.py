@@ -1885,6 +1885,26 @@ async def get_saas_subscription(x_username: Optional[str] = Header("admin")):
     sub_id = sub.get("id") or 1
     items = get_subscription_items(sub_id)
     sub["items"] = items
+
+    # Enrich with latest unpaid invoice if present
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute("""
+        SELECT id, invoice_number, subtotal, vat_amount, total_amount, plan_id, status
+        FROM invoices
+        WHERE org_id = ? AND status != 'PAID'
+        ORDER BY id DESC LIMIT 1
+    """, (org_id,))
+    inv_row = cursor.fetchone()
+    conn.close()
+    if inv_row:
+        inv_dict = dict(inv_row)
+        sub["invoice_id"] = inv_dict.get("id")
+        sub["invoice_number"] = inv_dict.get("invoice_number")
+        sub["subtotal"] = inv_dict.get("subtotal")
+        sub["vat_amount"] = inv_dict.get("vat_amount")
+        sub["total_amount"] = inv_dict.get("total_amount")
+
     return {"success": True, "subscription": sub}
 
 @app.post("/api/saas/subscription/upgrade")

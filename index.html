@@ -5373,6 +5373,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
         function showLandingPage() {
             clearLoginFormFields();
+            window._hasShownPendingPaymentNotice = false;
             if (typeof resetTrialForm === 'function') resetTrialForm();
             if (typeof resetEnterpriseForm === 'function') resetEnterpriseForm();
             document.getElementById('public-landing-view').style.display = 'block';
@@ -5385,6 +5386,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
         function showAuthScreen() {
             clearLoginFormFields();
+            window._hasShownPendingPaymentNotice = false;
             if (typeof resetTrialForm === 'function') resetTrialForm();
             if (typeof resetEnterpriseForm === 'function') resetEnterpriseForm();
             document.getElementById('public-landing-view').style.display = 'none';
@@ -6484,8 +6486,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             const isPrivilegedUser = ['OWNER', 'SUPER_ADMIN'].includes(role);
 
             if (!isPrivilegedUser && isInactiveSub && !['subscription-view', 'invoices-view', 'settings-view'].includes(viewId)) {
-                showToast("🔒 บัญชีของคุณอยู่ในสถานะรอชำระเงิน (PENDING PAYMENT) กรุณาเลือกวิธีชำระเงินเพื่อเปิดใช้งานระบบ", "warning");
                 viewId = 'subscription-view';
+                setTimeout(() => triggerDirectPaymentCheckout(window._currentSubscription), 200);
             }
 
             // Sync URL Bar seamlessly without page reload
@@ -7375,8 +7377,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                     applyPackageEntitlementsToUI(sub);
 
                     if (!isPrivilegedUser && isInactiveSub) {
-                        showToast("🔒 บัญชีของคุณอยู่ในสถานะรอชำระเงิน (PENDING PAYMENT) กรุณาชำระเงินเพื่อเปิดใช้งานระบบ", "warning");
                         switchSaaSView('subscription-view', null, false);
+                        setTimeout(() => triggerDirectPaymentCheckout(sub), 200);
                     }
                 }
 
@@ -8275,6 +8277,32 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 console.error("Error fetching payment methods:", e);
             }
             return [];
+        }
+
+        window._hasShownPendingPaymentNotice = false;
+
+        function triggerDirectPaymentCheckout(sub) {
+            if (!sub) sub = window._currentSubscription || {};
+            const totalAmt = parseFloat(sub.total_amount || sub.price_monthly || 3990);
+            const subTotalAmt = parseFloat(sub.subtotal || (totalAmt > 0 ? (totalAmt / 1.07) : 0));
+            const vatAmt = parseFloat(sub.vat_amount || (totalAmt > 0 ? (totalAmt - subTotalAmt) : 0));
+
+            if (!window._hasShownPendingPaymentNotice) {
+                window._hasShownPendingPaymentNotice = true;
+                showToast("🔒 บัญชีของคุณอยู่ในสถานะรอชำระเงิน (PENDING PAYMENT) กรุณาชำระเงินเพื่อเปิดใช้งานระบบ", "warning");
+            }
+
+            openPaymentCheckoutModal({
+                invoice_id: sub.invoice_id,
+                invoice_number: sub.invoice_number || 'INV-PENDING',
+                plan_id: sub.plan_id || 'professional',
+                plan_name: sub.plan_name || 'Professional',
+                subtotal: subTotalAmt,
+                vat_amount: vatAmt,
+                total_amount: totalAmt,
+                customer_name: sub.org_name || (currentUser ? currentUser.username : 'ร้านค้าสมาชิก'),
+                is_direct_signup: true
+            });
         }
 
         async function openPaymentCheckoutModal(params) {
