@@ -2334,7 +2334,7 @@ async def verify_corporate_invoice_payment(
     return res
 
 @app.get("/api/saas/invoices/{invoice_id}")
-async def get_saas_invoice_detail(invoice_id: int, x_username: Optional[str] = Header("admin")):
+async def get_saas_invoice_detail(invoice_id: str, x_username: Optional[str] = Header("admin")):
     ctx = get_user_tenant_context(x_username or "admin")
     org_id = ctx["organization"]["id"] if ctx else 1
     

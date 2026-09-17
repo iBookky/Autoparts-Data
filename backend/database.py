@@ -2760,8 +2760,28 @@ def update_full_plan(plan_id: str, plan_data: Dict[str, Any]) -> Tuple[bool, str
             cursor.execute("UPDATE plan_features SET is_included = ? WHERE plan_id = ? AND feature_code = 'API'", (api_access_enabled, plan_id))
             cursor.execute("UPDATE plan_features SET is_included = ? WHERE plan_id = ? AND feature_code = 'EXPORT'", (export_enabled, plan_id))
             cursor.execute("UPDATE plan_features SET is_included = ? WHERE plan_id = ? AND feature_code = 'AI'", (ai_search_enabled, plan_id))
+
+            # Automatically cascade & inherit updated plan features to all active customer subscriptions with this plan_id
+            cursor.execute("""
+                UPDATE subscriptions
+                SET search_quota = CASE WHEN search_quota < ? THEN ? ELSE search_quota END,
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE LOWER(plan_id) = LOWER(?)
+            """, (monthly_search_quota, monthly_search_quota, plan_id))
+
+            # Sync snapshots for subscribers of this plan
+            cursor.execute("SELECT id FROM subscriptions WHERE LOWER(plan_id) = LOWER(?)", (plan_id,))
+            sub_ids = [r[0] for r in cursor.fetchall()]
+            for s_id in sub_ids:
+                cursor.execute("""
+                    UPDATE subscription_entitlements_snapshot
+                    SET vin_search_enabled = ?, api_access_enabled = ?, export_enabled = ?, ai_search_enabled = ?,
+                        monthly_search_quota = ?, max_brands = ?, max_categories = ?, max_users = ?,
+                        updated_at = CURRENT_TIMESTAMP
+                    WHERE subscription_id = ?
+                """, (vin_search_enabled, api_access_enabled, export_enabled, ai_search_enabled, monthly_search_quota, max_brands, max_categories, max_users, s_id))
         except Exception as ex_sync:
-            print(f"Warning syncing plan versions/features on update: {ex_sync}")
+            print(f"Warning syncing plan versions/features/subscriptions on update: {ex_sync}")
 
         conn.commit()
         return True, "Plan updated successfully"
@@ -3511,16 +3531,35 @@ def create_invoice_with_items(
     finally:
         conn.close()
 
-def get_invoice_with_items(invoice_id: int) -> Optional[Dict[str, Any]]:
+def get_invoice_with_items(identifier: Any) -> Optional[Dict[str, Any]]:
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM invoices WHERE id = ? LIMIT 1", (invoice_id,))
-    inv_row = cursor.fetchone()
+    inv_row = None
+    if isinstance(identifier, int) or (isinstance(identifier, str) and identifier.isdigit()):
+        cursor.execute("""
+            SELECT i.*, o.name as org_name, o.billing_email, o.tax_id, o.address as billing_address, o.legal_name
+            FROM invoices i
+            LEFT JOIN organizations o ON o.id = i.org_id
+            WHERE i.id = ? OR i.invoice_number = ?
+            LIMIT 1
+        """, (int(identifier), str(identifier)))
+        inv_row = cursor.fetchone()
+    else:
+        cursor.execute("""
+            SELECT i.*, o.name as org_name, o.billing_email, o.tax_id, o.address as billing_address, o.legal_name
+            FROM invoices i
+            LEFT JOIN organizations o ON o.id = i.org_id
+            WHERE i.invoice_number = ?
+            LIMIT 1
+        """, (str(identifier),))
+        inv_row = cursor.fetchone()
+
     if not inv_row:
         conn.close()
         return None
     res = dict(inv_row)
-    cursor.execute("SELECT * FROM invoice_items WHERE invoice_id = ?", (invoice_id,))
+    actual_id = res["id"]
+    cursor.execute("SELECT * FROM invoice_items WHERE invoice_id = ?", (actual_id,))
     res["items"] = [dict(i) for i in cursor.fetchall()]
     conn.close()
     return res

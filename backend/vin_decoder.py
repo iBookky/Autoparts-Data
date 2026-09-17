@@ -117,11 +117,32 @@ def get_make_from_wmi(vin: str) -> str:
     return WMI_MAP.get(wmi, "")
 
 def get_year_from_vin(vin: str) -> str:
-    """Decode model year from VIN position 10 (ISO 3779 mapping)."""
+    """Decode model year from VIN position 10 (ISO 3779 mapping) with model generation fallbacks."""
     v = clean_vin(vin)
     if len(v) < 10:
         return ""
-    return VIN_YEAR_MAP.get(v[9], "2012")
+    
+    char10 = v[9]
+    if char10 in VIN_YEAR_MAP:
+        return VIN_YEAR_MAP[char10]
+        
+    # Model-specific generation fallbacks for non-standard 10th chars (e.g. Thai assembly plants)
+    if "J32" in v:
+        return "2010"  # Nissan Teana J32 Thailand generation (2009-2013)
+    if "J31" in v:
+        return "2006"  # Nissan Teana J31 Thailand generation (2004-2008)
+    if "L33" in v:
+        return "2015"  # Nissan Teana L33 Thailand generation (2013-2019)
+    if "K13" in v:
+        return "2012"  # Nissan March K13
+    if "N17" in v:
+        return "2013"  # Nissan Almera N17
+    if "B17" in v:
+        return "2014"  # Nissan Sylphy B17
+    if "D40" in v:
+        return "2010"  # Nissan Navara D40
+        
+    return "2012"
 
 def get_country_from_vin(vin: str) -> str:
     """Decodes country of vehicle assembly from 1st char of VIN."""
@@ -339,23 +360,28 @@ def get_model_from_vds(vin: str) -> str:
         return "Triton"
 
     # === 6. Nissan (MNT, JN1, JN8, JAP, 1N4, 1N6, 3N1, 5N1, VSK, SJN, SND) ===
-    if wmi in ("MNT", "JN1", "JN8", "JAP", "1N4", "1N6", "3N1", "5N1", "VSK", "SJN", "SND"):
-        if any(vds.startswith(p) for p in ("D22", "D40", "D23")) or "NAVARA" in v or "NP300" in v:
-            return "Navara"
-        if any(vds.startswith(p) for p in ("N17", "N18", "B15")) or "ALMERA" in v:
-            return "Almera"
-        if any(vds.startswith(p) for p in ("K13", "K14")) or "MARCH" in v or "MICRA" in v:
-            return "March"
-        if any(vds.startswith(p) for p in ("E12", "E13")) or "NOTE" in v:
-            return "Note"
-        if any(vds.startswith(p) for p in ("T31", "T32", "T33")) or "X-TRAIL" in v or "XTRAIL" in v:
-            return "X-Trail"
-        if vds.startswith("P15") or "KICKS" in v:
-            return "Kicks"
-        if any(vds.startswith(p) for p in ("J31", "J32", "L33")) or "TEANA" in v:
+    if wmi in ("MNT", "JN1", "JN8", "JAP", "1N4", "1N6", "3N1", "5N1", "VSK", "SJN", "SND") or "NISSAN" in v:
+        # Check chassis / platform codes anywhere in VIN
+        if "J31" in v or "J32" in v or "L33" in v or "TEANA" in v:
             return "Teana"
-        if vds.startswith("B17") or "SYLPHY" in v:
+        if "B17" in v or "SYLPHY" in v:
             return "Sylphy"
+        if "P15" in v or "KICKS" in v:
+            return "Kicks"
+        if any(p in v for p in ("T31", "T32", "T33")) or "X-TRAIL" in v or "XTRAIL" in v:
+            return "X-Trail"
+        if "E12" in v or "E13" in v or "NOTE" in v:
+            return "Note"
+        if "K13" in v or "K14" in v or "MARCH" in v or "MICRA" in v:
+            return "March"
+        if any(p in v for p in ("N17", "N18", "B15")) or "ALMERA" in v:
+            return "Almera"
+        if any(p in v for p in ("D22", "D40", "D23")) or "NAVARA" in v or "NP300" in v:
+            return "Navara"
+        if "C26" in v or "C27" in v or "SERENA" in v:
+            return "Serena"
+        if "E25" in v or "E26" in v or "URVAN" in v or "NV350" in v:
+            return "Urvan"
         if c4 == 'D':
             return "Navara"
         if c4 in ('N', 'B'):
