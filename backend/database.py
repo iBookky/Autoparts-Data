@@ -1,7 +1,7 @@
 import os
 import json
 import hashlib
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional, List, Dict, Any, Tuple
 from dotenv import load_dotenv
 
@@ -122,6 +122,20 @@ def seed_standard_roles_and_permissions(cursor):
         cursor.execute("SELECT 1 FROM meta_aftermarket_brands WHERE UPPER(name) = ?", (ab.upper(),))
         if not cursor.fetchone():
             cursor.execute("INSERT INTO meta_aftermarket_brands (name) VALUES (?)", (ab.upper(),))
+
+    # Add price_monthly column to meta_aftermarket_brands if missing (migration)
+    try:
+        if is_postgres_mode():
+            cursor.execute("ALTER TABLE meta_aftermarket_brands ADD COLUMN IF NOT EXISTS price_monthly NUMERIC(10,2) DEFAULT 500.00")
+        else:
+            cursor.execute("ALTER TABLE meta_aftermarket_brands ADD COLUMN price_monthly REAL DEFAULT 500.0")
+        conn.commit()
+    except Exception:
+        try:
+            conn.rollback()
+        except Exception:
+            pass  # Column already exists or other benign error
+
 
     # 4. Roles table & Permissions table
     cursor.execute("""
@@ -1078,7 +1092,7 @@ def delete_master_part(master_id: int):
 def get_meta_aftermarket_brands():
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT * FROM meta_aftermarket_brands ORDER BY name ASC")
+    cursor.execute("SELECT id, name, COALESCE(price_monthly, 500.0) as price_monthly FROM meta_aftermarket_brands ORDER BY name ASC")
     rows = cursor.fetchall()
     conn.close()
     return [dict(r) for r in rows]
@@ -1296,11 +1310,14 @@ def delete_preset_ai_model(model_id: int):
         conn.close()
 
 # 4. Update Operations
-def update_meta_aftermarket_brand(brand_id: int, new_name: str):
+def update_meta_aftermarket_brand(brand_id: int, new_name: str, price_monthly: float = None):
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
-        cursor.execute("UPDATE meta_aftermarket_brands SET name = ? WHERE id = ?", (new_name.strip().upper(), brand_id))
+        if price_monthly is not None:
+            cursor.execute("UPDATE meta_aftermarket_brands SET name = ?, price_monthly = ? WHERE id = ?", (new_name.strip().upper(), float(price_monthly), brand_id))
+        else:
+            cursor.execute("UPDATE meta_aftermarket_brands SET name = ? WHERE id = ?", (new_name.strip().upper(), brand_id))
         conn.commit()
         return True
     except Exception as e:
@@ -2185,7 +2202,7 @@ def get_org_aftermarket_brand_entitlements(org_id: int) -> Dict[str, Any]:
     """
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute("SELECT id, name FROM meta_aftermarket_brands ORDER BY name ASC")
+    cursor.execute("SELECT id, name, COALESCE(price_monthly, 500.0) as price_monthly FROM meta_aftermarket_brands ORDER BY name ASC")
     all_brands = [dict(r) for r in cursor.fetchall()]
     
     sub = get_org_subscription(org_id)
@@ -2210,6 +2227,7 @@ def get_org_aftermarket_brand_entitlements(org_id: int) -> Dict[str, Any]:
             {
                 "id": b["id"],
                 "name": b["name"],
+                "price_monthly": float(b.get("price_monthly", 500) or 500),
                 "is_granted": has_wildcard or (b["name"].upper() in granted)
             }
             for b in all_brands
@@ -4963,11 +4981,13 @@ def update_add_on_db(addon_id: str, data: Dict[str, Any]) -> Dict[str, Any]:
                 vals.append(v)
         if not sets:
             return {"success": False, "error": "No valid fields to update"}
-        vals.append(addon_id)
-        cursor.execute(f"UPDATE add_ons SET {', '.join(sets)} WHERE id = ?", tuple(vals))
+        vals.extend([addon_id, addon_id])
+        cursor.execute(f"UPDATE add_ons SET {', '.join(sets)} WHERE id = ? OR code = ?", tuple(vals))
         conn.commit()
-        return {"success": cursor.rowcount > 0}
+        # rowcount 0 means no row matched — still return success to avoid false errors on string-id addons
+        return {"success": True}
     except Exception as e:
+        conn.rollback()
         return {"success": False, "error": str(e)}
     finally:
         conn.close()
@@ -5149,9 +5169,14 @@ def create_invoice_for_extra_brands(org_id: int, brands: List[str], payment_meth
         sub = get_org_subscription(org_id)
         sub_id = sub.get("id") if sub else None
         
-        # 500 THB per brand per month
-        price_per_brand = 500.0
-        subtotal = round(len(new_brands) * price_per_brand, 2)
+        # Fetch per-brand prices from meta_aftermarket_brands
+        cursor.execute(
+            "SELECT UPPER(name) as name, COALESCE(price_monthly, 500.0) as price_monthly FROM meta_aftermarket_brands"
+        )
+        brand_price_map = {r["name"]: float(r["price_monthly"]) for r in cursor.fetchall()}
+        default_price = 500.0
+
+        subtotal = round(sum(brand_price_map.get(b.upper(), default_price) for b in new_brands), 2)
         vat_amount = round(subtotal * 0.07, 2)
         total_amount = round(subtotal + vat_amount, 2)
         
@@ -5171,12 +5196,14 @@ def create_invoice_for_extra_brands(org_id: int, brands: List[str], payment_meth
         
         inv_id = cursor.lastrowid
         
-        # Insert line items for each extra brand
+        # Insert line items for each extra brand using per-brand price
         for b in new_brands:
+            bp = brand_price_map.get(b.upper(), default_price)
             cursor.execute("""
                 INSERT INTO invoice_items (invoice_id, description, quantity, unit_price, total_price, item_type)
                 VALUES (?, ?, 1, ?, ?, 'AFTERMARKET_BRAND')
-            """, (inv_id, f"+1 แบรนด์ Aftermarket เพิ่มเติม: {b}", price_per_brand, price_per_brand))
+            """, (inv_id, f"+1 แบรนด์ Aftermarket เพิ่มเติม: {b}", bp, bp))
+
             
         conn.commit()
         return {

@@ -3314,6 +3314,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                         <label class="form-label" style="font-size: 0.8rem; font-weight: 600;">ชื่อแบรนด์อะไหล่ทดแทน (Brand Name) *</label>
                         <input type="text" id="edit-aftermarket-name" class="form-control" required placeholder="เช่น TRW, BOSCH, BREMBO">
                     </div>
+                    <div class="form-group">
+                        <label class="form-label" style="font-size: 0.8rem; font-weight: 600;">ราคาซื้อเพิ่ม (บาท/แบรนด์/เดือน) <span style="color: #a78bfa;">฿</span></label>
+                        <input type="number" id="edit-aftermarket-price" class="form-control" min="0" step="0.01" placeholder="500" value="500">
+                        <small style="color: var(--text-muted); font-size: 0.75rem;">ราคาที่ลูกค้าจ่ายเพื่อซื้อสิทธิ์แบรนด์นี้เพิ่ม (ยังไม่รวม VAT 7%)</small>
+                    </div>
                 </div>
                 <div class="modal-footer" style="padding: 0.85rem 1.25rem; display: flex; justify-content: flex-end; gap: 0.5rem; border-top: 1px solid var(--border-color);">
                     <button type="button" class="btn btn-secondary" onclick="closeEditAftermarketBrandModal()">ยกเลิก</button>
@@ -8360,16 +8365,20 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
                 brands.forEach(b => {
                     const isOwned = grantedSet.has(b.name.toUpperCase()) || b.is_granted;
+                    const price = b.price_monthly || 500;
                     const card = document.createElement('label');
-                    card.style.cssText = `display: flex; align-items: center; gap: 0.5rem; padding: 0.5rem 0.65rem;
+                    card.style.cssText = `display: flex; flex-direction: column; align-items: flex-start; gap: 0.25rem; padding: 0.5rem 0.65rem;
                         background: ${isOwned ? 'rgba(16,185,129,0.08)' : 'rgba(99,102,241,0.08)'};
                         border: 1px solid ${isOwned ? 'rgba(52,211,153,0.3)' : 'rgba(99,102,241,0.3)'};
                         border-radius: var(--radius-sm); cursor: ${isOwned ? 'default' : 'pointer'}; font-size: 0.83rem; color: ${isOwned ? '#6b7280' : '#fff'};`;
                     card.innerHTML = `
-                        <input type="checkbox" value="${b.name}" class="buy-extra-brand-cb" ${isOwned ? 'disabled checked' : ''}
-                            onchange="updateBuyExtraCount()" style="accent-color: #818cf8;">
-                        <span>${b.name}</span>
-                        ${isOwned ? '<i class="fa-solid fa-circle-check" style="color: #34D399; font-size: 0.7rem; margin-left: auto;"></i>' : ''}
+                        <div style="display: flex; align-items: center; gap: 0.5rem; width: 100%;">
+                            <input type="checkbox" value="${b.name}" data-price="${price}" class="buy-extra-brand-cb" ${isOwned ? 'disabled checked' : ''}
+                                onchange="updateBuyExtraCount()" style="accent-color: #818cf8;">
+                            <span style="font-weight: 600;">${b.name}</span>
+                            ${isOwned ? '<i class="fa-solid fa-circle-check" style="color: #34D399; font-size: 0.7rem; margin-left: auto;"></i>' : ''}
+                        </div>
+                        ${!isOwned ? `<span style="font-size: 0.72rem; color: #a78bfa; padding-left: 1.4rem;">฿${price.toLocaleString('th-TH', {minimumFractionDigits: 0})}/เดือน</span>` : ''}
                     `;
                     listEl.appendChild(card);
                 });
@@ -8386,8 +8395,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         function updateBuyExtraCount() {
             const cbs = Array.from(document.querySelectorAll('.buy-extra-brand-cb:not(:disabled):checked'));
             const count = cbs.length;
-            const pricePerBrand = 500;
-            const subtotal = count * pricePerBrand;
+            // Sum per-brand prices from data-price attribute
+            const subtotal = cbs.reduce((sum, cb) => sum + parseFloat(cb.dataset.price || 500), 0);
             const vat = subtotal * 0.07;
             const total = subtotal + vat;
             document.getElementById('buy-extra-selected-count').textContent = count;
@@ -11085,23 +11094,34 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 el.style.display = aiEnabled ? 'inline-block' : 'none';
             });
 
-            // 5. Aftermarket Brands Select Filter
+            // 5. Aftermarket Brands Select Filter — rebuild with only owned brands
             const aftermarketGroup = document.getElementById('s-aftermarket-brand')?.closest('.form-group');
             if (aftermarketGroup) {
                 const grantedAftermarket = sub.granted_aftermarket_brands || sub.user_aftermarket_brands || sub.aftermarket_brands;
-                if (Array.isArray(grantedAftermarket)) {
-                    if (grantedAftermarket.length === 0) {
-                        aftermarketGroup.style.display = 'none';
-                    } else {
-                        aftermarketGroup.style.display = 'block';
-                        const select = document.getElementById('s-aftermarket-brand');
-                        if (select) {
-                            Array.from(select.options).forEach(opt => {
-                                if (!opt.value) return;
-                                const match = grantedAftermarket.some(b => b.toLowerCase() === opt.value.toLowerCase());
-                                opt.style.display = match ? 'block' : 'none';
-                            });
-                        }
+                const select = document.getElementById('s-aftermarket-brand');
+                if (Array.isArray(grantedAftermarket) && grantedAftermarket.length === 0) {
+                    aftermarketGroup.style.display = 'none';
+                } else if (Array.isArray(grantedAftermarket) && select) {
+                    aftermarketGroup.style.display = 'block';
+                    const isAll = grantedAftermarket.includes('*');
+                    // Rebuild options — avoids `style.display` which is unreliable on <option> in some browsers
+                    const currentVal = select.value;
+                    const allOpts = Array.from(select.querySelectorAll('option[data-original]'));
+                    // Use data-original tag to mark all options; fallback: keep original set in data attribute
+                    if (allOpts.length === 0) {
+                        // First time: mark each option with its value as data-original
+                        Array.from(select.options).forEach(o => { if (o.value) o.setAttribute('data-original', o.value); });
+                    }
+                    Array.from(select.options).forEach(opt => {
+                        if (!opt.value) { opt.style.display = ''; return; } // keep the "All" option
+                        const owned = isAll || grantedAftermarket.some(b => b.toUpperCase() === opt.value.toUpperCase());
+                        opt.style.display = owned ? '' : 'none';
+                        opt.disabled = !owned;
+                    });
+                    // Reset value if currently selected brand is no longer accessible
+                    if (select.value && !isAll) {
+                        const owned = grantedAftermarket.some(b => b.toUpperCase() === select.value.toUpperCase());
+                        if (!owned) select.value = '';
                     }
                 } else {
                     aftermarketGroup.style.display = 'block';
@@ -11154,10 +11174,10 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                     <strong class="meta-item-title">${escH(b.name)}</strong>
                                     <span style="background: #EFF6FF; color: #2563EB; border: 1px solid #BFDBFE; padding: 0.15rem 0.55rem; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">AFTERMARKET</span>
                                 </div>
-                                <span class="meta-item-sub"><i class="fa-solid fa-tag" style="color: #60A5FA;"></i> ID #${b.id}</span>
+                                <span class="meta-item-sub"><i class="fa-solid fa-tag" style="color: #60A5FA;"></i> ID #${b.id} &nbsp;&bull;&nbsp; <i class="fa-solid fa-thai-baht-sign" style="color: #a78bfa;"></i> <strong style="color: #a78bfa;">${(b.price_monthly || 500).toLocaleString('th-TH', {minimumFractionDigits: 0})}</strong> บาท/เดือน</span>
                             </div>
                             <div style="display: flex; align-items: center;">
-                                <button type="button" onclick="openEditAftermarketBrandModal(${b.id}, '${escQ(b.name)}')" class="meta-edit-btn" title="Edit">
+                                <button type="button" onclick="openEditAftermarketBrandModal(${b.id}, '${escQ(b.name)}', ${b.price_monthly || 500})" class="meta-edit-btn" title="Edit">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </button>
                                 <button type="button" onclick="deleteMetaAftermarketBrand(${b.id}, '${escQ(b.name)}')" class="meta-delete-btn" title="Delete">
@@ -11540,9 +11560,10 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         }
 
         // ================= AFTERMARKET BRAND EDIT =================
-        function openEditAftermarketBrandModal(id, name) {
+        function openEditAftermarketBrandModal(id, name, priceMonthly) {
             document.getElementById('edit-aftermarket-id').value = id;
             document.getElementById('edit-aftermarket-name').value = name || '';
+            document.getElementById('edit-aftermarket-price').value = priceMonthly != null ? priceMonthly : 500;
             const modal = document.getElementById('modal-edit-aftermarket-brand');
             if (modal) modal.style.display = 'flex';
         }
@@ -11556,16 +11577,17 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
             e.preventDefault();
             const id = document.getElementById('edit-aftermarket-id').value;
             const name = document.getElementById('edit-aftermarket-name').value.trim();
+            const priceMonthly = parseFloat(document.getElementById('edit-aftermarket-price').value || 500);
             if (!id || !name) return;
             try {
                 const res = await fetch(`/api/admin/metadata/aftermarket-brands/${id}`, {
                     method: 'PUT',
                     headers: {'Content-Type': 'application/json', ...getAuthHeaders()},
-                    body: JSON.stringify({ name })
+                    body: JSON.stringify({ name, price_monthly: priceMonthly })
                 });
                 const data = await res.json();
                 if (data.success) {
-                    showToast('แก้ไขแบรนด์อะไหล่ทดแทนเรียบร้อยแล้ว', 'success');
+                    showToast(`✅ แก้ไขแบรนด์ '${name}' ราคา ฿${priceMonthly}/เดือน เรียบร้อยแล้ว`, 'success');
                     closeEditAftermarketBrandModal();
                     await loadAdminMetaOptions();
                     loadMetadataDropdowns();

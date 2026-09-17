@@ -1595,6 +1595,7 @@ async def admin_delete_master_part(id: int, admin = Depends(require_admin)):
 # Metadata Pydantic Schemas
 class MetaBrandRequest(BaseModel):
     name: str
+    price_monthly: Optional[float] = None
 
 class MetaModelRequest(BaseModel):
     car_brand: str
@@ -1795,7 +1796,7 @@ async def delete_metadata_ai_model(id: int, admin = Depends(require_admin)):
 
 @app.put("/api/admin/metadata/aftermarket-brands/{id}")
 async def update_metadata_aftermarket_brand(id: int, req: MetaBrandRequest, admin = Depends(require_admin)):
-    success = update_meta_aftermarket_brand(id, req.name)
+    success = update_meta_aftermarket_brand(id, req.name, req.price_monthly)
     return {"success": success}
 
 @app.put("/api/admin/metadata/car-brands/{id}")
