@@ -653,8 +653,8 @@
                         </div>
                         <div class="advanced-body">
                             <!-- Row 1: Vehicle & VIN Group -->
-                            <div class="form-grid-3">
-                                <div class="form-group">
+                            <div class="form-grid-2" id="vehicle-search-row">
+                                <div class="form-group" id="vin-search-group" style="display: none;">
                                     <label class="form-label"><i class="fa-solid fa-fingerprint" style="color: #F43F5E;"></i> <span data-i18n="adv.vinLabel">17-Digit VIN Number</span></label>
                                     <div style="display: flex; gap: 0.4rem;">
                                         <input type="text" id="s-vin" class="form-control" data-i18n-placeholder="adv.vinPlaceholder" placeholder="e.g. 1FMCU9G97EUE..." maxlength="17" onkeypress="if(event.key==='Enter'){event.preventDefault();decodeVinInput();}">
@@ -6491,6 +6491,9 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             apiNav.style.opacity = '1';
                         }
                     }
+
+                    // Apply package entitlements across UI (VIN search, APIs, exports, etc.)
+                    applyPackageEntitlementsToUI(sub);
                 }
             } catch (err) {
                 console.error("Error loading SaaS context:", err);
@@ -6651,7 +6654,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 titleEl.textContent = (typeof t === 'function') ? t('viewTitle.' + viewId, fallbackTitle) : fallbackTitle;
             }
 
-            // Lazy load view data
+            // Lazy load view data & apply entitlements
+            if (viewId === 'search-view') applyPackageEntitlementsToUI();
             if (viewId === 'coverage-view') loadDataCoverage();
             if (viewId === 'crossref-view') loadCrossReferenceMatrix();
             if (viewId === 'usage-view') loadUsageDashboard();
@@ -6741,8 +6745,13 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 performAdvancedSearch();
                 return;
             }
-            // Auto detect VIN (17 chars)
-            if (query.length === 17 && /^[A-HJ-NPR-Z0-9]{17}$/i.test(query)) {
+            // Auto detect VIN (17 chars) only if package includes VIN feature
+            const sub = window._currentSubscription || (window.currentTenant ? window.currentTenant.subscription : null);
+            const role = currentUser ? (currentUser.role || '').toUpperCase() : 'CUSTOMER';
+            const isOwnerOrSuper = ['OWNER', 'SUPER_ADMIN'].includes(role);
+            const vinEnabled = isOwnerOrSuper || !!(sub && (sub.vin_search_enabled === 1 || sub.vin_search_enabled === true || sub.vin_search_enabled === "1"));
+
+            if (query.length === 17 && /^[A-HJ-NPR-Z0-9]{17}$/i.test(query) && vinEnabled) {
                 document.getElementById('s-vin').value = query;
                 decodeVinInput();
                 performAdvancedSearch();
@@ -6758,7 +6767,12 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         }
 
         async function performAdvancedSearch() {
-            const vin = document.getElementById('s-vin').value.trim();
+            const sub = window._currentSubscription || (window.currentTenant ? window.currentTenant.subscription : null);
+            const role = currentUser ? (currentUser.role || '').toUpperCase() : 'CUSTOMER';
+            const isOwnerOrSuper = ['OWNER', 'SUPER_ADMIN'].includes(role);
+            const vinEnabled = isOwnerOrSuper || !!(sub && (sub.vin_search_enabled === 1 || sub.vin_search_enabled === true || sub.vin_search_enabled === "1"));
+
+            const vin = (vinEnabled && document.getElementById('s-vin')) ? document.getElementById('s-vin').value.trim() : '';
             const car_brand = document.getElementById('s-car-brand').value.trim();
             const car_model = document.getElementById('s-car-model').value.trim();
             const car_year = document.getElementById('s-car-year').value.trim();
@@ -7211,6 +7225,15 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
 
         // ================= VIN DECODER & DIRECT SEARCH =================
         async function decodeVinInput() {
+            const sub = window._currentSubscription || (window.currentTenant ? window.currentTenant.subscription : null);
+            const role = currentUser ? (currentUser.role || '').toUpperCase() : 'CUSTOMER';
+            const isOwnerOrSuper = ['OWNER', 'SUPER_ADMIN'].includes(role);
+            const vinEnabled = isOwnerOrSuper || !!(sub && (sub.vin_search_enabled === 1 || sub.vin_search_enabled === true || sub.vin_search_enabled === "1"));
+            if (!vinEnabled) {
+                showToast("ฟีเจอร์ค้นหาด้วยเลขตัวถัง (VIN Decoder) ไม่ได้รวมอยู่ในแพ็กเกจของคุณ กรุณาอัปเกรดเพื่อเปิดใช้งาน", "warning");
+                return;
+            }
+
             const rawVin = (document.getElementById('s-vin')?.value || '').trim();
             const vin = rawVin.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
             if (!vin || vin.length < 10 || vin.length > 17) {
@@ -10761,8 +10784,17 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         }
 
         function applyPackageEntitlementsToUI(sub) {
-            if (!sub && currentUser && (currentUser.role === 'OWNER' || currentUser.role === 'SUPER_ADMIN')) {
+            // If no subscription provided, fallback to currently stored subscription context
+            if (!sub) {
+                sub = window._currentSubscription || (window.currentTenant ? window.currentTenant.subscription : null);
+            }
+
+            const role = currentUser ? (currentUser.role || '').toUpperCase() : 'CUSTOMER';
+            const isOwnerOrSuper = ['OWNER', 'SUPER_ADMIN'].includes(role);
+
+            if (isOwnerOrSuper) {
                 sub = {
+                    ...(sub || {}),
                     vin_search_enabled: 1,
                     api_access_enabled: 1,
                     export_enabled: 1,
@@ -10773,14 +10805,32 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 };
             }
             
-            if (!sub) return;
+            // 1. VIN Search Input Box (Strictly Gated by Package/Entitlement)
+            const vinGroup = document.getElementById('vin-search-group') || document.getElementById('s-vin')?.closest('.form-group');
+            const vehicleRow = document.getElementById('vehicle-search-row') || vinGroup?.parentElement;
+            const vinEnabled = isOwnerOrSuper || !!(sub && (sub.vin_search_enabled === 1 || sub.vin_search_enabled === true || sub.vin_search_enabled === "1"));
 
-            // 1. VIN Search Input Box
-            const vinGroup = document.getElementById('s-vin')?.closest('.form-group');
             if (vinGroup) {
-                const vinEnabled = !!(sub.vin_search_enabled === 1 || sub.vin_search_enabled === true || sub.vin_search_enabled === "1");
-                vinGroup.style.display = vinEnabled ? 'block' : 'none';
+                if (vinEnabled) {
+                    vinGroup.style.display = 'block';
+                    if (vehicleRow) {
+                        vehicleRow.classList.remove('form-grid-2');
+                        vehicleRow.classList.add('form-grid-3');
+                    }
+                } else {
+                    vinGroup.style.display = 'none';
+                    const vinInput = document.getElementById('s-vin');
+                    if (vinInput) vinInput.value = '';
+                    const vinBadge = document.getElementById('vin-decoded-badge');
+                    if (vinBadge) vinBadge.style.display = 'none';
+                    if (vehicleRow) {
+                        vehicleRow.classList.remove('form-grid-3');
+                        vehicleRow.classList.add('form-grid-2');
+                    }
+                }
             }
+
+            if (!sub) return;
 
             // 2. REST API Gateway Navigation & View
             const apiNav = document.getElementById('nav-api-hub');
