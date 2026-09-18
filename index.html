@@ -4247,8 +4247,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
         <div class="modal-card" style="max-width: 860px; max-height: 92vh; overflow-y: auto; padding: 0; background: var(--bg-card); border: 1px solid var(--border-color);">
             <div class="modal-header no-print" style="padding: 1rem 1.5rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: var(--bg-surface);">
                 <div style="display: flex; align-items: center; gap: 0.75rem;">
-                    <i class="fa-solid fa-file-invoice-dollar" style="color: var(--primary); font-size: 1.25rem;"></i>
-                    <h3 style="margin: 0; font-size: 1.1rem; color: var(--text-primary);" data-i18n="invoice.receiptTitle">ต้นฉบับ ใบกำกับภาษี / ใบเสร็จรับเงิน (Tax Invoice / Receipt)</h3>
+                    <i id="receipt-modal-icon" class="fa-solid fa-file-invoice-dollar" style="color: var(--primary); font-size: 1.25rem;"></i>
+                    <h3 id="receipt-modal-title" style="margin: 0; font-size: 1.1rem; color: var(--text-primary);">ใบแจ้งหนี้ (Invoice)</h3>
                 </div>
                 <div style="display: flex; gap: 0.5rem; align-items: center;">
                     <button type="button" class="btn btn-primary btn-sm" onclick="printInvoiceReceipt()" style="display: flex; align-items: center; gap: 0.4rem;">
@@ -4278,9 +4278,9 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             </div>
                         </div>
                         <div style="text-align: right; min-width: 220px;">
-                            <div style="background: rgba(37,99,235,0.12); border: 1px solid rgba(37,99,235,0.3); border-radius: var(--radius-sm); padding: 0.5rem 0.75rem; display: inline-block; margin-bottom: 0.5rem;">
-                                <span style="font-weight: 800; font-size: 0.95rem; color: var(--primary);">ใบกำกับภาษี / ใบเสร็จรับเงิน</span><br>
-                                <span style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">TAX INVOICE / RECEIPT (ORIGINAL)</span>
+                            <div id="receipt-doc-type-badge" style="background: rgba(37,99,235,0.12); border: 1px solid rgba(37,99,235,0.3); border-radius: var(--radius-sm); padding: 0.5rem 0.75rem; display: inline-block; margin-bottom: 0.5rem;">
+                                <span id="receipt-doc-type-label" style="font-weight: 800; font-size: 0.95rem; color: var(--primary);">ใบแจ้งหนี้</span><br>
+                                <span id="receipt-doc-type-sub" style="font-size: 0.75rem; color: var(--text-muted); font-weight: 600;">INVOICE (ORIGINAL)</span>
                             </div>
                             <div style="font-size: 0.82rem; color: var(--text-secondary); line-height: 1.5;">
                                 <div><strong>เลขที่ (No.):</strong> <span id="receipt-inv-no" style="font-family: var(--font-mono); font-weight: 700; color: var(--text-primary);">-</span></div>
@@ -4301,7 +4301,7 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             <div>
                                 <div><strong>เลขประจำตัวผู้เสียภาษีอากร:</strong> <span id="receipt-cust-taxid" style="font-family: var(--font-mono); font-weight: 600; color: var(--text-primary);">-</span></div>
                                 <div style="margin-top: 0.25rem;"><strong>สาขา:</strong> <span id="receipt-cust-branch">สำนักงานใหญ่ (Head Office)</span></div>
-                                <div style="margin-top: 0.25rem;"><strong>สถานะการชำระ:</strong> <span class="status-badge verified" style="font-size: 0.72rem; padding: 0.15rem 0.5rem;"><i class="fa-solid fa-check"></i> ชำระเงินเรียบร้อยแล้ว (PAID)</span></div>
+                                <div style="margin-top: 0.25rem;"><strong>สถานะการชำระ:</strong> <span id="receipt-payment-status-badge" class="status-badge verified" style="font-size: 0.72rem; padding: 0.15rem 0.5rem;"><i class="fa-solid fa-check"></i> ชำระเงินเรียบร้อยแล้ว (PAID)</span></div>
                             </div>
                         </div>
                     </div>
@@ -9332,6 +9332,71 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                 } else {
                     receiptIcon.style.display = 'flex';
                 }
+            }
+
+            // ============================================================
+            // Document Type: INVOICE vs TAX INVOICE based on payment status
+            // ============================================================
+            const invStatus = (inv.status || '').toUpperCase();
+            const isPaid = ['PAID', 'PAID_CONFIRMED', 'COMPLETED', 'SETTLED'].includes(invStatus);
+
+            // --- Modal header icon & title ---
+            const modalTitle = document.getElementById('receipt-modal-title');
+            const modalIcon = document.getElementById('receipt-modal-icon');
+            if (modalTitle) {
+                modalTitle.textContent = isPaid
+                    ? 'ต้นฉบับ ใบกำกับภาษี / ใบเสร็จรับเงิน (Tax Invoice / Receipt)'
+                    : 'ใบแจ้งหนี้ (Invoice)';
+            }
+            if (modalIcon) {
+                modalIcon.style.color = isPaid ? 'var(--primary)' : '#F59E0B';
+            }
+
+            // --- Doc type badge (inside the printable sheet) ---
+            const badge = document.getElementById('receipt-doc-type-badge');
+            const badgeLabel = document.getElementById('receipt-doc-type-label');
+            const badgeSub = document.getElementById('receipt-doc-type-sub');
+            if (badge && badgeLabel && badgeSub) {
+                if (isPaid) {
+                    badge.style.background = 'rgba(37,99,235,0.12)';
+                    badge.style.borderColor = 'rgba(37,99,235,0.3)';
+                    badgeLabel.style.color = 'var(--primary)';
+                    badgeLabel.textContent = 'ใบกำกับภาษี / ใบเสร็จรับเงิน';
+                    badgeSub.textContent = 'TAX INVOICE / RECEIPT (ORIGINAL)';
+                } else {
+                    badge.style.background = 'rgba(245,158,11,0.12)';
+                    badge.style.borderColor = 'rgba(245,158,11,0.4)';
+                    badgeLabel.style.color = '#F59E0B';
+                    badgeLabel.textContent = 'ใบแจ้งหนี้';
+                    badgeSub.textContent = 'INVOICE (ORIGINAL)';
+                }
+            }
+
+            // --- Payment status badge (in Bill To section) ---
+            const statusBadge = document.getElementById('receipt-payment-status-badge');
+            if (statusBadge) {
+                if (isPaid) {
+                    statusBadge.className = 'status-badge verified';
+                    statusBadge.style.fontSize = '0.72rem';
+                    statusBadge.style.padding = '0.15rem 0.5rem';
+                    statusBadge.innerHTML = '<i class="fa-solid fa-check"></i> ชำระเงินเรียบร้อยแล้ว (PAID)';
+                } else {
+                    statusBadge.className = 'status-badge pending';
+                    statusBadge.style.fontSize = '0.72rem';
+                    statusBadge.style.padding = '0.15rem 0.5rem';
+                    statusBadge.style.background = 'rgba(245,158,11,0.15)';
+                    statusBadge.style.color = '#F59E0B';
+                    statusBadge.style.border = '1px solid rgba(245,158,11,0.4)';
+                    statusBadge.innerHTML = '<i class="fa-solid fa-clock"></i> รอชำระเงิน (PENDING)';
+                }
+            }
+
+            // --- Footer note changes for Invoice vs Tax Invoice ---
+            const footerNotes = document.getElementById('receipt-owner-footer-notes');
+            if (footerNotes) {
+                footerNotes.textContent = isPaid
+                    ? 'เอกสารนี้ออกโดยระบบอัตโนมัติและถือเป็นหลักฐานการชำระเงินที่ถูกต้องสมบูรณ์ตามกฎหมาย'
+                    : 'เอกสารนี้เป็นใบแจ้งหนี้ชั่วคราว ใบกำกับภาษี / ใบเสร็จรับเงินฉบับจริงจะออกให้เมื่อได้รับชำระเงินครบถ้วน';
             }
 
             // Show Modal
