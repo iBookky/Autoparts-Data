@@ -9183,7 +9183,11 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                         ` : '';
 
                         tr.innerHTML = `
-                            <td><strong style="color: #60A5FA; font-family: var(--font-mono);">${inv.invoice_number}</strong></td>
+                            <td>
+                                <a href="javascript:void(0)" onclick="viewInvoiceReceipt('${inv.invoice_number || inv.id}')" style="color: #60A5FA; font-weight: 700; text-decoration: underline; font-family: var(--font-mono);" title="คลิกเพื่อดู${isPaid ? 'ใบกำกับภาษี' : 'ใบแจ้งหนี้'}">
+                                    <i class="fa-solid fa-${isPaid ? 'file-invoice-dollar' : 'file-invoice'}" style="margin-right: 3px;"></i>${inv.invoice_number || 'INV-' + inv.id}
+                                </a>
+                            </td>
                             <td>${inv.period_start || '-'} to ${inv.period_end || '-'}</td>
                             <td>฿${inv.amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
                             <td>฿${inv.vat_amount.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
@@ -9192,8 +9196,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             <td>${statusHtml}</td>
                             <td style="text-align: right; white-space: nowrap;">
                                 ${payBtn}
-                                <button class="btn btn-primary btn-sm" onclick="viewInvoiceReceipt('${inv.invoice_number || inv.id}')" title="${t('invoice.viewReceipt', 'Tax Invoice')}">
-                                    <i class="fa-solid fa-file-invoice-dollar"></i> <span>${t('invoice.viewReceipt', 'Tax Invoice')}</span>
+                                <button class="btn btn-${isPaid ? 'primary' : 'secondary'} btn-sm" onclick="viewInvoiceReceipt('${inv.invoice_number || inv.id}')" title="${isPaid ? 'ดูใบกำกับภาษี / ใบเสร็จรับเงิน' : 'ดูใบแจ้งหนี้'}" style="${isPaid ? '' : 'background: rgba(100,116,139,0.2); color: var(--text-secondary); border: 1px solid var(--border-color);'}">
+                                    <i class="fa-solid fa-${isPaid ? 'file-invoice-dollar' : 'file-invoice'}"></i> ${isPaid ? 'ใบกำกับภาษี' : 'ใบแจ้งหนี้'}
                                 </button>
                             </td>
                         `;
@@ -12831,8 +12835,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                             </div>
                             <div style="display: flex; align-items: center; gap: 0.5rem;">
                                 <span style="color: #10B981; font-weight: 600; font-size: 0.88rem;">฿${Number(i.total_amount || 0).toLocaleString()} (${i.status})</span>
-                                <button class="btn btn-secondary btn-sm" onclick="viewInvoiceReceipt('${invId}')" title="กดดูรายละเอียดใบแจ้งหนี้ / ใบเสร็จรับเงิน">
-                                    <i class="fa-solid fa-file-invoice-dollar"></i> ดูใบแจ้งหนี้
+                                <button class="btn btn-${i.status === 'PAID' ? 'primary' : 'secondary'} btn-sm" onclick="viewInvoiceReceipt('${invId}')" title="${i.status === 'PAID' ? 'ดูใบกำกับภาษี / ใบเสร็จรับเงิน' : 'ดูใบแจ้งหนี้'}">
+                                    <i class="fa-solid fa-${i.status === 'PAID' ? 'file-invoice-dollar' : 'file-invoice'}"></i> ${i.status === 'PAID' ? 'ใบกำกับภาษี' : 'ใบแจ้งหนี้'}
                                 </button>
                             </div>
                         </div>
@@ -13420,8 +13424,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=�
                                     <span class="status-badge ${isPaid ? 'verified' : 'reviewed'}">${inv.status}</span>
                                 </td>
                                 <td style="text-align: right; white-space: nowrap; display: flex; justify-content: flex-end; gap: 0.35rem; align-items: center;">
-                                    <button class="btn btn-secondary btn-sm" onclick="viewInvoiceReceipt('${invId}')" title="กดดูรายละเอียดใบเสร็จและใบแจ้งหนี้">
-                                        <i class="fa-solid fa-file-invoice-dollar"></i> ดูใบแจ้งหนี้
+                                    <button class="btn btn-secondary btn-sm" onclick="viewInvoiceReceipt('${invId}')" title="${isPaid ? 'ดูใบกำกับภาษี / ใบเสร็จรับเงิน' : 'ดูใบแจ้งหนี้'}">
+                                        <i class="fa-solid fa-${isPaid ? 'file-invoice-dollar' : 'file-invoice'}"></i> ${isPaid ? 'ใบกำกับภาษี' : 'ใบแจ้งหนี้'}
                                     </button>
                                     ${!isPaid ? `
                                         <button class="btn btn-primary btn-sm" onclick="confirmOwnerInvoicePayment(${inv.id})" title="ยืนยันการรับชำระเงินและเปิดใช้งานแพ็กเกจทันที">
