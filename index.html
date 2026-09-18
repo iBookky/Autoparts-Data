@@ -7272,15 +7272,49 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=à¸
                 const brandsData = await resBrands.json();
                 const sBrandSelect = document.getElementById('s-aftermarket-brand');
                 const editBrandSelect = document.getElementById('edit-brand');
+
                 if (brandsData.success) {
                     window.cachedAdminMetaData.aftermarketBrands = brandsData.results || [];
-                    if (sBrandSelect) sBrandSelect.innerHTML = `<option value="">${t('search.allBrands', 'All Aftermarket Brands')}</option>`;
-                    if (editBrandSelect) editBrandSelect.innerHTML = `<option value="">${t('common.selectBrand', '-- Select Brand --')}</option>`;
-                    brandsData.results.forEach(b => {
-                        if (sBrandSelect) sBrandSelect.innerHTML += `<option value="${b.name}">${b.name}</option>`;
-                        if (editBrandSelect) editBrandSelect.innerHTML += `<option value="${b.name}">${b.name}</option>`;
-                    });
+
+                    // editBrand dropdown (admin) = show ALL brands
+                    if (editBrandSelect) {
+                        editBrandSelect.innerHTML = `<option value="">${t('common.selectBrand', '-- Select Brand --')}</option>`;
+                        brandsData.results.forEach(b => {
+                            editBrandSelect.innerHTML += `<option value="${b.name}">${b.name}</option>`;
+                        });
+                    }
+
+                    // Search dropdown (s-aftermarket-brand) = ONLY purchased/granted brands
+                    if (sBrandSelect) {
+                        // Fetch granted brands from subscription API (auth required)
+                        let grantedSet = window._grantedAftermarketBrands || null;
+                        if (!grantedSet) {
+                            try {
+                                const subAbRes = await fetch('/api/saas/subscription/aftermarket-brands', { headers: getAuthHeaders() });
+                                if (subAbRes.ok) {
+                                    const subAbData = await subAbRes.json();
+                                    if (subAbData.success) {
+                                        const gb = subAbData.granted_brands || [];
+                                        // '*' means all brands are granted (enterprise/business plan)
+                                        grantedSet = gb.includes('*') ? '*' : new Set(gb.map(b => b.toUpperCase()));
+                                        window._grantedAftermarketBrands = grantedSet;
+                                    }
+                                }
+                            } catch (e) { /* will fall back to showing all */ }
+                        }
+
+                        sBrandSelect.innerHTML = `<option value="">${t('search.allBrands', 'All Aftermarket Brands')}</option>`;
+
+                        const isUnlimited = grantedSet === '*';
+                        brandsData.results.forEach(b => {
+                            const isGranted = isUnlimited || (grantedSet && grantedSet.has(b.name.toUpperCase()));
+                            if (isGranted) {
+                                sBrandSelect.innerHTML += `<option value="${b.name}">${b.name}</option>`;
+                            }
+                        });
+                    }
                 }
+
 
                 // 2. Car Brands
                 const resCarBrands = await fetch('/api/metadata/car-brands');
@@ -8430,6 +8464,8 @@ curl -X GET "http://127.0.0.1:8000/api/parts/search?car_brand=TOYOTA&category=à¸
                 }
 
                 closeBuyExtraBrandsModal();
+                // Clear cached granted brands so the search dropdown will re-fetch and show new brands
+                window._grantedAftermarketBrands = null;
                 openPaymentCheckoutModal({
                     invoice_id: data.invoice_id,
                     invoice_number: data.invoice_number,

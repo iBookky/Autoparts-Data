@@ -337,8 +337,10 @@ class PGConnectionWrapper:
                 pass
 
 def _check_connection_health(conn):
-    """Test if a connection is alive by executing a simple query."""
+    """Test if a connection is alive and in a clean (non-aborted) transaction state."""
     try:
+        # First ensure we're not in an aborted transaction
+        conn.rollback()
         cur = conn.cursor()
         cur.execute("SELECT 1")
         cur.close()

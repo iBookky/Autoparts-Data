@@ -129,10 +129,11 @@ def seed_standard_roles_and_permissions(cursor):
             cursor.execute("ALTER TABLE meta_aftermarket_brands ADD COLUMN IF NOT EXISTS price_monthly NUMERIC(10,2) DEFAULT 500.00")
         else:
             cursor.execute("ALTER TABLE meta_aftermarket_brands ADD COLUMN price_monthly REAL DEFAULT 500.0")
-        conn.commit()
+        # Use cursor.connection (not bare 'conn') — this function receives only a cursor, 'conn' is not in scope
+        cursor.connection.commit()
     except Exception:
         try:
-            conn.rollback()
+            cursor.connection.rollback()
         except Exception:
             pass  # Column already exists or other benign error
 
@@ -5144,14 +5145,15 @@ def generate_invoice_db(data: Dict[str, Any]) -> Dict[str, Any]:
 
 def create_invoice_for_extra_brands(org_id: int, brands: List[str], payment_method: str = "PROMPTPAY") -> Dict[str, Any]:
     """
-    Creates an official invoice for purchasing extra aftermarket brands at 500 THB/brand/month.
+    Creates an official invoice for purchasing extra aftermarket brands.
+    Price per brand is read from meta_aftermarket_brands.price_monthly (default 500 THB).
+    PostgreSQL-safe: avoids LIKE % escaping issue, uses RETURNING for lastrowid.
     """
     conn = get_db_connection()
     cursor = conn.cursor()
     try:
         clean_brands = [str(b).strip().upper() for b in brands if str(b).strip()]
         if not clean_brands:
-            conn.close()
             return {"success": False, "error": "กรุณาระบุแบรนด์ Aftermarket ที่ต้องการซื้อเพิ่มอย่างน้อย 1 แบรนด์"}
 
         # Check existing granted brands to prevent charging for already owned brands
@@ -5161,50 +5163,55 @@ def create_invoice_for_extra_brands(org_id: int, brands: List[str], payment_meth
         )
         existing_brands = set(str(r["entitlement_value"]).upper() for r in cursor.fetchall())
         new_brands = [b for b in clean_brands if b not in existing_brands and b != '*']
-        
+
         if not new_brands:
-            conn.close()
             return {"success": False, "error": "แบรนด์ที่เลือกได้รับการเปิดใช้งานในระบบแล้ว"}
 
         sub = get_org_subscription(org_id)
         sub_id = sub.get("id") if sub else None
-        
-        # Fetch per-brand prices from meta_aftermarket_brands
-        cursor.execute(
-            "SELECT UPPER(name) as name, COALESCE(price_monthly, 500.0) as price_monthly FROM meta_aftermarket_brands"
-        )
-        brand_price_map = {r["name"]: float(r["price_monthly"]) for r in cursor.fetchall()}
+
+        # Fetch per-brand prices — plain name column to avoid alias issues with pg_adapter
+        cursor.execute("SELECT name, COALESCE(price_monthly, 500.0) as price_monthly FROM meta_aftermarket_brands")
+        brand_price_map = {str(r["name"]).upper(): float(r["price_monthly"]) for r in cursor.fetchall()}
         default_price = 500.0
 
-        subtotal = round(sum(brand_price_map.get(b.upper(), default_price) for b in new_brands), 2)
+        subtotal = round(sum(brand_price_map.get(b, default_price) for b in new_brands), 2)
         vat_amount = round(subtotal * 0.07, 2)
         total_amount = round(subtotal + vat_amount, 2)
-        
+
         now = datetime.now()
         cur_year_month = now.strftime("%Y%m")
-        cursor.execute("SELECT COUNT(*) FROM invoices WHERE invoice_number LIKE ?", (f"INV-{cur_year_month}-%",))
-        count = cursor.fetchone()[0]
+
+        # Use range query instead of LIKE to avoid PostgreSQL % parameter escaping issues
+        inv_range_lo = f"INV-{cur_year_month}-0000"
+        inv_range_hi = f"INV-{cur_year_month}-9999"
+        cursor.execute(
+            "SELECT COUNT(*) FROM invoices WHERE invoice_number >= ? AND invoice_number <= ?",
+            (inv_range_lo, inv_range_hi)
+        )
+        row = cursor.fetchone()
+        count = int(row[0]) if row else 0
         inv_num = f"INV-{cur_year_month}-{(count + 1):04d}"
-        
+
         p_start = now.strftime("%Y-%m-%d")
         p_end = (now + timedelta(days=30)).strftime("%Y-%m-%d")
 
+        # Use unified ? placeholder — pg_adapter converts to %s and auto-adds RETURNING id,
+        # then sets cursor.lastrowid from the result. Works for both PG and SQLite.
         cursor.execute("""
             INSERT INTO invoices (invoice_number, org_id, subscription_id, amount, vat_amount, total_amount, currency, status, payment_method, period_start, period_end)
-            VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING', ?, ?, ?)
-        """, (inv_num, org_id, sub_id, subtotal, vat_amount, total_amount, 'THB', payment_method, p_start, p_end))
-        
+            VALUES (?, ?, ?, ?, ?, ?, 'THB', 'PENDING', ?, ?, ?)
+        """, (inv_num, org_id, sub_id, subtotal, vat_amount, total_amount, payment_method, p_start, p_end))
         inv_id = cursor.lastrowid
-        
-        # Insert line items for each extra brand using per-brand price
-        for b in new_brands:
-            bp = brand_price_map.get(b.upper(), default_price)
-            cursor.execute("""
-                INSERT INTO invoice_items (invoice_id, description, quantity, unit_price, total_price, item_type)
-                VALUES (?, ?, 1, ?, ?, 'AFTERMARKET_BRAND')
-            """, (inv_id, f"+1 แบรนด์ Aftermarket เพิ่มเติม: {b}", bp, bp))
 
-            
+        # Insert line items for each new brand
+        for b in new_brands:
+            bp = brand_price_map.get(b, default_price)
+            cursor.execute("""
+                INSERT INTO invoice_items (invoice_id, description, quantity, unit_price, amount, total_amount, item_type)
+                VALUES (?, ?, 1, ?, ?, ?, 'AFTERMARKET_BRAND')
+            """, (inv_id, f"+1 แบรนด์ Aftermarket เพิ่มเติม: {b}", bp, bp, bp))
+
         conn.commit()
         return {
             "success": True,
@@ -5217,7 +5224,10 @@ def create_invoice_for_extra_brands(org_id: int, brands: List[str], payment_meth
             "items_count": len(new_brands)
         }
     except Exception as e:
-        conn.rollback()
+        try:
+            conn.rollback()
+        except Exception:
+            pass
         return {"success": False, "error": str(e)}
     finally:
         conn.close()
